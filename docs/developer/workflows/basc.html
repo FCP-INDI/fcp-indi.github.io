@@ -1,0 +1,526 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Bootstrap Analysis of Stable Clusters &mdash; CPAC 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CPAC 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Workflows" href="index.html" />
+    <link rel="next" title="Nuisance Signal Removal" href="nuisance.html" />
+    <link rel="prev" title="Seed Based Correlation Analysis" href="sca.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="nuisance.html" title="Nuisance Signal Removal"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sca.html" title="Seed Based Correlation Analysis"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Workflows</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-CPAC.basc">
+<span id="bootstrap-analysis-of-stable-clusters"></span><h1>Bootstrap Analysis of Stable Clusters<a class="headerlink" href="#module-CPAC.basc" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="CPAC.basc.create_basc">
+<tt class="descclassname">CPAC.basc.</tt><tt class="descname">create_basc</tt><big>(</big><em>name='basc'</em><big>)</big><a class="headerlink" href="#CPAC.basc.create_basc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bootstrap Analysis of Stable Clusters (BASC)</p>
+<p>This workflow performs group-level BASC.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>name</strong> : string, optional</p>
+<blockquote>
+<div><p>Name of the workflow.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>basc</strong> : nipype.pipeline.engine.Workflow</p>
+<blockquote class="last">
+<div><p>BASC workflow.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Workflow Inputs:</p>
+<div class="highlight-python"><pre>inputspec.roi : string (nifti file)
+    Mask of region(s) of interest
+inputpsec.subjects : list (nifti files)
+    4-D timeseries of a group of subjects normalized to MNI space
+inputspec.dataset_bootstraps : integer
+    Number of bootstrap samples of the dataset
+inputspec.timeseries_bootstraps : integer
+    Number of bootstraps of each subject's timeseries
+inputspec.k_clusters : integer
+    Number of clusters at both the individiual and group level
+inputspec.affinity_threshold : list (floats)
+    Minimum threshold for similarity matrix based on correlation to create an edge</pre>
+</div>
+<p>Workflow Outputs:</p>
+<div class="highlight-python"><pre>outputspec.gsm : ndarray
+    Group stability matrix
+outputspec.gsclusters: ndarray
+    Matrix partitioning each cluster of the group stability matrix
+outputspec.gsmap: ndarray
+    Group stability map using gsm and gscluster to calculate average within-cluster stability
+outputspec.gsclusters_img : string (nifti file)
+    3-D volume of brain regions partitioned with gsclusters
+outputspec.gsmap_img : string (nifti file)
+    3-D volume of brain regions associated with gs_map
+outputspec.ismap_imgs : list of strings (nifti files)
+    3-D volumes of stability scores of each cluster based on group clustering</pre>
+</div>
+<p>BASC Procedure:</p>
+<ol class="arabic simple">
+<li>Generate individual stability matrices based on multiple clusterings of each bootstrap sample for a single subject</li>
+<li>Use stratified bootstrap to sample new datasets of subjects</li>
+<li>Calculate average stability matrix of each new dataset using individual stability matrices generated at step 1</li>
+<li>Cluster each average stabiilty matrix</li>
+<li>Average to create a group stability matrix</li>
+<li>Cluster the group stability matrix</li>
+<li>Calculate average within-cluster stability based on the clustering of step 6</li>
+</ol>
+<p>Workflow Graph:</p>
+<img alt="../_images/basc.dot.png" src="../_images/basc.dot.png" style="width: 500px;" />
+<p>Detailed Workflow Graph:</p>
+<img alt="../_images/basc_detailed.dot.png" src="../_images/basc_detailed.dot.png" style="width: 500px;" />
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R2]</a></td><td><ol class="first last upperalpha simple" start="16">
+<li>Bellec, P. Rosa-Neto, O. C. Lyttelton, H. Benali, and A. C. Evans, &#8220;Multi-level bootstrap analysis of stable clusters in resting-state fMRI.,&#8221; NeuroImage, vol. 51, no. 3, pp. 1126-39, Jul. 2010.</li>
+</ol>
+</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">CPAC</span> <span class="kn">import</span> <span class="n">basc</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.basc.nifti_individual_stability">
+<tt class="descclassname">CPAC.basc.</tt><tt class="descname">nifti_individual_stability</tt><big>(</big><em>subject_file</em>, <em>roi_mask_file</em>, <em>n_bootstraps</em>, <em>k_clusters</em>, <em>cbb_block_size=None</em>, <em>affinity_threshold=0.5</em><big>)</big><a class="headerlink" href="#CPAC.basc.nifti_individual_stability" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the individual stability matrix for a single subject by using Circular Block Bootstrapping method
+for time-series data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>subject_file</strong> : string</p>
+<blockquote>
+<div><p>Nifti file of a subject</p>
+</div></blockquote>
+<p><strong>roi_mask_file</strong> : string</p>
+<blockquote>
+<div><p>Region of interest (this method is too computationally intensive to perform on a whole-brain volume)</p>
+</div></blockquote>
+<p><strong>n_bootstraps</strong> : integer</p>
+<blockquote>
+<div><p>Number of bootstraps</p>
+</div></blockquote>
+<p><strong>k_clusters</strong> : integer</p>
+<blockquote>
+<div><p>Number of clusters</p>
+</div></blockquote>
+<p><strong>cbb_block_size</strong> : integer, optional</p>
+<blockquote>
+<div><p>Size of the time-series block when performing circular block bootstrap</p>
+</div></blockquote>
+<p><strong>affinity_threshold</strong> : float, optional</p>
+<blockquote>
+<div><p>Minimum threshold for similarity matrix based on correlation to create an edge</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>ism</strong> : array_like</p>
+<blockquote class="last">
+<div><p>Individual stability matrix of shape (<cite>V</cite>, <cite>V</cite>), <cite>V</cite> voxels</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.basc.group_stability_matrix">
+<tt class="descclassname">CPAC.basc.</tt><tt class="descname">group_stability_matrix</tt><big>(</big><em>indiv_stability_list</em>, <em>n_bootstraps</em>, <em>k_clusters</em>, <em>stratification=None</em><big>)</big><a class="headerlink" href="#CPAC.basc.group_stability_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the group stability matrix of the entire dataset by bootstrapping the dataset</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>indiv_stability_list</strong> : list of strings</p>
+<blockquote>
+<div><p>A length <cite>N</cite> list of file paths to numpy matrices of shape (<cite>V</cite>, <cite>V</cite>), <cite>N</cite> subjects, <cite>V</cite> voxels</p>
+</div></blockquote>
+<p><strong>n_bootstraps</strong> : integer</p>
+<blockquote>
+<div><p>Number of bootstrap datasets</p>
+</div></blockquote>
+<p><strong>k_clusters</strong> : integer</p>
+<blockquote>
+<div><p>Number of clusters</p>
+</div></blockquote>
+<p><strong>stratification</strong> : array_like, optional</p>
+<blockquote>
+<div><p>List of integer entries denoting stratums for indiv_stability_list</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>G</strong> : array_like</p>
+<blockquote>
+<div><p>Group stability matrix of shape (<cite>V</cite>, <cite>V</cite>), <cite>V</cite> voxels</p>
+</div></blockquote>
+<p><strong>clusters_G</strong> : array_like</p>
+<blockquote>
+<div><p>Length <cite>V</cite> array of cluster assignments for each voxel</p>
+</div></blockquote>
+<p><strong>cluster_voxel_scores</strong> : array_like</p>
+<blockquote class="last">
+<div><p><cite>K</cite> by <cite>V</cite> matrix of within-cluster average values for each cluster of each voxel</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.basc.timeseries_bootstrap">
+<tt class="descclassname">CPAC.basc.</tt><tt class="descname">timeseries_bootstrap</tt><big>(</big><em>tseries</em>, <em>block_size</em><big>)</big><a class="headerlink" href="#CPAC.basc.timeseries_bootstrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a bootstrap sample derived from the input time-series.  Utilizes Circular-block-bootstrap method described in <a class="reference internal" href="#r3">[R3]</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>tseries</strong> : array_like</p>
+<blockquote>
+<div><p>A matrix of shapes (<cite>M</cite>, <cite>N</cite>) with <cite>M</cite> timepoints and <cite>N</cite> variables</p>
+</div></blockquote>
+<p><strong>block_size</strong> : integer</p>
+<blockquote>
+<div><p>Size of the bootstrapped blocks</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>bseries</strong> : array_like</p>
+<blockquote class="last">
+<div><p>Bootstrap sample of the input timeseries</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R3]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> P. Bellec; G. Marrelec; H. Benali, A bootstrap test to investigate
+changes in brain connectivity for functional MRI. Statistica Sinica, 
+special issue on Statistical Challenges and Advances in Brain Science, 
+2008, 18: 1253-1268.</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample_bootstrap</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">array([[ 7, 17, 27, 37, 47],</span>
+<span class="go">       [ 8, 18, 28, 38, 48],</span>
+<span class="go">       [ 9, 19, 29, 39, 49],</span>
+<span class="go">       [ 4, 14, 24, 34, 44],</span>
+<span class="go">       [ 5, 15, 25, 35, 45],</span>
+<span class="go">       [ 6, 16, 26, 36, 46],</span>
+<span class="go">       [ 0, 10, 20, 30, 40],</span>
+<span class="go">       [ 1, 11, 21, 31, 41],</span>
+<span class="go">       [ 2, 12, 22, 32, 42],</span>
+<span class="go">       [ 4, 14, 24, 34, 44]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.basc.standard_bootstrap">
+<tt class="descclassname">CPAC.basc.</tt><tt class="descname">standard_bootstrap</tt><big>(</big><em>dataset</em><big>)</big><a class="headerlink" href="#CPAC.basc.standard_bootstrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a bootstrap sample from the input dataset</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>dataset</strong> : array_like</p>
+<blockquote>
+<div><p>A matrix of where dimension-0 represents samples</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>bdataset</strong> : array_like</p>
+<blockquote class="last">
+<div><p>A bootstrap sample of the input dataset</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.basc.cluster_timeseries">
+<tt class="descclassname">CPAC.basc.</tt><tt class="descname">cluster_timeseries</tt><big>(</big><em>X</em>, <em>n_clusters</em>, <em>similarity_metric='k_neighbors'</em>, <em>affinity_threshold=0.0</em>, <em>neighbors=10</em><big>)</big><a class="headerlink" href="#CPAC.basc.cluster_timeseries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cluster a given timeseries</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>X</strong> : array_like</p>
+<blockquote>
+<div><p>A matrix of shape (<cite>N</cite>, <cite>M</cite>) with <cite>N</cite> samples and <cite>M</cite> dimensions</p>
+</div></blockquote>
+<p><strong>n_clusters</strong> : integer</p>
+<blockquote>
+<div><p>Number of clusters</p>
+</div></blockquote>
+<p><strong>similarity_metric</strong> : {&#8216;k_neighbors&#8217;, &#8216;correlation&#8217;, &#8216;data&#8217;}</p>
+<blockquote>
+<div><p>Type of similarity measure for spectral clustering.  The pairwise similarity measure
+specifies the edges of the similarity graph. &#8216;data&#8217; option assumes X as the similarity
+matrix and hence must be symmetric.  Default is kneighbors_graph <a class="reference internal" href="#r4">[R4]</a> (forced to be 
+symmetric)</p>
+</div></blockquote>
+<p><strong>affinity_threshold</strong> : float</p>
+<blockquote>
+<div><p>Threshold of similarity metric when &#8216;correlation&#8217; similarity metric is used.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>y_pred</strong> : array_like</p>
+<blockquote class="last">
+<div><p>Predicted cluster labels</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R4]</td><td><em>(<a class="fn-backref" href="#id4">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> <a class="reference external" href="http://scikit-learn.org/dev/modules/generated/sklearn.neighbors.kneighbors_graph.html">http://scikit-learn.org/dev/modules/generated/sklearn.neighbors.kneighbors_graph.html</a></td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.basc.adjacency_matrix">
+<tt class="descclassname">CPAC.basc.</tt><tt class="descname">adjacency_matrix</tt><big>(</big><em>cluster_pred</em><big>)</big><a class="headerlink" href="#CPAC.basc.adjacency_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate adjacency matrix for given cluster predictions</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>cluster_pred</strong> : array_like</p>
+<blockquote>
+<div><p>A matrix of shape (<cite>N</cite>, <cite>1</cite>) with <cite>N</cite> samples</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>A</strong> : array_like</p>
+<blockquote class="last">
+<div><p>Adjacency matrix of shape (<cite>N</cite>,`N`)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">CPAC.basc</span> <span class="kn">import</span> <span class="n">cluster_adjacency_matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">])[:,</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cluster_adjacency_matrix</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;int&#39;</span><span class="p">)</span>
+<span class="go">array([[1, 0, 0, 0, 1],</span>
+<span class="go">       [0, 1, 1, 0, 0],</span>
+<span class="go">       [0, 1, 1, 0, 0],</span>
+<span class="go">       [0, 0, 0, 1, 0],</span>
+<span class="go">       [1, 0, 0, 0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.basc.cluster_matrix_average">
+<tt class="descclassname">CPAC.basc.</tt><tt class="descname">cluster_matrix_average</tt><big>(</big><em>M</em>, <em>cluster_assignments</em><big>)</big><a class="headerlink" href="#CPAC.basc.cluster_matrix_average" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the average element value within a similarity matrix for each cluster assignment, a measure
+of within cluster similarity.  Self similarity (diagonal of similarity matrix) is removed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>M</strong> : array_like</p>
+<p><strong>cluster_assignments</strong> : array_like</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>s</strong> : array_like</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">CPAC</span> <span class="kn">import</span> <span class="n">basc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">assign</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">basc</span><span class="o">.</span><span class="n">cluster_matrix_average</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">assign</span><span class="p">)</span>
+<span class="go">array([  6.,   6.,   6.,  21.,  21.])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.basc.individual_stability_matrix">
+<tt class="descclassname">CPAC.basc.</tt><tt class="descname">individual_stability_matrix</tt><big>(</big><em>Y</em>, <em>n_bootstraps</em>, <em>k_clusters</em>, <em>cbb_block_size=None</em>, <em>affinity_threshold=0.5</em><big>)</big><a class="headerlink" href="#CPAC.basc.individual_stability_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the individual stability matrix of a single subject by bootstrapping their time-series</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>Y</strong> : array_like</p>
+<blockquote>
+<div><p>A matrix of shape (<cite>N</cite>, <cite>V</cite>) with <cite>N</cite> timepoints and <cite>V</cite> voxels</p>
+</div></blockquote>
+<p><strong>n_bootstraps</strong> : integer</p>
+<blockquote>
+<div><p>Number of bootstrap samples</p>
+</div></blockquote>
+<p><strong>k_clusters</strong> : integer</p>
+<blockquote>
+<div><p>Number of clusters</p>
+</div></blockquote>
+<p><strong>cbb_block_size</strong> : integer, optional</p>
+<blockquote>
+<div><p>Block size to use for the Circular Block Bootstrap algorithm</p>
+</div></blockquote>
+<p><strong>affinity_threshold</strong> : float, optional</p>
+<blockquote>
+<div><p>Minimum threshold for similarity matrix based on correlation to create an edge</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>S</strong> : array_like</p>
+<blockquote class="last">
+<div><p>A matrix of shape (<cite>V</cite>, <cite>V</cite>), each element v_{ij} representing the stability of the adjacency of voxel i with voxel j</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sca.html"
+                        title="previous chapter">Seed Based Correlation Analysis</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="nuisance.html"
+                        title="next chapter">Nuisance Signal Removal</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/workflows/basc.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="nuisance.html" title="Nuisance Signal Removal"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sca.html" title="Seed Based Correlation Analysis"
+             >previous</a> |</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Workflows</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Brian.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,30 @@
+Registration and Segmentation
+=============================
+
+Registration
+------------
+In order to compare brain activations between subjects, individual functional and anatomical images must first be transformed to match a common template. The most commonly used template (`MNI152 <http://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009>`_) is maintained by the Montreal Neurological Institute, and was created by combining data from the brains of many different individuals to create an "average" brain. 
+
+During registration, individual anatomical images are first transformed to match the common template. Then, the functional data for each subject is registered to their own transformed anatomical image.
+
+By default, C-PAC will register subject brains to the MNI152 template provided by FSL. Users wishing to register their data to a different template (such as a group specific template) can specifiy alternative template files in the :doc:`Resource Directory Setup section of the configuration file <dir_config>`_.
+
+Segmentation
+------------
+
+
+
+C-PAC uses FSL/FEAT to automatically segment brain images into white matter, gray matter, and CSF. This is done by integrating information from the current brain and prior information about the probability that a given voxel is of a particular tissue type. These priors are included by FSL, but must be binarized prior to use by C-PAC.
+
+The following bash script will binarize existing priors::
+
+    # Define what kind of priors to generate
+    # the example is for gray matter. gray can be substitute to white, csf or brain for priors of white matter, csf and how brian mask.
+            tissue=gray
+            threshold=0.5
+    # copy input from FSL folder
+        3dcopy $FSL_DIR/data/standard/tissuepriors/avg152T1_${tissue}.hdr avg152T1_${tissue}.nii.gz
+    # using fslmaths to binarize the image at the threshold you set up above
+        fslmaths avg152T1_${tissue}.nii.gz -thr $threshold -bin avg152T1_${tissue}_2mm_bin
+    # resample the data to the voxel size you want. here I resampled it to 3.0mm isotopic voxel size.
+        3dresample -dxyz 3.0 3.0 3.0 -prefix avg152T1_${tissue}_bin_3mm.nii.gz -inset avg152T1_${tissue}_2mm_bin.nii.gz

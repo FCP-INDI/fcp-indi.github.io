@@ -1,0 +1,348 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Functional Preprocessing &mdash; CPAC 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CPAC 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Workflows" href="index.html" />
+    <link rel="next" title="Segmentation Workflow" href="seg_preproc.html" />
+    <link rel="prev" title="Anatomical Preprocessing" href="anat_preproc.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="seg_preproc.html" title="Segmentation Workflow"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="anat_preproc.html" title="Anatomical Preprocessing"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Workflows</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-CPAC.func_preproc">
+<span id="functional-preprocessing"></span><h1>Functional Preprocessing<a class="headerlink" href="#module-CPAC.func_preproc" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="CPAC.func_preproc.create_func_preproc">
+<tt class="descclassname">CPAC.func_preproc.</tt><tt class="descname">create_func_preproc</tt><big>(</big><big>)</big><a class="headerlink" href="#CPAC.func_preproc.create_func_preproc" title="Permalink to this definition">¶</a></dt>
+<dd><p>The main purpose of this workflow is to process functional data. Raw rest file is deobliqued and reoriented 
+into RPI. Then take the mean intensity values over all time points for each voxel and use this image 
+to calculate motion parameters. The image is then skullstripped, normalized and a processed mask is 
+obtained to use it further in Image analysis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>func_preproc</strong> : workflow object</p>
+<blockquote class="last">
+<div><p>Functional Preprocessing workflow object</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p><a class="reference external" href="https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/func_preproc/func_preproc.py">Source</a></p>
+<p>Workflow Inputs:</p>
+<div class="highlight-python"><pre>inputspec.rest : func/rest file or a list of func/rest nifti file 
+    User input functional(T2) Image, in any of the 8 orientations
+
+inputspec.start_idx : string 
+    Starting volume/slice of the functional image (optional)
+
+inputspec.stop_idx : string
+    Last volume/slice of the functional image (optional)</pre>
+</div>
+<p>Workflow Outputs:</p>
+<div class="highlight-python"><pre>outputspec.drop_tr : string (nifti file)
+  Path to Output image with the inital few slices dropped
+
+outputspec.refit : string (nifti file)
+   Path to Deobliqued anatomical data 
+
+outputspec.reorient : string (nifti file)
+    Path to RPI oriented anatomical data 
+
+outputspec.motion_correct_ref : string (nifti file)
+     Path to Mean intensity Motion corrected image 
+     (base reference image for the second motion correction run)
+
+outputspec.motion_correct : string (nifti file)
+    Path to motion corrected output file
+
+outputspec.max_displacement : string (Mat file)
+    Path to maximum displacement (in mm) for brain voxels in each volume
+
+outputspec.movement_parameters : string (Mat file)
+    Path to 1D file containing six movement/motion parameters(3 Translation, 3 Rotations) 
+    in different columns (roll pitch yaw dS  dL  dP)
+
+outputspec.skullstrip : string (nifti file)
+    Path to skull stripped Motion Corrected Image 
+
+outputspec.mask : string (nifti file)
+    Path to brain-only mask
+
+outputspec.example_func : string (nifti file)
+    Mean, Skull Stripped, Motion Corrected output T2 Image path
+    (Image with mean intensity values across voxels) 
+
+outputpsec.preprocessed : string (nifti file)
+    output skull stripped, motion corrected T2 image 
+    with normalized intensity values 
+
+outspec.preprocessed_mask : string (nifti file)
+   Mask obtained from normalized preprocessed image</pre>
+</div>
+<p>Order of commands:</p>
+<ul>
+<li><p class="first">Get the start and the end volume index of the functional run. If not defined by the user, return the first and last volume.</p>
+<blockquote>
+<div><p>get_idx(in_files, stop_idx, start_idx)</p>
+</div></blockquote>
+</li>
+<li><p class="first">Dropping the initial TRs. For details see <a class="reference external" href="http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dcalc.html">3dcalc</a>:</p>
+<div class="highlight-python"><pre>3dcalc -a rest.nii.gz[4..299] 
+       -expr 'a' 
+       -prefix rest_3dc.nii.gz</pre>
+</div>
+</li>
+<li><p class="first">Deobliqing the scans.  For details see <a class="reference external" href="http://afni.nimh.nih.gov/pub/dist/doc/program_help/3drefit.html">3drefit</a>:</p>
+<div class="highlight-python"><pre>3drefit -deoblique rest_3dc.nii.gz</pre>
+</div>
+</li>
+<li><p class="first">Re-orienting the Image into Right-to-Left Posterior-to-Anterior Inferior-to-Superior (RPI) orientation. For details see <a class="reference external" href="http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dresample.html">3dresample</a>:</p>
+<div class="highlight-python"><pre>3dresample -orient RPI 
+           -prefix rest_3dc_RPI.nii.gz 
+           -inset rest_3dc.nii.gz</pre>
+</div>
+</li>
+<li><p class="first">Calculate voxel wise statistics. Get the RPI Image with mean intensity values over all timepoints for each voxel. For details see <a class="reference external" href="http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dTstat.html">3dTstat</a>:</p>
+<div class="highlight-python"><pre>3dTstat -mean 
+        -prefix rest_3dc_RPI_3dT.nii.gz 
+        rest_3dc_RPI.nii.gz</pre>
+</div>
+</li>
+<li><p class="first">Motion Correction. For details see <a class="reference external" href="http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dvolreg.html">3dvolreg</a>:</p>
+<div class="highlight-python"><pre>3dvolreg -Fourier 
+         -twopass 
+         -base rest_3dc_RPI_3dT.nii.gz/
+         -zpad 4 
+         -maxdisp1D rest_3dc_RPI_3dvmd1D.1D 
+         -1Dfile rest_3dc_RPI_3dv1D.1D 
+         -prefix rest_3dc_RPI_3dv.nii.gz 
+         rest_3dc_RPI.nii.gz</pre>
+</div>
+<p>The base image or the reference image is the mean intensity RPI image obtained in the above the step.For each volume 
+in RPI-oriented T2 image, the command, aligns the image with the base mean image and calculates the motion, displacement 
+and movement parameters. It also outputs the aligned 4D volume and movement and displacement parameters for each volume.</p>
+</li>
+<li><p class="first">Calculate voxel wise statistics. Get the motion corrected output Image from the above step, with mean intensity values over all timepoints for each voxel. 
+For details see <a class="reference external" href="http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dTstat.html">3dTstat</a>:</p>
+<div class="highlight-python"><pre>3dTstat -mean 
+        -prefix rest_3dc_RPI_3dv_3dT.nii.gz 
+        rest_3dc_RPI_3dv.nii.gz</pre>
+</div>
+</li>
+<li><p class="first">Motion Correction and get motion, movement and displacement parameters. For details see <a class="reference external" href="http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dvolreg.html">3dvolreg</a>:</p>
+<div class="highlight-python"><pre>3dvolreg -Fourier 
+         -twopass 
+         -base rest_3dc_RPI_3dv_3dT.nii.gz 
+         -zpad 4 
+         -maxdisp1D rest_3dc_RPI_3dvmd1D.1D 
+         -1Dfile rest_3dc_RPI_3dv1D.1D 
+         -prefix rest_3dc_RPI_3dv.nii.gz 
+         rest_3dc_RPI.nii.gz</pre>
+</div>
+<p>The base image or the reference image is the mean intensity motion corrected image obtained from the above the step (first 3dvolreg run). 
+For each volume in RPI-oriented T2 image, the command, aligns the image with the base mean image and calculates the motion, displacement 
+and movement parameters. It also outputs the aligned 4D volume and movement and displacement parameters for each volume.</p>
+</li>
+<li><p class="first">Create a  brain-only mask. For details see <a class="reference external" href="http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dAutomask.html">3dautomask</a>:</p>
+<div class="highlight-python"><pre>3dAutomask  
+           -prefix rest_3dc_RPI_3dv_automask.nii.gz 
+           rest_3dc_RPI_3dv.nii.gz</pre>
+</div>
+</li>
+<li><p class="first">Edge Detect(remove skull) and get the brain only. For details see <a class="reference external" href="http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dcalc.html">3dcalc</a>:</p>
+<div class="highlight-python"><pre>3dcalc -a rest_3dc_RPI_3dv.nii.gz 
+       -b rest_3dc_RPI_3dv_automask.nii.gz 
+       -expr 'a*b' 
+       -prefix rest_3dc_RPI_3dv_3dc.nii.gz</pre>
+</div>
+</li>
+<li><p class="first">Normalizing the image intensity values. For details see <a class="reference external" href="http://www.fmrib.ox.ac.uk/fsl/avwutils/index.html">fslmaths</a>:</p>
+<div class="highlight-python"><pre>fslmaths rest_3dc_RPI_3dv_3dc.nii.gz 
+         -ing 10000 rest_3dc_RPI_3dv_3dc_maths.nii.gz 
+         -odt float</pre>
+</div>
+<p>Normalized intensity = (TrueValue*10000)/global4Dmean</p>
+</li>
+<li><p class="first">Calculate mean of skull stripped image. For details see <a class="reference external" href="http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dTstat.html">3dTstat</a>:</p>
+<div class="highlight-python"><pre>3dTstat -mean -prefix rest_3dc_RPI_3dv_3dc_3dT.nii.gz rest_3dc_RPI_3dv_3dc.nii.gz</pre>
+</div>
+</li>
+<li><p class="first">Create Mask (Generate mask from Normalized data). For details see <a class="reference external" href="http://www.fmrib.ox.ac.uk/fsl/avwutils/index.html">fslmaths</a>:</p>
+<div class="highlight-python"><pre>fslmaths rest_3dc_RPI_3dv_3dc_maths.nii.gz 
+       -Tmin -bin rest_3dc_RPI_3dv_3dc_maths_maths.nii.gz 
+       -odt char</pre>
+</div>
+</li>
+</ul>
+<p>High Level Workflow Graph:</p>
+<img alt="../_images/func_preproc.dot.png" src="../_images/func_preproc.dot.png" style="width: 1000px;" />
+<p>Detailed Workflow Graph:</p>
+<img alt="../_images/func_preproc_detailed.dot.png" src="../_images/func_preproc_detailed.dot.png" style="width: 1000px;" />
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">func_preproc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preproc</span> <span class="o">=</span> <span class="n">create_func_preproc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">func</span><span class="o">=</span><span class="s">&#39;sub1/func/rest.nii.gz&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preproc</span><span class="o">.</span><span class="n">run</span><span class="p">()</span> 
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.func_preproc.get_idx">
+<tt class="descclassname">CPAC.func_preproc.</tt><tt class="descname">get_idx</tt><big>(</big><em>in_files</em>, <em>stop_idx</em>, <em>start_idx</em><big>)</big><a class="headerlink" href="#CPAC.func_preproc.get_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to get the first and the last slice for
+the functional run. It verifies the user specified
+first and last slice. If the values are not valid, it 
+calculates and returns the very first and the last slice</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>in_file</strong> : string (nifti file)</p>
+<blockquote>
+<div><p>Path to input functional run</p>
+</div></blockquote>
+<p><strong>stop_idx</strong> : int</p>
+<blockquote>
+<div><p>Last volume to be considered, specified by user
+in the configuration file</p>
+</div></blockquote>
+<p><strong>stop_idx</strong> : int</p>
+<blockquote>
+<div><p>First volume to be considered, specified by user 
+in the configuration file</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>stop_idx</strong> :  int</p>
+<blockquote>
+<div><p>Value of first slice to consider for the functional run</p>
+</div></blockquote>
+<p><strong>start_idx</strong> : int</p>
+<blockquote class="last">
+<div><p>Value of last slice to consider for the functional run</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="anat_preproc.html"
+                        title="previous chapter">Anatomical Preprocessing</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="seg_preproc.html"
+                        title="next chapter">Segmentation Workflow</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/workflows/func_preproc.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="seg_preproc.html" title="Segmentation Workflow"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="anat_preproc.html" title="Anatomical Preprocessing"
+             >previous</a> |</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Workflows</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Brian.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

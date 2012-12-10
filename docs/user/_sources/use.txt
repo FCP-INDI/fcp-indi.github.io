@@ -3,26 +3,43 @@ Using C-PAC
 
 Ready Your Data
 ---------------
-Before running C-PAC, you must create a list of subjects and data to process. This is done by defining your file structure in :file:`data_config.py` and running the :file:`extract_data` script.
+Before running C-PAC, you must generate a list of subjects and data to process.This is done by defining file structure templates in :file:`data_config.py` and running the :file:`extract_data` script. The latest version of :file:`data_config.py` can be `downloaded here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/data_config.py>`_.
 
-The latest version of :file:`data_config.py` can be `downloaded here <https://raw.github.com/FCP-INDI/C-PAC/master/CPAC/utils/data_config.py>`_. Open this file in a text editor and folllow the configuration instructions. It should be noted that C-PAC currently requires subject directories to be within a site level directory, even if your project does not contain data from multiple (data acquisition) sites.
+Define File Structure Templates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File structure templates are simply the full path to your data files, with the names of the site and subject directories replaced by wildcard placeholders :file:`%s`. For example, if the full paths to the data for :file:`subject_01` are:: 
 
+  /home/data/site_1/subject_1/anat/mprage.nii.gz
+  /home/data/site_1/subject_1/rest/rest.nii.gz
+
+Then the file structure templates would would be::
+
+  /home/data/%s/%s/anat/mprage.nii.gz
+  /home/data/%s/%s/rest/rest.nii.gz
+
+In cases where additional file and folder names contain subject specific information, asterisks can be used. For example, :file:`../sub01_anat/sub01_mprage.nii.gz` would be come :file:`../*_anat/*_mprage.nii.gz`.
+
+It should be noted that C-PAC currently requires subject directories to be within a site level directory, even if your project does not contain data from multiple (data acquisition) sites. Users encountering errors when attempting to run :file:`extract_data.py` may want to re-organize their data into a structure similar to that presented above.
+
+Configure Slice Timing Correction
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If you wish to run :doc:`Slice Timing Correction </slice>`, you must specify a file that contains information about the slice acquisition order used for each subject. 
 
 .. line-block::
   **If all subjects within a site have the same acquisition order:** 
-  Use the template :file:`scan_parameters.csv` file available for download `here <https://raw.github.com/FCP-INDI/C-PAC/master/tools/scan_parameters.csv>`_. 
+  Use the template :file:`scan_parameters.csv` file available for download `here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/scan_parameters.csv>`_. 
 
   **If subjects within a site have differeing acquisition orders:**
   Use the template :file:`scan_parameters_multiscan.csv` file available for download `here <https://raw.github.com/FCP-INDI/C-PAC/master/tools/scan_parameters_multiscan.csv>`_. 
 
+Generate Subject Lists
+^^^^^^^^^^^^^^^^^^^^^^
 When you are done setting up :file:`data_config.py`, save your changes. In the terminal, navigate to the directory where you would like to store subject lists for use by C-PAC. Open iPython by typing :file:`ipython`. From the iPython prompt, run one of the following commands.
 
 If you are not running Slice Timing Correction, or all subjects within a site have the same acquisition order::
 
   import CPAC
   CPAC.utils.extract_data.run ('/path/to/data_config.py')
-
 
 If you are running Slice Timing Correction and subjects within a site have differing acquisition orders::
 
@@ -37,18 +54,19 @@ This will ouput three subject list files needed to run C-PAC:
 
 Configure C-PAC
 ---------------
-The :file:`config.py` file is where you will specify which processing and analyses to run, and with which settings. This file is located in the :file:`/C-PAC/pipeline` directory of your installation, or can be `downloaded here <https://raw.github.com/FCP-INDI/C-PAC/master/CPAC/pipeline/config.py>`_. For detailed instructions on how to configure a particular C-PAC function, see the appropriate page under :doc:`Data Preprocessing </preproc>` or :doc:`Outputs and Measures </derivs>`. When you are finished, save your changes.
+The :file:`config.py` file is where you will specify which processing and analyses to run, and with which settings. This file is located in the :file:`/configs` directory of your installation, or can be `downloaded here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/config.py>`_. 
 
-**NOTE: If this is your first time using C-PAC, we strongly recommend that you go through the entire :file:`config.py` file at least once. The default settings will not work for everyone, and it's a good idea to consider the available options before running.**
+For detailed instructions on how to configure a particular C-PAC function, see the appropriate page under :doc:`Data Preprocessing </preproc>` or :doc:`Outputs and Measures </derivs>`. When you are finished, save your changes.
+
+**NOTE:** If this is your first time using C-PAC, we strongly recommend that you go through the entire :file:`config.py` file at least once. The default settings will not work for everyone, and it's a good idea to consider the available options before running.
+
+The following pages also contain configuration instructions:
 
 * :doc:`Computer Settings </compute_config>`
 * :doc:`Directory Setup </dir_config>`
 * :doc:`Preprocessing Setup </pp_config>`
-* :doc:`Segmentation </seg_config>`
 * :doc:`Nuisance Correction and Temporal Filtering </nuisance_config>`
 * :doc:`Seed-based Correlation Analysis and Timeseries Extraction </sca_tse_config>`
-* :doc:`Individual-Level Analyses </ind_config>`
-* :doc:`Group-Level Analyses </grp_config>`
 * :doc:`Group Statistics </stat_config>`
 
 Running C-PAC
@@ -59,19 +77,6 @@ Open iPython by typing :file:`ipython`. From the iPython prompt, run::
 
   import CPAC
   CPAC.pipeline.cpac_runner.run ('/path/to/config.py', '/path/to/CPAC_subjectlist.py')
-
-
-Data Output
------------
-C-PAC outputs data in the following structure::
-
-  /output_directory/pipeline/strategy/subject/output/output_options/
-
-Pipelines are combinations of workflows. For example, if you set C-PAC to process data both with and without anatomical pre-processing, you will get two separate pipelines.
-
-A strategy is a set of preprocessing options, including smoothing width, standard resolution, and nuisance corrections. Multiple combinations of settings will result in multiple strategies.
-
-Outputs include any measures calculated. 
 
 Running BASC, CWAS, and Group Statistics
 ----------------------------------------
@@ -91,9 +96,6 @@ Open iPython by typing :file:`ipython`. From the iPython prompt, run::
    Computer Settings <compute_config>
    Directory Setup <dir_config>
    Preprocessing Setup <pp_config>
-   Segmentation <seg_config>
    Nuisance Correction and Temporal Filtering <nuisance_config>
    Seed-based Correlation Analysis and Timeseries Extraction <sca_tse_config>
-   Individual-Level Analyses <ind_config>
-   Group-Level Analyses <grp_config>
    Group Statistics <stat_config>

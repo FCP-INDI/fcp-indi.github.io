@@ -1,18 +1,30 @@
 Anatomical Preprocessing
-========================
+------------------------
 
 Registration
-------------
-By default, C-PAC will register brains to the MNI152 template. Users wishing to register to a different template can specify alternative template files in the config file.
+^^^^^^^^^^^^
+In order to compare brain activations between subjects, individual functional and anatomical images must first be transformed to match a common template. The most commonly used template (`MNI152 <http://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009>`_) is maintained by the Montreal Neurological Institute, and is created by combining data from the brains of many different individuals to create an "average" brain.  The image below shows how an individual brain is warped to match the shape of the template.
+
+.. figure:: /images/registration.png
+
+Individual anatomical images are first transformed to match the common template. Then, the functional data for each subject is registered to their own transformed anatomical image. Finally, functional derivative files are transformed to the common template.
+
+By default, C-PAC will register subject brains to the MNI152 template included with FSL. Additionally, C-PAC requires the presence of an additional symmetric brain template. These files must be present for C-PAC to run, and can be downloaded as part of the :file:`CPAC_templates.tar.gz` package linked below.
+
+Users wishing to register their data to a different template (such as a group specific template) can specifiy alternative template files in the :doc:`Resource Directory Setup section of the configuration file <dir_config>`.
 
 Segmentation
-------------
+^^^^^^^^^^^^
+C-PAC uses `FSL/FAST <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FAST>`_ to automatically segment brain images into white matter, gray matter, and CSF. This is done using probability maps that contain information about the likelihood that a given voxel will be of a particular tissue type. Users specify a probability threshold such that voxels meeting a minimum probability of being a particular tissue will be classified as such. This results in masks containing voxels of only a single tissue type.
 
-C-PAC uses FSL/FAST to automatically segment the brain into white matter, gray matter, and CSF. This is done by integrating information from the current brain and prior information about the probability that a given voxel is of a particular tissue type. These priors are included by FSL, but must be binarized prior to use by C-PAC.
+.. figure:: /images/segmentation.png
+
+The tissue probability maps (referred to as piors) used during segmentation are based on information from a large number of brains, and are distributed with FSL. However, prior to use by C-PAC, these files must be binarized, such that for each voxel has it's probability for each tissue type set to either 0% or 100%. This can be done using the script below. 
 
 The following bash script will binarize existing priors::
 
-    # setup what type of priors you want to generate. the example is for gray matter. gray can be substitute to white, csf or brain for priors of white matter, csf and how brian mask.
+    # Define what kind of priors to generate
+    # the example is for gray matter. gray can be substitute to white, csf or brain for priors of white matter, csf and how brian mask.
             tissue=gray
             threshold=0.5
     # copy input from FSL folder
@@ -21,3 +33,53 @@ The following bash script will binarize existing priors::
         fslmaths avg152T1_${tissue}.nii.gz -thr $threshold -bin avg152T1_${tissue}_2mm_bin
     # resample the data to the voxel size you want. here I resampled it to 3.0mm isotopic voxel size.
         3dresample -dxyz 3.0 3.0 3.0 -prefix avg152T1_${tissue}_bin_3mm.nii.gz -inset avg152T1_${tissue}_2mm_bin.nii.gz
+
+Alternately, you can download C-PAC ready versions as part of the :file:`CPAC_templates.tar.gz` package linked below.
+
+Configuring C-PAC
+^^^^^^^^^^^^^^^^^
+The following settings in :file:`config.py` are used to configure Registration::
+    
+    # Set the resolution (in mm) to which images are transformed
+    # Transformation occurs during registration and is requried for many measures
+    standardResolution = '3mm'
+
+The following settings in :file:`config.py` are used to configure Segmentation::
+    
+    # Run automatic tissue segmentation
+    runSegmentationPreprocessing = [1]
+
+    # C-PAC uses FSL to automatically distinguish tissue types based on priors.
+    # Each prior represents the probability that a given voxel will be 
+    # of a particular tissue type (white matter, gray matter, or CSF).
+
+    # Please specify the location and name of your prior files.
+    # Priors distributed with FSL must be binarized to be used by C-PAC
+    # For information about how to do this, please see the User Guide
+    prior_path = '/path/to/tissuepriors/%s' % standardResolution
+
+    # These values will be set automatically based on prior_path
+    PRIOR_CSF = os.path.join(prior_path, 'avg152T1_csf_bin.nii.gz')
+    PRIOR_GRAY = os.path.join(prior_path, 'avg152T1_gray_bin.nii.gz')
+    PRIOR_WHITE = os.path.join(prior_path, 'avg152T1_white_bin.nii.gz')
+
+    # Set thresholds for use during automatic tissue segmentation.
+    # Values correspond to probability thresholds for a given tissue type.
+    # For example, setting a value of 0.8 will result in areas with a 80 percent 
+    # probability of being a particular tissue type to be classified as such
+
+    cerebralSpinalFluidThreshold = [0.4]
+
+    whiteMatterThreshold = [0.66]
+
+    grayMatterThreshold = [0.2]
+
+Software Workflow and Data Outputs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Preprocessed anatomical data from the Anatomical Preprocessing, Registration, and Segmentation workflows can be found in :file:`../scan/anat/` directory for each subject. The following diagram shows processing steps and standard output files for these workflows.
+
+.. figure:: /images/anat_prepro_schematic.png
+
+Downloads
+^^^^^^^^^
+`Click here <http://www.nitrc.org/frs/downloadlink.php/4923>`_ to download :file:`CPAC_templates.tar.gz` 

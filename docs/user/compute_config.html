@@ -55,55 +55,67 @@
             
   <div class="section" id="computer-settings">
 <h1>Computer Settings<a class="headerlink" href="#computer-settings" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="runongrid">
-<h2>runOnGrid<a class="headerlink" href="#runongrid" title="Permalink to this headline">¶</a></h2>
-<p>Specify whether C-PAC will be running on a local machine or a compute cluster (grid). Options are True and False:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># True = Run on compute cluster</span>
-<span class="c"># False = Run on local machine</span>
-<span class="n">runOnGrid</span> <span class="o">=</span> <span class="bp">False</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="numsubjectsatonce">
-<h2>numSubjectsAtOnce<a class="headerlink" href="#numsubjectsatonce" title="Permalink to this headline">¶</a></h2>
-<p>When running on a local machine that has multiple processing cores, specify how many subjects should be run simultaneously:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Number of subjects to run simultaneously</span>
-<span class="c"># This number depends on computing resources</span>
-<span class="c"># Only applies when running on a local machine with multiple cores</span>
-<span class="n">numSubjectsAtOnce</span> <span class="o">=</span> <span class="mi">5</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="numcorespersubject">
-<h2>numCoresPerSubject<a class="headerlink" href="#numcorespersubject" title="Permalink to this headline">¶</a></h2>
-<p>When running C-PAC on a grid or local machine with multiple cores, the number of dedicated cores (on a local machine) or slots on a node (on a grid) for each subject:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Number of cores (local) or slots on a node (cluster) per subject</span>
-<span class="c"># Slots are cores on a cluster node</span>
-<span class="c"># This number depends on computing resources</span>
-<span class="c"># Only applies when local machine has multiple cores or runOnGrid = True</span>
-<span class="n">numCoresPerSubject</span> <span class="o">=</span> <span class="mi">2</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="sge-settings">
-<h2>SGE Settings<a class="headerlink" href="#sge-settings" title="Permalink to this headline">¶</a></h2>
-<p>When running on a cluster with SGE, the user must properly configure their SGE environment. Instructions for doing so are available in the configuration file.</p>
-<div class="section" id="queue">
-<h3>queue<a class="headerlink" href="#queue" title="Permalink to this headline">¶</a></h3>
-<p>Specify which queue C-PAC jobs should be submitted to:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Specify the queue to use on an SGE system</span>
-<span class="c"># Only applies when resourceManager = &#39;SGE&#39;</span>
-<span class="n">queue</span> <span class="o">=</span> <span class="s">&#39;all.q&#39;</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="parallelenvironment">
-<h3>parallelEnvironment<a class="headerlink" href="#parallelenvironment" title="Permalink to this headline">¶</a></h3>
-<p>Specify which SGI environment to use:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">parallelEnvironment</span> <span class="o">=</span> <span class="s">&#39;mpi&#39;</span>
-</pre></div>
-</div>
-</div>
+<dl class="docutils">
+<dt>::</dt>
+<dd><p class="first"># True = Run on compute cluster
+# False = Run on non-cluster machine
+runOnGrid = False</p>
+<p># Number of subjects to run simultaneously
+# This number depends on computing resources
+# Only applies when running on a non-cluster machine with multiple cores
+numSubjectsAtOnce = 2</p>
+<p class="last"># Number of cores (non-cluster) or slots on a node (cluster) per subject
+# Slots are cores on a cluster node
+# This number depends on computing resources
+# Only applies when non-cluster machine has multiple cores or runOnGrid = True
+numCoresPerSubject = 2</p>
+</dd>
+</dl>
+<div class="section" id="grid-settings">
+<h2>Grid Settings<a class="headerlink" href="#grid-settings" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>::</dt>
+<dd><p class="first"># Options are &#8216;SGE&#8217; (Sun Grid Engine) or &#8216;PBS&#8217; (Portable Batch System)
+# Only applies when runOnGrid = True
+resourceManager = &#8216;SGE&#8217;</p>
+<p># Notes on setting up SGE for C-PAC
+#
+# SGE users must set up their parallel environment before running C-PAC.
+# A pipeline for each subject that needs preprocessing should be spawned
+# on single node of the cluster. To avoid I/O overhead, the pipeline should
+# only use the resources (cores) from that node. Users can enable this feature
+# on Sun Grid Engine by modifying their parallel environment.
+#
+# To create a new environment based on an existing one, follow these steps:
+# 1. List existing parallel environments
+#    $ qconf -spl
+# 2. View the settings for an existing environment
+#    $ qconf -sp environment_name
+#
+#    Example output:
+#    pe_name            mpi
+#    slots              999
+#    user_lists         NONE
+#    xuser_lists        NONE
+#    start_proc_args    NONE
+#    stop_proc_args     NONE
+#    allocation_rule    $fill_up
+#    control_slaves     TRUE
+#    job_is_first_task  FALSE
+#    urgency_slots      min
+#    accounting_summary TRUE
+#
+# 3. Create a new environment based on an existing one
+#    $ qconf -sp environment_name &gt; environment_name_cpac
+# 4. Edit the new environment and set allocation_rule to $pe_slots
+# 5. Add the new environment file to SGE
+#    $ qconf -Ap environment_name_cpac</p>
+<p># Specify your SGE parallel environment
+parallelEnvironment = &#8216;cpac&#8217;</p>
+<p class="last"># Queue to use when running on an SGE cluster
+queue = &#8216;all.q&#8217;</p>
+</dd>
+</dl>
 </div>
 </div>
 
@@ -122,6 +134,7 @@
 <li class="toctree-l1"><a class="reference internal" href="use.html">Using C-PAC</a></li>
 <li class="toctree-l1"><a class="reference internal" href="preproc.html">Data Preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="derivs.html">Outputs and Measures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="outputs.html">Data Output</a></li>
 <li class="toctree-l1"><a class="reference internal" href="help.html">Troubleshooting and Help</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnotes.html">Release Notes</a></li>
 </ul>

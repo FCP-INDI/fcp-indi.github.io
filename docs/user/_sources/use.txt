@@ -5,9 +5,11 @@ Ready Your Data
 ---------------
 Before running C-PAC, you must generate a list of subjects and data to process.This is done by defining file structure templates in :file:`data_config.py` and running the :file:`extract_data` script. The latest version of :file:`data_config.py` can be `downloaded here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/data_config.py>`_.
 
+It should be noted that C-PAC currently requires subject directories to be within a site level directory, even if your project does not contain data from multiple (data acquisition) sites. Users encountering errors when attempting to run :file:`extract_data.py` may want to re-organize their data into a structure similar to that in the example presented below.
+
 Define File Structure Templates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-File structure templates are simply the full path to your data files, with the names of the site and subject directories replaced by wildcard placeholders :file:`%s`. For example, if the full paths to the data for :file:`subject_01` are:: 
+File structure templates are simply the full path to your data files, with the names of the site and subject directories replaced by wildcard placeholders (:file:`%s`). For example, if the full paths to the data for :file:`subject_01` are:: 
 
   /home/data/site_1/subject_1/anat/mprage.nii.gz
   /home/data/site_1/subject_1/rest/rest.nii.gz
@@ -17,9 +19,7 @@ Then the file structure templates would would be::
   /home/data/%s/%s/anat/mprage.nii.gz
   /home/data/%s/%s/rest/rest.nii.gz
 
-In cases where additional file and folder names contain subject specific information, asterisks can be used. For example, :file:`../sub01_anat/sub01_mprage.nii.gz` would be come :file:`../*_anat/*_mprage.nii.gz`.
-
-It should be noted that C-PAC currently requires subject directories to be within a site level directory, even if your project does not contain data from multiple (data acquisition) sites. Users encountering errors when attempting to run :file:`extract_data.py` may want to re-organize their data into a structure similar to that presented above.
+In cases where additional file and folder names contain subject specific information, asterisks can be used. For example, :file:`../sub01_anat/sub01_mprage.nii.gz` would become :file:`../*_anat/*_mprage.nii.gz`.
 
 Configure Slice Timing Correction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -46,28 +46,40 @@ If you are running Slice Timing Correction and subjects within a site have diffe
   import CPAC
   CPAC.utils.extract_data_multiscan_params.run ('/path/to/data_config.py')
 
-This will ouput three subject list files needed to run C-PAC:
+This will ouput three files needed to run C-PAC:
 
-* :file:`CPAC_subjectlist.py`
-* :file:`template_phenotypic.csv`
-* :file:`subject_list_group_analysis.txt`
+* :file:`CPAC_subject_list.py` - Subject list used when running preprocessing and individual-level analyses. Contains subject IDs and paths to their associated data files.
+* :file:`template_phenotypic.csv` - Used by the :doc:`FSL Model Script </fsl_ga>`.
+* :file:`subject_list_group_analysis.txt` - Subject list used when running group-level analyses.
 
 Configure C-PAC
 ---------------
 The :file:`config.py` file is where you will specify which processing and analyses to run, and with which settings. This file is located in the :file:`/configs` directory of your installation, or can be `downloaded here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/config.py>`_. 
 
-For detailed instructions on how to configure a particular C-PAC function, see the appropriate page under :doc:`Data Preprocessing </preproc>` or :doc:`Outputs and Measures </derivs>`. When you are finished, save your changes.
-
-**NOTE:** If this is your first time using C-PAC, we strongly recommend that you go through the entire :file:`config.py` file at least once. The default settings will not work for everyone, and it's a good idea to consider the available options before running.
-
-The following pages also contain configuration instructions:
+For detailed instructions on how to configure a particular C-PAC function, see the following pages: 
 
 * :doc:`Computer Settings </compute_config>`
 * :doc:`Directory Setup </dir_config>`
-* :doc:`Preprocessing Setup </pp_config>`
-* :doc:`Nuisance Correction and Temporal Filtering </nuisance_config>`
-* :doc:`Seed-based Correlation Analysis and Timeseries Extraction </sca_tse_config>`
+* :doc:`Anatomical Preprocessing </anat>`
+* Functional Preprocessing
+
+  * :doc:`Slice Timing Correction </slice>`
+  * :doc:`Motion Correction and Scrubbing </motion>`
+  * :doc:`Temporal Filtering </temporal>`
+  * :doc:`Nuisance Corrections </nuisance>`
+
+* :doc:`Seed-based Correlation </sca>`
+* :doc:`Time Series Extraction </tse>`
+* :doc:`Regional Homogeneity </reho>`
+* :doc:`Voxel-mirrored Homotopic Connectivity </vmhc>`
+* :doc:`ALFF and fALFF </alff>`
+* :doc:`Network Centrality </centrality>`
+* :doc:`Bootstrap Analysis of Stable Clusters </basc>`
+* :doc:`Connectome-wide Association Studies </cwas>`
 * :doc:`Group Statistics </stat_config>`
+* :doc:`Smoothing </smoothing>
+
+**NOTE:** If this is your first time using C-PAC, we strongly recommend that you go through the entire :file:`config.py` file at least once. The default settings will not work for everyone, and it's a good idea to consider the available options before running.
 
 Running C-PAC
 -------------

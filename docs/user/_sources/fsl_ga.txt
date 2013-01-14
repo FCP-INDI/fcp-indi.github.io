@@ -16,13 +16,46 @@ If you would like to include motion parameters calcualted by C-PAC, download the
 
     python extract_parameters.py /path/to/output/directory
 
-Where :file:`/path/to/output/directory` is the path to :file:`sinkDir` as specified in :file:`config.py`. This will output a motion parameters :file:`.csv` file in the top level of each pipeline directory.
+Where :file:`/path/to/output/directory` is the path to :file:`sinkDir` as specified in :file:`config.py`. This will output a motion parameters :file:`.csv` file in the top level of each pipeline directory. You can then copy the columns from this file into your :file:`template_phenotypic.csv` file.
 
 When you are finished, save your changes. Future versions of C-PAC will automate this process.
 
 Configure FSL Model Script
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Open :file:`config_fsl.py`, which can be `downloaded here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/config_fsl.py>`_. Enter the regressors you would like to include, the path to :file:`template_phenotypic.csv`, and a name for the .csv model file to be output. Save your changes.
+Open :file:`config_fsl.py`, which can be `downloaded here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/config_fsl.py>`_. 
+
+Specify which regressors you would like included in your model::
+
+    # Specify which phenotypic variables and regressors to include in model
+    # These names should match column names in template_phenotypic.csv
+    columnsInModel = ['AgeAtScan', 'MeanFD', 'site', 'DxGroup']
+
+Define whether each regressor is categorical or directional::
+
+    # Set a type for each of the variables/regressors entered above.
+    # 1 = categorical, 0 = directional
+    categoricalVsDirectional = [0, 0, 1, 1]
+
+Specify which regressors should be de-meaned::
+
+    # Specify whether to de-mean each column.
+    deMean = [1, 1, 0, 0]
+
+Set the location of your modified :file:`template_phenotypic.csv` file::
+
+    # Specify the full path to template_phenotypic.csv
+    phenotypicFile = '/path/to/template_phenotypic.csv'
+
+Set the location of the :file:`subject_list_group_analysis.txt` file generated when you ran :file:`extract_data.py`::
+
+    # Specify the full path to subject_list_group_analysis.txt
+    subjectListFile = '/path/to/subject_list_group_analysis.txt'
+
+Specify a name for a model file :file:`.csv` to be output::
+
+    outputModelFile = '/home/ssikka/nki_nyu_pipeline/model_fsl.csv'
+
+Ignore the other options for now, and save your changes.
 
 Run FSL Model Script
 ^^^^^^^^^^^^^^^^^^^^
@@ -33,9 +66,17 @@ Open iPython and type::
 
 This will output a .csv model file with the name you specified.
 
-Reconfigure FSL Script
-^^^^^^^^^^^^^^^^^^^^^^
-Based on the columns you have included in your model, create a contrast file using FSL. Specify the location of this file in :file:`config_fsl.py`, as well as a name for the model.
+Define Contrasts and Reconfigure FSL Script
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Open the model file output by the previous step, and create your desired contrasts. Save this file, and set the path to it::
+
+    # Full path to a contrast file based on the columns listed above.
+    contrastFile = '/home/ssikka/nki_nyu_pipeline/contrasts.csv'
+
+Finally, define what you would like to name your model::
+
+    # Specify a name for the model.
+    modelName = 'my_model'
 
 Run FSL Script Again
 ^^^^^^^^^^^^^^^^^^^^

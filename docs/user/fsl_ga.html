@@ -54,12 +54,44 @@
 <p>If you would like to include motion parameters calcualted by C-PAC, download the <tt class="file docutils literal"><span class="pre">extract_parameters.py</span></tt> script. Navigate to your main C-PAC output directory and run it by typing:</p>
 <div class="highlight-python"><pre>python extract_parameters.py /path/to/output/directory</pre>
 </div>
-<p>Where <tt class="file docutils literal"><span class="pre">/path/to/output/directory</span></tt> is the path to <tt class="file docutils literal"><span class="pre">sinkDir</span></tt> as specified in <tt class="file docutils literal"><span class="pre">config.py</span></tt>. This will output a motion parameters <tt class="file docutils literal"><span class="pre">.csv</span></tt> file in the top level of each pipeline directory.</p>
+<p>Where <tt class="file docutils literal"><span class="pre">/path/to/output/directory</span></tt> is the path to <tt class="file docutils literal"><span class="pre">sinkDir</span></tt> as specified in <tt class="file docutils literal"><span class="pre">config.py</span></tt>. This will output a motion parameters <tt class="file docutils literal"><span class="pre">.csv</span></tt> file in the top level of each pipeline directory. You can then copy the columns from this file into your <tt class="file docutils literal"><span class="pre">template_phenotypic.csv</span></tt> file.</p>
 <p>When you are finished, save your changes. Future versions of C-PAC will automate this process.</p>
 </div>
 <div class="section" id="configure-fsl-model-script">
 <h2>Configure FSL Model Script<a class="headerlink" href="#configure-fsl-model-script" title="Permalink to this headline">¶</a></h2>
-<p>Open <tt class="file docutils literal"><span class="pre">config_fsl.py</span></tt>, which can be <a class="reference external" href="https://raw.github.com/FCP-INDI/C-PAC/master/configs/config_fsl.py">downloaded here</a>. Enter the regressors you would like to include, the path to <tt class="file docutils literal"><span class="pre">template_phenotypic.csv</span></tt>, and a name for the .csv model file to be output. Save your changes.</p>
+<p>Open <tt class="file docutils literal"><span class="pre">config_fsl.py</span></tt>, which can be <a class="reference external" href="https://raw.github.com/FCP-INDI/C-PAC/master/configs/config_fsl.py">downloaded here</a>.</p>
+<p>Specify which regressors you would like included in your model:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Specify which phenotypic variables and regressors to include in model</span>
+<span class="c"># These names should match column names in template_phenotypic.csv</span>
+<span class="n">columnsInModel</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;AgeAtScan&#39;</span><span class="p">,</span> <span class="s">&#39;MeanFD&#39;</span><span class="p">,</span> <span class="s">&#39;site&#39;</span><span class="p">,</span> <span class="s">&#39;DxGroup&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Define whether each regressor is categorical or directional:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Set a type for each of the variables/regressors entered above.</span>
+<span class="c"># 1 = categorical, 0 = directional</span>
+<span class="n">categoricalVsDirectional</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Specify which regressors should be de-meaned:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Specify whether to de-mean each column.</span>
+<span class="n">deMean</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Set the location of your modified <tt class="file docutils literal"><span class="pre">template_phenotypic.csv</span></tt> file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Specify the full path to template_phenotypic.csv</span>
+<span class="n">phenotypicFile</span> <span class="o">=</span> <span class="s">&#39;/path/to/template_phenotypic.csv&#39;</span>
+</pre></div>
+</div>
+<p>Set the location of the <tt class="file docutils literal"><span class="pre">subject_list_group_analysis.txt</span></tt> file generated when you ran <tt class="file docutils literal"><span class="pre">extract_data.py</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Specify the full path to subject_list_group_analysis.txt</span>
+<span class="n">subjectListFile</span> <span class="o">=</span> <span class="s">&#39;/path/to/subject_list_group_analysis.txt&#39;</span>
+</pre></div>
+</div>
+<p>Specify a name for a model file <tt class="file docutils literal"><span class="pre">.csv</span></tt> to be output:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">outputModelFile</span> <span class="o">=</span> <span class="s">&#39;/home/ssikka/nki_nyu_pipeline/model_fsl.csv&#39;</span>
+</pre></div>
+</div>
+<p>Ignore the other options for now, and save your changes.</p>
 </div>
 <div class="section" id="run-fsl-model-script">
 <h2>Run FSL Model Script<a class="headerlink" href="#run-fsl-model-script" title="Permalink to this headline">¶</a></h2>
@@ -70,9 +102,18 @@
 </div>
 <p>This will output a .csv model file with the name you specified.</p>
 </div>
-<div class="section" id="reconfigure-fsl-script">
-<h2>Reconfigure FSL Script<a class="headerlink" href="#reconfigure-fsl-script" title="Permalink to this headline">¶</a></h2>
-<p>Based on the columns you have included in your model, create a contrast file using FSL. Specify the location of this file in <tt class="file docutils literal"><span class="pre">config_fsl.py</span></tt>, as well as a name for the model.</p>
+<div class="section" id="define-contrasts-and-reconfigure-fsl-script">
+<h2>Define Contrasts and Reconfigure FSL Script<a class="headerlink" href="#define-contrasts-and-reconfigure-fsl-script" title="Permalink to this headline">¶</a></h2>
+<p>Open the model file output by the previous step, and create your desired contrasts. Save this file, and set the path to it:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Full path to a contrast file based on the columns listed above.</span>
+<span class="n">contrastFile</span> <span class="o">=</span> <span class="s">&#39;/home/ssikka/nki_nyu_pipeline/contrasts.csv&#39;</span>
+</pre></div>
+</div>
+<p>Finally, define what you would like to name your model:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Specify a name for the model.</span>
+<span class="n">modelName</span> <span class="o">=</span> <span class="s">&#39;my_model&#39;</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="run-fsl-script-again">
 <h2>Run FSL Script Again<a class="headerlink" href="#run-fsl-script-again" title="Permalink to this headline">¶</a></h2>

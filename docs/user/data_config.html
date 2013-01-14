@@ -1,0 +1,174 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Ready Your Data &mdash; C-PAC 0.1 Alpha documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1 Alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="C-PAC 0.1 Alpha documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="index.html">C-PAC 0.1 Alpha documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="ready-your-data">
+<h1>Ready Your Data<a class="headerlink" href="#ready-your-data" title="Permalink to this headline">¶</a></h1>
+<p>Before running C-PAC, you must generate a list of subjects and data files to process. This is done by defining a file structure template in the <tt class="file docutils literal"><span class="pre">data_config.py</span></tt> file and running the <tt class="file docutils literal"><span class="pre">extract_data.py</span></tt> script. <a class="reference internal" href="slice.html"><em>Slice Timing Correction</em></a> is also configured during this step.</p>
+<div class="section" id="define-file-structure-templates">
+<h2>Define File Structure Templates<a class="headerlink" href="#define-file-structure-templates" title="Permalink to this headline">¶</a></h2>
+<p>C-PAC has been designed to process large, complex data sets, and supports processing of multiple scans per subject, multiple scan sessions, and multiple data acquisition sites with differing scan acquisition parameters. Because the file directory structures resulting from such data sets can be compex, it is necessary to manually define the location of the image files to be processed for each subject.</p>
+<p>To begin, open <tt class="file docutils literal"><span class="pre">data_config.py</span></tt> in a text editor. This file can be found in the <tt class="file docutils literal"><span class="pre">/configs</span></tt> directory of your C-PAC installation, or can be <a class="reference external" href="https://raw.github.com/FCP-INDI/C-PAC/master/configs/data_config.py">downloaded here</a>.</p>
+<p><strong>Note</strong>: We provide versions of <tt class="file docutils literal"><span class="pre">data_config.py</span></tt> with preconfigured file structure templates for key INDI data releases (<a class="reference external" href="http://fcon_1000.projects.nitrc.org/indi/abide/">ABIDE</a>, <a class="reference external" href="http://fcon_1000.projects.nitrc.org/indi/adhd200/">ADHD-200</a>, <a class="reference external" href="http://fcon_1000.projects.nitrc.org/fcpClassic/FcpTable.html">1000 Functional Connectomes</a>, and <a class="reference external" href="http://fcon_1000.projects.nitrc.org/indi/enhanced/">NKI-Rockland Sample</a>). Please see the <a class="reference internal" href="files.html"><em>Preconfigured Files</em></a> page for more information.</p>
+<p>File structure templates are defined by adding wildcard characters (<tt class="file docutils literal"><span class="pre">%s</span></tt>) to the file path of each type of image file to be processed (anatomical and functional). For each file path, you will need to add two of these wildcard characters, one in the place of the acquistion site directory, and one in the place of the subject directory. For example, if the full paths to the image files for <tt class="file docutils literal"><span class="pre">subject_01</span></tt> were:</p>
+<div class="highlight-python"><pre>/home/data/site_1/subject_1/anat/mprage.nii.gz
+/home/data/site_1/subject_1/func/rest.nii.gz</pre>
+</div>
+<p>Then the file structure templates would would be:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">anatomicalTemplate</span> <span class="o">=</span> <span class="s">&#39;/home/data/</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">/anat/mprage.nii.gz&#39;</span>
+<span class="n">functionalTemplate</span> <span class="o">=</span> <span class="s">&#39;/home/data/</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">/func/rest.nii.gz&#39;</span>
+</pre></div>
+</div>
+<p>It should be noted that C-PAC currently requires subject directories to be within a site level directory. If your data set does not contain multiple acquisition sites, we recommend creating a <tt class="file docutils literal"><span class="pre">site_1</span></tt> directory in any case. This peculiarity will be fixed in future versions of C-PAC.</p>
+<p>In cases where file paths differ in more than just the site and subject directories, asterisks can be used. This is useful for data sets containing multiple scans per subject, multiple scan sessions, or subject-specific information in file or folder names. You may use as many asterisks as necessary to to define your file structure templates. For example, if the paths to functional image files for a subject were:</p>
+<div class="highlight-python"><pre>/home/data/site_1/subject_1/s01_func/session_1/rest_1.nii.gz
+/home/data/site_1/subject_1/s01_func/session_1/rest_2.nii.gz
+/home/data/site_1/subject_1/s01_func/session_2/rest_1.nii.gz
+/home/data/site_1/subject_1/s01_func/session_2/rest_2.nii.gz</pre>
+</div>
+<p>The file structure template would be:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">functionalTemplate</span> <span class="o">=</span> <span class="s">&#39;/home/data/</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">/*_func/session_*/rest_*.nii.gz&#39;</span>
+</pre></div>
+</div>
+<div class="section" id="example-file-structure-templates">
+<h3>Example File Structure Templates<a class="headerlink" href="#example-file-structure-templates" title="Permalink to this headline">¶</a></h3>
+<p>The image below illustrates the file structure used by the <a class="reference external" href="http://fcon_1000.projects.nitrc.org/fcpClassic/FcpTable.html">1000 Functional Connectomes</a> data release and the resulting file structure templates.</p>
+<div class="figure">
+<img alt="_images/fcon_structure.png" src="_images/fcon_structure.png" />
+</div>
+<p>Another example is the file structure used by the <a class="reference external" href="http://fcon_1000.projects.nitrc.org/indi/abide/">ABIDE</a> and <a class="reference external" href="http://fcon_1000.projects.nitrc.org/indi/adhd200/">ADHD-200</a> releases.</p>
+<div class="figure">
+<img alt="_images/abide_adhd_structure.png" src="_images/abide_adhd_structure.png" />
+</div>
+<p>Users experiencing difficulties defining file structure templates may want to re-organize their data to match one of the <a class="reference internal" href="files.html"><em>Preconfigured Files</em></a> we provide. If you manually define a file structure template and encounter an error when running <tt class="file docutils literal"><span class="pre">extract_data.py</span></tt>, please <a class="reference internal" href="help.html"><em>contact us</em></a> and we will be happy to help.</p>
+</div>
+</div>
+<div class="section" id="selectively-include-or-exclude-subjects">
+<h2>Selectively Include or Exclude Subjects<a class="headerlink" href="#selectively-include-or-exclude-subjects" title="Permalink to this headline">¶</a></h2>
+<p>By default, C-PAC will process data for all subjects matching the file templates defined above. In many cases however, a user may want to run only a subset of the subjects within a particular data set. In others, a user may want to exclude particular subjects from analysis. This can be done by specifying a list of subjects through the <tt class="file docutils literal"><span class="pre">subjectList</span></tt> or <tt class="file docutils literal"><span class="pre">exclusionSubjectList</span></tt> options. Lists can be specified either as a text file or directly in <tt class="file docutils literal"><span class="pre">data_config.py</span></tt>. Text files should contain one subject ID per line, with each subject ID matching the name of a subject folder. The same steps can used with the <tt class="file docutils literal"><span class="pre">siteList</span></tt> option to selectively process data from specific acquisition sites.</p>
+</div>
+<div class="section" id="set-up-slice-timing-correction">
+<h2>Set Up Slice Timing Correction<a class="headerlink" href="#set-up-slice-timing-correction" title="Permalink to this headline">¶</a></h2>
+<p>If you wish to run <a class="reference internal" href="slice.html"><em>Slice Timing Correction</em></a>, you must specify the path to a spreadsheet file containing scan acquisition parameters and slice timing information. Instructions for creating this file can be <a class="reference internal" href="slice.html"><em>found here</em></a>, and we provide preconfigured versions for INDI data releases on the <a class="reference internal" href="files.html"><em>Preconfigured Files</em></a> page. If you do not wish to run Slice Timing Correction, set <tt class="file docutils literal"><span class="pre">scanParametersCSV</span> <span class="pre">=</span> <span class="pre">None</span></tt>.</p>
+</div>
+<div class="section" id="generate-subject-lists">
+<h2>Generate Subject Lists<a class="headerlink" href="#generate-subject-lists" title="Permalink to this headline">¶</a></h2>
+<p>When you are done setting up <tt class="file docutils literal"><span class="pre">data_config.py</span></tt>, save your changes. If you are using a <a class="reference internal" href="files.html"><em>preconfigured file</em></a>, make sure that the file templates have been modified to match the specific location of files on your system.</p>
+<p>In the terminal, navigate to the directory where you would like to store subject lists for use by C-PAC. Open iPython by typing <tt class="file docutils literal"><span class="pre">ipython</span></tt>. From the iPython prompt, run one of the following commands.</p>
+<p>If you are not running Slice Timing Correction, or all subjects within a site have the same acquisition order:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">CPAC</span>
+<span class="n">CPAC</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">extract_data</span><span class="o">.</span><span class="n">run</span> <span class="p">(</span><span class="s">&#39;/path/to/data_config.py&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you are running Slice Timing Correction and subjects within a site have differing acquisition orders:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">CPAC</span>
+<span class="n">CPAC</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">extract_data_multiscan_params</span><span class="o">.</span><span class="n">run</span> <span class="p">(</span><span class="s">&#39;/path/to/data_config.py&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will ouput three files needed to run C-PAC:</p>
+<ul class="simple">
+<li><tt class="file docutils literal"><span class="pre">CPAC_subject_list.py</span></tt> - Subject list used when running preprocessing and individual-level analyses. Contains subject IDs and paths to their associated data files.</li>
+<li><tt class="file docutils literal"><span class="pre">template_phenotypic.csv</span></tt> - Used by the <a class="reference internal" href="fsl_ga.html"><em>FSL Model Script</em></a>.</li>
+<li><tt class="file docutils literal"><span class="pre">subject_list_group_analysis.txt</span></tt> - Subject list used when running group-level analyses.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/cpac_logo.jpg" alt="Logo"/>
+            </a></p>
+<h3><a href="index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="use.html">Using C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preproc.html">Data Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="derivs.html">Outputs and Measures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="outputs.html">Data Output</a></li>
+<li class="toctree-l1"><a class="reference internal" href="help.html">Troubleshooting and Help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnotes.html">Release Notes</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+          <div id="indi_sidebar">
+          An open neuroscience project brought to you by: <br/><br/>
+
+      <a href="http://fcon_1000.projects.nitrc.org/"><img src="_static/indi_logo.jpg"/></a><br/><br/>
+    </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="index.html">C-PAC 0.1 Alpha documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, C-PAC Team.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

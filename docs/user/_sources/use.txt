@@ -1,49 +1,20 @@
 Using C-PAC
 ===========
+Overview
+--------
+This page will guide you through the process of:
+
+* Readying your data for use by C-PAC by configuring :file:`data_config.py` and running the :file:`extract_data` script. This includes generating subject lists and defining which data will be run.
+* Configuring :doc:`Slice Timing Correction </slice>` by providing a :file:`scan_parameters.csv` file.
+* Specifying which preprocessing and analysis to run, and which what settings, as well as configuring C-PAC to run on your computer by editing :file:`config.py`.
+* Running individual-level analysis.
+* Running group-level analysis.
+
+.. figure:: /images/run_workflow.png
 
 Ready Your Data
 ---------------
-Before running C-PAC, you must generate a list of subjects and data to process.This is done by defining file structure templates in :file:`data_config.py` and running the :file:`extract_data` script. The latest version of :file:`data_config.py` can be `downloaded here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/data_config.py>`_.
-
-It should be noted that C-PAC currently requires subject directories to be within a site level directory, even if your project does not contain data from multiple (data acquisition) sites. Users encountering errors when attempting to run :file:`extract_data.py` may want to re-organize their data into a structure similar to that in the example presented below.
-
-.. figure:: /images/input_structure.png
-
-Define File Structure Templates
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-File structure templates are simply the full path to your data files, with the names of the site and subject directories replaced by wildcard placeholders (:file:`%s`). For example, if the full paths to the data for :file:`subject_01` are:: 
-
-  /home/data/site_1/subject_1/anat/mprage.nii.gz
-  /home/data/site_1/subject_1/rest/rest.nii.gz
-
-Then the file structure templates would would be::
-
-  /home/data/%s/%s/anat/mprage.nii.gz
-  /home/data/%s/%s/rest/rest.nii.gz
-
-In cases where additional file and folder names contain subject specific information, asterisks can be used. For example, :file:`../sub01_anat/sub01_mprage.nii.gz` would become :file:`../*_anat/*_mprage.nii.gz`.
-
-If you want to run :doc:`Slice Timing Correction </slice>`, include the path to your paramaters file under :file:`scanParametersCSV` (instructions :doc:`here </slice>`).
-
-Generate Subject Lists
-^^^^^^^^^^^^^^^^^^^^^^
-When you are done setting up :file:`data_config.py`, save your changes. In the terminal, navigate to the directory where you would like to store subject lists for use by C-PAC. Open iPython by typing :file:`ipython`. From the iPython prompt, run one of the following commands.
-
-If you are not running Slice Timing Correction, or all subjects within a site have the same acquisition order::
-
-  import CPAC
-  CPAC.utils.extract_data.run ('/path/to/data_config.py')
-
-If you are running Slice Timing Correction and subjects within a site have differing acquisition orders::
-
-  import CPAC
-  CPAC.utils.extract_data_multiscan_params.run ('/path/to/data_config.py')
-
-This will ouput three files needed to run C-PAC:
-
-* :file:`CPAC_subject_list.py` - Subject list used when running preprocessing and individual-level analyses. Contains subject IDs and paths to their associated data files.
-* :file:`template_phenotypic.csv` - Used by the :doc:`FSL Model Script </fsl_ga>`.
-* :file:`subject_list_group_analysis.txt` - Subject list used when running group-level analyses.
+Before running C-PAC, you must generate a list of subjects and data to process.This is done by defining file structure templates in :file:`data_config.py` and running the :file:`extract_data` script. For detailed instructions on how to do this, as well as how to configure :doc:`Slice Timing Correction </slice>`, please see the :doc:`Ready Your Data page</data_config>`.
 
 Configure C-PAC
 ---------------
@@ -52,16 +23,14 @@ The :file:`config.py` file is where you will specify which processing and analys
 For detailed instructions on how to configure a particular C-PAC function, see the following pages: 
 
 * :doc:`Computer Settings </compute_config>`
-* :doc:`Directory Setup </dir_config>`
+* :doc:`Resource Directory Setup </dir_config>`
 * :doc:`Anatomical Preprocessing </anat>`
-* Functional Preprocessing
-
-  * :doc:`Slice Timing Correction </slice>`
-  * :doc:`Temporal Filtering </temporal>`
-  * :doc:`Nuisance Corrections </nuisance_config>`
-
-* :doc:`Seed-based Correlation </sca>`
+* :doc:`Slice Timing Correction </slice>`
+* :doc:`Motion Correction </motion>`
+* :doc:`Nuisance Corrections </nuisance_config>`
+* :doc:`Temporal Filtering </temporal>`
 * :doc:`Time Series Extraction </tse>`
+* :doc:`Seed-based Correlation </sca>`
 * :doc:`Regional Homogeneity </reho>`
 * :doc:`Voxel-mirrored Homotopic Connectivity </vmhc>`
 * :doc:`ALFF and fALFF </alff>`
@@ -73,10 +42,8 @@ For detailed instructions on how to configure a particular C-PAC function, see t
 
 **NOTE:** If this is your first time using C-PAC, we strongly recommend that you go through the entire :file:`config.py` file at least once. The default settings will not work for everyone, and it's a good idea to consider the available options before running.
 
-Running C-PAC
--------------
-In the terminal, navigate to the crash directory you specified in :file:`config.py`. Because of a bug in Nipype, C-PAC will output crash logs from wherever it is run.
-
+Running Preprocessing and Individual-Level Analysis
+---------------------------------------------------
 Open iPython by typing :file:`ipython`. From the iPython prompt, run::
 
   import CPAC
@@ -90,9 +57,10 @@ For information on the files produced by C-PAC, see the :doc:`Outputs </outputs>
 
 Running BASC, CWAS, and Group Statistics
 ----------------------------------------
-In order to run group statistics, you must first run C-PAC to generate the desired measures for which you wish to calculate group differences.
 
-For BASC and CWAS, C-PAC must first be run to transform functional images to MNI space.
+* For BASC and CWAS, C-PAC must first be run to transform functional images to MNI space.
+* In order to run group statistics, you must first run C-PAC to generate the desired measures for which you wish to calculate group differences.
+
 
 Open iPython by typing :file:`ipython`. From the iPython prompt, run::
 
@@ -103,9 +71,7 @@ Open iPython by typing :file:`ipython`. From the iPython prompt, run::
 .. toctree::
    :hidden: 
 
+   Ready Your Data <data_config>
    Computer Settings <compute_config>
    Directory Setup <dir_config>
-   Preprocessing Setup <pp_config>
-   Nuisance Correction and Temporal Filtering <nuisance_config>
-   Seed-based Correlation Analysis and Timeseries Extraction <sca_tse_config>
-   Group Statistics <stat_config>
+   Data Ouptut <output>

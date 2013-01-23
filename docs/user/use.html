@@ -26,7 +26,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="C-PAC 0.1 Alpha documentation" href="index.html" />
-    <link rel="next" title="Computer Settings" href="compute_config.html" />
+    <link rel="next" title="Ready Your Data" href="data_config.html" />
     <link rel="prev" title="Installing C-PAC" href="install.html" /> 
   </head>
   <body>
@@ -37,7 +37,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="compute_config.html" title="Computer Settings"
+          <a href="data_config.html" title="Ready Your Data"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="install.html" title="Installing C-PAC"
@@ -53,46 +53,23 @@
             
   <div class="section" id="using-c-pac">
 <h1>Using C-PAC<a class="headerlink" href="#using-c-pac" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>This page will guide you through the process of:</p>
+<ul class="simple">
+<li>Readying your data for use by C-PAC by configuring <tt class="file docutils literal"><span class="pre">data_config.py</span></tt> and running the <tt class="file docutils literal"><span class="pre">extract_data</span></tt> script. This includes generating subject lists and defining which data will be run.</li>
+<li>Configuring <a class="reference internal" href="slice.html"><em>Slice Timing Correction</em></a> by providing a <tt class="file docutils literal"><span class="pre">scan_parameters.csv</span></tt> file.</li>
+<li>Specifying which preprocessing and analysis to run, and which what settings, as well as configuring C-PAC to run on your computer by editing <tt class="file docutils literal"><span class="pre">config.py</span></tt>.</li>
+<li>Running individual-level analysis.</li>
+<li>Running group-level analysis.</li>
+</ul>
+<div class="figure">
+<img alt="_images/run_workflow.png" src="_images/run_workflow.png" />
+</div>
+</div>
 <div class="section" id="ready-your-data">
 <h2>Ready Your Data<a class="headerlink" href="#ready-your-data" title="Permalink to this headline">¶</a></h2>
-<p>Before running C-PAC, you must generate a list of subjects and data to process.This is done by defining file structure templates in <tt class="file docutils literal"><span class="pre">data_config.py</span></tt> and running the <tt class="file docutils literal"><span class="pre">extract_data</span></tt> script. The latest version of <tt class="file docutils literal"><span class="pre">data_config.py</span></tt> can be <a class="reference external" href="https://raw.github.com/FCP-INDI/C-PAC/master/configs/data_config.py">downloaded here</a>.</p>
-<p>It should be noted that C-PAC currently requires subject directories to be within a site level directory, even if your project does not contain data from multiple (data acquisition) sites. Users encountering errors when attempting to run <tt class="file docutils literal"><span class="pre">extract_data.py</span></tt> may want to re-organize their data into a structure similar to that in the example presented below.</p>
-<div class="figure">
-<img alt="_images/input_structure.png" src="_images/input_structure.png" />
-</div>
-<div class="section" id="define-file-structure-templates">
-<h3>Define File Structure Templates<a class="headerlink" href="#define-file-structure-templates" title="Permalink to this headline">¶</a></h3>
-<p>File structure templates are simply the full path to your data files, with the names of the site and subject directories replaced by wildcard placeholders (<tt class="file docutils literal"><span class="pre">%s</span></tt>). For example, if the full paths to the data for <tt class="file docutils literal"><span class="pre">subject_01</span></tt> are:</p>
-<div class="highlight-python"><pre>/home/data/site_1/subject_1/anat/mprage.nii.gz
-/home/data/site_1/subject_1/rest/rest.nii.gz</pre>
-</div>
-<p>Then the file structure templates would would be:</p>
-<div class="highlight-python"><pre>/home/data/%s/%s/anat/mprage.nii.gz
-/home/data/%s/%s/rest/rest.nii.gz</pre>
-</div>
-<p>In cases where additional file and folder names contain subject specific information, asterisks can be used. For example, <tt class="file docutils literal"><span class="pre">../sub01_anat/sub01_mprage.nii.gz</span></tt> would become <tt class="file docutils literal"><span class="pre">../*_anat/*_mprage.nii.gz</span></tt>.</p>
-<p>If you want to run <a class="reference internal" href="slice.html"><em>Slice Timing Correction</em></a>, include the path to your paramaters file under <tt class="file docutils literal"><span class="pre">scanParametersCSV</span></tt> (instructions <a class="reference internal" href="slice.html"><em>here</em></a>).</p>
-</div>
-<div class="section" id="generate-subject-lists">
-<h3>Generate Subject Lists<a class="headerlink" href="#generate-subject-lists" title="Permalink to this headline">¶</a></h3>
-<p>When you are done setting up <tt class="file docutils literal"><span class="pre">data_config.py</span></tt>, save your changes. In the terminal, navigate to the directory where you would like to store subject lists for use by C-PAC. Open iPython by typing <tt class="file docutils literal"><span class="pre">ipython</span></tt>. From the iPython prompt, run one of the following commands.</p>
-<p>If you are not running Slice Timing Correction, or all subjects within a site have the same acquisition order:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">CPAC</span>
-<span class="n">CPAC</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">extract_data</span><span class="o">.</span><span class="n">run</span> <span class="p">(</span><span class="s">&#39;/path/to/data_config.py&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>If you are running Slice Timing Correction and subjects within a site have differing acquisition orders:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">CPAC</span>
-<span class="n">CPAC</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">extract_data_multiscan_params</span><span class="o">.</span><span class="n">run</span> <span class="p">(</span><span class="s">&#39;/path/to/data_config.py&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>This will ouput three files needed to run C-PAC:</p>
-<ul class="simple">
-<li><tt class="file docutils literal"><span class="pre">CPAC_subject_list.py</span></tt> - Subject list used when running preprocessing and individual-level analyses. Contains subject IDs and paths to their associated data files.</li>
-<li><tt class="file docutils literal"><span class="pre">template_phenotypic.csv</span></tt> - Used by the <a class="reference internal" href="fsl_ga.html"><em>FSL Model Script</em></a>.</li>
-<li><tt class="file docutils literal"><span class="pre">subject_list_group_analysis.txt</span></tt> - Subject list used when running group-level analyses.</li>
-</ul>
-</div>
+<p>Before running C-PAC, you must generate a list of subjects and data to process.This is done by defining file structure templates in <tt class="file docutils literal"><span class="pre">data_config.py</span></tt> and running the <tt class="file docutils literal"><span class="pre">extract_data</span></tt> script. For detailed instructions on how to do this, as well as how to configure <a class="reference internal" href="slice.html"><em>Slice Timing Correction</em></a>, please see the <a class="reference internal" href="data_config.html"><em>Ready Your Data page</em></a>.</p>
 </div>
 <div class="section" id="configure-c-pac">
 <h2>Configure C-PAC<a class="headerlink" href="#configure-c-pac" title="Permalink to this headline">¶</a></h2>
@@ -100,16 +77,14 @@
 <p>For detailed instructions on how to configure a particular C-PAC function, see the following pages:</p>
 <ul class="simple">
 <li><a class="reference internal" href="compute_config.html"><em>Computer Settings</em></a></li>
-<li><a class="reference internal" href="dir_config.html"><em>Directory Setup</em></a></li>
+<li><a class="reference internal" href="dir_config.html"><em>Resource Directory Setup</em></a></li>
 <li><a class="reference internal" href="anat.html"><em>Anatomical Preprocessing</em></a></li>
-<li>Functional Preprocessing<ul>
 <li><a class="reference internal" href="slice.html"><em>Slice Timing Correction</em></a></li>
-<li><a class="reference internal" href="temporal.html"><em>Temporal Filtering</em></a></li>
+<li><a class="reference internal" href="motion.html"><em>Motion Correction</em></a></li>
 <li><a class="reference internal" href="nuisance_config.html"><em>Nuisance Corrections</em></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="sca.html"><em>Seed-based Correlation</em></a></li>
+<li><a class="reference internal" href="temporal.html"><em>Temporal Filtering</em></a></li>
 <li><a class="reference internal" href="tse.html"><em>Time Series Extraction</em></a></li>
+<li><a class="reference internal" href="sca.html"><em>Seed-based Correlation</em></a></li>
 <li><a class="reference internal" href="reho.html"><em>Regional Homogeneity</em></a></li>
 <li><a class="reference internal" href="vmhc.html"><em>Voxel-mirrored Homotopic Connectivity</em></a></li>
 <li><a class="reference internal" href="alff.html"><em>ALFF and fALFF</em></a></li>
@@ -121,9 +96,8 @@
 </ul>
 <p><strong>NOTE:</strong> If this is your first time using C-PAC, we strongly recommend that you go through the entire <tt class="file docutils literal"><span class="pre">config.py</span></tt> file at least once. The default settings will not work for everyone, and it&#8217;s a good idea to consider the available options before running.</p>
 </div>
-<div class="section" id="running-c-pac">
-<h2>Running C-PAC<a class="headerlink" href="#running-c-pac" title="Permalink to this headline">¶</a></h2>
-<p>In the terminal, navigate to the crash directory you specified in <tt class="file docutils literal"><span class="pre">config.py</span></tt>. Because of a bug in Nipype, C-PAC will output crash logs from wherever it is run.</p>
+<div class="section" id="running-preprocessing-and-individual-level-analysis">
+<h2>Running Preprocessing and Individual-Level Analysis<a class="headerlink" href="#running-preprocessing-and-individual-level-analysis" title="Permalink to this headline">¶</a></h2>
 <p>Open iPython by typing <tt class="file docutils literal"><span class="pre">ipython</span></tt>. From the iPython prompt, run:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">CPAC</span>
 <span class="n">CPAC</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">cpac_runner</span><span class="o">.</span><span class="n">run</span> <span class="p">(</span><span class="s">&#39;/path/to/config.py&#39;</span><span class="p">,</span> <span class="s">&#39;/path/to/CPAC_subjectlist.py&#39;</span><span class="p">)</span>
@@ -137,8 +111,10 @@
 </div>
 <div class="section" id="running-basc-cwas-and-group-statistics">
 <h2>Running BASC, CWAS, and Group Statistics<a class="headerlink" href="#running-basc-cwas-and-group-statistics" title="Permalink to this headline">¶</a></h2>
-<p>In order to run group statistics, you must first run C-PAC to generate the desired measures for which you wish to calculate group differences.</p>
-<p>For BASC and CWAS, C-PAC must first be run to transform functional images to MNI space.</p>
+<ul class="simple">
+<li>For BASC and CWAS, C-PAC must first be run to transform functional images to MNI space.</li>
+<li>In order to run group statistics, you must first run C-PAC to generate the desired measures for which you wish to calculate group differences.</li>
+</ul>
 <p>Open iPython by typing <tt class="file docutils literal"><span class="pre">ipython</span></tt>. From the iPython prompt, run:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">CPAC</span>
 <span class="n">CPAC</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">cpac_group_runner</span><span class="o">.</span><span class="n">run</span> <span class="p">(</span><span class="s">&#39;/path/to/config.py&#39;</span><span class="p">,</span> <span class="s">&#39;/path/to/desired/strategy&#39;</span><span class="p">)</span>
@@ -198,7 +174,7 @@
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="compute_config.html" title="Computer Settings"
+          <a href="data_config.html" title="Ready Your Data"
              >next</a> |</li>
         <li class="right" >
           <a href="install.html" title="Installing C-PAC"

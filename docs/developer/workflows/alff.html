@@ -96,16 +96,10 @@ inputspec.rest_res : string (existing nifti file)
     Nuisance signal regressed functional image
 
 inputspec.rest_mask : string (existing nifti file)
-    A mask volume(derived by dilating the motion corrected functional volume) in native space
-
-inputspec.tr : float
-    scan TR, if input as None, TR is extracted from the nifti file header</pre>
+    A mask volume(derived by dilating the motion corrected functional volume) in native space</pre>
 </div>
 <p>Workflow Outputs:</p>
-<div class="highlight-python"><pre>outputspec.power_spectrum_distribution : string (nifti file)
-    outputs image containing the spectral power density of residual functional image
-
-outputspec.alff_img : string (nifti file)
+<div class="highlight-python"><pre>outputspec.alff_img : string (nifti file)
     outputs image containing the sum of the amplitudes in the low frequency band
 
 outputspec.falff_img : string (nifti file)
@@ -119,58 +113,30 @@ outputspec.falff_Z_img : string (nifti file)
 </div>
 <p>Order of Commands:</p>
 <ul>
-<li><p class="first">Compute the Power Spectrum</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">fslpspec</span>
-<span class="n">rest_res</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span>
-<span class="n">power_spectrum_distribution</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span>
-</pre></div>
+<li><p class="first">Filter the input preprocessed rest image</p>
+<div class="highlight-python"><pre>3dBandpass -prefix residual_filtered.nii.gz 
+            0.009 0.08 residual.nii.gz</pre>
 </div>
 </li>
-<li><p class="first">Compute square root of power spectrum</p>
-<div class="highlight-python"><pre>fslmaths
-power_spectrum_distribution.nii.gz
--sqrt prealff_func_data_ps_sqrt.nii.gz</pre>
+<li><p class="first">Calculate ALFF by taking the standard deviation of the filtered file</p>
+<div class="highlight-python"><pre>3dTstat -stdev 
+        -mask rest_mask.nii.gz 
+        -prefix residual_filtered_3dT.nii.gz
+        residual_filtered.nii.gz</pre>
 </div>
 </li>
-<li><p class="first">Extract the TR and Number of volumes(NVOLS) from the Nuisance signal regressed functional image</p>
-</li>
-<li><p class="first">Calculate the High Frequency Point(n2) and Low Frequency Point(n1)</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">n1</span> <span class="o">=</span> <span class="p">(</span><span class="n">HP</span> <span class="o">*</span> <span class="n">NVOLS</span> <span class="o">*</span> <span class="n">TR</span><span class="p">)</span> <span class="o">-</span><span class="mi">1</span>
-<span class="n">n2</span> <span class="o">=</span> <span class="p">(</span><span class="n">LP</span> <span class="o">*</span> <span class="n">NVOLS</span> <span class="o">*</span> <span class="n">TR</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">HP</span> <span class="o">*</span> <span class="n">NVOLS</span> <span class="o">*</span> <span class="n">TR</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-</pre></div>
+<li><p class="first">Calculate the standard deviation of the unfiltered file</p>
+<div class="highlight-python"><pre>3dTstat -stdev 
+        -mask rest_mask.nii.gz 
+        -prefix residual_3dT.nii.gz
+        residual.nii.gz</pre>
 </div>
 </li>
-<li><p class="first">Cut the low frequency data from the the whole frequency band</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">fslroi</span>
-<span class="n">prealff_func_data_ps_sqrt</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span>
-<span class="n">prealff_func_ps_slow</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span>
-<span class="n">n1</span>
-<span class="n">n2</span>
-</pre></div>
-</div>
-</li>
-<li><p class="first">Calculate ALFF as the sum of the amplitudes in the low frequency band</p>
-<div class="highlight-python"><pre>fslmaths 
-prealff_func_ps_slow.nii.gz
--Tmean
--mul n2
-ALFF.nii.gz</pre>
-</div>
-</li>
-<li><p class="first">Compute amplitude of total frequency</p>
-<div class="highlight-python"><pre>fslmaths
-prealff_func_data_ps_sqrt.nii.gz
--Tmean
--mul NVOLS
--div 2
-prealff_func_pssum_amplitudes_low_frequency.nii.gz</pre>
-</div>
-</li>
-<li><p class="first">Compute fALFF as ALFF/amplitude of total frequency</p>
-<div class="highlight-python"><pre>fslmaths
-ALFF.nii.gz
--div prealff_func_pssum_amplitudes_low_frequency.nii.gz
-fALFF.nii.gz</pre>
+<li><p class="first">Calculate fALFF</p>
+<div class="highlight-python"><pre>3dcalc -a rest_mask.nii.gz 
+   -b residual_filtered_3dT.nii.gz
+   -c residual_3dT.nii.gz  
+   -expr '(1.0*bool(a))*((1.0*b)/(1.0*c))' -float</pre>
 </div>
 </li>
 <li><p class="first">Normalize ALFF/fALFF to Z-score across full brain</p>
@@ -211,9 +177,9 @@ fALFF_Z.nii.gz</pre>
 </li>
 </ul>
 <p>Workflow ALFF and fractional ALFF:</p>
-<img alt="../_images/alff_graph.dot.png" src="../_images/alff_graph.dot.png" style="width: 500px;" />
+<img alt="../_images/alff.dot.png" src="../_images/alff.dot.png" style="width: 700px;" />
 <p>Workflow Detailed:</p>
-<img alt="../_images/alff_detailed_graph.dot.png" src="../_images/alff_detailed_graph.dot.png" style="width: 500px;" />
+<img alt="../_images/alff_detailed.dot.png" src="../_images/alff_detailed.dot.png" style="width: 700px;" />
 <p class="rubric">References</p>
 <table class="docutils citation" frame="void" id="r1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -225,129 +191,50 @@ fALFF_Z.nii.gz</pre>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span> <span class="o">=</span> <span class="n">create_alff</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">hp_input</span><span class="o">.</span><span class="n">hp</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">lp_input</span><span class="o">.</span><span class="n">lp</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="s">&#39;hp_input&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">iterables</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;hp&#39;</span><span class="p">,</span>
-<span class="go">                                            [0.01])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="s">&#39;lp_input&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">iterables</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;lp&#39;</span><span class="p">,</span>
-<span class="go">                                            [0.1])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="s">&#39;hp_input&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">iterables</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;hp&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="s">&#39;lp_input&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">iterables</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;lp&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">rest_res</span> <span class="o">=</span> <span class="s">&#39;/home/data/subject/func/rest_bandpassed.nii.gz&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">rest_mask</span><span class="o">=</span> <span class="s">&#39;/home/data/subject/func/rest_mask.nii.gz&#39;</span> 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">tr</span> <span class="o">=</span> <span class="bp">None</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">run</span><span class="p">()</span> 
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="function">
-<dt id="CPAC.alff.get_img_nvols">
-<tt class="descclassname">CPAC.alff.</tt><tt class="descname">get_img_nvols</tt><big>(</big><em>in_files</em><big>)</big><a class="headerlink" href="#CPAC.alff.get_img_nvols" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates the number of volumes in the given nifti image</p>
+<dt id="CPAC.alff.get_zscore">
+<tt class="descclassname">CPAC.alff.</tt><tt class="descname">get_zscore</tt><big>(</big><em>wf_name='z_score'</em><big>)</big><a class="headerlink" href="#CPAC.alff.get_zscore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Workflow to calculate z-scores</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>in_files</strong> : string (nifti file)</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>out</strong> : int</p>
-<blockquote class="last">
-<div><p>number of volumes of input nifti file</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="CPAC.alff.get_img_tr">
-<tt class="descclassname">CPAC.alff.</tt><tt class="descname">get_img_tr</tt><big>(</big><em>in_files</em>, <em>TRa</em><big>)</big><a class="headerlink" href="#CPAC.alff.get_img_tr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes the Temporal Resolution parameter from the image header.
-If TRa is not None then it compares the computed TR and the supplied
-if the difference is greater than 0.001 then it returns supplied TRa as the
-TR of the image and flashes a warning message else returns TRa</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>in_files</strong> : string (nifti file)</p>
-<p><strong>TRa</strong> : float</p>
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>wf_name</strong> : string</p>
 <blockquote>
-<div><p>user supplied Temporal Resolution</p>
+<div><p>name of the workflow</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>out</strong> : float</p>
-<blockquote class="last">
-<div><p>TR for input file</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>wf</strong> : workflow object</p>
 </td>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-<dl class="function">
-<dt id="CPAC.alff.get_N1">
-<tt class="descclassname">CPAC.alff.</tt><tt class="descname">get_N1</tt><big>(</big><em>nvols</em>, <em>TR</em>, <em>HP</em><big>)</big><a class="headerlink" href="#CPAC.alff.get_N1" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the low frequency point</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>TR</strong> : float</p>
-<blockquote>
-<div><p>Temporal Resolution</p>
-</div></blockquote>
-<p><strong>nvols</strong> : int</p>
-<blockquote>
-<div><p>Number of volumes</p>
-</div></blockquote>
-<p><strong>HP</strong> : float</p>
-<blockquote>
-<div><p>HighPass Low Cutoff Frequency</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>n1</strong> : float</p>
-<p class="last"><strong>Low Frequency Point</strong> :</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="CPAC.alff.get_N2">
-<tt class="descclassname">CPAC.alff.</tt><tt class="descname">get_N2</tt><big>(</big><em>nvols</em>, <em>TR</em>, <em>LP</em>, <em>HP</em><big>)</big><a class="headerlink" href="#CPAC.alff.get_N2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the high frequency point</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>TR</strong> : float</p>
-<blockquote>
-<div><p>Temporal Resolution</p>
-</div></blockquote>
-<p><strong>nvols</strong> : int</p>
-<blockquote>
-<div><p>Number of volumes</p>
-</div></blockquote>
-<p><strong>LP</strong> : float</p>
-<blockquote>
-<div><p>LowPass High Cutoff Frequency</p>
-</div></blockquote>
-<p><strong>HP</strong> : float</p>
-<blockquote>
-<div><p>HighPass Low Cutoff Frequency</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>n2</strong> : float</p>
-<p class="last"><strong>High Frequency Point</strong> :</p>
-</td>
-</tr>
-</tbody>
-</table>
+<p class="rubric">Notes</p>
+<p><a class="reference external" href="https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/alff/alff.py">Source</a></p>
+<p>Workflow Inputs:</p>
+<div class="highlight-python"><pre>inputspec.input_file : string
+    path to input functional derivative file for which z score has to be calculated
+inputspec.mask_file : string
+    path to whole brain functional mask file required to calculate zscore</pre>
+</div>
+<p>Workflow Outputs:</p>
+<div class="highlight-python"><pre>outputspec.z_score_img : string
+     path to image containing Z scores.</pre>
+</div>
+<p>High Level Workflow Graph:</p>
+<img alt="../_images/zscore.dot.png" src="../_images/zscore.dot.png" style="width: 600px;" />
+<p>Detailed Workflow Graph:</p>
+<img alt="../_images/zscore_detailed.dot.png" src="../_images/zscore_detailed.dot.png" style="width: 700px;" />
 </dd></dl>
 
 <dl class="function">
@@ -377,59 +264,16 @@ mean and std deviation to alff workflow nodes</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="CPAC.alff.set_op_str">
-<tt class="descclassname">CPAC.alff.</tt><tt class="descname">set_op_str</tt><big>(</big><em>n2</em><big>)</big><a class="headerlink" href="#CPAC.alff.set_op_str" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build the operand string used by the workflow nodes</p>
+<dt id="CPAC.alff.get_opt_string">
+<tt class="descclassname">CPAC.alff.</tt><tt class="descname">get_opt_string</tt><big>(</big><em>mask</em><big>)</big><a class="headerlink" href="#CPAC.alff.get_opt_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to return option string for 3dTstat</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>n2</strong> : float</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><strong>mask</strong> : string (file)</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>strs</strong> : string</p>
-<blockquote class="last">
-<div><p>operand string</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="CPAC.alff.set_op1_str">
-<tt class="descclassname">CPAC.alff.</tt><tt class="descname">set_op1_str</tt><big>(</big><em>nvols</em><big>)</big><a class="headerlink" href="#CPAC.alff.set_op1_str" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build the operand string used by the workflow nodes</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>nvols</strong> : int</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>strs</strong> : string</p>
-<blockquote class="last">
-<div><p>operand string</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="CPAC.alff.takemod">
-<tt class="descclassname">CPAC.alff.</tt><tt class="descname">takemod</tt><big>(</big><em>nvols</em><big>)</big><a class="headerlink" href="#CPAC.alff.takemod" title="Permalink to this definition">¶</a></dt>
-<dd><p>Determine if the input is odd or even values and 
-return a of 0 and 1 depending on the truth value</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><strong>nvols</strong> : int</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><strong>decisions</strong> : int</td>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><strong>opt_str</strong> : string</td>
 </tr>
 </tbody>
 </table>

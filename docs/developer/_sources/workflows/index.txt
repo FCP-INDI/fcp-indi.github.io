@@ -37,3 +37,7 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+Version
+=======
+   
+**Latest Release** - *Version_0.1.6*

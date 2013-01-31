@@ -1,36 +1,54 @@
 Group-Level Statistics
-----------------------
-C-PAC uses `FSL/FEAT <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT/UserGuide>`_ to compare findings across groups and run statistical analysis. Users create a model file that includes group, phenotypic, and nuisance regressors for each subject, and the data is `run through a GLM <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT/UserGuide#Appendix_A:_Brief_Overview_of_GLM_Analysis>`_.
+======================
+Overview
+^^^^^^^^
+C-PAC uses `FSL/FEAT <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT/UserGuide>`_ to compare findings across groups.
 
-Model files can be `created manually through FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT/UserGuide#FEAT_in_Detail>`_, or by using the C-PAC FSL Model Script and instructions below.
+Users create a model file that includes group, phenotypic, and nuisance regressors for each subject, and the data is `run through a General Linear Model (GLM) based on pre-defined comparisons (contrasts) <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT/UserGuide#Appendix_A:_Brief_Overview_of_GLM_Analysis>`_.
 
+The following links provide a good introduction to how groups are compared using FSL, as well as how to define contrasts.
 
+* http://ccn.ucla.edu/wiki/images/c/c7/FSL_workshop_FEAT_2.pdf
 
-When you have created the necessary model files, please refer to the Configuring C-PAC section below.
+* http://www.fmrib.ox.ac.uk/fslcourse/lectures/feat1_part2.pdf
+
+* http://www.cubric.cf.ac.uk/neuroimaging-training/session5_group.pdf
+
+This page will walk you through the following steps necessary to run group statistics:
+
+* Gather phenotypic information and other regressors.
+* Set up contrasts.
+* Create a model (either through FSL or using the C-PAC FSL Model Script)
+
+.. figure:: /images/run_workflow.png
+
+Model files can be `created manually through FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT/UserGuide#FEAT_in_Detail>`_, or by using the C-PAC FSL Model Script and instructions below. If you choose to create your model files using FSL, please skip to the Configuring C-PAC section.
 
 Prepare Phenotypic Information and Other Regressors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Phenotypic information and nuisance regressors are specified in a :file:`.csv` file, with subjects as rows and regressors as columns. A :file:`template_phenotypic.csv` is generated when you :doc:`prepare your data </use>`, and includes rows for all subjects to be included in group satistics. Open this file, create a column for each phenotypic variable or regressor you would like included in your model, and enter the appropriate value for each subject.
+Explanatory variables (EVs) such as phenotypic characteristics and group membership, as well as nuisance regressors, are specified in a :file:`.csv` file, with subjects as rows and regressors as columns. A :file:`template_phenotypic.csv` is generated when you :doc:`prepare your data </use>`, and includes rows for all subjects to be included in group satistics. Open this file, create a column for each phenotypic or nuisance regressor you would like included in your model, and enter the appropriate value for each subject.
 
-If you would like to include motion parameters calcualted by C-PAC, download the :file:`extract_parameters.py` script. Navigate to your main C-PAC output directory and run it by typing::
+.. figure:: /images/phenotypic_csv.png
+
+If you would like to include motion parameters calcualted by C-PAC as nuisance regressors, `download <https://raw.github.com/FCP-INDI/C-PAC/master/tools/extract_parameters.py>`_ the :file:`extract_parameters.py` script. Navigate to your main C-PAC output directory and run it by typing::
 
     python extract_parameters.py /path/to/output/directory
 
-Where :file:`/path/to/output/directory` is the path to :file:`sinkDir` as specified in :file:`config.py`. This will output a motion parameters :file:`.csv` file in the top level of each pipeline directory. You can then copy the columns from this file into your :file:`template_phenotypic.csv` file.
+Where :file:`/path/to/output/directory` is the path to your output directory (:file:`sinkDir` as specified in :file:`config.py`). This will output a :file:`...all_params.csv` file in the top level of each pipeline directory which contains all motion parameters calculated by C-PAC. You can then copy the columns from this file into your :file:`template_phenotypic.csv` file. When you are finished, save your changes. Future versions of C-PAC will automate this process.
 
-When you are finished, save your changes. Future versions of C-PAC will automate this process.
+
 
 Configure FSL Model Script
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Open :file:`config_fsl.py`, which can be `downloaded here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/config_fsl.py>`_. 
 
-Specify which regressors you would like included in your model::
+Specify which regressors you would like included in your model by listing names of columns in your :file:`template_phenotypic.csv`::
 
     # Specify which phenotypic variables and regressors to include in model
     # These names should match column names in template_phenotypic.csv
     columnsInModel = ['AgeAtScan', 'MeanFD', 'site', 'DxGroup']
 
-Define whether each regressor is categorical or directional::
+Define whether each regressor is categorical (such as age or diagnosis) or directional (such as age or a test score)::
 
     # Set a type for each of the variables/regressors entered above.
     # 1 = categorical, 0 = directional
@@ -64,11 +82,17 @@ Open iPython and type::
     import CPAC
     CPAC.utils.create_fsl_model.run ('/path/to/config_fsl_py', 'generate_model_csv')
 
-This will output a .csv model file with the name you specified.
+This will output a :file:`.csv` file with the name you specified. In this file, each categorical EV will have been split into two columns, with 1s and 0s indicating category membership. Any columns you asked to be de-meaned will now show values above or below the mean.
+
+.. figure:: /images/ev_csv.png
 
 Define Contrasts and Reconfigure FSL Script
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Open the model file output by the previous step, and create your desired contrasts. Save this file, and set the path to it::
+Based on the columns present in the model :file:`.csv` you just generated, create a new spreadsheet specifying your desired contrasts. 
+
+.. figure:: /images/contrasts_csv.png
+
+Save this file, and set the path to it in :file:`fsl_config.py`::
 
     # Full path to a contrast file based on the columns listed above.
     contrastFile = '/home/ssikka/nki_nyu_pipeline/contrasts.csv'
@@ -86,6 +110,8 @@ Open iPython and type::
     create_fsl_model.run ('/path/to/config_fsl_py', 'generate_model_fsl_files')
 
 This will output the standard FSL model files in the directory from which the script is run. You may then specify the location of these files in :file:`config.py`, and :doc:`run the C-PAC group pipeline </use>`.
+
+.. figure:: /images/model.png
 
 Configuring C-PAC
 ^^^^^^^^^^^^^^^^^

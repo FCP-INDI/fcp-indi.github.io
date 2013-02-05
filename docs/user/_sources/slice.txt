@@ -4,10 +4,6 @@ Background
 ^^^^^^^^^^
 Most fMRI images are created by combining multiple 2D slices into a single 3D volume. Slices are acquired one after another, either sequentially in ascending or descending order, or in an interleaved manner, such that every other slice is acquired in a first pass, and the remaining slices are aqcuired in a second pass. The time between the acquisition of the first and last slice depends on the TR used (e.g. 2.5 seconds for a TR of 2500ms). Slice timing correction acts to adjust the timecourse of voxels in each slice to account for these differences. This is done by interpolating the data in each slice to match the timing of a reference slice. Slice timing correction is necessary because many statistical models used for fMRI analysis assume that all voxels are measured simultaneously. As such, differences in acqusition time between slices can cause confounds.
 
-Slice Timing Correction Guidelines
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Whenever possible, it is desirable to avoid using slice timing correction, as it can interact with motion correction to distort data (Poldrack et al., 2011). If one must apply slice timing correction, it should be done after motion correction to minimize these distortions. However, as the BOLD response is relatively sluggish, combining interleaved acquisitions with TR times shoter than 2000ms may obviate the need for slice timing correction, even for event-related designs (Poldrack et al., 2011).
-
 Configuring C-PAC
 ^^^^^^^^^^^^^^^^^
 If you wish to run :doc:`Slice Timing Correction </slice>`, you must include a file that contains information about the slice acquisition order used for each subject. This file is specified when running :file:`extract_data.py` (see the :doc:`Using C-PAC </use>` page).
@@ -25,17 +21,36 @@ Slice Timing information should be entered into these files as follows:
 * **Scan** - Only for :file:`scan_parameters_multiscan.csv`. Scan name corresponding to a scan-level folder in your directory structure (e.g. :file:`anat`, :file:`rest`)
 * **TR** - TR in seconds.
 * **Reference** - Desired reference slice (usually the middle slice).
-* **Acquisition** - Acquisition order for multi-band scans.
+* **Acquisition** - Acquisition order.
 
-  * **alt+z** - Interleaved ascending
-  * **alt-z** - Interleaved descending
-  * **seq+z** - Sequential ascending
-  * **seq-z** - Sequential descending
+    * **altplus** - Interleaved ascending
+    * **alt+z** - Interleaved ascending, but beginning at slice #1
+    * **alt+z2** - Interleaved ascending, but beginning at slice #2 
+    * **altminus** - Interleaved descending
+    * **alt-z** - Interleaved descending, but beginning at slice #nz-1
+    * **alt-z2** - Interleaved descending, but beginning at slice #nz-2
+    * **seqplus** - Sequential ascending
+    * **seqminus** - Sequential descending
+    * **simult** - Simultaneous acquisition
 
 * **FirstTR** - First volume to include in analysis. (Reminder, volumes start at 0)
 * **LastTR** - Last volume to inclucde in analysis.
 
+**Note:** alt+z2 is the order most commonlly used on Siemens scanners for interleaved scans with an even number of slices.
+
 It should be noted that the settings specified in the files above over-ride the equivalent settings in the Timeseries Options section of :file:`config.py`.
+
+Specifying Acquisition Order for Non-Standard Sequences
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""
+If your data does not conform to one of the 6 acquistion orders in the list above (as would be the case for multiband and multi-echo sequences), you must generate acquisition order files before running Slice Timing Correction. This is done using the AFNI command :command:`dicom_hdr` and specifying the first DICOM file in an image sequence, as well as the name of an output :file:`.txt` file.::
+
+    dicom_hdr -slice_times /path/to/file.dcm > output_name.txt
+
+This will output a text file with the name you specified. Each number in this file corresponds to a slice and the time when it was acquired (relative to the beginning of the TR). The following is an example of an acquisition order file for a a multiband fMRI scan with 40 slices and TR=645ms::
+
+    0.0 452.5 257.5 65.0 517.5 322.5 130.0 582.5 387.5 195.0 0.0 452.5 257.5 65.0 517.5 322.5 130.0 582.5 387.5 195.0 0.0 452.5 257.5 65.0 517.5 322.5 130.0 582.5 387.5 195.0 0.0 452.5 257.5 65.0 517.5 322.5 130.0 582.5 387.5 195.0
+
+The path to the acquisition order file for each scan should be specified in the "Acquisition" column of your :file:`scan_parameters.csv` or :file:`scan_parameters_multiscan.csv` file.
 
 External Resources
 ^^^^^^^^^^^^^^^^^^

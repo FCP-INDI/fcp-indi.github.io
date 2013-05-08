@@ -1,0 +1,382 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Easy thresh &mdash; CPAC 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CPAC 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Workflows" href="index.html" />
+    <link rel="next" title="Connectome Wide Association Studies" href="cwas.html" />
+    <link rel="prev" title="Group Analysis" href="group_analysis.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="cwas.html" title="Connectome Wide Association Studies"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="group_analysis.html" title="Group Analysis"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Workflows</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-CPAC.easy_thresh">
+<span id="easy-thresh"></span><h1>Easy thresh<a class="headerlink" href="#module-CPAC.easy_thresh" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="CPAC.easy_thresh.easy_thresh">
+<tt class="descclassname">CPAC.easy_thresh.</tt><tt class="descname">easy_thresh</tt><big>(</big><em>wf_name</em><big>)</big><a class="headerlink" href="#CPAC.easy_thresh.easy_thresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Workflow for carrying out cluster-based thresholding 
+and colour activation overlaying</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>wf_name</strong> : string</p>
+<blockquote>
+<div><p>Workflow name</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>easy_thresh</strong> : object</p>
+<blockquote class="last">
+<div><p>Easy thresh workflow object</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p><a class="reference external" href="https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/easy_thresh/easy_thresh.py">Source</a></p>
+<p>Workflow Inputs:</p>
+<div class="highlight-python"><pre>inputspec.z_stats : string (nifti file)
+    z_score stats output for t or f contrast from flameo
+
+inputspec.merge_mask : string (nifti file)
+    mask generated from 4D Merged derivative file
+
+inputspec.z_threshold : float
+    Z Statistic threshold value for cluster thresholding. It is used to 
+    determine what level of activation would be statistically significant. 
+    Increasing this will result in higher estimates of required effect.
+
+inputspec.p_threshold : float
+    Probability threshold for cluster thresholding.
+
+inputspec.paramerters : string (tuple)
+    tuple containing which MNI and FSLDIR path information</pre>
+</div>
+<p>Workflow Outputs:</p>
+<div class="highlight-python"><pre>outputspec.cluster_threshold : string (nifti files)
+   the thresholded Z statistic image for each t contrast
+
+outputspec.cluster_index : string (nifti files)
+    image of clusters for each t contrast; the values 
+    in the clusters are the index numbers as used 
+    in the cluster list.
+
+outputspec.overlay_threshold : string (nifti files)
+    3D color rendered stats overlay image for t contrast
+    After reloading this image, use the Statistics Color 
+    Rendering GUI to reload the color look-up-table
+
+outputspec.overlay_rendered_image : string (nifti files)
+   2D color rendered stats overlay picture for each t contrast
+
+outputspec.cluster_localmax_txt : string (text files)
+    local maxima text file, defines the coordinates of maximum value
+    in the cluster</pre>
+</div>
+<p>Order of commands:</p>
+<ul>
+<li><p class="first">Estimate smoothness of the image:</p>
+<div class="highlight-python"><pre>smoothest --mask= merge_mask.nii.gz --zstat=.../flameo/stats/zstat1.nii.gz
+
+arguments
+--mask  :  brain mask volume
+--zstat :  filename of zstat/zfstat image</pre>
+</div>
+</li>
+<li><p class="first">Create mask. For details see <a class="reference external" href="http://www.fmrib.ox.ac.uk/fslcourse/lectures/practicals/intro/index.htm#fslutils">fslmaths</a>:</p>
+<div class="highlight-python"><pre>fslmaths ../flameo/stats/zstat1.nii.gz 
+         -mas merge_mask.nii.gz 
+         zstat1_mask.nii.gz
+
+arguments
+-mas   : use (following image&gt;0) to mask current image</pre>
+</div>
+</li>
+<li><p class="first">Copy Geometry image dimensions, voxel dimensions, voxel dimensions units string, image orientation/origin or qform/sform info) from one image to another:</p>
+<div class="highlight-python"><pre>fslcpgeom MNI152_T1_2mm_brain.nii.gz zstat1_mask.nii.gz</pre>
+</div>
+</li>
+<li><p class="first">Cluster based thresholding. For details see <a class="reference external" href="http://www.fmrib.ox.ac.uk/fsl/feat5/detail.html#poststats">FEAT</a>:</p>
+<div class="highlight-python"><pre>cluster --dlh = 0.0023683100 
+        --in = zstat1_mask.nii.gz 
+        --oindex = zstat1_cluster_index.nii.gz 
+        --olmax = zstat1_cluster_localmax.txt
+        --othresh = zstat1_cluster_threshold.nii.gz 
+        --pthresh = 0.0500000000 
+        --thresh = 2.3000000000 
+        --volume = 197071
+
+arguments 
+--in    :    filename of input volume
+--dlh   :    smoothness estimate = sqrt(det(Lambda))
+--oindex  :  filename for output of cluster index
+--othresh :  filename for output of thresholded image
+--olmax   :  filename for output of local maxima text file
+--volume  :  number of voxels in the mask
+--pthresh :  p-threshold for clusters
+--thresh  :  threshold for input volume</pre>
+</div>
+</li>
+</ul>
+<blockquote>
+<div>Z statistic image is thresholded to show which voxels or clusters of voxels are activated at a particular significance level.
+A Z statistic threshold is used to define contiguous clusters. Then each cluster&#8217;s estimated significance level (from GRF-theory) 
+is compared with the cluster probability threshold. Significant clusters are then used to mask the original Z statistic image.</div></blockquote>
+<ul>
+<li><p class="first">Get the maximum intensity value of the output thresholded image. This used is while rendering the Z statistic image:</p>
+<div class="highlight-python"><pre>fslstats zstat1_cluster_threshold.nii.gz -R
+
+arguments
+-R  : output &lt;min intensity&gt; &lt;max intensity&gt;</pre>
+</div>
+</li>
+<li><p class="first">Rendering. For details see <a class="reference external" href="http://www.fmrib.ox.ac.uk/fsl/feat5/detail.html#poststats">FEAT</a>:</p>
+<div class="highlight-python"><pre>overlay 1 0 MNI152_T1_2mm_brain.nii.gz 
+       -a zstat1_cluster_threshold.nii.gz 
+       2.30 15.67 
+       zstat1_cluster_threshold_overlay.nii.gz
+
+slicer zstat1_cluster_threshold_overlay.nii.gz 
+       -L  -A 750 
+       zstat1_cluster_threshold_overlay.png</pre>
+</div>
+<p>The Z statistic range selected for rendering is automatically calculated by default, 
+to run from red (minimum Z statistic after thresholding) to yellow (maximum Z statistic, here 
+maximum intensity).</p>
+</li>
+</ul>
+<p>High Level Workflow Graph:</p>
+<a class="reference internal image-reference" href="../_images/easy_thresh.dot.png"><img alt="../_images/easy_thresh.dot.png" src="../_images/easy_thresh.dot.png" style="width: 800px;" /></a>
+<p>Detailed Workflow Graph:</p>
+<a class="reference internal image-reference" href="../_images/easy_thresh_detailed.dot.png"><img alt="../_images/easy_thresh_detailed.dot.png" src="../_images/easy_thresh_detailed.dot.png" style="width: 800px;" /></a>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">easy_thresh</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preproc</span> <span class="o">=</span> <span class="n">easy_thresh</span><span class="o">.</span><span class="n">easy_thresh</span><span class="p">(</span><span class="s">&quot;new_workflow&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">z_stats</span><span class="o">=</span> <span class="s">&#39;flameo/stats/zstat1.nii.gz&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">merge_mask</span> <span class="o">=</span> <span class="s">&#39;merge_mask/alff_Z_fn2standard_merged_mask.nii.gz&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">z_threshold</span> <span class="o">=</span> <span class="mf">2.3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">p_threshold</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;/usr/local/fsl/&#39;</span><span class="p">,</span> <span class="s">&#39;MNI152&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">preporc</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>  <span class="o">--</span> <span class="n">SKIP</span> <span class="n">doctest</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.easy_thresh.copy_geom">
+<tt class="descclassname">CPAC.easy_thresh.</tt><tt class="descname">copy_geom</tt><big>(</big><em>infile_a</em>, <em>infile_b</em><big>)</big><a class="headerlink" href="#CPAC.easy_thresh.copy_geom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to call fsl fslcpgeom command to copy 
+certain parts of the header information (image dimensions, 
+voxel dimensions, voxel dimensions units string, image 
+orientation/origin or qform/sform info) from one image to another</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>infile_a</strong> : nifti file</p>
+<blockquote>
+<div><p>input volume from which the geometry is copied from</p>
+</div></blockquote>
+<p><strong>infile_b</strong> : nifti file</p>
+<blockquote>
+<div><p>input volume from which the geometry is copied to</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>out_file</strong> : nifti file</p>
+<blockquote>
+<div><p>Input volume infile_b with modified geometry information
+in the header.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises :</th><td class="field-body"><p class="first"><strong>Exception</strong> :</p>
+<blockquote class="last">
+<div><p>If fslcpgeom fails</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.easy_thresh.get_standard_background_img">
+<tt class="descclassname">CPAC.easy_thresh.</tt><tt class="descname">get_standard_background_img</tt><big>(</big><em>in_file</em>, <em>file_parameters</em><big>)</big><a class="headerlink" href="#CPAC.easy_thresh.get_standard_background_img" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to get the standard brain image from FSL 
+standard data directory</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>in_file</strong> : nifti file</p>
+<blockquote>
+<div><p>Merged 4D Zmap volume</p>
+</div></blockquote>
+<p><strong>file_parameters</strong> : tuple</p>
+<blockquote>
+<div><p>Value FSLDIR and MNI from config file</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>standard_path</strong> : string</p>
+<blockquote>
+<div><p>Standard FSL Image file path</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises :</th><td class="field-body"><p class="first"><strong>Exception</strong> :</p>
+<blockquote class="last">
+<div><p>If nibabel cannot load the input nifti volume</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.easy_thresh.get_tuple">
+<tt class="descclassname">CPAC.easy_thresh.</tt><tt class="descname">get_tuple</tt><big>(</big><em>infile_a</em>, <em>infile_b</em><big>)</big><a class="headerlink" href="#CPAC.easy_thresh.get_tuple" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple method to return tuple of z_threhsold
+maximum intensity values of Zstatistic image
+for input to the overlay.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>z_theshold</strong> : float</p>
+<blockquote>
+<div><p>z threshold value</p>
+</div></blockquote>
+<p><strong>intensity_stat</strong> : tuple of float values</p>
+<blockquote>
+<div><p>minimum and maximum intensity values</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>img_min_max</strong> : tuple (float)</p>
+<blockquote class="last">
+<div><p>tuple of zthreshold and maximum intensity 
+value of z statistic image</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="group_analysis.html"
+                        title="previous chapter">Group Analysis</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="cwas.html"
+                        title="next chapter">Connectome Wide Association Studies</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/workflows/easy_thresh.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="cwas.html" title="Connectome Wide Association Studies"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="group_analysis.html" title="Group Analysis"
+             >previous</a> |</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Workflows</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Brian.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

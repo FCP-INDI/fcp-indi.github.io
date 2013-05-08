@@ -1,0 +1,375 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Connectome Wide Association Studies &mdash; CPAC 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CPAC 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Workflows" href="index.html" />
+    <link rel="next" title="Median Angle Correction" href="median_angle.html" />
+    <link rel="prev" title="Easy thresh" href="easy_thresh.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="median_angle.html" title="Median Angle Correction"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="easy_thresh.html" title="Easy thresh"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Workflows</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-CPAC.cwas">
+<span id="connectome-wide-association-studies"></span><h1>Connectome Wide Association Studies<a class="headerlink" href="#module-CPAC.cwas" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="CPAC.cwas.create_cwas">
+<tt class="descclassname">CPAC.cwas.</tt><tt class="descname">create_cwas</tt><big>(</big><em>name='cwas'</em><big>)</big><a class="headerlink" href="#CPAC.cwas.create_cwas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connectome Wide Association Studies</p>
+<p>This workflow performs CWAS on a group of subjects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>name</strong> : string, optional</p>
+<blockquote>
+<div><p>Name of the workflow.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>cwas</strong> : nipype.pipeline.engine.Workflow</p>
+<blockquote class="last">
+<div><p>CWAS workflow.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Workflow Inputs:</p>
+<div class="highlight-python"><pre>inputspec.roi : string (nifti file)
+    Mask of region(s) of interest
+inputpsec.subjects : list (nifti files)
+    4-D timeseries of a group of subjects normalized to MNI space
+inputspec.regressor : list (float)
+    Corresponding list of the regressor variable of shape (`N`) or (`N`,`1`), `N` subjects
+inputspec.f_samples : int
+    Number of permutation samples to draw from the pseudo F distribution
+inputspec.parallel_nodes : integer
+    Number of nodes to create and potentially parallelize over</pre>
+</div>
+<p>Workflow Outputs:</p>
+<div class="highlight-python"><pre>outputspec.F_map : string (nifti file)
+    Pseudo F values of CWAS
+outputspec.p_map : string (nifti file)
+    Significance p values calculated from permutation tests</pre>
+</div>
+<p>CWAS Procedure:</p>
+<ol class="arabic simple">
+<li>Calculate spatial correlation of a voxel</li>
+<li>Correlate spatial z-score maps for every subject pair</li>
+<li>Convert matrix to distance matrix, <cite>1-r</cite></li>
+<li>Calculate MDMR statistics for the voxel</li>
+<li>Determine significance of MDMR statistics with permutation tests</li>
+</ol>
+<p>Workflow Graph:</p>
+<a class="reference internal image-reference" href="../_images/cwas.dot.png"><img alt="../_images/cwas.dot.png" src="../_images/cwas.dot.png" style="width: 500px;" /></a>
+<p>Detailed Workflow Graph:</p>
+<a class="reference internal image-reference" href="../_images/cwas_detailed.dot.png"><img alt="../_images/cwas_detailed.dot.png" src="../_images/cwas_detailed.dot.png" style="width: 500px;" /></a>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R5]</a></td><td>Shehzad Z, Kelly C, Reiss PT, Emerson JW, McMahon K, Copland DA, Castellanos FX, Milham MP. An Analytic Framework for Connectome-Wide Association Studies. Under Review.</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.cwas.calc_cwas">
+<tt class="descclassname">CPAC.cwas.</tt><tt class="descname">calc_cwas</tt><big>(</big><em>subjects_data</em>, <em>regressor</em>, <em>iter</em><big>)</big><a class="headerlink" href="#CPAC.cwas.calc_cwas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs Connectome-Wide Association Studies (CWAS) <a class="reference internal" href="#r6" id="id2">[R6]</a> for every voxel.  Implementation based on
+<a class="reference internal" href="#r7" id="id3">[R7]</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>subjects_data</strong> : ndarray</p>
+<blockquote>
+<div><p>Numpy data array of shape (<cite>S</cite>,`T`,`V`), <cite>S</cite> subjects, <cite>T</cite> timepoints, <cite>V</cite> voxels.  The number
+of timepoints <cite>T</cite> can vary between subjects.</p>
+</div></blockquote>
+<p><strong>regressor</strong> : ndarray</p>
+<blockquote>
+<div><p>Matrix of shape (<cite>S</cite>, <cite>R</cite>), <cite>S</cite> subjects and <cite>R</cite> regressors</p>
+</div></blockquote>
+<p><strong>iter</strong> : integer</p>
+<blockquote>
+<div><p>Number of permutations to derive significance tests</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>F_set</strong> : ndarray</p>
+<blockquote>
+<div><p>Pseudo-F statistic calculated for every voxel</p>
+</div></blockquote>
+<p><strong>p_set</strong> : ndarray</p>
+<blockquote class="last">
+<div><p>Significance probabilities of F_set based on permutation tests</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>The distance matrix can potentially take up a great deal of memory and therefore is not
+returned.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R6]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> Shehzad Z, Reiss PT, Adelstein JS, Emerson JW, Chabernaud C, Mennes M, Di Martino A, Kelly C, Castellanos FX, Milham MP. (June 2011). Connectome-Wide Association Studies (CWAS): A Multivariate Distance-Based Approach. Poster to be presented at the Annual Meeting of the Organization for Human Brain Mapping, Quebec City.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R7]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> Xiao-Wei Song, Zhang-Ye Dong, Xiang-Yu Long, Su-Fang Li, Xi-Nian Zuo, Chao-Zhe Zhu, Yong He, Chao-Gan Yan, Yu-Feng Zang. (2011) REST: A Toolkit for Resting-State Functional Magnetic Resonance Imaging Data Processing. PLoS ONE 6(9): e25031. doi:10.1371/journal.pone.0025031</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.cwas.y_mdmr">
+<tt class="descclassname">CPAC.cwas.</tt><tt class="descname">y_mdmr</tt><big>(</big><em>yDis</em>, <em>x</em>, <em>iter</em><big>)</big><a class="headerlink" href="#CPAC.cwas.y_mdmr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multivariate Distance Matrix Regression</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>yDis</strong> : ndarray</p>
+<p><strong>x</strong> : ndarray</p>
+<p><strong>iter</strong> : integer</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>F</strong> : float</p>
+<p class="last"><strong>p</strong> : float</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Implementation based on work by YAN Chao-Gan (<a class="reference external" href="mailto:ycg&#46;yan&#37;&#52;&#48;gmail&#46;com">ycg<span>&#46;</span>yan<span>&#64;</span>gmail<span>&#46;</span>com</a>) and References section.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id6">[R8]</a></td><td>Anderson, M. J. 2002. DISTML v.2: a FORTRAN computer program to calculate a distance-based multivariate analysis for a linear model. Dept. of Statistics University of Auckland. (<a class="reference external" href="http://www.stat.auckland.ac.nz/PEOPLE/marti/">http://www.stat.auckland.ac.nz/PEOPLE/marti/</a>)</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r9" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id7">[R9]</a></td><td>Anderson, M. J. 2001. A new method for non-parametric multivariate analysis of variance. Austral Ecology 26: 32-46.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r10" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id8">[R10]</a></td><td>Legendre, P. &amp; L. Legendre. 1998. Numerical ecology. 2nd English ed. Elsevier Science BV, Amsterdam.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r11" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id9">[R11]</a></td><td>McArdle, B. H. and M. J. Anderson. 2001. Fitting multivariate models to community data: a comment on distance-based redundancy analysis. Ecology 290-297.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r12" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id10">[R12]</a></td><td>Neter, J., M. H. Kutner, C. J. Nachtsheim, and W. Wasserman. 1996. Applied linear statistical models. 4th ed. Irwin, Chicago, Illinois.</td></tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.cwas.joint_mask">
+<tt class="descclassname">CPAC.cwas.</tt><tt class="descname">joint_mask</tt><big>(</big><em>subjects_file_list</em>, <em>mask_file</em><big>)</big><a class="headerlink" href="#CPAC.cwas.joint_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a joint mask (intersection) common to all the subjects in a provided list
+and a provided mask</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>subjects_file_list</strong> : list of strings</p>
+<blockquote>
+<div><p>A length <cite>N</cite> list of file paths of the nifti files of subjects</p>
+</div></blockquote>
+<p><strong>mask_file</strong> : string</p>
+<blockquote>
+<div><p>Path to a mask file in nifti format</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>joint_mask</strong> : string</p>
+<blockquote class="last">
+<div><p>Path to joint mask file in nifti format</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.cwas.nifti_cwas">
+<tt class="descclassname">CPAC.cwas.</tt><tt class="descname">nifti_cwas</tt><big>(</big><em>subjects_file_list</em>, <em>mask_file</em>, <em>regressor</em>, <em>f_samples</em>, <em>voxel_range</em><big>)</big><a class="headerlink" href="#CPAC.cwas.nifti_cwas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs CWAS for a group of subjects</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>subjects_file_list</strong> : list of strings</p>
+<blockquote>
+<div><p>A length <cite>N</cite> list of file paths of the nifti files of subjects</p>
+</div></blockquote>
+<p><strong>mask_file</strong> : string</p>
+<blockquote>
+<div><p>Path to a mask file in nifti format</p>
+</div></blockquote>
+<p><strong>regressor</strong> : ndarray</p>
+<blockquote>
+<div><p>Vector of shape (<cite>S</cite>) or (<cite>S</cite>, <cite>1</cite>), <cite>S</cite> subjects</p>
+</div></blockquote>
+<p><strong>f_samples</strong> : integer</p>
+<blockquote>
+<div><p>Number of pseudo f values to sample using a random permutation test</p>
+</div></blockquote>
+<p><strong>voxel_range</strong> : tuple</p>
+<blockquote>
+<div><p>(start, end) tuple specify the range of voxels (inside the mask) to perform cwas on.
+Index ordering is based on the np.where(mask) command</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>F_file</strong> : string</p>
+<blockquote>
+<div><p>.npy file of pseudo-F statistic calculated for every voxel</p>
+</div></blockquote>
+<p><strong>p_file</strong> : string</p>
+<blockquote>
+<div><p>.npy file of significance probabilities of pseudo-F values</p>
+</div></blockquote>
+<p><strong>voxel_range</strong> : tuple</p>
+<blockquote class="last">
+<div><p>Passed on by the voxel_range provided in parameters, used to make parallelization
+easier</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="easy_thresh.html"
+                        title="previous chapter">Easy thresh</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="median_angle.html"
+                        title="next chapter">Median Angle Correction</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/workflows/cwas.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="median_angle.html" title="Median Angle Correction"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="easy_thresh.html" title="Easy thresh"
+             >previous</a> |</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Workflows</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Brian.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

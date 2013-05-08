@@ -1,0 +1,490 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Segmentation Workflow &mdash; CPAC 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CPAC 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Workflows" href="index.html" />
+    <link rel="next" title="Seed Based Correlation Analysis" href="sca.html" />
+    <link rel="prev" title="Functional Preprocessing" href="func_preproc.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sca.html" title="Seed Based Correlation Analysis"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="func_preproc.html" title="Functional Preprocessing"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Workflows</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-CPAC.seg_preproc">
+<span id="segmentation-workflow"></span><h1>Segmentation Workflow<a class="headerlink" href="#module-CPAC.seg_preproc" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="CPAC.seg_preproc.create_seg_preproc">
+<tt class="descclassname">CPAC.seg_preproc.</tt><tt class="descname">create_seg_preproc</tt><big>(</big><em>wf_name='seg_preproc'</em><big>)</big><a class="headerlink" href="#CPAC.seg_preproc.create_seg_preproc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Segment the Subject&#8217;s Anatomical brain into cerebral spinal fluids, white matter and gray matter.
+Threshold and binarize them.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>wf_name</strong> : string</p>
+<blockquote>
+<div><p>name of the workflow</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>seg_preproc</strong> : workflow</p>
+<blockquote class="last">
+<div><p>Workflow Object for Segmentation Workflow</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p><a class="reference external" href="https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/seg_preproc/seg_preproc.py">Source</a></p>
+<p>Workflow Inputs:</p>
+<div class="highlight-python"><pre>csf_threshold.csf_threshold : list (float)
+    Threshold of Cerebral Spinal Fluid probabilities 
+
+wm_threshold.wm_threshold : list (float) 
+    Threshold of White Matter probabilities
+
+gm_threshold.gm_threshold : list (float) 
+    Threshold of Gray Matter probabilities
+
+inputspec.brain : string (existing nifti file)
+    Anatomical image(without skull)
+
+inputspec.standard2highres_mat : string (existing affine transformation .mat file)
+    File for transformation from mni space to anatomical space
+
+inputspec.PRIOR_CSF : string (existing nifti file)
+    FSL Standard CSF Tissue prior image , binarized with threshold of 0.4 
+
+inputspec.PRIOR_GRAY : string (existing nifti file)
+    FSL Standard GRAY Matter Tissue prior image , binarized with threshold of 0.66
+
+inputspec.PRIOR_WHITE : string (existing nifti file)
+    FSL Standard White Matter Tissue prior image , binarized with threshold of 0.2</pre>
+</div>
+<p>Workflow Outputs:</p>
+<div class="highlight-python"><pre>outputspec.csf_mni2t1 : string (nifti file)
+    outputs CSF prior template(in MNI space) registered to anatomical space
+
+outputspec.csf_combo : string (nifti file)
+    outputs Image containing overlap between csf probability map and 
+    csf tissue prior in t1 native space
+
+outputspec.csf_bin : string (nifti file)
+    outputs image after Thresholding and binarizing csf_combo
+
+outputspec.csf_mask : string (nifti file)
+    outputs image after masking csf_combo with csf prior in t1 space
+
+outputspec.gm_mni2t1 : string (nifti file)
+    outputs gray matter prior template registered to anatomical space
+
+outputspec.gm_combo : string (nifti file)
+    outputs image containing overlap between gray matter probability map 
+    and gm tissue prior in t1 native space
+
+outputspec.gm_bin : string (nifti file)
+    outputs image after thresholding and binarizing gm_combo
+
+outputspec.gm_mask : string (nifti file)
+    outputs image after masking gm_combo with gm prior in t1 space
+
+outputspec.wm_mni2t1 : string (nifti file)
+    outputs White Matter prior template(in MNI space) registered to anatomical space
+
+outputspec.wm_combo : string (nifti file)
+    outputs image containing overlap between white matter(wm) probability map 
+    and wm tissue prior in t1 native space
+
+outputspec.wm_bin : string (nifti file)
+    outputs image after Thresholding and binarizing wm_combo
+
+outputspec.wm_mask : string (nifti file)
+    outputs image after masking wm_combo with white matter(wm) prior in t1 space
+
+outputspec.probability_maps : string (nifti file)
+    outputs individual probability maps (output from brain segmentation using FAST)
+
+outputspec.mixeltype : string (nifti file)
+    outputs mixeltype volume file _mixeltype (output from brain segmentation using FAST)
+
+outputspec.partial_volume_map : string (nifti file)
+    outputs partial volume file _pveseg (output from brain segmentation using FAST)
+
+outputspec.partial_volume_files : string (nifti file)
+    outputs partial volume estimate files _pve_ (output from brain segmentation using FAST)</pre>
+</div>
+<p>Order of commands:</p>
+<ul>
+<li><p class="first">Segment the Anatomical brain. For details see <a class="reference external" href="http://www.fmrib.ox.ac.uk/fsl/fast4/index.html">fast</a>:</p>
+<div class="highlight-python"><pre>fast
+-t 1
+-g
+-p
+-o segment
+mprage_brain.nii.gz</pre>
+</div>
+</li>
+<li><p class="first">Register CSF template in MNI space to t1 space. For details see <a class="reference external" href="http://www.fmrib.ox.ac.uk/fsl/flirt/index.html">flirt</a>:</p>
+<div class="highlight-python"><pre>flirt
+-in PRIOR_CSF
+-ref mprage_brain.nii.gz
+-applyxfm
+-init standard2highres_inv.mat
+-out csf_mni2t1</pre>
+</div>
+</li>
+<li><p class="first">Find overlap between csf probability map and csf_mni2t1. For details see  <a class="reference external" href="http://www.fmrib.ox.ac.uk/fslcourse/lectures/practicals/intro/index.htm">fslmaths</a>:</p>
+<div class="highlight-python"><pre>fslmaths
+segment_prob_0.nii.gz
+-mas csf_mni2t1.nii.gz
+csf_combo.nii.gz</pre>
+</div>
+</li>
+<li><p class="first">Threshold and binarize CSF probability map</p>
+<div class="highlight-python"><pre>fslmaths
+csf_combo.nii.gz
+-thr 0.4
+-bin csf_bin.nii.gz</pre>
+</div>
+</li>
+<li><p class="first">Generate CSF csf_mask, by applying csf prior in t1 space to thresholded binarized csf probability map</p>
+<div class="highlight-python"><pre>fslmaths
+csf_bin.nii.gz
+-mas csf_mni2t1
+csf_mask</pre>
+</div>
+</li>
+<li><p class="first">Register WM template in MNI space to t1 space</p>
+<div class="highlight-python"><pre>flirt
+-in PRIOR_WM
+-ref mprage_brain.nii.gz
+-applyxfm
+-init standard2highres.mat
+-out wm_mni2t1</pre>
+</div>
+</li>
+<li><p class="first">Find overlap between wm probability mask and wm_mni2t1</p>
+<div class="highlight-python"><pre>fslmaths
+segment_prob_2.nii.gz
+-mas wm_mni2t1.nii.gz
+wm_combo.nii.gz</pre>
+</div>
+</li>
+<li><p class="first">Threshold and binarize WM probability map</p>
+<div class="highlight-python"><pre>fslmaths
+wm_combo.nii.gz
+-thr 0.4
+-bin wm_bin.nii.gz</pre>
+</div>
+</li>
+<li><p class="first">Generate WM csf_mask, by applying wm_prior in t1 space to thresholded binarized wm probability map</p>
+<div class="highlight-python"><pre>fslmaths
+wm_bin.nii.gz
+-mas wm_mni2t1
+wm_mask</pre>
+</div>
+</li>
+<li><p class="first">Register GM template in MNI space to t1 space</p>
+<div class="highlight-python"><pre>flirt
+-in PRIOR_GM
+-ref mprage_brain.nii.gz
+-applyxfm
+-init standard2highres.mat
+-out gm_mni2t1</pre>
+</div>
+</li>
+<li><p class="first">Find overlap between gm probability map and gm_mni2t1</p>
+<div class="highlight-python"><pre>fslmaths
+segment_prob_1.nii.gz
+-mas gm_mni2t1.nii.gz
+gm_combo.nii.gz</pre>
+</div>
+</li>
+<li><p class="first">Threshold and binarize GM probability map</p>
+<div class="highlight-python"><pre>fslmaths
+gm_combo.nii.gz
+-thr 0.4
+-bin gm_bin.nii.gz</pre>
+</div>
+</li>
+<li><p class="first">Generate GM csf_mask, by applying gm prior in t1 space to thresholded binarized gm probability map</p>
+<div class="highlight-python"><pre>fslmaths
+gm_bin.nii.gz
+-mas gm_mni2t1
+gm_mask</pre>
+</div>
+</li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">CPAC.seg_preproc</span> <span class="kn">as</span> <span class="nn">seg_wflow</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seg</span> <span class="o">=</span> <span class="n">seg_wflow</span><span class="o">.</span><span class="n">create_seg_preproc</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">standard2highres_mat</span> <span class="o">=</span> <span class="s">&#39;/home/data/Projects/C-PAC/working_directory/s1001/reg_preproc/standard2highres.mat&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">PRIOR_CSF</span> <span class="o">=</span> <span class="s">&#39;/home/data/Projects/C-PAC/tissuepriors/2mm/avg152T1_csf_bin.nii.gz&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">PRIOR_WHITE</span> <span class="o">=</span> <span class="s">&#39;/home/data/Projects/C-PAC/tissuepriors/2mm/avg152T1_white_bin.nii.gz&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">PRIOR_GRAY</span> <span class="o">=</span> <span class="s">&#39;/home/data/Projects/C-PAC/tissuepriors/2mm/avg152T1_gray_bin.nii.gz&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">brain</span> <span class="o">=</span> <span class="s">&#39;/home/data/Projects/C-PAC/working_directory/s1001/anat_preproc/mprage_brain.nii.gz&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">csf_threshold</span><span class="o">.</span><span class="n">csf_threshold</span> <span class="o">=</span> <span class="mf">0.4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">wm_threshold</span><span class="o">.</span><span class="n">wm_threshold</span> <span class="o">=</span> <span class="mf">0.66</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">gm_threshold</span><span class="o">.</span><span class="n">gm_threshold</span> <span class="o">=</span> <span class="mf">0.2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seg_preproc</span><span class="o">.</span><span class="n">run</span><span class="p">()</span> 
+</pre></div>
+</div>
+<p>High Level Graph:</p>
+<a class="reference internal image-reference" href="../_images/seg_preproc.dot.png"><img alt="../_images/seg_preproc.dot.png" src="../_images/seg_preproc.dot.png" style="width: 1100px; height: 480px;" /></a>
+<p>Detailed Graph:</p>
+<a class="reference internal image-reference" href="../_images/seg_preproc_detailed.dot.png"><img alt="../_images/seg_preproc_detailed.dot.png" src="../_images/seg_preproc_detailed.dot.png" style="width: 1100px; height: 480px;" /></a>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.seg_preproc.process_segment_map">
+<tt class="descclassname">CPAC.seg_preproc.</tt><tt class="descname">process_segment_map</tt><big>(</big><em>wf_name</em><big>)</big><a class="headerlink" href="#CPAC.seg_preproc.process_segment_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a sub workflow used inside segmentation workflow to process 
+probability maps obtained in segmententation. Steps include overlapping 
+of the prior tissue with probability maps, thresholding and binarizing 
+it and creating a mask thst is used in further analysis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>wf_name</strong> : string</p>
+<blockquote>
+<div><p>Workflow Name</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>preproc</strong> : workflow</p>
+<blockquote class="last">
+<div><p>Workflow Object for process_segment_map Workflow</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p><a class="reference external" href="https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/seg_preproc/seg_preproc.py">Source</a></p>
+<p>Workflow Inputs:</p>
+<div class="highlight-python"><pre>inputspec.brain : string (existing nifti file)
+    Anatomical image(without skull)
+
+inputspec.standard2highres_mat : string (existing affine transformation .mat file)
+    path to transformation matrix from mni space to anatomical space
+
+inputspec.tissue_prior : string (existing nifti file)
+    path to FSL Standard Tissue prior image 
+
+inputspec.threshold : string (float)
+    threshold of Segmentation Probaility Maps
+
+inputspec.probability_map : string (nifti file)
+    tissue Probability map obtained from fsl FAST</pre>
+</div>
+<p>Workflow Outputs:</p>
+<div class="highlight-python"><pre>outputspec.segment_mni2t1 : string (nifti file)
+    path to output CSF prior template(in MNI space) registered to anatomical space
+
+outputspec.segment_combo : string (nifti file)
+    path to output image containing overlap between csf probability map and segment_mni2t1
+
+outputspec.segment_bin : string (nifti file)
+    path to output image after Thresholding and binarizing segment_combo
+
+outputspec.segment_mask : string (nifti file)
+    path to output image after masking segment_combo with its tissue prior in t1 space</pre>
+</div>
+<p>Order of commands:</p>
+<ul class="simple">
+<li>Register tissue prior in MNI space to t1 space.</li>
+<li>Find overlap between segment probability map and tissue prior in t1 native space.</li>
+<li>Threshold and binarize segment probability map</li>
+<li>Generate segment mask, by applying tissue prior in t1 space to thresholded binarized segment probability map</li>
+</ul>
+<p>High Level Graph:</p>
+<a class="reference internal image-reference" href="../_images/process_segment_map.dot.png"><img alt="../_images/process_segment_map.dot.png" src="../_images/process_segment_map.dot.png" style="width: 1100px; height: 480px;" /></a>
+<p>Detailed Graph:</p>
+<a class="reference internal image-reference" href="../_images/process_segment_map_detailed.dot.png"><img alt="../_images/process_segment_map_detailed.dot.png" src="../_images/process_segment_map_detailed.dot.png" style="width: 1100px; height: 480px;" /></a>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.seg_preproc.pick_wm_0">
+<tt class="descclassname">CPAC.seg_preproc.</tt><tt class="descname">pick_wm_0</tt><big>(</big><em>probability_maps</em><big>)</big><a class="headerlink" href="#CPAC.seg_preproc.pick_wm_0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the csf probability map from the list of segmented probability maps</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>probability_maps</strong> : list (string)</p>
+<blockquote>
+<div><p>List of Probability Maps</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>file</strong> : string</p>
+<blockquote class="last">
+<div><p>Path to segment_prob_0.nii.gz is returned</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.seg_preproc.pick_wm_1">
+<tt class="descclassname">CPAC.seg_preproc.</tt><tt class="descname">pick_wm_1</tt><big>(</big><em>probability_maps</em><big>)</big><a class="headerlink" href="#CPAC.seg_preproc.pick_wm_1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the gray matter probability map from the list of segmented probability maps</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>probability_maps</strong> : list (string)</p>
+<blockquote>
+<div><p>List of Probability Maps</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>file</strong> : string</p>
+<blockquote class="last">
+<div><p>Path to segment_prob_1.nii.gz is returned</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.seg_preproc.pick_wm_2">
+<tt class="descclassname">CPAC.seg_preproc.</tt><tt class="descname">pick_wm_2</tt><big>(</big><em>probability_maps</em><big>)</big><a class="headerlink" href="#CPAC.seg_preproc.pick_wm_2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the white matter probability map from the list of segmented probability maps</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>probability_maps</strong> : list (string)</p>
+<blockquote>
+<div><p>List of Probability Maps</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>file</strong> : string</p>
+<blockquote class="last">
+<div><p>Path to segment_prob_2.nii.gz is returned</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="func_preproc.html"
+                        title="previous chapter">Functional Preprocessing</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="sca.html"
+                        title="next chapter">Seed Based Correlation Analysis</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/workflows/seg_preproc.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sca.html" title="Seed Based Correlation Analysis"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="func_preproc.html" title="Functional Preprocessing"
+             >previous</a> |</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Workflows</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Brian.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

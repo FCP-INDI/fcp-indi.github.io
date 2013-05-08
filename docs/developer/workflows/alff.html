@@ -1,0 +1,482 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Amplitude of Low Frequency Fluctuations(ALFF) and fractional ALFF &mdash; CPAC 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CPAC 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Workflows" href="index.html" />
+    <link rel="next" title="Voxel Mirrored Homotopic Connectivity Analysis" href="vmhc.html" />
+    <link rel="prev" title="Nuisance Signal Removal" href="nuisance.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="vmhc.html" title="Voxel Mirrored Homotopic Connectivity Analysis"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="nuisance.html" title="Nuisance Signal Removal"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Workflows</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-CPAC.alff">
+<span id="amplitude-of-low-frequency-fluctuations-alff-and-fractional-alff"></span><h1>Amplitude of Low Frequency Fluctuations(ALFF) and fractional ALFF<a class="headerlink" href="#module-CPAC.alff" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="CPAC.alff.create_alff">
+<tt class="descclassname">CPAC.alff.</tt><tt class="descname">create_alff</tt><big>(</big><em>wf_name='alff_workflow'</em><big>)</big><a class="headerlink" href="#CPAC.alff.create_alff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate Amplitude of low frequency oscillations(ALFF) and fractional ALFF maps</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>wf_name</strong> : string</p>
+<blockquote>
+<div><p>Workflow name</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>alff_workflow</strong> : workflow object</p>
+<blockquote class="last">
+<div><p>ALFF workflow</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p><a class="reference external" href="https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/alff/alff.py">Source</a></p>
+<p>Workflow Inputs:</p>
+<div class="highlight-python"><pre>hp_input.hp : list (float) 
+    high pass frequencies
+
+lp_input.lp : list (float) 
+    low pass frequencies
+
+inputspec.rest_res : string (existing nifti file)
+    Nuisance signal regressed functional image
+
+inputspec.rest_mask : string (existing nifti file)
+    A mask volume(derived by dilating the motion corrected functional volume) in native space</pre>
+</div>
+<p>Workflow Outputs:</p>
+<div class="highlight-python"><pre>outputspec.alff_img : string (nifti file)
+    outputs image containing the sum of the amplitudes in the low frequency band
+
+outputspec.falff_img : string (nifti file)
+    outputs image containing the sum of the amplitudes in the low frequency band divided by the amplitude of the total frequency
+
+outputspec.alff_Z_img : string (nifti file)
+    outputs image containing Normalized ALFF Z scores across full brain in native space
+
+outputspec.falff_Z_img : string (nifti file)
+    outputs image containing Normalized fALFF Z scores across full brain in native space</pre>
+</div>
+<p>Order of Commands:</p>
+<ul>
+<li><dl class="first docutils">
+<dt>Filter the input file rest file( slice-time, motion corrected and nuisance regressed) ::</dt>
+<dd><dl class="first last docutils">
+<dt>3dBandpass -prefix residual_filtered.nii.gz </dt>
+<dd><p class="first last">0.009 0.08 residual.nii.gz</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Calculate ALFF by taking the standard deviation of the filtered file ::</dt>
+<dd><dl class="first last docutils">
+<dt>3dTstat -stdev </dt>
+<dd><p class="first last">-mask rest_mask.nii.gz 
+-prefix residual_filtered_3dT.nii.gz
+residual_filtered.nii.gz</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Calculate the standard deviation of the unfiltered file ::</dt>
+<dd><dl class="first last docutils">
+<dt>3dTstat -stdev </dt>
+<dd><p class="first last">-mask rest_mask.nii.gz 
+-prefix residual_3dT.nii.gz
+residual.nii.gz</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Calculate fALFF ::</dt>
+<dd><dl class="first last docutils">
+<dt>3dcalc -a rest_mask.nii.gz </dt>
+<dd><p class="first last">-b residual_filtered_3dT.nii.gz
+-c residual_3dT.nii.gz  
+-expr &#8216;(1.0*bool(a))*((1.0*b)/(1.0*c))&#8217; -float</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><p class="first">Normalize ALFF/fALFF to Z-score across full brain</p>
+<div class="highlight-python"><pre>fslstats
+ALFF.nii.gz
+-k rest_mask.nii.gz
+-m &gt; mean_ALFF.txt ; mean=$( cat mean_ALFF.txt )
+
+fslstats
+ALFF.nii.gz
+-k rest_mask.nii.gz
+-s &gt; std_ALFF.txt ; std=$( cat std_ALFF.txt )
+
+fslmaths
+ALFF.nii.gz
+-sub ${mean}
+-div ${std}
+-mas rest_mask.nii.gz ALFF_Z.nii.gz
+
+fslstats
+fALFF.nii.gz
+-k rest_mask.nii.gz
+-m &gt; mean_fALFF.txt ; mean=$( cat mean_fALFF.txt )
+
+fslstats
+fALFF.nii.gz
+-k rest_mask.nii.gz 
+-s &gt; std_fALFF.txt
+std=$( cat std_fALFF.txt )
+
+fslmaths
+fALFF.nii.gz
+-sub ${mean}
+-div ${std}
+-mas rest_mask.nii.gz
+fALFF_Z.nii.gz</pre>
+</div>
+</li>
+</ul>
+<p>High Level Workflow Graph:</p>
+<a class="reference internal image-reference" href="../_images/alff.dot.png"><img alt="../_images/alff.dot.png" src="../_images/alff.dot.png" style="width: 500px;" /></a>
+<p>Detailed Workflow Graph:</p>
+<a class="reference internal image-reference" href="../_images/alff_detailed.dot.png"><img alt="../_images/alff_detailed.dot.png" src="../_images/alff_detailed.dot.png" style="width: 500px;" /></a>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R1]</a></td><td>Zou, Q.-H., Zhu, C.-Z., Yang, Y., Zuo, X.-N., Long, X.-Y., Cao, Q.-J., Wang, Y.-F., et al. (2008). An improved approach to detection of amplitude of low-frequency fluctuation (ALFF) for resting-state fMRI: fractional ALFF. Journal of neuroscience methods, 172(1), 137-41. doi:10.10</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span> <span class="o">=</span> <span class="n">create_alff</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">hp_input</span><span class="o">.</span><span class="n">hp</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">lp_input</span><span class="o">.</span><span class="n">lp</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="s">&#39;hp_input&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">iterables</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;hp&#39;</span><span class="p">,[</span><span class="mf">0.01</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="s">&#39;lp_input&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">iterables</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;lp&#39;</span><span class="p">,[</span><span class="mf">0.1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">rest_res</span> <span class="o">=</span> <span class="s">&#39;/home/data/subject/func/rest_bandpassed.nii.gz&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">rest_mask</span><span class="o">=</span> <span class="s">&#39;/home/data/subject/func/rest_mask.nii.gz&#39;</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">alff_w</span><span class="o">.</span><span class="n">run</span><span class="p">()</span> 
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.alff.get_img_nvols">
+<tt class="descclassname">CPAC.alff.</tt><tt class="descname">get_img_nvols</tt><big>(</big><em>in_files</em><big>)</big><a class="headerlink" href="#CPAC.alff.get_img_nvols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the number of volumes in the given nifti image</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>in_files</strong> : string (nifti file)</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>out</strong> : int</p>
+<blockquote class="last">
+<div><p>number of volumes of input nifti file</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.alff.get_img_tr">
+<tt class="descclassname">CPAC.alff.</tt><tt class="descname">get_img_tr</tt><big>(</big><em>in_files</em>, <em>TRa</em><big>)</big><a class="headerlink" href="#CPAC.alff.get_img_tr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Temporal Resolution parameter from the image header.
+If TRa is not None then it compares the computed TR and the supplied
+if the difference is greater than 0.001 then it returns supplied TRa as the
+TR of the image and flashes a warning message else returns TRa</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>in_files</strong> : string (nifti file)</p>
+<p><strong>TRa</strong> : float</p>
+<blockquote>
+<div><p>user supplied Temporal Resolution</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>out</strong> : float</p>
+<blockquote class="last">
+<div><p>TR for input file</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.alff.get_N1">
+<tt class="descclassname">CPAC.alff.</tt><tt class="descname">get_N1</tt><big>(</big><em>nvols</em>, <em>TR</em>, <em>HP</em><big>)</big><a class="headerlink" href="#CPAC.alff.get_N1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the low frequency point</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>TR</strong> : float</p>
+<blockquote>
+<div><p>Temporal Resolution</p>
+</div></blockquote>
+<p><strong>nvols</strong> : int</p>
+<blockquote>
+<div><p>Number of volumes</p>
+</div></blockquote>
+<p><strong>HP</strong> : float</p>
+<blockquote>
+<div><p>HighPass Low Cutoff Frequency</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>n1</strong> : float</p>
+<p class="last"><strong>Low Frequency Point</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.alff.get_N2">
+<tt class="descclassname">CPAC.alff.</tt><tt class="descname">get_N2</tt><big>(</big><em>nvols</em>, <em>TR</em>, <em>LP</em>, <em>HP</em><big>)</big><a class="headerlink" href="#CPAC.alff.get_N2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the high frequency point</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>TR</strong> : float</p>
+<blockquote>
+<div><p>Temporal Resolution</p>
+</div></blockquote>
+<p><strong>nvols</strong> : int</p>
+<blockquote>
+<div><p>Number of volumes</p>
+</div></blockquote>
+<p><strong>LP</strong> : float</p>
+<blockquote>
+<div><p>LowPass High Cutoff Frequency</p>
+</div></blockquote>
+<p><strong>HP</strong> : float</p>
+<blockquote>
+<div><p>HighPass Low Cutoff Frequency</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>n2</strong> : float</p>
+<p class="last"><strong>High Frequency Point</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.alff.get_operand_string">
+<tt class="descclassname">CPAC.alff.</tt><tt class="descname">get_operand_string</tt><big>(</big><em>mean</em>, <em>std_dev</em><big>)</big><a class="headerlink" href="#CPAC.alff.get_operand_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the Operand String to be used in workflow nodes to supply 
+mean and std deviation to alff workflow nodes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>mean: string</strong> :</p>
+<blockquote>
+<div><p>mean value in string format</p>
+</div></blockquote>
+<p><strong>std_dev</strong> : string</p>
+<blockquote>
+<div><p>std deviation value in string format</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>op_string</strong> : string</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.alff.set_op_str">
+<tt class="descclassname">CPAC.alff.</tt><tt class="descname">set_op_str</tt><big>(</big><em>n2</em><big>)</big><a class="headerlink" href="#CPAC.alff.set_op_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the operand string used by the workflow nodes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>n2</strong> : float</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>strs</strong> : string</p>
+<blockquote class="last">
+<div><p>operand string</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.alff.set_op1_str">
+<tt class="descclassname">CPAC.alff.</tt><tt class="descname">set_op1_str</tt><big>(</big><em>nvols</em><big>)</big><a class="headerlink" href="#CPAC.alff.set_op1_str" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the operand string used by the workflow nodes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>nvols</strong> : int</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>strs</strong> : string</p>
+<blockquote class="last">
+<div><p>operand string</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.alff.takemod">
+<tt class="descclassname">CPAC.alff.</tt><tt class="descname">takemod</tt><big>(</big><em>nvols</em><big>)</big><a class="headerlink" href="#CPAC.alff.takemod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine if the input is odd or even values and 
+return a of 0 and 1 depending on the truth value</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><strong>nvols</strong> : int</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><strong>decisions</strong> : int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="nuisance.html"
+                        title="previous chapter">Nuisance Signal Removal</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="vmhc.html"
+                        title="next chapter">Voxel Mirrored Homotopic Connectivity Analysis</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/workflows/alff.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="vmhc.html" title="Voxel Mirrored Homotopic Connectivity Analysis"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="nuisance.html" title="Nuisance Signal Removal"
+             >previous</a> |</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Workflows</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Brian.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

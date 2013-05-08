@@ -1,0 +1,291 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Registration &mdash; CPAC 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CPAC 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Workflows" href="index.html" />
+    <link rel="next" title="Timeseries Analysis" href="timeseries.html" />
+    <link rel="prev" title="Median Angle Correction" href="median_angle.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="timeseries.html" title="Timeseries Analysis"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="median_angle.html" title="Median Angle Correction"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Workflows</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-CPAC.registration">
+<span id="registration"></span><h1>Registration<a class="headerlink" href="#module-CPAC.registration" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="CPAC.registration.create_nonlinear_register">
+<tt class="descclassname">CPAC.registration.</tt><tt class="descname">create_nonlinear_register</tt><big>(</big><em>name='nonlinear_register'</em><big>)</big><a class="headerlink" href="#CPAC.registration.create_nonlinear_register" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs non-linear registration of an input file to a reference file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>name</strong> : string, optional</p>
+<blockquote>
+<div><p>Name of the workflow.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>nonlinear_register</strong> : nipype.pipeline.engine.Workflow</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Workflow Inputs:</p>
+<div class="highlight-python"><pre>inputspec.input_brain : string (nifti file)
+    File of brain to be normalized (registered)
+inputspec.input_skull : string (nifti file)
+    File of input brain with skull
+inputspec.reference_brain : string (nifti file)
+    Target brain file to normalize to
+inputspec.reference_skull : string (nifti file)
+    Target brain with skull to normalize to
+inputspec.fnirt_config : string (fsl fnirt config file)
+    Configuration file containing parameters that can be specified in fnirt</pre>
+</div>
+<p>Workflow Outputs:</p>
+<div class="highlight-python"><pre>outputspec.output_brain : string (nifti file)
+    Normalizion of input brain file
+outputspec.linear_xfm : string (.mat file)
+    Affine matrix of linear transformation of brain file
+outputspec.invlinear_xfm : string
+    Inverse of affine matrix of linear transformation of brain file
+outputspec.nonlinear_xfm : string
+    Nonlinear field coefficients file of nonlinear transformation</pre>
+</div>
+<p>Registration Procedure:</p>
+<ol class="arabic simple">
+<li>Perform a linear registration to get affine transformation matrix.</li>
+<li>Perform a nonlinear registration on an input file to the reference file utilizing affine
+transformation from the previous step as a starting point.</li>
+<li>Invert the affine transformation to provide the user a transformation (affine only) from the
+space of the reference file to the input file.</li>
+</ol>
+<p>Workflow Graph:</p>
+<a class="reference internal image-reference" href="../_images/nonlinear_register.dot.png"><img alt="../_images/nonlinear_register.dot.png" src="../_images/nonlinear_register.dot.png" style="width: 500px;" /></a>
+<p>Detailed Workflow Graph:</p>
+<a class="reference internal image-reference" href="../_images/nonlinear_register_detailed.dot.png"><img alt="../_images/nonlinear_register_detailed.dot.png" src="../_images/nonlinear_register_detailed.dot.png" style="width: 500px;" /></a>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.registration.create_register_func_to_mni">
+<tt class="descclassname">CPAC.registration.</tt><tt class="descname">create_register_func_to_mni</tt><big>(</big><em>name='register_func_to_mni'</em><big>)</big><a class="headerlink" href="#CPAC.registration.create_register_func_to_mni" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers a functional scan in native space to MNI standard space.  This is meant to be used 
+after create_nonlinear_register() has been run and relies on some of it&#8217;s outputs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>name</strong> : string, optional</p>
+<blockquote>
+<div><p>Name of the workflow.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>register_func_to_mni</strong> : nipype.pipeline.engine.Workflow</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Workflow Inputs:</p>
+<div class="highlight-python"><pre>inputspec.func : string (nifti file)
+    Input functional scan to be registered to MNI space
+inputspec.mni : string (nifti file)
+    Reference MNI file
+inputspec.anat : string (nifti file)
+    Corresponding anatomical scan of subject
+inputspec.interp : string
+    Type of interpolation to use ('trilinear' or 'nearestneighbour' or 'sinc')
+inputspec.anat_to_mni_nonlinear_xfm : string (warp file)
+    Corresponding anatomical native space to MNI warp file
+inputspec.anat_to_mni_linear_xfm : string (mat file)
+    Corresponding anatomical native space to MNI mat file</pre>
+</div>
+<p>Workflow Outputs:</p>
+<div class="highlight-python"><pre>outputspec.func_to_anat_linear_xfm : string (mat file)
+    Affine transformation from functional to anatomical native space
+outputspec.func_to_mni_linear_xfm : string (mat file)
+    Affine transformation from functional to MNI space
+outputspec.mni_to_func_linear_xfm : string (mat file)
+    Affine transformation from MNI to functional space
+outputspec.mni_func : string (nifti file)
+    Functional scan registered to MNI standard space</pre>
+</div>
+<p>Workflow Graph:</p>
+<a class="reference internal image-reference" href="../_images/register_func_to_mni.dot.png"><img alt="../_images/register_func_to_mni.dot.png" src="../_images/register_func_to_mni.dot.png" style="width: 500px;" /></a>
+<p>Detailed Workflow Graph:</p>
+<a class="reference internal image-reference" href="../_images/register_func_to_mni_detailed.dot.png"><img alt="../_images/register_func_to_mni_detailed.dot.png" src="../_images/register_func_to_mni_detailed.dot.png" style="width: 500px;" /></a>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.registration.create_bbregister_func_to_mni">
+<tt class="descclassname">CPAC.registration.</tt><tt class="descname">create_bbregister_func_to_mni</tt><big>(</big><em>name='bbregister_func_to_mni'</em><big>)</big><a class="headerlink" href="#CPAC.registration.create_bbregister_func_to_mni" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers a functional scan in native space to MNI standard space.  This is meant to be used 
+after create_nonlinear_register() has been run and relies on some of it&#8217;s outputs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>name</strong> : string, optional</p>
+<blockquote>
+<div><p>Name of the workflow.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>register_func_to_mni</strong> : nipype.pipeline.engine.Workflow</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Workflow Inputs:</p>
+<div class="highlight-python"><pre>inputspec.func : string (nifti file)
+    Input functional scan to be registered to MNI space
+inputspec.mni : string (nifti file)
+    Reference MNI file
+inputspec.anat : string (nifti file)
+    Corresponding anatomical scan of subject
+inputspec.interp : string
+    Type of interpolation to use ('trilinear' or 'nearestneighbour' or 'sinc')
+inputspec.anat_to_mni_nonlinear_xfm : string (warp file)
+    Corresponding anatomical native space to MNI warp file
+inputspec.anat_to_mni_linear_xfm : string (mat file)
+    Corresponding anatomical native space to MNI mat file
+inputspec.anat_wm_segmentation : string (nifti file)
+    White matter segmentation probability mask in anatomical space
+inputspec.bbr_schedule : string (.sch file)
+    Boundary based registration schedule file for flirt command</pre>
+</div>
+<p>Workflow Outputs:</p>
+<div class="highlight-python"><pre>outputspec.func_to_anat_linear_xfm : string (mat file)
+    Affine transformation from functional to anatomical native space
+outputspec.func_to_mni_linear_xfm : string (mat file)
+    Affine transformation from functional to MNI space
+outputspec.mni_to_func_linear_xfm : string (mat file)
+    Affine transformation from MNI to functional space
+outputspec.anat_wm_edge : string (nifti file)
+    White matter edge mask in anatomical space
+outputspec.anat_func : string (nifti file)
+    Functional data in anatomical space
+outputspec.mni_func : string (nifti file)
+    Functional scan registered to MNI standard space</pre>
+</div>
+<p>Workflow Graph:</p>
+<a class="reference internal image-reference" href="../_images/register_func_to_mni.dot.png"><img alt="../_images/register_func_to_mni.dot.png" src="../_images/register_func_to_mni.dot.png" style="width: 500px;" /></a>
+<p>Detailed Workflow Graph:</p>
+<a class="reference internal image-reference" href="../_images/register_func_to_mni_detailed.dot.png"><img alt="../_images/register_func_to_mni_detailed.dot.png" src="../_images/register_func_to_mni_detailed.dot.png" style="width: 500px;" /></a>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="median_angle.html"
+                        title="previous chapter">Median Angle Correction</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="timeseries.html"
+                        title="next chapter">Timeseries Analysis</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/workflows/registration.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="timeseries.html" title="Timeseries Analysis"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="median_angle.html" title="Median Angle Correction"
+             >previous</a> |</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Workflows</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Brian.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

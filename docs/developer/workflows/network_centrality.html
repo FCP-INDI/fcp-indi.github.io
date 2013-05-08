@@ -1,0 +1,664 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Network Centrality &mdash; CPAC 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="CPAC 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Workflows" href="index.html" />
+    <link rel="prev" title="Timeseries Analysis" href="timeseries.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="timeseries.html" title="Timeseries Analysis"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Workflows</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-CPAC.network_centrality">
+<span id="network-centrality"></span><h1>Network Centrality<a class="headerlink" href="#module-CPAC.network_centrality" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="CPAC.network_centrality.create_resting_state_graphs">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">create_resting_state_graphs</tt><big>(</big><em>allocated_memory=None</em>, <em>wf_name='resting_state_graph'</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.create_resting_state_graphs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Workflow to calculate degree and eigenvector centrality
+measures for the resting state data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>generate_graph</strong> : boolean</p>
+<blockquote>
+<div><p>when true the workflow plots the adjacency matrix graph 
+and converts the adjacency matrix into compress sparse 
+matrix and stores it in a .mat file. By default its False</p>
+</div></blockquote>
+<p><strong>wf_name</strong> : string</p>
+<blockquote>
+<div><p>name of the workflow</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>wf</strong> : workflow object</p>
+<blockquote class="last">
+<div><p>resting state graph workflow object</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p><a class="reference external" href="https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/network_centrality/resting_state_centrality.py">Source</a></p>
+<p>Workflow Inputs:</p>
+<div class="highlight-python"><pre>inputspec.subject: string (nifti file)
+    path to resting state input data for which centrality measure is to be calculated
+
+inputspec.template : string (existing nifti file)
+    path to mask/parcellation unit 
+
+inputspec.threshold_option: string (int)
+    threshold options:  0 for probability p_value, 1 for sparsity threshold, any other for threshold value
+
+inputspec.threshold: string (float)
+    pvalue/sparsity_threshold/threshold value
+
+centrality_options.weight_options : string (list of boolean)
+    list of two booleans for binarize and weighted options respectively
+
+centrality_options.method_options : string (list of boolean)
+    list of two booleans for Degree and Eigenvector centrality method options respectively</pre>
+</div>
+<p>Workflow Outputs:</p>
+<div class="highlight-python"><pre>outputspec.centrality_outputs : string (list of nifti files)
+    path to list of centrality outputs for binarized or/and weighted and
+    degree or/and eigen_vector 
+
+outputspec.threshold_matrix : string (numpy file)
+    path to file containing thresholded correlation matrix
+
+outputspec.correlation_matrix : string (numpy file)
+    path to file containing correlation matrix
+
+outputspec.graph_outputs : string (mat and png files)
+    path to matlab compatible sparse adjacency matrix files 
+    and adjacency graph images </pre>
+</div>
+<p>Order of commands:</p>
+<ul class="simple">
+<li>load the data and template, based on template type (parcellation unit ar mask)
+extract timeseries</li>
+<li>Calculate the correlation matrix for the image data for each voxel in the mask or node
+in the parcellation unit</li>
+<li>Based on threshold option (p_value or sparsity_threshold), calculate the threshold value</li>
+<li>Threshold the correlation matrix</li>
+<li>Based on weight options for edges in the network (binarize or weighted), calculate Degree 
+or Vector Based centrality measures</li>
+</ul>
+<p>High Level Workflow Graph:</p>
+<a class="reference internal image-reference" href="../_images/resting_state_centrality.dot.png"><img alt="../_images/resting_state_centrality.dot.png" src="../_images/resting_state_centrality.dot.png" style="width: 1000px;" /></a>
+<p>Detailed Workflow Graph:</p>
+<a class="reference internal image-reference" href="../_images/resting_state_centrality_detailed.dot.png"><img alt="../_images/resting_state_centrality_detailed.dot.png" src="../_images/resting_state_centrality_detailed.dot.png" style="width: 1000px;" /></a>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">resting_state_centrality</span> <span class="kn">as</span> <span class="nn">graph</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wflow</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">create_resting_state_graphs</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wflow</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">centrality_options</span><span class="o">.</span><span class="n">method_options</span><span class="o">=</span><span class="p">[</span><span class="bp">True</span><span class="p">,</span> <span class="bp">True</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wflow</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">centrality_options</span><span class="o">.</span><span class="n">weight_options</span><span class="o">=</span><span class="p">[</span><span class="bp">True</span><span class="p">,</span> <span class="bp">True</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wflow</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">subject</span> <span class="o">=</span> <span class="s">&#39;/home/work/data/rest_mc_MNI_TR_3mm.nii.gz&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wflow</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">template</span> <span class="o">=</span> <span class="s">&#39;/home/work/data/mask_3mm.nii.gz&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wflow</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">threshold_option</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wflow</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="mf">0.0744</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wflow</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">=</span> <span class="s">&#39;graph_working_directory&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wflow</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.network_centrality.load">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">load</tt><big>(</big><em>datafile</em>, <em>template</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to read data from datafile and mask/parcellation unit
+and store the mask data, timeseries, affine matrix, mask type
+and scans. The output of this method is used by all other nodes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>datafile</strong> : string (nifti file)</p>
+<blockquote>
+<div><p>path to subject data file</p>
+</div></blockquote>
+<p><strong>template</strong> : string (nifti file)</p>
+<blockquote>
+<div><p>path to mask/parcellation unit</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>timeseries_data: string (numpy npy file)</strong> :</p>
+<blockquote>
+<div><p>path to file containing timeseries of the input data</p>
+</div></blockquote>
+<p><strong>affine: string (numpy npy file)</strong> :</p>
+<blockquote>
+<div><p>path to file containing affine matrix of teh input data</p>
+</div></blockquote>
+<p><strong>mask_data: string (numpy npy file)</strong> :</p>
+<blockquote>
+<div><p>path to file containing mask/parcellation unit matrix</p>
+</div></blockquote>
+<p><strong>template_type: string</strong> :</p>
+<blockquote>
+<div><p>0 for mask, 1 for parcellation unit</p>
+</div></blockquote>
+<p><strong>scans: string (int)</strong> :</p>
+<blockquote>
+<div><p>total no of scans in the input data</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises :</th><td class="field-body"><p class="first last"><strong>Exception</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.network_centrality.load_mat">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">load_mat</tt><big>(</big><em>mat_file</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.load_mat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple method to load a npy file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>mat_file</strong> : string (numpy file or list of numpy file)</p>
+<blockquote>
+<div><p>any numpy image</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>matrix</strong> : numpy matrix</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.network_centrality.get_centrality">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">get_centrality</tt><big>(</big><em>timeseries_data</em>, <em>method_options</em>, <em>weight_options</em>, <em>threshold</em>, <em>option</em>, <em>scans</em>, <em>memory_allocated</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.get_centrality" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to calculate degree and eigen vector centrality</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>weight_options</strong> : string (list of boolean)</p>
+<blockquote>
+<div><p>list of two booleans for binarize and weighted options respectively</p>
+</div></blockquote>
+<p><strong>method_options</strong> : string (list of boolean)</p>
+<blockquote>
+<div><p>list of two booleans for binarize and weighted options respectively</p>
+</div></blockquote>
+<p><strong>threshold_matrix</strong> : string (numpy npy file)</p>
+<blockquote>
+<div><p>path to file containing thresholded correlation matrix</p>
+</div></blockquote>
+<p><strong>correlation_matrix</strong> : string (numpy npy file)</p>
+<blockquote>
+<div><p>path to file containing correlation matrix</p>
+</div></blockquote>
+<p><strong>template_data</strong> : string (numpy npy file)</p>
+<blockquote>
+<div><p>path to file containing mask or parcellation unit data</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>out_list</strong> : string (list of tuples)</p>
+<blockquote>
+<div><p>list of tuple containing output name to be used to store nifti image
+for centrality and centrality matrix</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises :</th><td class="field-body"><p class="first last"><strong>Exception</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.network_centrality.get_centrality_opt">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">get_centrality_opt</tt><big>(</big><em>timeseries_data</em>, <em>method_options</em>, <em>weight_options</em>, <em>memory_allocated</em>, <em>threshold</em>, <em>scans</em>, <em>r_value=None</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.get_centrality_opt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to calculate degree and eigen vector centrality. 
+This method takes into consideration the amount of memory
+allocated by the user to calculate degree centrality.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>timeseries_data</strong> : numpy array</p>
+<blockquote>
+<div><p>timeseries of the input subject</p>
+</div></blockquote>
+<p><strong>weight_options</strong> : string (list of boolean)</p>
+<blockquote>
+<div><p>list of two booleans for binarize and weighted options respectively</p>
+</div></blockquote>
+<p><strong>method_options</strong> : string (list of boolean)</p>
+<blockquote>
+<div><p>list of two booleans for binarize and weighted options respectively</p>
+</div></blockquote>
+<p><strong>memory_allocated</strong> : a string</p>
+<blockquote>
+<div><p>amount of memory allocated to degree centrality</p>
+</div></blockquote>
+<p><strong>scans</strong> : an integer</p>
+<blockquote>
+<div><p>number of scans in the subject</p>
+</div></blockquote>
+<p><strong>r_value :a float</strong> :</p>
+<blockquote>
+<div><p>threshold value</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>out_list</strong> : string (list of tuples)</p>
+<blockquote>
+<div><p>list of tuple containing output name to be used to store nifti image
+for centrality and centrality matrix</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises :</th><td class="field-body"><p class="first last"><strong>Exception</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.network_centrality.map_centrality_matrix">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">map_centrality_matrix</tt><big>(</big><em>centrality_matrix</em>, <em>affine</em>, <em>template_data</em>, <em>template_type</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.map_centrality_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to map centrality matrix to a nifti image</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>centrality_matrix</strong> : tuple (string, array_like)</p>
+<blockquote>
+<div><p>tuple containing matrix name and degree/eigenvector centrality matrix</p>
+</div></blockquote>
+<p><strong>affine</strong> : string (numpy mat file)</p>
+<blockquote>
+<div><p>path to file containing image affine matrix</p>
+</div></blockquote>
+<p><strong>template_data</strong> : string (numpy mat file)</p>
+<blockquote>
+<div><p>path to file containing mask or roi data matrix</p>
+</div></blockquote>
+<p><strong>template_type</strong> : int</p>
+<blockquote>
+<div><p>type of template: 0 for mask, 1 for roi</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>out_file</strong> : string (nifti image)</p>
+<blockquote>
+<div><p>nifti image mapped from the centrality matrix</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises :</th><td class="field-body"><p class="first last"><strong>Exception</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.network_centrality.get_zscore">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">get_zscore</tt><big>(</big><em>wf_name='z_score'</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.get_zscore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Workflow to calculate z-scores</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>wf_name</strong> : string</p>
+<blockquote>
+<div><p>name of the workflow</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>wf</strong> : workflow object</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p><a class="reference external" href="https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/network_centrality/z_score.py">Source</a></p>
+<p>Workflow Inputs:</p>
+<div class="highlight-python"><pre>inputspec.input_file : string
+    path to input functional derivative file for which z score has to be calculated
+inputspec.mask_file : string
+    path to whole brain functional mask file required to calculate zscore</pre>
+</div>
+<p>Workflow Outputs:</p>
+<div class="highlight-python"><pre>outputspec.z_score_img : string
+     path to image containing Normalized Input Image Z scores across full brain.</pre>
+</div>
+<p>High Level Workflow Graph:</p>
+<a class="reference internal image-reference" href="../_images/zscore.dot.png"><img alt="../_images/zscore.dot.png" src="../_images/zscore.dot.png" style="width: 500px;" /></a>
+<p>Detailed Workflow Graph:</p>
+<a class="reference internal image-reference" href="../_images/zscore_detailed.dot.png"><img alt="../_images/zscore_detailed.dot.png" src="../_images/zscore_detailed.dot.png" style="width: 500px;" /></a>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.network_centrality.calc_corrcoef">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">calc_corrcoef</tt><big>(</big><em>X</em>, <em>Y=None</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.calc_corrcoef" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to calculate correlation 
+Each of the columns in X will be correlated 
+with each of the columns in Y. Each column 
+represents a variable, with the rows containing the observations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>X</strong> : numpy array</p>
+<blockquote>
+<div><p>array of shape x1, x2</p>
+</div></blockquote>
+<p><strong>Y</strong> : numpy array</p>
+<blockquote>
+<div><p>array of shape y1, y2</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>r</strong> : numpy array</p>
+<blockquote class="last">
+<div><p>array containing correlation values of shape x2, y2</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.network_centrality.calc_centrality">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">calc_centrality</tt><big>(</big><em>method_options</em>, <em>weight_options</em>, <em>option</em>, <em>threshold</em>, <em>timeseries_data</em>, <em>scans</em>, <em>template_type</em>, <em>template_data</em>, <em>affine</em>, <em>allocated_memory</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.calc_centrality" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to calculate centrality and map them to a nifti file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>method_options</strong> : list (boolean)</p>
+<blockquote>
+<div><p>list of two booleans for binarize and weighted options respectively</p>
+</div></blockquote>
+<p><strong>weight_options</strong> : list (boolean)</p>
+<blockquote>
+<div><p>list of two booleans for binarize and weighted options respectively</p>
+</div></blockquote>
+<p><strong>option</strong> : an integer</p>
+<blockquote>
+<div><p>0 for probability p_value, 1 for sparsity threshold, 
+any other for threshold value</p>
+</div></blockquote>
+<p><strong>threshold</strong> : a float</p>
+<blockquote>
+<div><p>pvalue/sparsity_threshold/threshold value</p>
+</div></blockquote>
+<p><strong>timeseries_data</strong> : string (numpy filepath)</p>
+<blockquote>
+<div><p>timeseries of the input subject</p>
+</div></blockquote>
+<p><strong>scans</strong> : an integer</p>
+<blockquote>
+<div><p>number of scans in the subject</p>
+</div></blockquote>
+<p><strong>template_type</strong> : an integer</p>
+<blockquote>
+<div><p>0 for mask, 1 for roi</p>
+</div></blockquote>
+<p><strong>template_data</strong> : string (numpy filepath)</p>
+<blockquote>
+<div><p>path to file containing mask/parcellation unit matrix</p>
+</div></blockquote>
+<p><strong>affine</strong> : string (filepath)</p>
+<blockquote>
+<div><p>path to file containing affine matrix of the input data</p>
+</div></blockquote>
+<p><strong>allocated_memory</strong> : string</p>
+<blockquote>
+<div><p>amount of memory allocated to degree centrality</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>out_list</strong> : list</p>
+<blockquote class="last">
+<div><p>list containing out mapped centrality images</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.network_centrality.calc_eigenV">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">calc_eigenV</tt><big>(</big><em>r_matrix</em>, <em>r_value</em>, <em>weight_options</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.calc_eigenV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to calculate Eigen Vector Centrality</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>r_matrix</strong> : numpy array</p>
+<blockquote>
+<div><p>correlation matrix</p>
+</div></blockquote>
+<p><strong>r_value</strong> : a float</p>
+<blockquote>
+<div><p>threshold value</p>
+</div></blockquote>
+<p><strong>weight_options</strong> : list (boolean)</p>
+<blockquote>
+<div><p>list of two booleans for binarize and weighted options respectively</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>out_list</strong> : list</p>
+<blockquote class="last">
+<div><p>list containing eigen vector centrality maps</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.network_centrality.calc_blocksize">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">calc_blocksize</tt><big>(</big><em>shape</em>, <em>memory_allocated=None</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.calc_blocksize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to calculate blocksize to calculate correlation matrix
+as per the memory allocated by the user. By default, the block
+size is 1000.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>shape</strong> : tuple</p>
+<blockquote>
+<div><p>shape of array</p>
+</div></blockquote>
+<p><strong>memory_allocated</strong> : float</p>
+<blockquote>
+<div><p>memory allocated in GB for degree centrality</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>block_size</strong> : an integer</p>
+<blockquote class="last">
+<div><p>size of block for matrix calculation</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.network_centrality.calc_threshold">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">calc_threshold</tt><big>(</big><em>option</em>, <em>threshold</em>, <em>scans</em>, <em>corr_matrix=None</em>, <em>full_matrix=True</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.calc_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to calculate threshold based
+on the threshold method chosen</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>option</strong> : an integer</p>
+<blockquote>
+<div><p>threshold option</p>
+</div></blockquote>
+<p><strong>threshold</strong> : a float</p>
+<blockquote>
+<div><p>thrshold value</p>
+</div></blockquote>
+<p><strong>scans</strong> : an integer</p>
+<blockquote>
+<div><p>no of timepoints</p>
+</div></blockquote>
+<p><strong>corr_matrix</strong> : numpy array</p>
+<blockquote>
+<div><p>correlation matrix</p>
+</div></blockquote>
+<p><strong>full_matrix</strong> : boolean</p>
+<blockquote class="last">
+<div><p>True, if full matrix is considered.
+False, if only upper triangle is considered.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.network_centrality.check_timeseries">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">check_timeseries</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.check_timeseries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to check if the array contains
+any zeros values. If it contains zeros
+then return the indices of those points.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>data</strong> : numpy array</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>index</strong> : list</p>
+<blockquote>
+<div><p>indices of all where a</p>
+</div></blockquote>
+<p class="last"><strong>data</strong> : numpy array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="timeseries.html"
+                        title="previous chapter">Timeseries Analysis</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/workflows/network_centrality.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="timeseries.html" title="Timeseries Analysis"
+             >previous</a> |</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Workflows</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Brian.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

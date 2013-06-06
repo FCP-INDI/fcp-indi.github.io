@@ -1,36 +1,29 @@
 Temporal Filtering
 ------------------
 
-Why Filter?
+Introduction & Background
+^^^^^^^^^^^^^^^^^^^^^^^^^
+The overall goal of temporal filtering is to increase the signal-to-noise ratio. Due to the relatively poor temporal resolution of fMRI, time series data contain little high-frequency noise. They do, however, often contain very slow frequency fluctuations that may be unrelated to the signal of interest. Slow changes in magnetic field strength may be responsible for part of the low-frequency signal observed in fMRI time series (Smith et al., 1999). Other factors contributing to noise in a time series are cardiac and respiratory effects, which will often show up as noise around ~0.15 and ~0.34 Hz, respectively (Wager et al., 2007).
+
+Computation
 ^^^^^^^^^^^
-As with smoothing (which is a type of spatial filtering), the goal of temporal filtering is to increase the signal-to-noise ratio. Due to the relatively poor temporal resolution of fMRI, timeseries data contain no high-frequency noise. They do, however, often contain very slow frequency fluctuations that may be unrelated to the signal of interest.
+The temporal filtering method implemented by C-PAC is relatively simple. Users specify a lower and upper bound for a band-pass filter, which then removes any information in frequencies outside the specified frequency band.
 
-How Temporal Filtering Works
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Compared to the Gussian kernel used to smooth spatial data, the temporal filtering method implemented by C-PAC is relatively simple. Users specify a lower and upper bound for a band-pass filter, which then removes any information in frequencies outside the specified frequency band.
+Applications and Recommendations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Recent work has revealed a portion of the low-frequency signal (0.01 to 0.1 Hz) to be the result of slow oscillations intrinsic to brain activity (Gee et al., 2011; Zuo et al., 2010; Schroeder and Lakatos, 2009). Utilizing measures such as Amplitude of Low Frequency Fluctuations (ALFF) and fractional ALFF, the power of these oscillations has been shown to differ both across subjects (Zang et al., 2007) and between conditions (Yan et al., 2009). Resting functional connectivity has been shown to be most prominent at these frequency bands (Cordes et al., 2001), and as such these fluctuations are commonly used to measure functional connectivity in the resting brain (Gee et al., 2010). 
 
-Temporal Filtering Guidelines
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Though slow changes in magnetic field strength may be responsible for part of the low-frequency signal observed in fMRI timeseries (Smith et al., 1999), recent work in neuroscience has revealed a portion of this signal (sometimes called 1/*f* noise) to be the result of slow oscillations intrinsic to brain activity (Gee et al., 2011; Zuo et al., 2010; Schroeder and Lakatos, 2009). Utilizing measures such as Amplitude of Low Frequency Fluctuations (ALFF) and fractional ALFF, the power of osccillations (which occur between 0.01 and 0.1 Hz) has been shown to differ both across subjects (Zang et al., 2007) and between conditions (Yan et al., 2009). These fluctuations can also be used to measure functional connectivity within the resting brain (Gee et al., 2010). As these signals may be of interest to some researchers, it is important to take this knowledge into account when deciding on what temporal filtering settings to use. As a general rule, filtering frequencies below 0.0083 Hz seems to work well in most studies (Ashby, 2011).
+As these low-frequency oscillations are likely of interest to researchers, it is important to take this knowledge into account when deciding on what temporal filtering settings to use. As a general rule, it is safe to filter frequencies below 0.0083 Hz (Ashby, 2011).
 
-Other factors contributing to noise in a timeseries are cardiac and respiratory effects, which will often show up as noise around ~0.15 and ~0.34 Hz, respectively (Wager et al., 2007). As resting functional connectivity is most prominent between 0.01 and 0.1 Hz (Cordes et al., 2001), cardiopulmonary signals can be removed without affecting signals of interest.
+Additionally, there is some evidence (Davey et al., 2012) that temporal filtering may induce correlation in resting fMRI data, breaking the assumption of temporal sample independence and potentially inavalidating the results of connectivity analysis. This should be taken into account when running temporal filtering on data on which you will later run connectivity analysis.
 
-As these frequencies lie outside the region of interest for LFO studies, they can not be filtered out and must be removed later during nuisance signal regression. 
+Configuring CPAC to run Temporal Filtering
+""""""""""""""""""""""""""""""""""""""""""
+.. figure:: /images/gui/tf_gui.png
 
-There is some evidence (Davey et al., 2012) that temporal filtering may induce correlation in resting fMRI data, breaking the assumption of temporal sample independence and potentially inavalidating the results of connectivity analysis. This should be taken into account when running temporal filtering on data on which you will later run connectivity analysis.
+#. **Run Temporal Filtering:** Apply a temporal band-pass filter to functional data.
 
-Configuring C-PAC
-^^^^^^^^^^^^^^^^^
-The following settings in :file:`config.yml` are used to configure Temporal Filtering::
-    
-    # Apply Temporal Filtering
-    runFrequencyFiltering = [1]
-
-    # First value = Lower bound for a band-pass filter
-    # Second value = Upper bound for a band-pass filter
-    # To use a high-pass filter, set the second value to None
-    # To use a low-pass filter, set the first value to None
-    nuisanceBandpassFreq =[(0.01, 0.1)]
+#. **Band-Pass Filters:** Define one or more band-pass filters by clicking the + button.
 
 External Resources
 ^^^^^^^^^^^^^^^^^^

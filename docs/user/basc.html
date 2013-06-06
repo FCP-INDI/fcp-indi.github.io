@@ -61,22 +61,21 @@
 </div>
 <div class="section" id="computation-and-analysis-considerations">
 <h2>Computation and Analysis Considerations<a class="headerlink" href="#computation-and-analysis-considerations" title="Permalink to this headline">¶</a></h2>
-<p>Note: Though they are computed together, it is possible to specify different numbers of bootstraps for individual and group analysis. Additionally, BASC analysis can be limited to ROIs by applying a mask during setup.</p>
 <p><strong>Individual-level BASC:</strong></p>
 <ol class="arabic simple">
-<li>For each subject, bootstrapping is applied to the original data set. For each bootstrap, multiple time windows (fixed width) are randomly selected from the original timeseries (with replacement) to create a new timeseries of equal length. This results in <em>B</em> new timeseries where <em>B</em> is the number of bootstraps set by the user.</li>
-<li>A clustering algorithm is applied to each new timeseries. Clustering partitions the 4D data matrix into <em>C</em> clusters such that each voxel timeseries is a member of only one cluster. <em>C</em> is the number of clusters specified by the user. This results in <em>B</em> adjacency matrices which represent the cluster membership of each voxel.</li>
-<li>All adjacency matrices are then averaged to form a stability matrix which quantifies the stable features (voxel memberships) across sets.</li>
+<li>For each subject, bootstrapping is applied to the original time series. For each bootstrap, multiple time windows (fixed width) are randomly selected from the original time series (with replacement) to create a new time series of equal length. This results in <em>B</em> new time series where <em>B</em> is the number of bootstraps set by the user.</li>
+<li>A clustering algorithm is applied to each new time series. Clustering partitions the 4D data matrix into <em>C</em> clusters such that each voxel time series is a member of only one cluster. <em>C</em> is the number of clusters specified by the user. This results in <em>B</em> adjacency matrices which represent the cluster membership of each voxel.</li>
+<li>All adjacency matrices are then averaged to form an individual stability matrix which quantifies the stable features (voxel memberships) across replicated time series..</li>
 </ol>
 <p><strong>Group-level BASC:</strong></p>
 <ol class="arabic simple">
 <li>Bootstrapping is applied to the individual stability matrices. For each bootstrap, subjects are drawn (with replacement) from the original data set to create <em>B</em> new sets, each of which have the same number of subjects as the original. This process is intended to mimic random variations in subject recruitment.</li>
-<li>Within each new data set, individual stability matrices are averaged to create an average individual stability matrix.</li>
-<li>A clustering algorithm is applied to each individual stability matrix to generate a group-level adjacency matrix.</li>
+<li>Within each new data set, individual stability matrices are averaged to create an average stability matrix.</li>
+<li>A clustering algorithm is applied to each average stability matrix to generate a group-level adjacency matrix.</li>
 <li>All group-level adjacency matrices are averaged to create a group stability matrix.</li>
 <li>The group stability matrix is fed into a clustering algorithm to derive stable clusters.</li>
 </ol>
-<p>The figure below (taken from Garcia-Garcia et al.) shows a visual representation of these steps. For more detail on how C-PAC computes these steps, please see the <a class="reference external" href="http://fcp-indi.github.com/docs/developer/workflows/basc.html">BASC section of the developer documentation</a>.</p>
+<p>The figure below (taken from Garcia-Garcia et al.) shows a visual representation of these steps. For more detail on how CPAC computes these steps, please see the <a class="reference external" href="http://fcp-indi.github.com/docs/developer/workflows/basc.html">BASC Page of the developer documentation</a>.</p>
 <div class="figure">
 <img alt="_images/basc_manu_schematic.png" src="_images/basc_manu_schematic.png" />
 </div>
@@ -84,33 +83,21 @@
 </div>
 <div class="section" id="applications-and-recommendations">
 <h2>Applications and Recommendations<a class="headerlink" href="#applications-and-recommendations" title="Permalink to this headline">¶</a></h2>
-<p>BASC has recently been used to investigate differences in striatal organization between children with ADHD and typically developing controls (Garcia-Garcia et al., 2012), and has been shown to have good test-retest reliability (Garcia-Garcia et al., in prep).</p>
+<p>BASC has recently been used to investigate differences in striatal connectivity patterns between children with ADHD and typically developing controls (Garcia-Garcia et al., 2012), and has been shown to have good test-retest reliability (Garcia-Garcia et al., in prep).</p>
 <p>A number of parameters can influence the results of a BASC analysis, the most important of which is the number of clusters. Users are directed to Bellec et al. 2010 for an in-depth discussion of how each parameter influences calculation.</p>
+<div class="section" id="configuring-cpac-to-run-anatomical-registration">
+<h3>Configuring CPAC to run Anatomical Registration<a class="headerlink" href="#configuring-cpac-to-run-anatomical-registration" title="Permalink to this headline">¶</a></h3>
+<div class="figure">
+<img alt="_images/basc_gui.png" src="_images/basc_gui.png" />
 </div>
-<div class="section" id="configuring-c-pac">
-<h2>Configuring C-PAC<a class="headerlink" href="#configuring-c-pac" title="Permalink to this headline">¶</a></h2>
-<p>The following settings in <tt class="file docutils literal"><span class="pre">config.yml</span></tt> are used to configure BASC:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Run BASC</span>
-<span class="n">runBASC</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-<span class="c"># Path to a mask file. Voxels outside this mask will be excluded from BASC.</span>
-<span class="n">bascROIFile</span> <span class="o">=</span> <span class="s">&#39;/path/to/basc_mask_file&#39;</span>
-
-<span class="c"># Number of clusters at both the individual and group level.</span>
-<span class="n">bascClusters</span> <span class="o">=</span> <span class="mi">6</span>
-
-<span class="c"># Number of bootstraps to apply to original timeseries data.</span>
-<span class="n">bascTimeseriesBootstraps</span> <span class="o">=</span> <span class="mi">100</span>
-
-<span class="c"># Number of bootstraps to apply to individual stability matrices.</span>
-<span class="n">bascDatasetBootstraps</span> <span class="o">=</span> <span class="mi">100</span>
-
-<span class="c"># Path to a text file containing Affinity Thresholds for each subject.</span>
-<span class="c"># These are correlation thresholds applied prior to spectral clustering.</span>
-<span class="c"># Can be subject specific when subjects have differing numbers of timepoints.</span>
-<span class="c"># Subjects should be in the same order as in the main subject list.</span>
-<span class="n">bascAffinityThresholdFile</span> <span class="o">=</span> <span class="s">&#39;/path/to/basc_affinity_threshold_file&#39;</span>
-</pre></div>
+<ol class="arabic simple">
+<li><strong>Run BASC:</strong> Run Bootstrap Analysis of Stable Clusters.</li>
+<li><strong>Mask File:</strong> Full path to a mask file to be used when running BASC. Voxels outside this mask will be excluded from analysis. If you do not wish to use a mask, set this field to None. However, BASC is very computationally intensive, we strongly recommend you limit your analysis to specific brain areas of interest.</li>
+<li><strong>Number of Time Series Bootstraps:</strong> Number of bootstraps to apply to individual time series.</li>
+<li><strong>Number of Dataset Bootstraps:</strong> Number of bootstraps to apply to the original dataset.</li>
+<li><strong>Correlation Threshold File:</strong> Path to a text file containing correlation threshold for each subject. These thresholds will be applied to the correlation matrix before clustering. This file should contain one value per line, with each line corresponding to the subject on the same line in the group analysis subject list file. In most cases, the same threshold can be used for all subjects. Different thresholds are useful when subjects have time series of different lengths.</li>
+<li><strong>Number of Clusters:</strong> Number of clusters to create during clustering at both the individual and group levels.</li>
+</ol>
 </div>
 </div>
 <div class="section" id="references">

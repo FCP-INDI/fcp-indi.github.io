@@ -3,11 +3,11 @@ Network Centrality
 
 Introduction & Background 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-Nodes are the basic units of a network. Among the many nodes that form the whole-brain network (the functional connectome), some play a crucial role and are considered "central" within the network. These central nodes can be identified by applying various graph-theory based network analysis techniques which provide a measure of the "centrality" or functional importance of each node (Koschutzki et al. 2005). Different centrality measures capture different aspects of connectivity (Joyce et al., 2010; Zuo et al., 2011), as discussed below. C-PAC treats each voxel as a node and calculates two commonly used centrality indices: Degree Centrality (DC) and Eigenvector Centrality (EC). Unlike traditional functional connectivity analyses, centrality measures capture the complexity of the entire functional connectome, and do not require the selection of any *a priori* regions of interest.
+Nodes are the basic units of a network, and are connected by edges. Among the many nodes that form the whole-brain network (also known as the functional connectome), some play a crucial role and may be considered "central" within the network. These central nodes can be identified by applying various graph-theory based network analysis techniques which provide a measure of the "centrality" or functional importance of each node (Koschutzki et al. 2005). Different centrality measures capture different aspects of connectivity (Joyce et al., 2010; Zuo et al., 2011). CPAC is able to calculate two commonly used centrality indices: Degree Centrality (DC) and Eigenvector Centrality (EC). Unlike traditional functional connectivity analyses, centrality measures capture the complexity of the entire functional connectome, and do not require the selection of any *a priori* regions of interest.
 
-Degree centrality is a measure of local network connectivity and identifies the most connected nodes by counting the number of direct connections to all other nodes. As such, a node with high DC will have strong, direct connections to many other nodes in the network. Degree centrality analysis tends to emphasize higher order cortical association areas while showing reduced sensitivity for paralimbic and subcortical regions (Zuo et al., 2012).
+Degree centrality is a measure of local network connectivity and identifies the most connected nodes by counting the number of direct connections (edges) to all other nodes. As such, a node with high DC will have direct connections to many other nodes in the network. Degree centrality analysis tends to emphasize higher order cortical association areas while showing reduced sensitivity for paralimbic and subcortical regions (Zuo et al., 2012).
 
-Eigenvector centrality is a measure of global network connectivity. The EC of a given node reflects the number of direct connections it has with nodes that have high centrality. Thus, the EC of a given node depends not only on its own centrality, but the centrality of the nodes it connects to. A node with high EC has strong connections to many other nodes that are themselves highly connected and central within the network. In contrast to DC, EC is more sensitive to paralimbic and subcortical regions (Zuo et al., 2012).
+Eigenvector centrality is a measure of global network connectivity. The EC of a given node reflects the number of direct connections it has with other nodes that have high centrality. Thus, the EC of a given node depends not only on its own centrality, but the centrality of the nodes it connects to. A node with high EC has connections to many other nodes that are themselves highly connected and central within the network. In contrast to DC, EC is more sensitive to paralimbic and subcortical regions (Zuo et al., 2012).
 
 The figure below (taken from Zuo et al., 2012) shows differences in centrality across the brain, as well as differences between EC and DC measures.
 
@@ -15,9 +15,9 @@ The figure below (taken from Zuo et al., 2012) shows differences in centrality a
 
 Computation and Analysis Considerations 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-For each subject, the timeseries for each voxel is extracted and used to calculate a temporal correlation matrix which represents the connectivity between all voxels. A threshold is then applied to the correlation matrix to create an adjacency matrix which describes all nodes that have survived thresholding. In C-PAC, users can choose to apply a threshold based on either sparsity, significance, or correlation strength. Threshold values should be chosen carefully, as they can strongly influence the results of centrality analysis (Zuo et al., 2012).
+For each subject, the timeseries for each node is extracted and used to calculate a temporal correlation matrix which represents the connectivity between all nodes. A threshold is then applied to the correlation matrix to create an adjacency matrix which describes all nodes that have survived thresholding. In CPAC, users can choose to apply a threshold based on either sparsity, significance, or correlation strength. Threshold values should be chosen carefully, as they can strongly influence the results of centrality analysis (Zuo et al., 2012).
 
-Of the two centrality measures computed by C-PAC, Degree Centrality is the simplest, and is computed by counting the number of significant correlations between the timeseries of a given voxel and all other voxels in the adjacency matrix. Eigenvector Centrality is computed by identifying the first eigenvector of the adjacency matrix, which corresponds to the largest eigenvalue. Since EC is a recursive measure that takes into account the properties of connected nodes, the EC of a given voxel is proportional to the sum of the EC of all directly neighboring voxels. After computing the centrality measures, voxel-based graphs are generated and standardized using Z-scores for use in group analysis (Zuo et al., 2012). For more detail on how C-PAC computes these steps, please see the `Network Centrality section of the developer documentation <http://fcp-indi.github.com/docs/developer/workflows/network_centrality.html>`_.
+Of the two centrality measures computed by CPAC, Degree Centrality is the simplest, and is computed by counting the number of significant correlations between the timeseries of a given node and that of all other nodes in the adjacency matrix. Eigenvector Centrality is computed by identifying the first eigenvector of the adjacency matrix, which corresponds to the largest eigenvalue. Since EC is a recursive measure that takes into account the properties of connected nodes, the EC of a given node is proportional to the sum of the EC of all directly neighboring nodes. After computing the centrality measures, centrality maps are generated and standardized using Z-scores for use in group analysis (Zuo et al., 2012). For more detail on how CPAC computes these steps, please see the `Network Centrality Page of the developer documentation <http://fcp-indi.github.com/docs/developer/workflows/network_centrality.html>`_.
 
 Applications and Recommendations 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -27,47 +27,23 @@ Degree centrality has been widely used to identify "functional hubs" and examine
 
 Beyond detecting functional hubs, both DC and EC have been used as a way of characterizing information flow through the functional connectome at the voxel level. These voxel-wise centrality analyses (depicted in the figure above, taken from Zuo et al., 2012) showed both short and long-term test-retest reliability, and appear to be modulated by age and sex (Zuo et al., 2012). Additionally, EC has been shown to be modulated by subjects' states of hunger or satiety (Lohmann et al. 2010).
 
-Configuring C-PAC
-^^^^^^^^^^^^^^^^^
-The following settings in :file:`config.yml` are used to configure ReHo::
-    
-    # Calculate network centrality measures
-    runNetworkCentrality = [1]
+Configuring CPAC to run VMHC
+""""""""""""""""""""""""""""
+.. figure:: /images/gui/vmhc_gui.png
 
-    # Select which centrality measures to calculate
-    # First value = Degree Centrality 
-    # Second value = Eigenvector Centrality
-    # Options are True/False
-    centralityMethodOptions = [True, True]
+#. **Calculate Network Centrality Measures:** Calculate Degree Centrality and/or Eigenvector Centrality.
 
-    # Specify how connections are defined during graph construction
-    # First value = Binarized (connection strenth is either 0 or 1)
-    # Second value = Weighted (connection strength is a correlation value)
-    # Options are True/False
-    centralityWeightOptions = [True, True]
+#. **ROI / Mask Specification File:** Full path to a text file containing a mask or list of ROIs. Each line of this file should contain the path to an ROI or mask. If a mask is specified, centrality will be calculated for all voxels within the mask. If a list of ROIs is specified, each ROI will be treated as a node, and centrality will be calculated for each node.
 
-    # Select what type of threshold is applied to create an adjacency matrix
-    # 0 = Significance threshold (P-value)
-    # 1 = Sparsity threshold (Sparsity value)
-    # 2 = Correlation threshold (Pearson's r)
-    correlationThresholdOption = 1
+#. **Measures to Calculate:** Note that calculating Eigenvector Centrality will take significantly longer and require significantly more computing power to calculate than Degree Centrality.
 
-    # Based on the type of threshold selected above, enter the appropriate value
-    # Significance threshold = P-value
-    # Sparsity threshold = sparsity value
-    # Correlation threshold = Pearsons' r value
-    # examples: 0.05, 0.0744, 0.6
-    correlationThreshold = 0.0744
+#. **Connection Weight Options:** Specify how connections are represented during graph construction. Binarized: Connection strength is either 1 or 0. Weighted: Connection strength is a correlation value.
 
-    # Directory containing ROI definitions or masks
-    # Using ROIs will result in node-based centrality measures
-    # Using a mask will result in voxel-based centrality measures
-    templateDirectoryPath = '/path/to/centrality_mask_roi_directory' 
+#. **Threshold Type:** Select the type of threshold used when creating the adjacency matrix.
 
-    # Generate an adjacency matrix png image and matrix mat file
-    # WARNING: Requires a very large amount of memory
-    # Do not use when calculating voxel-based graphs
-    generateAdjacencyGraph = False
+#. **Threshold Value:** Based on the Threshold Type selected above, enter a Threshold Value. P-value for Significance Threshold, Sparsity value for Sparsity Threshold, Pearson's r value for Correlation Threshold.
+
+#. **Maximum RAM Use (GB):** Maximum amount of RAM (in GB) to be used when calculating Degree Centrality. Calculating Eigenvector Centrality will require additional memory based on the size of the mask or number of ROI nodes.
 
 References
 ^^^^^^^^^^

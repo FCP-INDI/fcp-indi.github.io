@@ -46,6 +46,8 @@ Python is the glue (Bloom, 2012) that ties all the pieces of CPAC together. Thou
 
 For advanced users wishing to undertake a manual installation (or users unable to access a 64-bit version of Canopy), below is a full list of CPAC dependencies. Manually installing these dependencies is an involved process, and is beyond the scope of this guide.
 
+Packages with an asterisk (*) can be installed through `setuptools <https://pythonhosted.org/setuptools/easy_install.html>`_ by running the command ``easy_install package`` (for example, ``easy_install networkx``).
+
 * `SciPy and NumPy <http://www.scipy.org/install.html>`_ (**Mac Users:** Follow `these instructions <http://penandpants.com/2013/04/04/install-scientific-python-on-mac-os-x/>`_.)
 * `NetworkX <http://networkx.lanl.gov/>`_ *
 * `Traits <https://github.com/enthought/traits>`_ *
@@ -54,8 +56,6 @@ For advanced users wishing to undertake a manual installation (or users unable t
 * `PyYAML <http://pyyaml.org/wiki/PyYAML>`_ *
 * `iPython <http://ipython.org/>`_ (optional)
 * `Graphviz <http://www.graphviz.org/>`_ (optional; required for workflow graphs)
-
-Packages with an asterisk (*) can be installed through `setuptools <https://pythonhosted.org/setuptools/easy_install.html>`_ by running the command ``easy_install package`` (for example, ``easy_install networkx``).
 
 Install Nibabel and Nipype
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -85,11 +85,11 @@ For instructions on how to install AFNI, `click here <http://afni.nimh.nih.gov/p
 For instructions on how to install FSL, `click here <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation>`_. Downloading FSL should take approximately 15 minutes on a standard broadband connection. 
 
 
-Check FSL and AFNI Paths
+Check AFNI and FSL Paths
 """"""""""""""""""""""""
-Application paths for AFNI and FSL should have been added to your user profile when they were installed, but it is useful to double-check this before continuing (as the absence of these paths is a common cause of CPAC errors).
+Application paths for AFNI and FSL should have been added to your user profile when they were installed, but it is useful to double-check this before continuing (as the absence of these paths is a common cause of CPAC errors). If the application paths have been set properly, you should be able to open AFNI and FSL by running the commands ``afni`` and ``fsl`` in a new terminal window.
 
-If you have not already done so, make sure the paths to FSL and AFNI have been added to your :file:`.bashrc` file. To do this, run the command ``nano ~/.bashrc``. This will open :file:`.bashrc` in the `nano text editor <http://mintaka.sdsu.edu/reu/nano.html>`_. Scroll to the bottom of the file and add the following text::
+If either of these commands fail, you will have to add the AFNI and FSL application paths manually. To do this, run the command ``nano ~/.bashrc``. This will open your :file:`.bashrc` file in the `nano text editor <http://mintaka.sdsu.edu/reu/nano.html>`_. Scroll to the bottom of the file (navigate using the arrow keys on your keyboard) and paste the following text::
 
     # Path to FSL
     FSLDIR=/path/to/fsl
@@ -99,18 +99,28 @@ If you have not already done so, make sure the paths to FSL and AFNI have been a
 
     # Path to AFNI
     export PATH=$PATH:/path/to/afni
+    export DYLD_FALLBACK_LIBRARY_PATH=/path/to/afni
 
-Where :file:`/path/to/fsl` and :file:`/path/to/afni` are the locations where FSL and AFNI are installed (usually :file:`/usr/local/fsl` for FSL and :file:`~/abin` for AFNI). Save :file:`.bashrc` and exit nano.
+Where :file:`/path/to/fsl` and :file:`/path/to/afni` are the locations where FSL and AFNI are installed (by default, these are :file:`/usr/local/fsl` for FSL and :file:`HOME/abin` for AFNI). When you have added the paths, save your changes (control + O) and exit nano (control + X).
 
-**Note to Mac Users:** You must also add these paths to your :file:`.bash_profile` file. This can be done following the same steps outlined above.
+**Mac Users:** You must also add these paths to your :file:`.bash_profile` file. Simply follow the same instructions above but replace ``nano ~/.bashrc`` with ``nano ~/.bash_profile``.
 
-If these changes have worked, you should be able to launch FSL and AFNI from the terminal simply by typing :file:`afni` and :file:`fsl`. 
+**tcsh Users:** Add these paths to your ``.cshrc`` file.
 
-**NOTE:** If you are using a different terminal, such as csh or tcsh, follow the equivalent steps for those platforms.
+To confirm that the changes have worked, open a new terminal window and try again to open AFNI and FSL.
 
-Download Required Image Resource Files
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-CPAC requires symmetric versions of the MNI152 standard brain template (for use when calculating VMHC), as well as binarized tissue priors (for use during tissue segmentation). These are non-standard files, and are provided in `cpac_resources.tgz <http://fcon_1000.projects.nitrc.org/indi/cpac_resources.tgz>`_.
+
+Install CPAC Image Resources
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+During preprocessing and analysis, CPAC utilizes many of the standard brain atlases and tissue maps provided by FSL. Additionally, CPAC requires the following non-standard files in order to run properly.
+
+* Binarized tissue prior probability maps (used during :doc:`tissue segmentation </anat>`)
+* Symmetric versions of the MNI152 brain template and masks (used when calculating :doc:`VMHC </vmhc>`)
+
+These files are included in the CPAC Image Resources package, available for download here. As above, this file can be unpacked by running the command ``tar -xzvf filename.tar.gz``. 
+
+Included in the package is a ``install_resources.sh`` script that when run will copy the resource files to your FSL directory (which is where CPAC looks for them by default). To run this script, navigate to the CPAC Image Resources directory that you just downloaded and run the command ``sudo bash install_resources.sh``
+
 
 * Files located in the :file:`symmetric` folder of the downloaded archive should be copied to the :file:`/data/standard` directory of your FSL installation.
 

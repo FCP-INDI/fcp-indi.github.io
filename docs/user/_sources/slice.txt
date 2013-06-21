@@ -1,12 +1,16 @@
 Slice Timing Correction 
 -----------------------
-Background
-^^^^^^^^^^
+Introduction and Background
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Most fMRI images are created by combining multiple 2D slices into a single 3D volume. Slices are acquired one after another, either sequentially in ascending or descending order, or in an interleaved manner, such that every other slice is acquired in a first pass, and the remaining slices are aqcuired in a second pass. The time between the acquisition of the first and last slice depends on the TR used (e.g. 2.5 seconds for a TR of 2500ms). Slice timing correction acts to adjust the timecourse of voxels in each slice to account for these differences. This is done by interpolating the data in each slice to match the timing of a reference slice. Slice timing correction is necessary because many statistical models used for fMRI analysis assume that all voxels are measured simultaneously. As such, differences in acqusition time between slices can cause confounds.
 
-Configuring C-PAC
-^^^^^^^^^^^^^^^^^
-If you wish to run :doc:`Slice Timing Correction </slice>`, you must include a file that contains information about the slice acquisition order used for each subject. This file is specified when running :file:`extract_data.py` (see the :doc:`Using C-PAC </use>` page).
+Configuring CPAC to run Slice Timing Correction
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If you wish to run Slice Timing Correction, you must provide information about the scan parameters used for each subject, and CPAC will embed this information in the main subject list file. As such, **scan parameters must be specified when generating subject lists**, and not when configuring a pipeline. **CPAC will automatically run Slice Timing Correction if this information is present in the subject list file** (and skip this step if the information is missing.)
+
+Specifying Acquisition Order for Standard Sequences
+"""""""""""""""""""""""""""""""""""""""""""""""""""
+Scan parameters must be supplied to CPAC in a ``.csv`` file, and the path to this file provided when :doc:`setting up a new subject list </data_config>`.
 
 .. line-block::
   **If all subjects within a site have the same acquisition order:** 
@@ -38,11 +42,11 @@ Slice Timing information should be entered into these files as follows:
 
 **Note:** alt+z2 is the order most commonlly used on Siemens scanners for interleaved scans with an even number of slices.
 
-It should be noted that the settings specified in the files above over-ride the equivalent settings in the Timeseries Options section of :file:`config.yml`.
+**Note:** Scan parameter information specified for Slice Timing Correction will override the equivalent settings present in the :doc:`Time Series Options </tsopt>` section of pipeline configuration.
 
 Specifying Acquisition Order for Non-Standard Sequences
 """""""""""""""""""""""""""""""""""""""""""""""""""""""
-If your data does not conform to one of the 6 acquistion orders in the list above (as would be the case for multiband and multi-echo sequences), you must generate acquisition order files before running Slice Timing Correction. This is done using the AFNI command :command:`dicom_hdr` and specifying the first DICOM file in an image sequence, as well as the name of an output :file:`.txt` file.::
+If your data does not conform to one of the 6 acquistion orders in the list above (as would be the case for multiband and multi-echo sequences), you must generate acquisition order files before running Slice Timing Correction. This is done using the AFNI command ``dicom_hdr`` and specifying the first DICOM file in an image sequence, as well as the name of an output :file:`.txt` file.::
 
     dicom_hdr -slice_times /path/to/file.dcm > output_name.txt
 

@@ -55,13 +55,16 @@
             
   <div class="section" id="slice-timing-correction">
 <h1>Slice Timing Correction<a class="headerlink" href="#slice-timing-correction" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="background">
-<h2>Background<a class="headerlink" href="#background" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="introduction-and-background">
+<h2>Introduction and Background<a class="headerlink" href="#introduction-and-background" title="Permalink to this headline">¶</a></h2>
 <p>Most fMRI images are created by combining multiple 2D slices into a single 3D volume. Slices are acquired one after another, either sequentially in ascending or descending order, or in an interleaved manner, such that every other slice is acquired in a first pass, and the remaining slices are aqcuired in a second pass. The time between the acquisition of the first and last slice depends on the TR used (e.g. 2.5 seconds for a TR of 2500ms). Slice timing correction acts to adjust the timecourse of voxels in each slice to account for these differences. This is done by interpolating the data in each slice to match the timing of a reference slice. Slice timing correction is necessary because many statistical models used for fMRI analysis assume that all voxels are measured simultaneously. As such, differences in acqusition time between slices can cause confounds.</p>
 </div>
-<div class="section" id="configuring-c-pac">
-<h2>Configuring C-PAC<a class="headerlink" href="#configuring-c-pac" title="Permalink to this headline">¶</a></h2>
-<p>If you wish to run <a class="reference internal" href=""><em>Slice Timing Correction</em></a>, you must include a file that contains information about the slice acquisition order used for each subject. This file is specified when running <tt class="file docutils literal"><span class="pre">extract_data.py</span></tt> (see the <a class="reference internal" href="use.html"><em>Using C-PAC</em></a> page).</p>
+<div class="section" id="configuring-cpac-to-run-slice-timing-correction">
+<h2>Configuring CPAC to run Slice Timing Correction<a class="headerlink" href="#configuring-cpac-to-run-slice-timing-correction" title="Permalink to this headline">¶</a></h2>
+<p>If you wish to run Slice Timing Correction, you must provide information about the scan parameters used for each subject, and CPAC will embed this information in the main subject list file. As such, <strong>scan parameters must be specified when generating subject lists</strong>, and not when configuring a pipeline. <strong>CPAC will automatically run Slice Timing Correction if this information is present in the subject list file</strong> (and skip this step if the information is missing.)</p>
+<div class="section" id="specifying-acquisition-order-for-standard-sequences">
+<h3>Specifying Acquisition Order for Standard Sequences<a class="headerlink" href="#specifying-acquisition-order-for-standard-sequences" title="Permalink to this headline">¶</a></h3>
+<p>Scan parameters must be supplied to CPAC in a <tt class="docutils literal"><span class="pre">.csv</span></tt> file, and the path to this file provided when <a class="reference internal" href="data_config.html"><em>setting up a new subject list</em></a>.</p>
 <div class="line-block">
 <div class="line"><strong>If all subjects within a site have the same acquisition order:</strong></div>
 <div class="line">Use the template <tt class="file docutils literal"><span class="pre">scan_parameters.csv</span></tt> file available for download <a class="reference external" href="https://raw.github.com/FCP-INDI/C-PAC/master/configs/scan_parameters.csv">here</a>.</div>
@@ -100,10 +103,11 @@
 </li>
 </ul>
 <p><strong>Note:</strong> alt+z2 is the order most commonlly used on Siemens scanners for interleaved scans with an even number of slices.</p>
-<p>It should be noted that the settings specified in the files above over-ride the equivalent settings in the Timeseries Options section of <tt class="file docutils literal"><span class="pre">config.yml</span></tt>.</p>
+<p><strong>Note:</strong> Scan parameter information specified for Slice Timing Correction will override the equivalent settings present in the <tt class="xref doc docutils literal"><span class="pre">Time</span> <span class="pre">Series</span> <span class="pre">Options</span></tt> section of pipeline configuration.</p>
+</div>
 <div class="section" id="specifying-acquisition-order-for-non-standard-sequences">
 <h3>Specifying Acquisition Order for Non-Standard Sequences<a class="headerlink" href="#specifying-acquisition-order-for-non-standard-sequences" title="Permalink to this headline">¶</a></h3>
-<p>If your data does not conform to one of the 6 acquistion orders in the list above (as would be the case for multiband and multi-echo sequences), you must generate acquisition order files before running Slice Timing Correction. This is done using the AFNI command <strong class="command">dicom_hdr</strong> and specifying the first DICOM file in an image sequence, as well as the name of an output <tt class="file docutils literal"><span class="pre">.txt</span></tt> file.:</p>
+<p>If your data does not conform to one of the 6 acquistion orders in the list above (as would be the case for multiband and multi-echo sequences), you must generate acquisition order files before running Slice Timing Correction. This is done using the AFNI command <tt class="docutils literal"><span class="pre">dicom_hdr</span></tt> and specifying the first DICOM file in an image sequence, as well as the name of an output <tt class="file docutils literal"><span class="pre">.txt</span></tt> file.:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">dicom_hdr</span> <span class="o">-</span><span class="n">slice_times</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="nb">file</span><span class="o">.</span><span class="n">dcm</span> <span class="o">&gt;</span> <span class="n">output_name</span><span class="o">.</span><span class="n">txt</span>
 </pre></div>
 </div>

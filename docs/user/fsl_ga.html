@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Group-Level Statistics &mdash; C-PAC 0.1 Alpha documentation</title>
+    <title>FSL Group Analysis &mdash; C-PAC 0.1 Alpha documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -53,174 +53,51 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="group-level-statistics">
-<h1>Group-Level Statistics<a class="headerlink" href="#group-level-statistics" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="fsl-group-analysis">
+<h1>FSL Group Analysis<a class="headerlink" href="#fsl-group-analysis" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>C-PAC uses <a class="reference external" href="http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT/UserGuide">FSL/FEAT</a> to compare findings across groups.</p>
 <p>Users create a model file that includes group, phenotypic, and nuisance regressors for each subject, and the data is <a class="reference external" href="http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT/UserGuide#Appendix_A:_Brief_Overview_of_GLM_Analysis">run through a General Linear Model (GLM) based on pre-defined comparisons (contrasts)</a>.</p>
-<p>The following links provide a good introduction to how groups are compared using FSL, as well as how to define contrasts.</p>
+<p>The following links provide an introduction to how groups are compared using FSL, as well as how to define contrasts.</p>
 <ul class="simple">
 <li><a class="reference external" href="http://ccn.ucla.edu/wiki/images/c/c7/FSL_workshop_FEAT_2.pdf">http://ccn.ucla.edu/wiki/images/c/c7/FSL_workshop_FEAT_2.pdf</a></li>
 <li><a class="reference external" href="http://www.fmrib.ox.ac.uk/fslcourse/lectures/feat1_part2.pdf">http://www.fmrib.ox.ac.uk/fslcourse/lectures/feat1_part2.pdf</a></li>
 <li><a class="reference external" href="http://www.cubric.cf.ac.uk/neuroimaging-training/session5_group.pdf">http://www.cubric.cf.ac.uk/neuroimaging-training/session5_group.pdf</a></li>
 </ul>
-<p>This page will walk you through the following steps necessary to run group statistics:</p>
+</div>
+<div class="section" id="configuring-cpac-to-run-fsl-group-analysis">
+<h2>Configuring CPAC to Run FSL Group Analysis<a class="headerlink" href="#configuring-cpac-to-run-fsl-group-analysis" title="Permalink to this headline">¶</a></h2>
+<div class="figure">
+<img alt="_images/fslga_main.png" src="_images/fslga_main.png" />
+</div>
 <ul class="simple">
-<li>Gather phenotypic information and other regressors.</li>
-<li>Set up contrasts.</li>
-<li>Create a model (either through FSL or using the C-PAC FSL Model Script)</li>
+<li><strong>Run Group Analysis:</strong> Run group analysis using FSL/FEAT.</li>
+<li><strong>Select Derivatives:</strong> Select which derivatives you would like to include when running group analysis. When including Dual Regression, make sure to correct your P-value for the number of maps you are comparing. When including Multiple Regression SCA, you must have more degrees of freedom (subjects) than there were time series.</li>
+<li><strong>Models to Run:</strong> Use the + to add FSL Models to be run (or to create new models).</li>
+<li><strong>Models Contain F-tests:</strong> Set this option to True if any of the models specified above contain F-tests.</li>
+<li><strong>Z Threshold:</strong> Only voxels with a Z-score higher than this value will be considered significant.</li>
+<li><strong>Cluster Significance Threshold:</strong> Significance threshold (P-value) to use when doing cluster correction for multiple comparisons.</li>
 </ul>
+<div class="section" id="specifying-models-to-run">
+<h3>Specifying Models to Run<a class="headerlink" href="#specifying-models-to-run" title="Permalink to this headline">¶</a></h3>
 <div class="figure">
-<img alt="_images/run_workflow.png" src="_images/run_workflow.png" />
+<img alt="_images/fslga_gui.png" src="_images/fslga_gui.png" />
 </div>
-<p>Model files can be <a class="reference external" href="http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT/UserGuide#FEAT_in_Detail">created manually through FSL</a>, or by using the C-PAC FSL Model Script and instructions below. If you choose to create your model files using FSL, please skip to the Configuring C-PAC section.</p>
-</div>
-<div class="section" id="prepare-phenotypic-information-and-other-regressors">
-<h2>Prepare Phenotypic Information and Other Regressors<a class="headerlink" href="#prepare-phenotypic-information-and-other-regressors" title="Permalink to this headline">¶</a></h2>
-<p>Explanatory variables (EVs) such as phenotypic characteristics and group membership, as well as nuisance regressors, are specified in a <tt class="file docutils literal"><span class="pre">.csv</span></tt> file, with subjects as rows and regressors as columns. A <tt class="file docutils literal"><span class="pre">template_phenotypic.csv</span></tt> is generated when you <a class="reference internal" href="use.html"><em>prepare your data</em></a>, and includes rows for all subjects to be included in group satistics. Open this file, create a column for each phenotypic or nuisance regressor you would like included in your model, and enter the appropriate value for each subject.</p>
-<div class="figure">
-<img alt="_images/phenotypic_csv.png" src="_images/phenotypic_csv.png" />
-</div>
-<p>If you would like to include motion parameters calcualted by C-PAC as nuisance regressors, <a class="reference external" href="https://raw.github.com/FCP-INDI/C-PAC/master/tools/extract_parameters.py">download</a> the <tt class="file docutils literal"><span class="pre">extract_parameters.py</span></tt> script. Navigate to your main C-PAC output directory and run it by typing:</p>
-<div class="highlight-python"><pre>python extract_parameters.py /path/to/output/directory</pre>
-</div>
-<p>Where <tt class="file docutils literal"><span class="pre">/path/to/output/directory</span></tt> is the path to your output directory (<tt class="file docutils literal"><span class="pre">sinkDir</span></tt> as specified in <tt class="file docutils literal"><span class="pre">config.yml</span></tt>). This will output a <tt class="file docutils literal"><span class="pre">...all_params.csv</span></tt> file in the top level of each pipeline directory which contains all motion parameters calculated by C-PAC. You can then copy the columns from this file into your <tt class="file docutils literal"><span class="pre">template_phenotypic.csv</span></tt> file. When you are finished, save your changes. Future versions of C-PAC will automate this process.</p>
-</div>
-<div class="section" id="configure-fsl-model-script">
-<h2>Configure FSL Model Script<a class="headerlink" href="#configure-fsl-model-script" title="Permalink to this headline">¶</a></h2>
-<p>Open <tt class="file docutils literal"><span class="pre">config_fsl.yml</span></tt>, which can be <a class="reference external" href="https://raw.github.com/FCP-INDI/C-PAC/master/configs/config_fsl.yml">downloaded here</a>.</p>
-<p>Specify which regressors you would like included in your model by listing names of columns in your <tt class="file docutils literal"><span class="pre">template_phenotypic.csv</span></tt>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Specify which phenotypic variables and regressors to include in model</span>
-<span class="c"># These names should match column names in template_phenotypic.csv</span>
-<span class="n">columnsInModel</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;AgeAtScan&#39;</span><span class="p">,</span> <span class="s">&#39;MeanFD&#39;</span><span class="p">,</span> <span class="s">&#39;site&#39;</span><span class="p">,</span> <span class="s">&#39;DxGroup&#39;</span><span class="p">]</span>
-</pre></div>
-</div>
-<p>Define whether each regressor is categorical (such as age or diagnosis) or directional (such as age or a test score):</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Set a type for each of the variables/regressors entered above.</span>
-<span class="c"># 1 = categorical, 0 = directional</span>
-<span class="n">categoricalVsDirectional</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
-</pre></div>
-</div>
-<p>Specify which regressors should be de-meaned:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Specify whether to de-mean each column.</span>
-<span class="n">deMean</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
-</pre></div>
-</div>
-<p>Set the location of your modified <tt class="file docutils literal"><span class="pre">template_phenotypic.csv</span></tt> file:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Specify the full path to template_phenotypic.csv</span>
-<span class="n">phenotypicFile</span> <span class="o">=</span> <span class="s">&#39;/path/to/template_phenotypic.csv&#39;</span>
-</pre></div>
-</div>
-<p>Set the location of the <tt class="file docutils literal"><span class="pre">subject_list_group_analysis.txt</span></tt> file generated when you ran <tt class="file docutils literal"><span class="pre">extract_data.py</span></tt>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Specify the full path to subject_list_group_analysis.txt</span>
-<span class="n">subjectListFile</span> <span class="o">=</span> <span class="s">&#39;/path/to/subject_list_group_analysis.txt&#39;</span>
-</pre></div>
-</div>
-<p>Specify a name for a model file <tt class="file docutils literal"><span class="pre">.csv</span></tt> to be output:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">outputModelFile</span> <span class="o">=</span> <span class="s">&#39;/home/ssikka/nki_nyu_pipeline/model_fsl.csv&#39;</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="define-contrasts">
-<h2>Define Contrasts<a class="headerlink" href="#define-contrasts" title="Permalink to this headline">¶</a></h2>
-<p>Based on the columns present in the model <tt class="file docutils literal"><span class="pre">.csv</span></tt> you just generated, create a new spreadsheet specifying your desired contrasts.</p>
-<div class="figure">
-<img alt="_images/contrasts_csv.png" src="_images/contrasts_csv.png" />
-</div>
-<p>Save this file, and set the path to it in <tt class="file docutils literal"><span class="pre">fsl_config.py</span></tt>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Full path to a contrast file based on the columns listed above.</span>
-<span class="n">contrastFile</span> <span class="o">=</span> <span class="s">&#39;/home/ssikka/nki_nyu_pipeline/contrasts.csv&#39;</span>
-</pre></div>
-</div>
-<p>Finally, define what you would like to name your model:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Specify a name for the model.</span>
-<span class="n">modelName</span> <span class="o">=</span> <span class="s">&#39;my_model&#39;</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="run-fsl-script">
-<h2>Run FSL Script<a class="headerlink" href="#run-fsl-script" title="Permalink to this headline">¶</a></h2>
-<p>Open iPython and type:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">CPAC</span>
-<span class="n">CPAC</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">create_fsl_model</span><span class="o">.</span><span class="n">run</span> <span class="p">(</span><span class="s">&#39;/path/to/config_fsl.yml&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>This will output the standard FSL model files in the directory from which the script is run. You may then specify the location of these files in <tt class="file docutils literal"><span class="pre">config.yml</span></tt>, and <a class="reference internal" href="use.html"><em>run the C-PAC group pipeline</em></a>.</p>
-<div class="figure">
-<img alt="_images/model.png" src="_images/model.png" />
-</div>
-</div>
-<div class="section" id="configuring-c-pac">
-<h2>Configuring C-PAC<a class="headerlink" href="#configuring-c-pac" title="Permalink to this headline">¶</a></h2>
-<p>The following settings in <tt class="file docutils literal"><span class="pre">config.yml</span></tt> are used to configure Group Statistics.</p>
-<div class="section" id="groupanalysissubjectlist">
-<h3>groupAnalysisSubjectList<a class="headerlink" href="#groupanalysissubjectlist" title="Permalink to this headline">¶</a></h3>
-<p>Specify the full path to a list of subjects on which to run group statistics:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># This file should be created automatically when you run extract_data.py</span>
-<span class="c"># The order of subjects in this list must match the order in your model</span>
-<span class="n">groupAnalysisSubjectList</span> <span class="o">=</span> <span class="s">&#39;/path/to/subject_list_group_analysis.txt&#39;</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="derivativelist">
-<h3>derivativeList<a class="headerlink" href="#derivativelist" title="Permalink to this headline">¶</a></h3>
-<p>Select which measures should be included in group analysis:</p>
 <ul class="simple">
-<li>sca_seed_Z_to_standard_smooth = voxel-based SCA</li>
-<li>sca_roi_Z_to_standard_smooth = ROI based SCA</li>
-<li>alff_Z_to_standard_smooth = ALFF</li>
-<li>falff_Z_to_standard_smooth  = fALFF</li>
-<li>vmhc_z_score_stat_map = VMHC</li>
-<li>reho_Z_to_standard_smooth = ReHo</li>
+<li><strong>Subject List:</strong> Full path to a list of subjects to be included in the model. This should be a text file with one subject per line. Tip 1: A list in this format contaning all subjects run through CPAC was generated along with the main CPAC subject list (see subject_list_group_analysis.txt). Tip 2: An easy way to manually create this file is to copy the subjects column from your Regressor/EV spreadsheet.</li>
+<li><strong>EV File:</strong> Full path to a .csv file containing EV information for each subject. Tip: A file in this format (containing a single column listing all subjects run through CPAC) was generated along with the main CPAC subject list (see template_phenotypic.csv).</li>
+<li><strong>Subjects Column Name:</strong> Name of the subjects column in your EV file.</li>
+<li><strong>EVs to Include:</strong> Specify the names of columns in your EV file that you would like to include in this model. Column names should be separated by commas and appear exactly as they do in your EV file. To include motion parameters calculated by CPAC, click the + button to on the right (and include an empty column of the same name in your EV file).</li>
+<li><strong>EV Type:</strong> Specify whether each of the EVs in this model should be treated as categorical or continuous. To do this, place a 1 (categorical) or 0 (continuous) in the same list position as the corresponding EV. For example, if the EVs to include were: <tt class="docutils literal"><span class="pre">age,</span> <span class="pre">sex,</span> <span class="pre">diagnosis,</span> <span class="pre">mean_fd</span></tt> One might specify: <tt class="docutils literal"><span class="pre">0,1,1,0</span></tt></li>
+<li><strong>Demean:</strong> Specify whether to demean each of the EVs in this model. To do this, place a 1 (demean) or 0 (don&#8217;t demean) in the same list position as the corresponding EV. For example, if the EVs to include were: <tt class="docutils literal"><span class="pre">age,</span> <span class="pre">sex,</span> <span class="pre">diagnosis,</span> <span class="pre">mean_fd</span></tt> One might specify:<tt class="docutils literal"><span class="pre">1,0,0,1</span></tt> Note that only continuous EV&#8217;s should be demeaned.</li>
+<li><strong>Contrast File:</strong> Full path to a .csv file containing contrasts to be applied to this model. When specifying EVs in this file: - Continuous EVs should appear the same as their corresponding column name in the EV file. - Categorical EVs must be split into multiple columns (one for each category), with names of the format EVname__N (e.g. diagnosis__1, diagnosis__2, diagnosis__3) If you wish to include F-tests in your model, create a column for each desired F-test, with names in the format f_test_1, f_test_2, etc.</li>
+<li><strong>Model Group Variances Seperately:</strong> Specify whether FSL should model the variance for each group separately. If this option is enabled, you must specify a grouping variable below.</li>
+<li><strong>Grouping Variable:</strong> The name of the EV that should be used to group subjects when modeling variances. If you do not wish to model group variances separately, set this value to None.</li>
+<li><strong>Model Name:</strong> Specify a name for the new model.</li>
+<li><strong>Output Directory:</strong> Full path to the directory where CPAC should place model files.</li>
+<li><strong>Model CSV File Name:</strong> In addition to the standard FSL model files, CPAC will output a .csv containing the subjects and EVs specified above. Column names in this file will be the same as in the contrasts file, and will have been demeaned as specified.</li>
 </ul>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">derivativeList</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;sca_seed_Z_to_standard_smooth&#39;</span><span class="p">,</span> \
-                  <span class="s">&#39;sca_roi_Z_to_standard_smooth&#39;</span><span class="p">,</span> \
-                  <span class="s">&#39;alff_Z_to_standard_smooth&#39;</span><span class="p">,</span> \
-                  <span class="s">&#39;falff_Z_to_standard_smooth&#39;</span><span class="p">,</span> \
-                  <span class="s">&#39;vmhc_z_score_stat_map&#39;</span><span class="p">,</span> \
-                  <span class="s">&#39;reho_Z_to_standard_smooth&#39;</span><span class="p">]</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="modelfile">
-<h3>modelFile<a class="headerlink" href="#modelfile" title="Permalink to this headline">¶</a></h3>
-<p>Specify the full path to a text file contaning a list of FSL models:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Each line in this file should be the path to a model directory</span>
-<span class="c"># Each model directory should contain a .mat, .con, and .grp file</span>
-<span class="c"># If fTest = True (see below), model directories must also contain a .fts file</span>
-<span class="c"># These models can be generated through FSL, or using create_fsl_model.py</span>
-<span class="n">modelFile</span> <span class="o">=</span> <span class="s">&#39;/path/to/subject_list_model_list.txt&#39;</span>
-</pre></div>
-</div>
-<p>For instructions on building FSL model files using the C-PAC scripts, <tt class="xref doc docutils literal"><span class="pre">click</span> <span class="pre">here</span></tt></p>
-</div>
-<div class="section" id="mixedscananalysis">
-<h3>mixedScanAnalysis<a class="headerlink" href="#mixedscananalysis" title="Permalink to this headline">¶</a></h3>
-<p>Specify whether to include all scans from a subject or only a single session:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># If a subjecs has multiple scans:</span>
-<span class="c"># False = Consdier only the first scan session during group analysis</span>
-<span class="c"># True = Consider all scan sessions</span>
-<span class="n">mixedScanAnalysis</span> <span class="o">=</span> <span class="bp">False</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="thresholds">
-<h3>Thresholds<a class="headerlink" href="#thresholds" title="Permalink to this headline">¶</a></h3>
-<p>Specify statistical thresholds:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">zThreshold</span> <span class="o">=</span> <span class="mf">2.3</span>
-
-<span class="n">pThreshold</span> <span class="o">=</span> <span class="mf">0.05</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="ftest">
-<h3>fTest<a class="headerlink" href="#ftest" title="Permalink to this headline">¶</a></h3>
-<p>Specify whether to run an F-test:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Options are True/False</span>
-<span class="n">fTest</span> <span class="o">=</span> <span class="bp">True</span>
-</pre></div>
-</div>
 </div>
 </div>
 </div>

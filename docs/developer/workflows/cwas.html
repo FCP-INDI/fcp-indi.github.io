@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -6,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Connectome Wide Association Studies &mdash; CPAC 0.1 documentation</title>
+    <title>Connectome Wide Association Studies &mdash; CPAC 0.3.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1',
+        VERSION:     '0.3.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +25,7 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="CPAC 0.1 documentation" href="../index.html" />
+    <link rel="top" title="CPAC 0.3.1 documentation" href="../index.html" />
     <link rel="up" title="Workflows" href="index.html" />
     <link rel="next" title="Median Angle Correction" href="median_angle.html" />
     <link rel="prev" title="Easy thresh" href="easy_thresh.html" /> 
@@ -47,7 +49,7 @@
         <li class="right" >
           <a href="easy_thresh.html" title="Easy thresh"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+        <li><a href="../index.html">CPAC 0.3.1 documentation</a> &raquo;</li>
           <li><a href="index.html" accesskey="U">Workflows</a> &raquo;</li> 
       </ul>
     </div>  
@@ -90,8 +92,12 @@ inputpsec.subjects : list (nifti files)
     4-D timeseries of a group of subjects normalized to MNI space
 inputspec.regressor : list (float)
     Corresponding list of the regressor variable of shape (`N`) or (`N`,`1`), `N` subjects
+inputspec.cols : list (int)
+    todo
 inputspec.f_samples : int
     Number of permutation samples to draw from the pseudo F distribution
+inputspec.strata : None or ndarray
+    todo
 inputspec.parallel_nodes : integer
     Number of nodes to create and potentially parallelize over</pre>
 </div>
@@ -110,9 +116,9 @@ outputspec.p_map : string (nifti file)
 <li>Determine significance of MDMR statistics with permutation tests</li>
 </ol>
 <p>Workflow Graph:</p>
-<a class="reference internal image-reference" href="../_images/cwas.dot.png"><img alt="../_images/cwas.dot.png" src="../_images/cwas.dot.png" style="width: 500px;" /></a>
+<img alt="../_images/cwas.dot.png" src="../_images/cwas.dot.png" style="width: 500px;" />
 <p>Detailed Workflow Graph:</p>
-<a class="reference internal image-reference" href="../_images/cwas_detailed.dot.png"><img alt="../_images/cwas_detailed.dot.png" src="../_images/cwas_detailed.dot.png" style="width: 500px;" /></a>
+<img alt="../_images/cwas_detailed.dot.png" src="../_images/cwas_detailed.dot.png" style="width: 500px;" />
 <p class="rubric">References</p>
 <table class="docutils citation" frame="void" id="r5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -124,9 +130,9 @@ outputspec.p_map : string (nifti file)
 
 <dl class="function">
 <dt id="CPAC.cwas.calc_cwas">
-<tt class="descclassname">CPAC.cwas.</tt><tt class="descname">calc_cwas</tt><big>(</big><em>subjects_data</em>, <em>regressor</em>, <em>iter</em><big>)</big><a class="headerlink" href="#CPAC.cwas.calc_cwas" title="Permalink to this definition">¶</a></dt>
-<dd><p>Performs Connectome-Wide Association Studies (CWAS) <a class="reference internal" href="#r6" id="id2">[R6]</a> for every voxel.  Implementation based on
-<a class="reference internal" href="#r7" id="id3">[R7]</a>.</p>
+<tt class="descclassname">CPAC.cwas.</tt><tt class="descname">calc_cwas</tt><big>(</big><em>subjects_data</em>, <em>regressor</em>, <em>cols</em>, <em>iter</em>, <em>voxel_range</em>, <em>strata=None</em><big>)</big><a class="headerlink" href="#CPAC.cwas.calc_cwas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs Connectome-Wide Association Studies (CWAS) <a class="reference internal" href="#r6">[R6]</a> for every voxel.  Implementation based on
+<a class="reference internal" href="#r7">[R7]</a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -143,6 +149,14 @@ of timepoints <cite>T</cite> can vary between subjects.</p>
 <p><strong>iter</strong> : integer</p>
 <blockquote>
 <div><p>Number of permutations to derive significance tests</p>
+</div></blockquote>
+<p><strong>voxel_range</strong> : tuple</p>
+<blockquote>
+<div><p>(start, end) tuple specify the range of voxels (inside the mask) to perform cwas on.</p>
+</div></blockquote>
+<p><strong>strata</strong> : None or list</p>
+<blockquote>
+<div><p>todo</p>
 </div></blockquote>
 </td>
 </tr>
@@ -177,26 +191,27 @@ returned.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="CPAC.cwas.y_mdmr">
-<tt class="descclassname">CPAC.cwas.</tt><tt class="descname">y_mdmr</tt><big>(</big><em>yDis</em>, <em>x</em>, <em>iter</em><big>)</big><a class="headerlink" href="#CPAC.cwas.y_mdmr" title="Permalink to this definition">¶</a></dt>
+<dt id="CPAC.cwas.mdmr">
+<tt class="descclassname">CPAC.cwas.</tt><tt class="descname">mdmr</tt><big>(</big><em>ys</em>, <em>x</em>, <em>cols</em>, <em>perms</em>, <em>strata=None</em>, <em>debug_output=False</em><big>)</big><a class="headerlink" href="#CPAC.cwas.mdmr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Multivariate Distance Matrix Regression</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>yDis</strong> : ndarray</p>
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>ys</strong> : ndarray</p>
 <p><strong>x</strong> : ndarray</p>
-<p><strong>iter</strong> : integer</p>
+<p><strong>perms</strong> : integer or ndarray</p>
+<p><strong>strata</strong> : list or ndarray</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>F</strong> : float</p>
-<p class="last"><strong>p</strong> : float</p>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>ps</strong> : float</p>
+<p><strong>Fs</strong> : float</p>
+<p><strong>Fperms</strong> : ndarray</p>
+<p class="last"><strong>perms</strong> : ndarray</p>
 </td>
 </tr>
 </tbody>
 </table>
-<p class="rubric">Notes</p>
-<p>Implementation based on work by YAN Chao-Gan (<a class="reference external" href="mailto:ycg&#46;yan&#37;&#52;&#48;gmail&#46;com">ycg<span>&#46;</span>yan<span>&#64;</span>gmail<span>&#46;</span>com</a>) and References section.</p>
 <p class="rubric">References</p>
 <table class="docutils citation" frame="void" id="r8" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -261,7 +276,7 @@ and a provided mask</p>
 
 <dl class="function">
 <dt id="CPAC.cwas.nifti_cwas">
-<tt class="descclassname">CPAC.cwas.</tt><tt class="descname">nifti_cwas</tt><big>(</big><em>subjects_file_list</em>, <em>mask_file</em>, <em>regressor</em>, <em>f_samples</em>, <em>voxel_range</em><big>)</big><a class="headerlink" href="#CPAC.cwas.nifti_cwas" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">CPAC.cwas.</tt><tt class="descname">nifti_cwas</tt><big>(</big><em>subjects_file_list</em>, <em>mask_file</em>, <em>regressor</em>, <em>cols</em>, <em>f_samples</em>, <em>voxel_range</em>, <em>strata=None</em><big>)</big><a class="headerlink" href="#CPAC.cwas.nifti_cwas" title="Permalink to this definition">¶</a></dt>
 <dd><p>Performs CWAS for a group of subjects</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -279,6 +294,10 @@ and a provided mask</p>
 <blockquote>
 <div><p>Vector of shape (<cite>S</cite>) or (<cite>S</cite>, <cite>1</cite>), <cite>S</cite> subjects</p>
 </div></blockquote>
+<p><strong>cols</strong> : list</p>
+<blockquote>
+<div><p>todo</p>
+</div></blockquote>
 <p><strong>f_samples</strong> : integer</p>
 <blockquote>
 <div><p>Number of pseudo f values to sample using a random permutation test</p>
@@ -287,6 +306,10 @@ and a provided mask</p>
 <blockquote>
 <div><p>(start, end) tuple specify the range of voxels (inside the mask) to perform cwas on.
 Index ordering is based on the np.where(mask) command</p>
+</div></blockquote>
+<p><strong>strata</strong> : ndarray (optional)</p>
+<blockquote>
+<div><p>todo</p>
 </div></blockquote>
 </td>
 </tr>
@@ -363,13 +386,13 @@ easier</p>
         <li class="right" >
           <a href="easy_thresh.html" title="Easy thresh"
              >previous</a> |</li>
-        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
+        <li><a href="../index.html">CPAC 0.3.1 documentation</a> &raquo;</li>
           <li><a href="index.html" >Workflows</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2012, Brian.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+        &copy; Copyright .
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
     </div>
   </body>
 </html>

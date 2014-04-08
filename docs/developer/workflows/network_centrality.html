@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Network Centrality &mdash; CPAC 0.3.3 documentation</title>
+    <title>Network Centrality &mdash; CPAC 0.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.3.3',
+        VERSION:     '0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="CPAC 0.3.3 documentation" href="../index.html" />
+    <link rel="top" title="CPAC 0.1 documentation" href="../index.html" />
     <link rel="up" title="Workflows" href="index.html" />
     <link rel="prev" title="Timeseries Analysis" href="timeseries.html" /> 
   </head>
@@ -45,7 +45,7 @@
         <li class="right" >
           <a href="timeseries.html" title="Timeseries Analysis"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">CPAC 0.3.3 documentation</a> &raquo;</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
           <li><a href="index.html" accesskey="U">Workflows</a> &raquo;</li> 
       </ul>
     </div>  
@@ -95,11 +95,14 @@ matrix and stores it in a .mat file. By default its False</p>
 inputspec.template : string (existing nifti file)
     path to mask/parcellation unit 
 
-inputspec.threshold_option: string (int)
-    threshold options:  0 for probability p_value, 1 for sparsity threshold, any other for threshold value
+inputspec.method_option: string (int)
+    0 for degree centrality, 1 for eigenvector centrality, 2 for lFCD
 
 inputspec.threshold: string (float)
     pvalue/sparsity_threshold/threshold value
+
+inputspec.threshold_option: string (int)
+    threshold options:  0 for probability p_value, 1 for sparsity threshold, any other for threshold value
 
 centrality_options.weight_options : string (list of boolean)
     list of two booleans for binarize and weighted options respectively
@@ -154,10 +157,13 @@ or Vector Based centrality measures</li>
 
 <dl class="function">
 <dt id="CPAC.network_centrality.load">
-<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">load</tt><big>(</big><em>datafile</em>, <em>template</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.load" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">load</tt><big>(</big><em>datafile</em>, <em>template=None</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method to read data from datafile and mask/parcellation unit
 and store the mask data, timeseries, affine matrix, mask type
 and scans. The output of this method is used by all other nodes.</p>
+<p>Note that this function also will internally compute it&#8217;s own 
+brain mask by getting all voxels with non-zero variance in the
+timeseries.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -166,23 +172,24 @@ and scans. The output of this method is used by all other nodes.</p>
 <blockquote>
 <div><p>path to subject data file</p>
 </div></blockquote>
-<p><strong>template</strong> : string (nifti file)</p>
+<p><strong>template</strong> : string (nifti file) or None (default: None)</p>
 <blockquote>
-<div><p>path to mask/parcellation unit</p>
+<div><p>path to mask/parcellation unit
+if none, then will be mask with all 1s</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>timeseries_data: string (numpy npy file)</strong> :</p>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>timeseries_data: ndarray</strong> :</p>
 <blockquote>
-<div><p>path to file containing timeseries of the input data</p>
+<div><p>Masked timeseries of the input data.</p>
 </div></blockquote>
-<p><strong>affine: string (numpy npy file)</strong> :</p>
+<p><strong>affine: ndarray</strong> :</p>
 <blockquote>
-<div><p>path to file containing affine matrix of teh input data</p>
+<div><p>Affine matrix of the input data</p>
 </div></blockquote>
-<p><strong>mask_data: string (numpy npy file)</strong> :</p>
+<p><strong>mask_data: ndarray</strong> :</p>
 <blockquote>
-<div><p>path to file containing mask/parcellation unit matrix</p>
+<div><p>Mask/parcellation unit matrix</p>
 </div></blockquote>
 <p><strong>template_type: string</strong> :</p>
 <blockquote>
@@ -223,32 +230,32 @@ and scans. The output of this method is used by all other nodes.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="CPAC.network_centrality.get_centrality">
-<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">get_centrality</tt><big>(</big><em>timeseries_data</em>, <em>method_options</em>, <em>weight_options</em>, <em>threshold</em>, <em>option</em>, <em>scans</em>, <em>memory_allocated</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.get_centrality" title="Permalink to this definition">¶</a></dt>
+<dt id="CPAC.network_centrality.get_centrality_by_sparsity">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">get_centrality_by_sparsity</tt><big>(</big><em>timeseries</em>, <em>method_option</em>, <em>weight_options</em>, <em>threshold</em>, <em>memory_allocated</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.get_centrality_by_sparsity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method to calculate degree and eigen vector centrality</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>weight_options</strong> : string (list of boolean)</p>
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>timeseries</strong> : numpy array</p>
 <blockquote>
-<div><p>list of two booleans for binarize and weighted options respectively</p>
+<div><p>timeseries of the input subject</p>
 </div></blockquote>
 <p><strong>method_options</strong> : string (list of boolean)</p>
 <blockquote>
+<div><p>list of two booleans for degree and eigen options respectively</p>
+</div></blockquote>
+<p><strong>weight_options</strong> : string (list of boolean)</p>
+<blockquote>
 <div><p>list of two booleans for binarize and weighted options respectively</p>
 </div></blockquote>
-<p><strong>threshold_matrix</strong> : string (numpy npy file)</p>
+<p><strong>threshold</strong> : float</p>
 <blockquote>
-<div><p>path to file containing thresholded correlation matrix</p>
+<div><p>sparsity threshold for the correlation values</p>
 </div></blockquote>
-<p><strong>correlation_matrix</strong> : string (numpy npy file)</p>
+<p><strong>memory_allocated</strong> : a string</p>
 <blockquote>
-<div><p>path to file containing correlation matrix</p>
-</div></blockquote>
-<p><strong>template_data</strong> : string (numpy npy file)</p>
-<blockquote>
-<div><p>path to file containing mask or parcellation unit data</p>
+<div><p>amount of memory allocated to degree centrality</p>
 </div></blockquote>
 </td>
 </tr>
@@ -267,8 +274,8 @@ for centrality and centrality matrix</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="CPAC.network_centrality.get_centrality_opt">
-<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">get_centrality_opt</tt><big>(</big><em>timeseries_data</em>, <em>method_options</em>, <em>weight_options</em>, <em>memory_allocated</em>, <em>threshold</em>, <em>scans</em>, <em>r_value=None</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.get_centrality_opt" title="Permalink to this definition">¶</a></dt>
+<dt id="CPAC.network_centrality.get_centrality_by_thresh">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">get_centrality_by_thresh</tt><big>(</big><em>timeseries</em>, <em>template</em>, <em>method_option</em>, <em>weight_options</em>, <em>threshold</em>, <em>r_value</em>, <em>memory_allocated</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.get_centrality_by_thresh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method to calculate degree and eigen vector centrality. 
 This method takes into consideration the amount of memory
 allocated by the user to calculate degree centrality.</p>
@@ -280,25 +287,29 @@ allocated by the user to calculate degree centrality.</p>
 <blockquote>
 <div><p>timeseries of the input subject</p>
 </div></blockquote>
+<p><strong>template</strong> : numpy array</p>
+<blockquote>
+<div><p>Mask/ROI template for timeseries of subject</p>
+</div></blockquote>
+<p><strong>method_option</strong> : integer</p>
+<blockquote>
+<div><p>0 - degree centrality calculation, 1 - eigenvector centrality calculation, 2 - lFCD calculation</p>
+</div></blockquote>
 <p><strong>weight_options</strong> : string (list of boolean)</p>
 <blockquote>
 <div><p>list of two booleans for binarize and weighted options respectively</p>
 </div></blockquote>
-<p><strong>method_options</strong> : string (list of boolean)</p>
+<p><strong>threshold</strong> : float</p>
 <blockquote>
-<div><p>list of two booleans for binarize and weighted options respectively</p>
+<div><p>p-value threshold for the correlation values (ignored if the r_value option is specified)</p>
+</div></blockquote>
+<p><strong>r_value</strong> : float</p>
+<blockquote>
+<div><p>threshold value in terms of the correlation (this will override the threshold option)</p>
 </div></blockquote>
 <p><strong>memory_allocated</strong> : a string</p>
 <blockquote>
 <div><p>amount of memory allocated to degree centrality</p>
-</div></blockquote>
-<p><strong>scans</strong> : an integer</p>
-<blockquote>
-<div><p>number of scans in the subject</p>
-</div></blockquote>
-<p><strong>r_value :a float</strong> :</p>
-<blockquote>
-<div><p>threshold value</p>
 </div></blockquote>
 </td>
 </tr>
@@ -306,6 +317,49 @@ allocated by the user to calculate degree centrality.</p>
 <blockquote>
 <div><p>list of tuple containing output name to be used to store nifti image
 for centrality and centrality matrix</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises :</th><td class="field-body"><p class="first last"><strong>Exception</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.network_centrality.get_centrality_fast">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">get_centrality_fast</tt><big>(</big><em>timeseries</em>, <em>method_options</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.get_centrality_fast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to calculate degree and eigen vector centrality. 
+Relative to <cite>get_centrality_opt</cite>, it runs fast by not directly computing 
+the correlation matrix. As a consequence, there are several differences/
+limitations from the standard approach:</p>
+<ol class="arabic simple">
+<li>Cannot specify a correlation threshold</li>
+<li>As a consequence, the weighted dense matrix centrality is computed</li>
+<li>No memory limit is specified since it is assumed to be ok</li>
+</ol>
+<p>Note that the approach doesn&#8217;t directly calculate the complete correlation
+matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>timeseries_data</strong> : numpy array</p>
+<blockquote>
+<div><p>timeseries of the input subject</p>
+</div></blockquote>
+<p><strong>method_options</strong> : string (list of boolean)</p>
+<blockquote>
+<div><p>list of two booleans for binarize and weighted options respectively</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>out_list</strong> : string (list of tuples)</p>
+<blockquote>
+<div><p>list of tuple containing output name to be used to store nifti image
+for centrality and centrality matrix. this will only be weighted since
+the fast approaches are limited to this type of output.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -318,7 +372,7 @@ for centrality and centrality matrix</p>
 
 <dl class="function">
 <dt id="CPAC.network_centrality.map_centrality_matrix">
-<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">map_centrality_matrix</tt><big>(</big><em>centrality_matrix</em>, <em>affine</em>, <em>template_data</em>, <em>template_type</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.map_centrality_matrix" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">map_centrality_matrix</tt><big>(</big><em>centrality_matrix</em>, <em>aff</em>, <em>mask</em>, <em>template_type</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.map_centrality_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method to map centrality matrix to a nifti image</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -328,13 +382,13 @@ for centrality and centrality matrix</p>
 <blockquote>
 <div><p>tuple containing matrix name and degree/eigenvector centrality matrix</p>
 </div></blockquote>
-<p><strong>affine</strong> : string (numpy mat file)</p>
+<p><strong>aff</strong> : ndarray</p>
 <blockquote>
-<div><p>path to file containing image affine matrix</p>
+<div><p>Affine matrix of the input data</p>
 </div></blockquote>
-<p><strong>template_data</strong> : string (numpy mat file)</p>
+<p><strong>mask</strong> : ndarray</p>
 <blockquote>
-<div><p>path to file containing mask or roi data matrix</p>
+<div><p>Mask or roi data matrix</p>
 </div></blockquote>
 <p><strong>template_type</strong> : int</p>
 <blockquote>
@@ -425,48 +479,41 @@ represents a variable, with the rows containing the observations.</p>
 
 <dl class="function">
 <dt id="CPAC.network_centrality.calc_centrality">
-<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">calc_centrality</tt><big>(</big><em>method_options</em>, <em>weight_options</em>, <em>option</em>, <em>threshold</em>, <em>timeseries_data</em>, <em>scans</em>, <em>template_type</em>, <em>template_data</em>, <em>affine</em>, <em>allocated_memory</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.calc_centrality" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">calc_centrality</tt><big>(</big><em>datafile</em>, <em>template</em>, <em>method_option</em>, <em>threshold_option</em>, <em>threshold</em>, <em>weight_options</em>, <em>allocated_memory</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.calc_centrality" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method to calculate centrality and map them to a nifti file</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>method_options</strong> : list (boolean)</p>
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>datafile</strong> : string (nifti file)</p>
 <blockquote>
-<div><p>list of two booleans for binarize and weighted options respectively</p>
+<div><p>path to subject data file</p>
+</div></blockquote>
+<p><strong>template</strong> : string (nifti file)</p>
+<blockquote>
+<div><p>path to mask/parcellation unit</p>
+</div></blockquote>
+<p><strong>method_option</strong> : integer</p>
+<blockquote>
+<div><p>0 - degree centrality calculation, 1 - eigenvector centrality calculation, 2 - lFCD calculation</p>
 </div></blockquote>
 <p><strong>weight_options</strong> : list (boolean)</p>
 <blockquote>
 <div><p>list of two booleans for binarize and weighted options respectively</p>
 </div></blockquote>
-<p><strong>option</strong> : an integer</p>
+<p><strong>threshold_option</strong> : an integer</p>
 <blockquote>
 <div><p>0 for probability p_value, 1 for sparsity threshold, 
-any other for threshold value</p>
+2 for actual threshold value, and 3 for no threshold and fast approach</p>
 </div></blockquote>
 <p><strong>threshold</strong> : a float</p>
 <blockquote>
 <div><p>pvalue/sparsity_threshold/threshold value</p>
 </div></blockquote>
-<p><strong>timeseries_data</strong> : string (numpy filepath)</p>
+<p><strong>weight_options</strong> : list (boolean)</p>
 <blockquote>
-<div><p>timeseries of the input subject</p>
-</div></blockquote>
-<p><strong>scans</strong> : an integer</p>
-<blockquote>
-<div><p>number of scans in the subject</p>
-</div></blockquote>
-<p><strong>template_type</strong> : an integer</p>
-<blockquote>
-<div><p>0 for mask, 1 for roi</p>
-</div></blockquote>
-<p><strong>template_data</strong> : string (numpy filepath)</p>
-<blockquote>
-<div><p>path to file containing mask/parcellation unit matrix</p>
-</div></blockquote>
-<p><strong>affine</strong> : string (filepath)</p>
-<blockquote>
-<div><p>path to file containing affine matrix of the input data</p>
+<div><p>list of booleans, where, weight_options[0] corresponds to binary counting 
+and weight_options[1] corresponds to weighted counting (e.g. [True,False])</p>
 </div></blockquote>
 <p><strong>allocated_memory</strong> : string</p>
 <blockquote>
@@ -485,96 +532,38 @@ any other for threshold value</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="CPAC.network_centrality.calc_eigenV">
-<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">calc_eigenV</tt><big>(</big><em>r_matrix</em>, <em>r_value</em>, <em>weight_options</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.calc_eigenV" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method to calculate Eigen Vector Centrality</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>r_matrix</strong> : numpy array</p>
-<blockquote>
-<div><p>correlation matrix</p>
-</div></blockquote>
-<p><strong>r_value</strong> : a float</p>
-<blockquote>
-<div><p>threshold value</p>
-</div></blockquote>
-<p><strong>weight_options</strong> : list (boolean)</p>
-<blockquote>
-<div><p>list of two booleans for binarize and weighted options respectively</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>out_list</strong> : list</p>
-<blockquote class="last">
-<div><p>list containing eigen vector centrality maps</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
 <dt id="CPAC.network_centrality.calc_blocksize">
-<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">calc_blocksize</tt><big>(</big><em>shape</em>, <em>memory_allocated=None</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.calc_blocksize" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">calc_blocksize</tt><big>(</big><em>timeseries</em>, <em>memory_allocated=None</em>, <em>include_full_matrix=False</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.calc_blocksize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Method to calculate blocksize to calculate correlation matrix
 as per the memory allocated by the user. By default, the block
-size is 1000.</p>
+size is 1000 when no memory limit is specified.</p>
+<p>If memory allocated is specified, then block size is calculated
+as memory allocated subtracted by the memory of the timeseries 
+and centrality output, then divided by the size of one correlation 
+map. That is how many correlation maps can we calculate simultaneously 
+in memory?</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>shape</strong> : tuple</p>
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>timeseries</strong> : numpy array</p>
 <blockquote>
-<div><p>shape of array</p>
+<div><p>timeseries data: <cite>nvoxs</cite> x <cite>ntpts</cite></p>
 </div></blockquote>
 <p><strong>memory_allocated</strong> : float</p>
 <blockquote>
 <div><p>memory allocated in GB for degree centrality</p>
+</div></blockquote>
+<p><strong>include_full_matrix</strong> : boolean</p>
+<blockquote>
+<div><p>do you want to consider the full correlation matrix in this calculation?
+default: False</p>
 </div></blockquote>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>block_size</strong> : an integer</p>
 <blockquote class="last">
 <div><p>size of block for matrix calculation</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="CPAC.network_centrality.calc_threshold">
-<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">calc_threshold</tt><big>(</big><em>option</em>, <em>threshold</em>, <em>scans</em>, <em>corr_matrix=None</em>, <em>full_matrix=True</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.calc_threshold" title="Permalink to this definition">¶</a></dt>
-<dd><p>Method to calculate threshold based
-on the threshold method chosen</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>option</strong> : an integer</p>
-<blockquote>
-<div><p>threshold option</p>
-</div></blockquote>
-<p><strong>threshold</strong> : a float</p>
-<blockquote>
-<div><p>thrshold value</p>
-</div></blockquote>
-<p><strong>scans</strong> : an integer</p>
-<blockquote>
-<div><p>no of timepoints</p>
-</div></blockquote>
-<p><strong>corr_matrix</strong> : numpy array</p>
-<blockquote>
-<div><p>correlation matrix</p>
-</div></blockquote>
-<p><strong>full_matrix</strong> : boolean</p>
-<blockquote class="last">
-<div><p>True, if full matrix is considered.
-False, if only upper triangle is considered.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -604,6 +593,71 @@ then return the indices of those points.</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.network_centrality.degree_centrality">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">degree_centrality</tt><big>(</big><em>corr_matrix</em>, <em>r_value</em>, <em>method</em>, <em>out=None</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.degree_centrality" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate centrality for the rows in the corr_matrix using
+a specified correlation threshold. The centrality output can 
+be binarized or weighted.</p>
+<p>corr_matrix : numpy.ndarray
+r_value : float
+method : str</p>
+<blockquote>
+<div>Can be &#8216;binarize&#8217; or &#8216;weighted&#8217;</div></blockquote>
+<dl class="docutils">
+<dt>out <span class="classifier-delimiter">:</span> <span class="classifier">numpy.ndarray (optional)</span></dt>
+<dd>If specified then should have shape of <cite>corr_matrix.shape[0]</cite></dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><strong>out</strong> : numpy.ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.network_centrality.eigenvector_centrality">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">eigenvector_centrality</tt><big>(</big><em>corr_matrix</em>, <em>r_value=None</em>, <em>method=None</em>, <em>to_transform=True</em>, <em>ret_eigenvalue=False</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.eigenvector_centrality" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># Simulate Data</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ntpts</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span> <span class="n">nvoxs</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">ntpts</span><span class="p">,</span><span class="n">nvoxs</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mm</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="c"># note that need to generate connectivity matrix here</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># Execute</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">CPAC.network_centrality.core</span> <span class="kn">import</span> <span class="n">eigenvector_centrality</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eigenvector</span> <span class="o">=</span> <span class="n">slow_eigenvector_centrality</span><span class="p">(</span><span class="n">mm</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="CPAC.network_centrality.fast_eigenvector_centrality">
+<tt class="descclassname">CPAC.network_centrality.</tt><tt class="descname">fast_eigenvector_centrality</tt><big>(</big><em>m</em>, <em>maxiter=99</em>, <em>verbose=True</em><big>)</big><a class="headerlink" href="#CPAC.network_centrality.fast_eigenvector_centrality" title="Permalink to this definition">¶</a></dt>
+<dd><p>The output here is based on a transfered correlation matrix of m.
+Where it equals (1+r)/2.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r18" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[R18]</a></td><td>Wink, A.M., de Munck, J.C., van der Werf, Y.D., van den Heuvel, O.A., Barkhof, F., 2012. Fast Eigenvector Centrality Mapping of Voxel-Wise Connectivity in Functional Magnetic Resonance Imaging: Implementation, Validation, and Interpretation. Brain Connectivity 2, 265–274.</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># Simulate Data</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ntpts</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span> <span class="n">nvoxs</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">ntpts</span><span class="p">,</span><span class="n">nvoxs</span><span class="p">))</span> <span class="c"># note that don&#39;t need to generate connectivity matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># Execute</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">CPAC.network_centrality.core</span> <span class="kn">import</span> <span class="n">fast_eigenvector_centrality</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eigenvector</span> <span class="o">=</span> <span class="n">fast_eigenvector_centrality</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -654,12 +708,12 @@ then return the indices of those points.</p>
         <li class="right" >
           <a href="timeseries.html" title="Timeseries Analysis"
              >previous</a> |</li>
-        <li><a href="../index.html">CPAC 0.3.3 documentation</a> &raquo;</li>
+        <li><a href="../index.html">CPAC 0.1 documentation</a> &raquo;</li>
           <li><a href="index.html" >Workflows</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2013.
+        &copy; Copyright 2012, Brian.
       Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>

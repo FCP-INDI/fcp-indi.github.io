@@ -11,22 +11,23 @@ Downloads
 
 * ABIDE
 
-    * :file:`data_config_abide.py` - `Download <_static/data_config_abide.py>`_
+    * :file:`data_config_abide.yaml` - `Download <_static/data_config_abide.yaml>`_
     * :file:`scan_parameters_abide.csv` - `Download <_static/scan_parameters_abide.csv>`_
 
 * ADHD-200
 
-    * :file:`data_config_adhd.py` - `Download <_static/data_config_adhd.py>`_
+    * :file:`data_config_adhd.yaml` - `Download <_static/data_config_adhd.yaml>`_
     * :file:`scan_parameters_adhd.csv` - `Download <_static/scan_parameters_adhd.csv>`_
 
 * 1000 Functional Connectomes
 
-    * :file:`data_config_fcon.py` - `Download <_static/data_config_fcon.py>`_
+    * :file:`data_config_fcon.yaml` - `Download <_static/data_config_fcon.yaml>`_
     * :file:`scan_parameters_fcon.csv` - `Download <_static/scan_parameters_fcon.csv>`_
 
 * NKI-Rockland Sample
 
-    * :file:`data_config_nki.py` - `Download <_static/data_config_nki.py>`_
-    * :file:`scan_parameters_nki.csv` - Download
+    * :file:`data_config_nki.yaml` - `Download <_static/data_config_nki.yaml>`_
+    * :file:`scan_parameters_nki.csv` - `Not Yet Available` 
+    .. Comment `Download <_static/scan_parameters_nki.csv>`_
 
 

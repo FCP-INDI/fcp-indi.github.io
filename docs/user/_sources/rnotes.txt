@@ -38,7 +38,7 @@ Instructions for Updating to 0.3.4
 ``````````````````````````````````
 #. Download the new version from `Github <https://github.com/FCP-INDI/C-PAC>`_ or the `CPAC homepage <http://fcp-indi.github.io.>`_.
 
-#. If you do not have Cython installed already, follow the instructions `here </install.html#install-python-dependencies>`.
+#. If you do not have Cython installed already, follow the instructions `here <http://fcp-indi.github.io/docs/user/install.html#install-python-dependencies>`_.
 
 #. Replace the old CPAC directory with the new files and then run ``sudo python setup.py install``.
 

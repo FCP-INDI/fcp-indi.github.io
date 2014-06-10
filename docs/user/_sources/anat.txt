@@ -5,7 +5,7 @@ Anatomical Registration
 ^^^^^^^^^^^^^^^^^^^^^^^
 In order to compare brain activations between subjects, individual functional and anatomical images must first be transformed to match a common template. The most commonly used template (`MNI152 <http://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009>`_) is maintained by the Montreal Neurological Institute, and is created by combining data from the brains of many different individuals to create an "average" brain. The image below shows how an individual brain is warped to match the shape of the template.
 
-.. figure:: /images/registration.png
+.. figure:: /_images/registration.png
 
 CPAC provides the option of either using FSL (`FLIRT <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT>`_ and `FNIRT <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FNIRT>`_) or `Advanced Normalization Tools (ANTS) <http://stnava.github.io/ANTs/>`_ to register images. Although the use of ANTS requires an extra step during the CPAC install process, we have found its results to significantly better than those produced by FSL (a conclusion supported by a `recent systematic analysis by Klein et al. <http://mindboggle.info/papers/evaluation_NeuroImage2010.php>`_ )
 
@@ -15,7 +15,7 @@ By default, CPAC will register subject brains to the MNI152 template included wi
 
 Configuring CPAC to run Anatomical Registration
 """""""""""""""""""""""""""""""""""""""""""""""
-.. figure:: /images/gui/anat_reg_gui.png
+.. figure:: /_images/gui/anat_reg_gui.png
 
 #. **Run Anatomical Registration:** Register anatomical images to a template.
 
@@ -33,7 +33,7 @@ Anatomical Tissue Segmentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 CPAC uses `FSL/FAST <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FAST>`_ to automatically segment brain images into white matter, gray matter, and CSF. This is done using probability maps that contain information about the likelihood that a given voxel will be of a particular tissue type. Users specify a probability threshold such that voxels meeting a minimum probability of being a particular tissue will be classified as such. This results in masks containing voxels of only a single tissue type.
 
-.. figure:: /images/segmentation.png
+.. figure:: /_images/segmentation.png
 
 The default tissue probability maps (referred to as Prior Probability Maps) used during segmentation are based on information from a large number of brains, and are based on the priors distributed with FSL and are included in the "Image Resource Files" package downloaded during installation. For more detail on how CPAC computes these steps, please see the `Segmentation Page of the developer documentation <http://fcp-indi.github.io/docs/developer/workflows/seg_preproc.html>`_.
 
@@ -55,7 +55,7 @@ The following bash script will binarize existing priors::
 
 Configuring CPAC to run Anatomical Tissue Segmentation
 """"""""""""""""""""""""""""""""""""""""""""""""""""""
-.. figure:: /images/gui/seg_gui.png
+.. figure:: /_images/gui/seg_gui.png
 
 #. **Run Tissue Segmentation:** Automatically segment anatomical images into white matter, gray matter, and CSF based on prior probability maps.
 

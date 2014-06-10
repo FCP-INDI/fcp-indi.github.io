@@ -28,7 +28,7 @@ Where :file:`/path/to/output/directory` is the path to your output directory (:f
 
 Configuring CPAC to run Motion Correction
 """""""""""""""""""""""""""""""""""""""""
-.. figure:: /images/gui/motion_gui.png
+.. figure:: /_images/gui/motion_gui.png
 
 #. **Use Friston 24-Parameter Model:** Use the Friston 24-Parameter Model during volume realignment. If this option is turned off, only 6 parameters will be used. These parameters will also be output as a spreadsheet.
 
@@ -51,7 +51,7 @@ After calculating FD and DVARS, thresholds can be applied to censor the data. Se
 
 Configuring CPAC to run Scrubbing
 """""""""""""""""""""""""""""""""
-.. figure:: /images/gui/scrubbing_gui.png
+.. figure:: /_images/gui/scrubbing_gui.png
 
 #. **Run Scrubbing:** Remove volumes exhibiting excessive motion.
 

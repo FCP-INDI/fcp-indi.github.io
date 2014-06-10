@@ -14,7 +14,7 @@ Open CPAC
 ---------
 To open the CPAC GUI, simply enter the command ``cpac_gui`` in a terminal window. You will be presented with the main CPAC window.
 
-.. figure:: /images/gui/main_gui.png
+.. figure:: /_images/gui/main_gui.png
 
 Specify a Subject List
 ----------------------
@@ -52,7 +52,7 @@ When you are ready to run CPAC, select the subject lists and pipelines you would
 
 The following schematic illustrates the order in which C-PAC executes.
 
-.. figure:: /images/processing_workflow.png
+.. figure:: /_images/processing_workflow.png
 
 Viewing Run Status
 ------------------
@@ -60,7 +60,7 @@ Viewing Run Status
 
 To view the status of a CPAC run (how many subjects have been processed, whether any errors have been encountered, etc), you can view the log files located in the ``/logs`` folder of your output directory. Double-click on the ``/reports/index.html`` file to open it in your browser.
 
-.. figure:: /images/logs_main.png
+.. figure:: /_images/logs_main.png
 
 
 Viewing CPAC Outputs
@@ -69,7 +69,7 @@ Viewing CPAC Outputs
 
 If you have enabled it in your pipeline configuration, the CPAC Quality Control (QC) interface is the most efficient way to rapidly view the outputs of a CPAC run. For each subject, CPAC generates an HTML file containing images of each output and additional information such as motion parameters and signal-to-noise ratios.
 
-.. figure:: /images/qc_main.png
+.. figure:: /_images/qc_main.png
 
 Though it is possible to view the QC page for each subject individually, we recommend generating a combined QC page that lets you easily navigate between subjects. To do this, open a python terminal and run the following command::
 

@@ -32,7 +32,7 @@ Symbolic Links
 """"""""""""""
 C-PAC gives users the option (:file:`runSymbolicLinks = [1]` in :file:`config.yml`) of creating an output directory containing `symbolic links <http://en.wikipedia.org/wiki/Symbolic_link>`_ to processed files. We strongly recommend this setting be enabled by all users, as it makes it much easier to navigate output files. The following schematic shows the structure of the resulting :file:`sym_links` directory:
 
-.. figure:: /images/symlink_structure.png
+.. figure:: /_images/symlink_structure.png
 
 Pipeline and strategy folders are named as described above. 
 
@@ -40,17 +40,17 @@ File Descriptions
 """""""""""""""""
 Preprocessed anatomical data from the Anatomical Preprocessing, Registration, and Segmentation workflows can be found in :file:`../scan/anat/` directory for each subject. The following diagram shows processing steps and standard output files for these workflows.
 
-.. figure:: /images/anat_prepro_schematic.png
+.. figure:: /_images/anat_prepro_schematic.png
 
 Preprocesesd functional data from the Functional Preprocessing workflow can be found int the :file:`../scan_<name>/func` directory for each subject. The following diagram shows processing steps and standard output files for this workflow.
 
-.. figure:: /images/functional_preprocessing.png
+.. figure:: /_images/functional_preprocessing.png
 
 Derivative Outputs
 """"""""""""""""""
 Derivatives for each subject can be found in the :file:`../scan_<name>` directory of each subject. This folder also contains the outputs of the registration and sementation workflows.
 
-.. figure:: /images/derivs_outputs.png
+.. figure:: /_images/derivs_outputs.png
 
 Within each derivative folder will be sub-folders for each set of frequency filters set in :file:`config.yml`, as well as a folder containing smoothed outputs.
 

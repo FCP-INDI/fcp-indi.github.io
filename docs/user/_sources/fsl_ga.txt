@@ -8,7 +8,7 @@ Users create a model file that includes group, phenotypic, and nuisance regresso
 
 The following links provide an introduction to how groups are compared using FSL, as well as how to define contrasts.
 
-* http://ccn.ucla.edu/wiki/images/c/c7/FSL_workshop_FEAT_2.pdf
+* http://ccn.ucla.edu/wiki/_images/c/c7/FSL_workshop_FEAT_2.pdf
 
 * http://www.fmrib.ox.ac.uk/fslcourse/lectures/feat1_part2.pdf
 
@@ -17,7 +17,7 @@ The following links provide an introduction to how groups are compared using FSL
 Configuring CPAC to Run FSL Group Analysis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. figure:: /images/gui/fslga_main.png
+.. figure:: /_images/gui/fslga_main.png
 
 * **Run Group Analysis:** Run group analysis using FSL/FEAT.
 * **Select Derivatives:** Select which derivatives you would like to include when running group analysis. When including Dual Regression, make sure to correct your P-value for the number of maps you are comparing. When including Multiple Regression SCA, you must have more degrees of freedom (subjects) than there were time series.
@@ -30,7 +30,7 @@ Specifying Models to Run
 """"""""""""""""""""""""
 
 
-.. figure:: /images/gui/fslga_gui.png
+.. figure:: /_images/gui/fslga_gui.png
 
 * **Subject List:** Full path to a list of subjects to be included in the model. This should be a text file with one subject per line. Tip 1: A list in this format contaning all subjects run through CPAC was generated along with the main CPAC subject list (see subject_list_group_analysis.txt). Tip 2: An easy way to manually create this file is to copy the subjects column from your Regressor/EV spreadsheet.
 * **EV File:** Full path to a .csv file containing EV information for each subject. Tip: A file in this format (containing a single column listing all subjects run through CPAC) was generated along with the main CPAC subject list (see template_phenotypic.csv).

@@ -19,7 +19,7 @@ Computation steps for CWAS are listed below as described by Shehzad and colleagu
 
 The figure below (taken from Shehzad et al., 2010) outlines these steps. For more detail on how C-PAC handles these computations, please see the `CWAS section of the developer documentation <http://fcp-indi.github.com/docs/developer/workflows/cwas.html>`_.
 
-.. figure:: /images/cwas_shehzad_schematic.png
+.. figure:: /_images/cwas_shehzad_schematic.png
 
 It is important to note that the results of MDMR analysis do not contain information about the direction of connectivity-phenotype relationships, nor the specific connections underlying these connectome-wide associations. Follow-up analysis using seed-based correlation analysis (or similar methods) is required to discover this information (Shehzad et al., in prep). To avoid bias caused by 'double-dipping' your data (Kriegeskorte et al., 2009), this analysis should always be performed on an independent sample (Shehzad et al., in prep). Further, the results of these follow-up analyses should take into account existing knowledge about brain anatomy and physiology before being considered definitive (Shehzad et al., in prep).
 
@@ -27,7 +27,7 @@ Applications and Recommendations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 As C-PAC is one of the first public software packages to implement CWAS, it has yet to be utilized by more than a few researchers. The most notable use to date is the analysis performed by Shehzad and colleagues, who found robust associations between functional connectivity and a number of phenotypic characteristics including age, ADHD diagnosis, IQ, and *L-dopa* administration.
 
-.. figure:: /images/cwas_shehzad_brains.png
+.. figure:: /_images/cwas_shehzad_brains.png
 
 As CWAS examines connectivity across the whole brain, it may have reduced sensitivity to highly-localized sets of connections related to a phenotype. This issue can be addressed by limiting analysis to connectivity between specific anatomical regions (Shehzad et al., in prep), which can be accomplished by defining an ROI mask during C-PAC setup.
 

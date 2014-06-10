@@ -12,7 +12,7 @@ Seed-based Correlation Analysis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Seed-based Correlation Analysis (SCA) is one of the most common ways to explore functional connectivity within the brain. Based on the time series of a seed voxel (or ROI), connectivity is calcualted as the correlation of time series for all other voxels in the brain. The result of SCA is a connectivity map showing Z-scores for each voxel indicating how well it's time series correlates with the time series of the seed. Below is an example connectivity map showing correlated voxels based on a seed in the precuneus.
 
-.. figure:: /images/sca_map.png
+.. figure:: /_images/sca_map.png
 
 Astute readers will note that the pattern of connectivity mapped above closely resembles the anatomy of the Default Network. Indeed, SCA may be used to explore functional networks that share similar patterns of activity.
 

@@ -1,6 +1,6 @@
 Computer Settings
 -----------------
-.. figure:: /images/gui/compute_gui.png
+.. figure:: /_images/gui/compute_gui.png
 
 #. **Run CPAC on a Cluster/Grid:** Select False if you intend to run CPAC on a single machine. If set to True, CPAC will attempt to submit jobs through the job scheduler / resource manager selected below.
 

@@ -9,7 +9,7 @@ Computation and Analysis Considerations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Smoothing is accomplished by applying a Gaussian filter (also known as a kernel) to the original image. This results in the signal of each voxel being replaced by the weighted average of its neighbors (Ashby, 2011). It is the shape of the kernel that defines the weights applied during smoothing. As a Gaussian kernel is essentially a normal distribution, weight is always strongest at the voxel being smoothed and decreases with distance at a rate that depends on the width of the distribution. Wider distributions result in greater smoothing, as more distant voxels recieve higher weights than they would with a thinner kernel. Unlike in statistics, where the width of a distribution is described by the standard devition, the shape of a smoothing kernel is usually described by the width of the distribution at half of its maximum value. This is known as the Full Width Half Maximum (FWHM). The figure below shows the smoothing effect of different FWHM values.
 
-.. figure:: /images/smoothing.png
+.. figure:: /_images/smoothing.png
 
 **Note:** In CPAC, smoothing applied after calculating individual-level analyses (except for VMHC, for which smoothing is applied prior to calculation). This preserves the structure of the data as much as possible prior to statistical analysis.
 
@@ -21,7 +21,7 @@ Care must be taken when utilizing methods such as Regional Homogeneity (ReHo) an
 
 Configuring CPAC to run Smoothing
 """""""""""""""""""""""""""""""""
-.. figure:: /images/gui/smoothing_gui.png
+.. figure:: /_images/gui/smoothing_gui.png
 
 #. **Kernel FWHM (in mm):** Full Width at Half Maximum of the Gaussian kernel used during spatial smoothing. Can be a single value or multiple values separated by commas. Note that spatial smoothing is run as the last step in the individual-level analysis pipeline, such that all derivatives are output both smoothed and unsmoothed.
 

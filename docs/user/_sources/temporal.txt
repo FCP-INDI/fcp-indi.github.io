@@ -19,7 +19,7 @@ Additionally, there is some evidence (Davey et al., 2012) that temporal filterin
 
 Configuring CPAC to run Temporal Filtering
 """"""""""""""""""""""""""""""""""""""""""
-.. figure:: /images/gui/tf_gui.png
+.. figure:: /_images/gui/tf_gui.png
 
 #. **Run Temporal Filtering:** Apply a temporal band-pass filter to functional data.
 

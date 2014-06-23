@@ -34,7 +34,7 @@ Open the CPAC GUI and click to create a new Subject List. In the Subject List Co
 
 .. figure:: /_images/benchmark_data_config.png
 
-Click Generate Subject Lists. You will be asked to specify a name for a configuratino file containing the newly entered settings, as well as for the subject list itself. 
+Click Generate Subject Lists. You will be asked to specify a name for a configuration file containing the newly entered settings, as well as for the subject list itself. 
 
 4) Configure CPAC
 ^^^^^^^^^^^^^^^^^

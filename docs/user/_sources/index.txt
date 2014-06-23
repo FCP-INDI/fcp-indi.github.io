@@ -41,6 +41,7 @@ The C-PAC Team
    
 
    **Other Contributors:**
+   Aimi Watanabe
    Qingyang Li
    Chao-Gan Yan
    Brian Cheung

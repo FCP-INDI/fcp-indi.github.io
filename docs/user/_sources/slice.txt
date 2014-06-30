@@ -37,7 +37,7 @@ Slice Timing information should be entered into these files as follows:
     * **seqminus** - Sequential in the minus direction
 
 * **FirstTR** - First volume to include in analysis. (Reminder, volumes start at 0)
-* **LastTR** - Last volume to inclucde in analysis.
+* **LastTR** - Last volume to include in analysis.
 
 **Note:** alt+z2 is the order most commonlly used on Siemens scanners for interleaved scans with an even number of slices.
 

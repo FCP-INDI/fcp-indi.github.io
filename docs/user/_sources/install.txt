@@ -73,7 +73,7 @@ Python is the glue (Bloom, 2012) that ties all the pieces of CPAC together. Plea
 * `PyYAML <http://pyyaml.org/wiki/PyYAML>`_ * (``easy_install pyyaml``)
 * `Jinja2 <http://jinja.pocoo.org/docs/intro/#installation>`_ * (``easy_install jinja2``)
 * `PyLockfile <https://code.google.com/p/pylockfile/>`_ * (``easy_install lockfile``)
-* `Cython <http://www.cython.org/">`_ (version 12.1 or greater)  * (``easy_install Cython``)
+* `Cython <http://www.cython.org/>`_ (version 12.1 or greater)  * (``easy_install Cython``)
 * `iPython <http://ipython.org/>`_ (optional)
 * `Graphviz <http://www.graphviz.org/>`_ (optional; required for workflow graphs)
 

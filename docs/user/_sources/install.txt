@@ -88,7 +88,7 @@ CPAC relies heavily on tools developed as part of the `Neuroimaging in Python pr
 
 To install Nibabel, run the command ``easy_install nibabel``.
 
-To install Nipype, first download, `click here <https://github.com/nipy/nipype/releases/tag/0.9.1>`_ the package from Github. CPAC requires Nipype 0.9.1, will not work with other versions.
+To install Nipype, first download `this package<https://github.com/FCP-INDI/nipype/releases/tag/v0.9.2_cpac_tested>`_ from Github. CPAC versions 0.3.4b, 0.3.5 and higher require this custom version of Nipype 0.9.2.
 
 Open a terminal window and unpack the file using the following command
 
@@ -156,20 +156,47 @@ If you wish to use ANTS for anatomical registration, follow the instructions bel
 
 **ANTS:**
 
-Download the latest version of ANTS (`found here <http://sourceforge.net/projects/advants/>`_). Unzip the downloaded archive, and place the extracted folder in a location of your choosing. Add the following text to your :file:`.bashrc` file (Mac Users: You must also add this text to your :file:`.bash_profile`.)
+Download ANTS from GitHub and switch the repository branch to the version tested with C-PAC by running these commands from terminal:
 
 .. code-block:: bash
 
-    export PATH=/path_to/ANTS/bin:$PATH
-    export ANTSPATH=/path_to/ANTS/bin
+    git clone https://github.com/stnava/ANTs.git ANTS_repository
+    cd ANTS_repository
+    git branch v2.1.0rc2
 
-Where :file:`/path_to/ANTS` is the location of the extracted folder.
+This will create a folder named "ANTS_repository" in the directory where you ran the command from.
 
-Open a new terminal window. Test your installation by running :file:`antsIntroduction.sh`. If this fails, see the Troubleshooting section below.
+Next, create a new directory in a location of your choosing and navigate to it:
 
-Because of differences between the compiled binaries (which you have just downloaded and installed) and the version of ANTS which has been implemented in CPAC, you will need to manually replace your existing copy of :file:`antsIntroduction.sh` with the version available on Github. To do this, delete the copy of this file on your local machine, and replace it with the version available for `download here <https://raw.github.com/stnava/ANTs/master/Scripts/antsIntroduction.sh>`_.
+.. code-block:: bash
 
-When this is done, confirm that this has worked by re-running the :file:`antsIntroduction.sh` command in terminal.
+    mkdir <path>/ants_install
+    cd <path>/ants_install
+
+Next, run these commands from this directory to build your ANTS install:
+
+.. code-block:: bash
+
+    cmake -c -g <path to the ANTS repository>/ANTS_repository
+    make -j <number>
+
+Where <number> is how many cores you wish to dedicate to building your install - the more you use, the sooner it will complete. For example, if you want to use four cores, you would run 'make -j 4'.
+
+Once this is complete, you will need to modify your environment. Add the following text to your :file:`.bashrc` file (Mac Users: You must also add this text to your :file:`.bash_profile`.)
+
+.. code-block:: bash
+
+    export ANTSPATH=/<path>/ants_install/bin
+    export PATH=/<path>/ants_install/bin:$PATH
+
+:file:`/<path>/ants_install` would be the path to the :file:`ants_install` folder you created earlier. You can test the installation by opening a new terminal window and running this command:
+
+.. code-block:: bash
+
+    antsApplyTransforms
+
+If this returns a help page with a list of parameters, your ANTS installation was a success.
+
 
 **C3D:**
 
@@ -237,6 +264,31 @@ Some network centrality features will not be available without compiling the C-b
     python setup.py build_ext --inplace
 
 **Note:** Unfortunately, it is not possible at this time to use the CPAC GUI without installing CPAC.
+
+Isolated Nipype and CPAC Installs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+You can install an "isolated" version of Nipype and/or CPAC (i.e. a non-global version) if you want to have multiple versions installed, if you want to test out a new installation of CPAC that may rely on a new version of Nipype, or if you want another version of Nipype or CPAC to develop and experiment with. Simply do the following:
+
+.. code-block:: bash
+
+    python setup.py install --prefix='/custom/path/here'
+
+This will create a folder structure in '/custom/path/here' (whatever you may select) containing your Nipype or CPAC install, and will not affect any global Nipype or CPAC install you may have. This folder structure will mirror the usual structure found as part of your Python path and package installations, and will look something like this: :file:`lib/python2.7/site-packages`, with a :file:`Nipype` or :file:`CPAC` folder within the :file:`site-packages` folder. In order to properly import these isolated versions, you simply add this path up until the :file:`site-packages` folder (i.e. not including the :file:`Nipype` or :file:`CPAC` folder) in Python's :file:`sys.path`, making sure to insert it at the beginning of the :file:`sys.path` list.
+
+For example, in order to invoke an isolated install of Nipype and CPAC, open Python and run the following:
+
+.. code-block:: python
+
+    import sys
+    sys.path.insert(0,'/custom/path/to/isolated_nipype/site-packages')
+    sys.path.insert(0,'/custom/path/to/isolated_CPAC/site-packages')
+
+    import nipype
+    import CPAC
+
+    CPAC.GUI.run()
+
+If you wish to use this method, you may find it easier to save this into a Python script that can easily be run from the command line.
 
 References
 ^^^^^^^^^^

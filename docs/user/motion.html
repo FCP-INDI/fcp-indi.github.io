@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Motion Correction &mdash; C-PAC 0.3.8 Alpha documentation</title>
+    <title>Motion Correction &mdash; C-PAC 0.3.9 Alpha documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.3.8 Alpha',
+        VERSION:     '0.3.9 Alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="C-PAC 0.3.8 Alpha documentation" href="index.html" />
+    <link rel="top" title="C-PAC 0.3.9 Alpha documentation" href="index.html" />
     <link rel="up" title="Data Preprocessing" href="preproc.html" />
     <link rel="next" title="Nuisance Signal Regression" href="nuisance.html" />
     <link rel="prev" title="Slice Timing Correction" href="slice.html" /> 
@@ -42,7 +42,7 @@
         <li class="right" >
           <a href="slice.html" title="Slice Timing Correction"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">C-PAC 0.3.8 Alpha documentation</a> &raquo;</li>
+        <li><a href="index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li>
           <li><a href="preproc.html" accesskey="U">Data Preprocessing</a> &raquo;</li> 
       </ul>
     </div>  
@@ -54,7 +54,7 @@
             
   <div class="section" id="motion-correction">
 <h1>Motion Correction<a class="headerlink" href="#motion-correction" title="Permalink to this headline">¶</a></h1>
-<p>Movement during scanning is one of of the largest factors influencing the quality of fMRI data. Movement of the head between the acquisition of each volume can cause brain images to become misaligned. Head motion during scanning can also cause in spurious changes in signal intensity. If they are not corrected, these changes can influence the results of activation and connectivity analyses. Recent studies have shown that motion as small as 0.1mm can systematically bias both within- and between- group effects during the analysis of fMRI data (Power et al., 2011; Satterhwaite et al., 2012; Van Dijk et al., 2012). Even the most cooperative subjects often still show displacements of up to a millimeter, and head movements of several millimeters are not uncommon in studies of hyperkinetic subjects such as young children, older adults, or patient populations.</p>
+<p>Movement during scanning is one of of the largest factors influencing the quality of fMRI data. Movement of the head between the acquisition of each volume can cause brain images to become misaligned. Head motion during scanning can also cause spurious changes in signal intensity. If they are not corrected, these changes can influence the results of activation and connectivity analyses. Recent studies have shown that motion as small as 0.1mm can systematically bias both within- and between- group effects during the analysis of fMRI data (Power et al., 2011; Satterhwaite et al., 2012; Van Dijk et al., 2012). Even the most cooperative subjects often still show displacements of up to a millimeter, and head movements of several millimeters are not uncommon in studies of hyperkinetic subjects such as young children, older adults, or patient populations.</p>
 <p>There are three main approaches to motion correction: volume realignment, using a general linear model to regress out motion-related artifacts (i.e. regression of motion parameters), and censoring of motion confounded time points (i.e. &#8220;scrubbing&#8221;)</p>
 <div class="section" id="volume-realignment">
 <h2>Volume Realignment<a class="headerlink" href="#volume-realignment" title="Permalink to this headline">¶</a></h2>
@@ -74,8 +74,9 @@
 </pre></div>
 </div>
 <p>Where <tt class="file docutils literal"><span class="pre">/path/to/output/directory</span></tt> is the path to your output directory (<tt class="file docutils literal"><span class="pre">outputDirectory</span></tt> as specified in <tt class="file docutils literal"><span class="pre">config.yml</span></tt>). This will output a <tt class="file docutils literal"><span class="pre">...all_params.csv</span></tt> file in the top level of each pipeline directory which contains all motion parameters calculated by C-PAC.</p>
+</div>
 <div class="section" id="configuring-cpac-to-run-motion-correction">
-<h3>Configuring CPAC to run Motion Correction<a class="headerlink" href="#configuring-cpac-to-run-motion-correction" title="Permalink to this headline">¶</a></h3>
+<h2>Configuring CPAC to Run Motion Correction<a class="headerlink" href="#configuring-cpac-to-run-motion-correction" title="Permalink to this headline">¶</a></h2>
 <div class="figure">
 <img alt="_images/motion_gui.png" src="_images/motion_gui.png" />
 </div>
@@ -83,6 +84,13 @@
 <li><strong>Use Friston 24-Parameter Model - [On, Off, On/Off]:</strong> Use the Friston 24-Parameter Model during volume realignment. If this option is turned off, only 6 parameters will be used. These parameters will also be output as a spreadsheet.</li>
 <li><strong>Calculate Motion Statistics - [On, Off, On/Off]:</strong> Calculate motion statistics including Framewise Displacement (FD) and DVARS. Required to run Scrubbing. These parameters will also be output as a spreadsheet.</li>
 </ol>
+<div class="section" id="configuration-using-a-yaml-file">
+<h3>Configuration Using a YAML File<a class="headerlink" href="#configuration-using-a-yaml-file" title="Permalink to this headline">¶</a></h3>
+<p>To configure the motion correction options within a YAML file, add the following lines to your file (with appropriate substitutions for paths):</p>
+<div class="highlight-python"><div class="highlight"><pre>runFristonModel : [1]
+runGenerateMotionStatistics : [1]
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="scrubbing">
@@ -96,8 +104,9 @@ Power and colleagues (2011) proposed two measures to identify volumes contaminat
 <p>Together, these two measures capture the head displacements and the brain-wide BOLD signal displacements from volume to volume over all voxels within the brain (Power et al., 2011).</p>
 <p>After calculating FD and DVARS, thresholds can be applied to censor the data. Selecting thresholds for Scrubbing is a trade-off. More stringent thresholds allow more complete removal of motion-contaminated data, and minimize motion-induced artifacts. Meanwhile, more stringent Scrubbing will also remove more data, which may increase the variability and decrease the test-retest reliability of the data. Commonly used thresholds are FD &gt; 0.2 to 0.5 mm and DVARS &gt; 0.3 to 0.5% of BOLD.</p>
 <p><strong>IMPORTANT:</strong> Removing time points from a continuous time series (as is done during Scrubbing) disrupts the temporal structure of the data and precludes frequency-based analyses such as <a class="reference external" href="alff">ALFF/fAlff</a>. However, Scrubbing can effectively be used to minimize motion-related artifacts in seed-based correlation analyses (Power et al., 2011; 2012).</p>
+</div>
 <div class="section" id="configuring-cpac-to-run-scrubbing">
-<h3>Configuring CPAC to run Scrubbing<a class="headerlink" href="#configuring-cpac-to-run-scrubbing" title="Permalink to this headline">¶</a></h3>
+<h2>Configuring CPAC to Run Scrubbing<a class="headerlink" href="#configuring-cpac-to-run-scrubbing" title="Permalink to this headline">¶</a></h2>
 <div class="figure">
 <img alt="_images/scrubbing_gui.png" src="_images/scrubbing_gui.png" />
 </div>
@@ -107,6 +116,15 @@ Power and colleagues (2011) proposed two measures to identify volumes contaminat
 <li><strong>Number of Preceding Volumes to Remove - [integer]:</strong> Number of volumes to remove preceeding a volume with excessive FD.</li>
 <li><strong>Number of Subsequent Volumes to Remove - [integer]:</strong> Number of volumes to remove subsequent to a volume with excessive FD.</li>
 </ol>
+<div class="section" id="id1">
+<h3>Configuration Using a YAML File<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>To configure the scrubbing options within a YAML file, add the following lines to your file (with appropriate substitutions for paths):</p>
+<div class="highlight-python"><div class="highlight"><pre>runScrubbing : [0]
+scrubbingThreshold : [0.2]
+numRemovePrecedingFrames : 1
+numRemoveSubsequentFrames : 2
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="references">
@@ -172,13 +190,13 @@ Power and colleagues (2011) proposed two measures to identify volumes contaminat
         <li class="right" >
           <a href="slice.html" title="Slice Timing Correction"
              >previous</a> |</li>
-        <li><a href="index.html">C-PAC 0.3.8 Alpha documentation</a> &raquo;</li>
+        <li><a href="index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li>
           <li><a href="preproc.html" >Data Preprocessing</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2014, C-PAC Team.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+        &copy; Copyright 2015, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

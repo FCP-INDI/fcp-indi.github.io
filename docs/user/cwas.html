@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Connectome-wide Association Studies (CWAS) &mdash; C-PAC 0.3.8 Alpha documentation</title>
+    <title>Connectome-wide Association Studies (CWAS) &mdash; C-PAC 0.3.9 Alpha documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.3.8 Alpha',
+        VERSION:     '0.3.9 Alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="C-PAC 0.3.8 Alpha documentation" href="index.html" />
+    <link rel="top" title="C-PAC 0.3.9 Alpha documentation" href="index.html" />
     <link rel="up" title="Outputs and Measures" href="derivs.html" />
     <link rel="next" title="Timeseries Extraction" href="tse.html" />
     <link rel="prev" title="Network Centrality" href="centrality.html" /> 
@@ -42,7 +42,7 @@
         <li class="right" >
           <a href="centrality.html" title="Network Centrality"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">C-PAC 0.3.8 Alpha documentation</a> &raquo;</li>
+        <li><a href="index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li>
           <li><a href="derivs.html" accesskey="U">Outputs and Measures</a> &raquo;</li> 
       </ul>
     </div>  
@@ -81,25 +81,33 @@
 </div>
 <p>As CWAS examines connectivity across the whole brain, it may have reduced sensitivity to highly-localized sets of connections related to a phenotype. This issue can be addressed by limiting analysis to connectivity between specific anatomical regions (Shehzad et al., 2014), which can be accomplished by defining an ROI mask during C-PAC setup.</p>
 </div>
-<div class="section" id="configuring-c-pac">
-<h2>Configuring C-PAC<a class="headerlink" href="#configuring-c-pac" title="Permalink to this headline">¶</a></h2>
-<p>The following settings in <tt class="file docutils literal"><span class="pre">config.yml</span></tt> are used to configure CWAS:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Run CWAS</span>
-<span class="n">runCWAS</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-<span class="c"># Path to a mask file. Voxels outside this mask will be excluded from CWAS.</span>
+<div class="section" id="configuring-cwas">
+<h2>Configuring CWAS<a class="headerlink" href="#configuring-cwas" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="using-the-gui">
+<h3>Using the GUI<a class="headerlink" href="#using-the-gui" title="Permalink to this headline">¶</a></h3>
+<div class="figure">
+<img alt="_images/cwas.png" src="_images/cwas.png" />
+</div>
+<ol class="arabic simple">
+<li><strong>Run CWAS - [Off, On]:</strong> Used to determine if CWAS will be added to the pipeline or not.</li>
+<li><strong>CWAS ROI File - [path]:</strong> Path to a mask file. Voxels outside of the mask will be excluded from CWAS.</li>
+<li><strong>CWAS Regressor File - [path]:</strong> Path to a text file containing the phenotypic regressor.</li>
+<li><strong>CWAS FSamples - [integer]:</strong> Number of permutation tests to run on the Pseudo-F statistics.</li>
+<li><strong>CWAS Parallel Nodes - [integer]:</strong> Number of Nipype nodes created while computing CWAS.  Dependent upon computing resources.</li>
+<li><strong>Column Number with Regressor of Interest - [integer]:</strong> The index for the regressor of interest.  Indexing starts at 0.</li>
+<li><strong>CWAS Regressor Strata - [list]:</strong> A list with length equal to the total number of rows in your regressor file. Each element of the list, indicates that elements group. Leave it as None. if you have a between-subject design and give it a value if not.  For instance, if you have multiple scans per subject, then you would want to do a permutation within-subject between scans. For this to occur, the list below could be something like [&#8216;s1&#8217;, &#8216;s1&#8217;, &#8216;s2&#8217;, &#8216;s2&#8217;, &#8216;s3&#8217;, &#8216;s3&#8217;, ...], indicating what subject each element/scan is associated with and permutations would only be done between scans within each subject.</li>
+</ol>
+</div>
+<div class="section" id="configuration-using-a-yaml-file">
+<h3>Configuration Using a YAML File<a class="headerlink" href="#configuration-using-a-yaml-file" title="Permalink to this headline">¶</a></h3>
+<p>To configure CWAS options within a YAML file, add the following lines to your file (with appropriate substitutions for paths):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">runCWAS</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">cwasROIFile</span> <span class="o">=</span> <span class="s">&#39;/path/to/cwas_mask_file&#39;</span>
-
-<span class="c"># Number of permutation tests to run on the Pseudo-F statistic</span>
 <span class="n">cwasFSamples</span> <span class="o">=</span> <span class="mi">5000</span>
-
-<span class="c"># Number of NiPype nodes to be created while computing CWAS.</span>
-<span class="c"># This number depends on computing resources</span>
 <span class="n">cwasParallelNodes</span> <span class="o">=</span> <span class="mi">10</span>
-
-<span class="c"># Path to a text file containing phenotypic regressor.</span>
 <span class="n">cwasRegressorFile</span> <span class="o">=</span> <span class="s">&#39;/path/to/cwas_regressor_file&#39;</span>
 </pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="references">
@@ -163,13 +171,13 @@ distance-based permutation tests for between-group comparisons</a>. Biometrics 6
         <li class="right" >
           <a href="centrality.html" title="Network Centrality"
              >previous</a> |</li>
-        <li><a href="index.html">C-PAC 0.3.8 Alpha documentation</a> &raquo;</li>
+        <li><a href="index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li>
           <li><a href="derivs.html" >Outputs and Measures</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2014, C-PAC Team.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+        &copy; Copyright 2015, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

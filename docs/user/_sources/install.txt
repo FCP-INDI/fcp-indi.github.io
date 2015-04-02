@@ -6,7 +6,7 @@ Requirements
 
 System Requirements
 """"""""""""""""""
-CPAC is **designed to run in a \*nix-like environment** and thus does not support Windows.  The CPAC team actively tests CPAC in Ubuntu 14.04 and CentOS 7, although older versions of those distributions and other \*nixes (such as Mac OS X) will usually work as well.   As a general rule, CPAC should be able to operate on any machine capable of reliably running `AFNI <http://afni.nimh.nih.gov/afni>`_ and `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_.  This guide includes OS-specific instructions for non-Linux configurations that have been known to work in the past.
+CPAC is **designed to run in a \*nix-like environment** and thus does not support Windows.  The CPAC team actively tests CPAC in Ubuntu Linux, although older versions of those distributions and other \*nixes (such as Mac OS X) will usually work as well.   As a general rule, CPAC should be able to operate on any machine capable of reliably running `AFNI <http://afni.nimh.nih.gov/afni>`_ and `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_.  This guide includes OS-specific instructions for non-Linux configurations that have been known to work in the past.
 
 Hardware Requirements
 """"""""""""""""""""
@@ -25,26 +25,18 @@ A Note About the \*nix Command Line
 
 Installation Overview
 ^^^^^^^^^^^^^^^^^^^^^
-If you are using Ubuntu (version 14.04 or newer) you can download  and run `cpac_install.sh <https://github.com/FCP-INDI/C-PAC/blob/master/scripts/cpac_install.sh?raw=true>`_ with the following terminal commands:
+If you are using Ubuntu (version 12.04 or newer) you can download  and run `cpac_install.sh <https://github.com/FCP-INDI/C-PAC/blob/master/scripts/cpac_install.sh?raw=true>`_ with the following terminal commands:
 
 .. code-block:: bash
 
     wget https://github.com/FCP-INDI/C-PAC/blob/master/scripts/cpac_install.sh?raw=true
     mv cpac_install.sh?raw=true cpac_install.sh
     sudo -i
-    ./cpac_install.sh -r
+    ./cpac_install.sh
    
-This will install all of the prerequisites and resources listed below. If you have previously installed versions of these, they will not be reinstalled, and the script will not check the release version to match the requirements of CPAC.  CPAC and all of its Python dependencies will be isolated in a `Miniconda <http://conda.pydata.org/miniconda.html>`_ environment, which is flexible enough to be replaced should future CPAC versions become available.
-
-If you do not have root privileges, you may try the following instead to create a local installation of CPAC and its dependencies.  If you are using Ubuntu, note that you will be unable to perform a local install of FSL, and will need to contact your system administrator.
-
-.. code-block:: bash
-
-    wget https://github.com/FCP-INDI/C-PAC/blob/master/scripts/cpac_install.sh?raw=true
-    mv cpac_install.sh?raw=true cpac_install.sh
-    ./cpac_install.sh -l
+This will install all of the prerequisites and resources listed below. If you have previously installed versions of these, they will not be reinstalled, and the script will not check the release version to match the requirements of CPAC. 
  
-**Note**: This script is intended for Ubuntu Linux 14.04 and CentOS 7, but it may work for older releases of CentOS/Ubuntu (if the prerequisite packages are up to date) or other Linux distributions based upon these distributions.
+**Note**: This script is intended for Ubuntu Linux 12.04,  but it may work for older releases of Ubuntu.
 
 **For other operating systems**, this page will guide you through the following CPAC installation steps:
 
@@ -138,7 +130,7 @@ OS-Specific Instructions
 
 **Mac OS X:** 
 
-* It is highly recommended that you use either Canopy or Anaconda/Miniconda to install Python packages such as wxPython, SciPy and NumPy.  Manually installing these packages on OS X can be difficult and error-prone.  If you use Anaconda/Conda, the commands above should install all packages seamlessly (assuming you download the Mac OS X Miniconda install script instead of the Linux script).  Later instructions in this guide will assume the use of Miniconda, since that is what the CPAC install script uses.
+* It is highly recommended that you use either Canopy or Anaconda/Miniconda to install Python packages such as wxPython, SciPy and NumPy.  Manually installing these packages on OS X can be difficult and error-prone.  If you use Anaconda/Conda, the commands above should install all packages seamlessly (assuming you download the Mac OS X Miniconda install script instead of the Linux script).  
 
 Installing AFNI and FSL
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -151,7 +143,7 @@ For instructions on how to install FSL, `click here <http://fsl.fmrib.ox.ac.uk/f
 
 Check AFNI and FSL Paths
 """"""""""""""""""""""""
-Application paths for AFNI and FSL should have been added to your user profile when they were installed (unless you use the install script, in which case they are either in ``~/cpac_env.sh`` or ``/etc/profile.d/cpac_env.sh``), but it is useful to double-check this before continuing (as the absence of these paths is a common cause of CPAC errors). If the application paths have been set properly, you should be able to open AFNI and FSL by running the commands ``afni`` and ``fsl`` in a new terminal window.
+Application paths for AFNI and FSL should have been added to your user profile when they were installed, but it is useful to double-check this before continuing (as the absence of these paths is a common cause of CPAC errors). If the application paths have been set properly, you should be able to open AFNI and FSL by running the commands ``afni`` and ``fsl`` in a new terminal window.
 
 If either of these commands fail, you will have to add the AFNI and FSL application paths manually. To do this, run the command ``nano ~/.bashrc``. This will open your :file:`.bashrc` file in the `nano text editor <http://mintaka.sdsu.edu/reu/nano.html>`_.  If you are using the C shell instead of bash, replace ``.bashrc`` with ``.cshrc``. Scroll to the bottom of the file (navigate using the arrow keys on your keyboard) and paste the following text
 
@@ -173,6 +165,17 @@ To confirm that the changes have worked, open a new terminal window and try agai
 
 OS-Specific Instructions 
 """"""""""""""""""""""""
+
+**Ubuntu/Neurodebian:**
+
+* Installing the key for the Neurodebian repository (must have superuser privileges or use sudo)::
+
+    wget -O- http://neuro.debian.net/lists/$(lsb_release -cs).us-nh.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
+    apt-key adv --recv-keys --keyserver pgp.mit.edu 2649A5A9
+    apt-get update
+
+* FSL : ``apt-get install -y fsl-5.0-complete``
+* AFNI : ``apt-get install -y afni``
 
 **Mac OS X:**
 
@@ -266,11 +269,12 @@ During preprocessing and analysis, CPAC utilizes many of the standard brain atla
 * Binarized tissue prior probability maps (used during :doc:`tissue segmentation </anat>`)
 * Symmetric versions of the MNI152 brain template and masks (used when calculating :doc:`VMHC </vmhc>`)
 
-These files are included in the CPAC Image Resources package, available `here <http://fcon_1000.projects.nitrc.org/indi/cpac_resources.tgz>`_. You may install these files using the following commands:
+These files are included in the CPAC Image Resources package, available `here <http://fcon_1000.projects.nitrc.org/indi/cpac_resources.tgz>`_. You may install these files using the following commands or use the included script (install_resources.sh):
 
 .. code-block:: bash
 
     cd /tmp
+    wget http://fcon_1000.projects.nitrc.org/indi/cpac_resources.tgz
     tar xfz cpac_resources.tgz
     cd cpac_image_resources
     cp -n MNI_3mm/* $FSLDIR/data/standard
@@ -287,7 +291,6 @@ These commands perform the following steps:
 
 * The :file:`/2mm` and :file:`/3mm` folders located in CPAC Image Resources directory are copied to :file:`/data/standard/tissuepriors` directory of your FSL installation.
 
-
 Installing CPAC
 ^^^^^^^^^^^^^^^
 Congratulations, you are now ready to install CPAC itself!
@@ -296,43 +299,38 @@ CPAC is available for download from the `CPAC Homepage <http://fcp-indi.github.c
 
  .. code-block:: bash
    
-   source activate cpac 
    cd /tmp
    git clone https://github.com/FCP-INDI/C-PAC.git
    cd C-PAC
    python setup.py install
-   source deactivate
-
 
 Testing Your CPAC Installation
 """"""""""""""""""""""""""""""
-In a new terminal window, open iPython (or Python) and enter the command ``import CPAC``. If installation was successful, this will execute without an error and present you with a blank new line. If you encounter an error (e.g. ``no module named CPAC``), try re-running the CPAC install command above. If this does not work, see the :doc:`Troubleshooting and Help Page </help>`.
+In a new terminal window, open iPython (or Python) and enter the command ``import CPAC``. If installation was successful, this will execute without an error and present you with a blank new line. If you encounter an error (e.g. ``no module named CPAC``), try re-running the CPAC install command above. If this does not work, see the :doc:`Troubleshooting and Help Page </help>`.  Note that if you do not open a new terminal window and are still within the CPAC installation directory ('C-PAC'), you may encounter errors that can be alleviated by leaving the 'C-PAC' directory.
 
 Once you are able to successfully ``import CPAC`` it is safe to delete any setup files downloaded during the install process (e.g. Nipype and CPAC downloads, FSL install scripts, etc.), as they are no longer needed.
 
 **Note:** The test process described here only acts to confirm that the CPAC python package has been correctly installed. To fully test CPAC on your system, please see the :doc:`Benchmark Page </benchmark>`.
 
-Updating CPAC / Running CPAC Without Installing
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-CPAC is being actively developed, and new versions (containing bug fixes and new features) are often released.  To update to the latest version of CPAC, you must destroy your CPAC Miniconda environment and create a new one with the new version.  To do this with the install script, simply type the following commands in the terminal (to be run as root if CPAC was originally installed with superuser privileges):
+Updating CPAC 
+^^^^^^^^^^^^^^
+CPAC is being actively developed, and new versions (containing bug fixes and new features) are often released. To update to the latest version, simply download it from the `CPAC Homepage <http://fcp-indi.github.com/>`_ and repeat the instructions in the "Installing CPAC" section above. A list of previous versions and the changes they contain is available on the :doc:`Release Notes Page </rnotes>`.
+
+**Note: If you are using Anaconda/Miniconda you may also use the following command (replacing 'cpac' with your environment name) to remove an old environment and before creating a new environment to replace it.**
 
  .. code-block:: bash
 
     conda remove --all -n cpac
-    ./cpac_install.sh -p -n "cpac"
 
-Since CPAC is installed within a Miniconda environment, you can also destroy your CPAC installation completely using the above conda command.  This would be useful if you just want to try out CPAC.  If your system doesn't work with the installation script, you can use the following commands to upgrade CPAC manually:
+Running CPAC Without Installing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  .. code-block:: bash
+Users wishing to run CPAC without installing it can do so by copying the downloaded CPAC directory to the location of their choice. CPAC can then be run by opening iPython (or Python) from within this directory. This is useful in cases where a user does not have sufficient privledges to install Python packages, but is running on a machine that already contains all CPAC dependencies.
 
-    conda remove --all -n cpac
-    conda create -y -n cpac python
-    source activate cpac
-    conda install -y cython numpy scipy matplotlib networkx traits pyyaml jinja2 nose ipython pip wxpython
-    pip install lockfile pygraphviz nibabel nipype patsy
-    git clone https://github.com/FCP-INDI/C-PAC.git        
-    cd C-PAC
-    python setup.py install
-    source deactivate
+Some network centrality features will not be available without compiling the C-based elements. In order to do this without installing the rest of CPAC, simply use the following command
 
-A list of previous versions of CPAC and the changes they contain is available on the :doc:`Release Notes Page </rnotes>`.
+.. code-block:: bash
+
+    python setup.py build_ext --inplace
+
+**Note:** Unfortunately, it is not possible at this time to use the CPAC GUI without installing CPAC.

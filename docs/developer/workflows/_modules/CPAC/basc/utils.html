@@ -1,0 +1,362 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>CPAC.basc.utils &mdash; C-PAC 0.3.9 Alpha documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.3.9 Alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="C-PAC 0.3.9 Alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for CPAC.basc.utils</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<div class="viewcode-block" id="timeseries_bootstrap"><a class="viewcode-back" href="../../../basc.html#CPAC.basc.timeseries_bootstrap">[docs]</a><span class="k">def</span> <span class="nf">timeseries_bootstrap</span><span class="p">(</span><span class="n">tseries</span><span class="p">,</span> <span class="n">block_size</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a bootstrap sample derived from the input time-series.  Utilizes Circular-block-bootstrap method described in [1]_.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tseries : array_like</span>
+<span class="sd">        A matrix of shapes (`M`, `N`) with `M` timepoints and `N` variables</span>
+<span class="sd">    block_size : integer</span>
+<span class="sd">        Size of the bootstrapped blocks </span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bseries : array_like</span>
+<span class="sd">        Bootstrap sample of the input timeseries</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] P. Bellec; G. Marrelec; H. Benali, A bootstrap test to investigate</span>
+<span class="sd">       changes in brain connectivity for functional MRI. Statistica Sinica, </span>
+<span class="sd">       special issue on Statistical Challenges and Advances in Brain Science, </span>
+<span class="sd">       2008, 18: 1253-1268. </span>
+<span class="sd">    </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; x = np.arange(50).reshape((5,10)).T</span>
+<span class="sd">    &gt;&gt;&gt; sample_bootstrap(x,3)</span>
+<span class="sd">    array([[ 7, 17, 27, 37, 47],</span>
+<span class="sd">           [ 8, 18, 28, 38, 48],</span>
+<span class="sd">           [ 9, 19, 29, 39, 49],</span>
+<span class="sd">           [ 4, 14, 24, 34, 44],</span>
+<span class="sd">           [ 5, 15, 25, 35, 45],</span>
+<span class="sd">           [ 6, 16, 26, 36, 46],</span>
+<span class="sd">           [ 0, 10, 20, 30, 40],</span>
+<span class="sd">           [ 1, 11, 21, 31, 41],</span>
+<span class="sd">           [ 2, 12, 22, 32, 42],</span>
+<span class="sd">           [ 4, 14, 24, 34, 44]])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">tseries</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="n">block_size</span><span class="p">)</span>
+    <span class="n">r_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">tseries</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    
+    <span class="n">blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">block_size</span><span class="p">)[:,</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="n">k</span><span class="p">]))</span>
+    <span class="n">block_offsets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">block_size</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span> <span class="n">r_ind</span><span class="p">)</span>
+    
+    <span class="n">block_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">blocks</span> <span class="o">+</span> <span class="n">block_offsets</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="s">&#39;F&#39;</span><span class="p">)[:</span><span class="n">tseries</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+    <span class="n">block_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">block_mask</span><span class="p">,</span> <span class="n">tseries</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    
+    <span class="k">return</span> <span class="n">tseries</span><span class="p">[</span><span class="n">block_mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;int&#39;</span><span class="p">),</span> <span class="p">:]</span>
+</div>
+<div class="viewcode-block" id="standard_bootstrap"><a class="viewcode-back" href="../../../basc.html#CPAC.basc.standard_bootstrap">[docs]</a><span class="k">def</span> <span class="nf">standard_bootstrap</span><span class="p">(</span><span class="n">dataset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a bootstrap sample from the input dataset</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dataset : array_like</span>
+<span class="sd">        A matrix of where dimension-0 represents samples</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bdataset : array_like</span>
+<span class="sd">        A bootstrap sample of the input dataset</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random_integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dataset</span><span class="p">[</span><span class="n">b</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="cluster_timeseries"><a class="viewcode-back" href="../../../basc.html#CPAC.basc.cluster_timeseries">[docs]</a><span class="k">def</span> <span class="nf">cluster_timeseries</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">n_clusters</span><span class="p">,</span> <span class="n">similarity_metric</span> <span class="o">=</span> <span class="s">&#39;k_neighbors&#39;</span><span class="p">,</span> <span class="n">affinity_threshold</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">neighbors</span> <span class="o">=</span> <span class="mi">10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Cluster a given timeseries</span>
+<span class="sd">        </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : array_like</span>
+<span class="sd">        A matrix of shape (`N`, `M`) with `N` samples and `M` dimensions</span>
+<span class="sd">    n_clusters : integer</span>
+<span class="sd">        Number of clusters</span>
+<span class="sd">    similarity_metric : {&#39;k_neighbors&#39;, &#39;correlation&#39;, &#39;data&#39;}</span>
+<span class="sd">        Type of similarity measure for spectral clustering.  The pairwise similarity measure</span>
+<span class="sd">        specifies the edges of the similarity graph. &#39;data&#39; option assumes X as the similarity</span>
+<span class="sd">        matrix and hence must be symmetric.  Default is kneighbors_graph [1]_ (forced to be </span>
+<span class="sd">        symmetric)</span>
+<span class="sd">    affinity_threshold : float</span>
+<span class="sd">        Threshold of similarity metric when &#39;correlation&#39; similarity metric is used.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    y_pred : array_like</span>
+<span class="sd">        Predicted cluster labels</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] http://scikit-learn.org/dev/modules/generated/sklearn.neighbors.kneighbors_graph.html</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">similarity_metric</span> <span class="o">==</span> <span class="s">&#39;correlation&#39;</span><span class="p">:</span>
+        <span class="c"># Calculate empirical correlation matrix between samples</span>
+        <span class="n">Xn</span> <span class="o">=</span> <span class="n">X</span> <span class="o">-</span> <span class="n">X</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">1</span><span class="p">)[:,</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="n">Xn</span> <span class="o">=</span> <span class="n">Xn</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="p">(</span><span class="n">Xn</span><span class="o">**</span><span class="mf">2.</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)[:,</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="p">)</span>
+        <span class="n">C_X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Xn</span><span class="p">,</span> <span class="n">Xn</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">C_X</span><span class="p">[</span><span class="n">C_X</span> <span class="o">&lt;</span> <span class="n">affinity_threshold</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">lil_matrix</span>
+        <span class="n">C_X</span> <span class="o">=</span> <span class="n">lil_matrix</span><span class="p">(</span><span class="n">C_X</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">similarity_metric</span> <span class="o">==</span> <span class="s">&#39;data&#39;</span><span class="p">:</span>
+        <span class="n">C_X</span> <span class="o">=</span> <span class="n">X</span>
+    <span class="k">elif</span> <span class="n">similarity_metric</span> <span class="o">==</span> <span class="s">&#39;k_neighbors&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">kneighbors_graph</span>
+        <span class="n">C_X</span> <span class="o">=</span> <span class="n">kneighbors_graph</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">n_neighbors</span><span class="o">=</span><span class="n">neighbors</span><span class="p">)</span>
+        <span class="n">C_X</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">C_X</span> <span class="o">+</span> <span class="n">C_X</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Unknown value for similarity_metric: &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span> <span class="o">%</span> <span class="n">similarity_metric</span><span class="p">)</span>
+    
+    <span class="c">#sklearn code is not stable for bad clusters which using correlation as a stability metric</span>
+    <span class="c">#tends to give for more info see:</span>
+    <span class="c">#http://scikit-learn.org/dev/modules/clustering.html#spectral-clustering warning</span>
+<span class="c">#    from sklearn import cluster</span>
+<span class="c">#    algorithm = cluster.SpectralClustering(k=n_clusters, mode=&#39;arpack&#39;)</span>
+<span class="c">#    algorithm.fit(C_X)</span>
+<span class="c">#    y_pred = algorithm.labels_.astype(np.int)</span>
+
+    <span class="kn">from</span> <span class="nn">python_ncut_lib</span> <span class="kn">import</span> <span class="n">ncut</span><span class="p">,</span> <span class="n">discretisation</span>
+    <span class="n">eigen_val</span><span class="p">,</span> <span class="n">eigen_vec</span> <span class="o">=</span> <span class="n">ncut</span><span class="p">(</span><span class="n">C_X</span><span class="p">,</span> <span class="n">n_clusters</span><span class="p">)</span>
+    <span class="n">eigen_discrete</span> <span class="o">=</span> <span class="n">discretisation</span><span class="p">(</span><span class="n">eigen_vec</span><span class="p">)</span>
+
+    <span class="c">#np.arange(n_clusters)+1 isn&#39;t really necessary since the first cluster can be determined</span>
+    <span class="c">#by the fact that the each cluster is a disjoint set</span>
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">eigen_discrete</span><span class="o">.</span><span class="n">toarray</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_clusters</span><span class="p">)))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">y_pred</span>
+    </div>
+<div class="viewcode-block" id="adjacency_matrix"><a class="viewcode-back" href="../../../basc.html#CPAC.basc.adjacency_matrix">[docs]</a><span class="k">def</span> <span class="nf">adjacency_matrix</span><span class="p">(</span><span class="n">cluster_pred</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate adjacency matrix for given cluster predictions</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cluster_pred : array_like</span>
+<span class="sd">        A matrix of shape (`N`, `1`) with `N` samples</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    A : array_like</span>
+<span class="sd">        Adjacency matrix of shape (`N`,`N`)</span>
+<span class="sd">        </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from CPAC.basc import cluster_adjacency_matrix</span>
+<span class="sd">    &gt;&gt;&gt; x = np.asarray([1, 2, 2, 3, 1])[:,np.newaxis]</span>
+<span class="sd">    &gt;&gt;&gt; cluster_adjacency_matrix(x).astype(&#39;int&#39;)</span>
+<span class="sd">    array([[1, 0, 0, 0, 1],</span>
+<span class="sd">           [0, 1, 1, 0, 0],</span>
+<span class="sd">           [0, 1, 1, 0, 0],</span>
+<span class="sd">           [0, 0, 0, 1, 0],</span>
+<span class="sd">           [1, 0, 0, 0, 1]])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">cluster_pred</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    
+    <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        
+    <span class="c"># Force the cluster indexing to be positive integers</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="o">-</span><span class="n">x</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
+        
+    <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="o">**-</span><span class="mf">1.</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+    
+    <span class="k">return</span> <span class="n">A</span>
+</div>
+<div class="viewcode-block" id="cluster_matrix_average"><a class="viewcode-back" href="../../../basc.html#CPAC.basc.cluster_matrix_average">[docs]</a><span class="k">def</span> <span class="nf">cluster_matrix_average</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">cluster_assignments</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the average element value within a similarity matrix for each cluster assignment, a measure</span>
+<span class="sd">    of within cluster similarity.  Self similarity (diagonal of similarity matrix) is removed.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    M : array_like</span>
+<span class="sd">    cluster_assignments : array_like</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    s : array_like</span>
+<span class="sd">    </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from CPAC import basc</span>
+<span class="sd">    &gt;&gt;&gt; S = np.arange(25).reshape(5,5)</span>
+<span class="sd">    &gt;&gt;&gt; assign = np.array([0,0,0,1,1])</span>
+<span class="sd">    &gt;&gt;&gt; basc.cluster_matrix_average(S, assign)</span>
+<span class="sd">    array([  6.,   6.,   6.,  21.,  21.])</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">M</span><span class="p">)):</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s">&#39;bad_M.npz&#39;</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;M matrix has a nan value&#39;</span><span class="p">)</span>
+    
+    <span class="n">cluster_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">cluster_assignments</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span> <span class="p">(</span><span class="n">cluster_ids</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cluster_assignments</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&#39;float64&#39;</span><span class="p">)</span>
+    <span class="n">s_idx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">cluster_id</span> <span class="ow">in</span> <span class="n">cluster_ids</span><span class="p">:</span>
+        <span class="n">s</span><span class="p">[</span><span class="n">s_idx</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">M</span><span class="p">[:,</span><span class="n">cluster_assignments</span> <span class="o">==</span> <span class="n">cluster_id</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">s_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="c">#        k = (cluster_assignments == cluster_id)[:, np.newaxis]</span>
+<span class="c">#        print &#39;Cluster %i size: %i&#39; % (cluster_id, k.sum())</span>
+<span class="c">#        K = np.dot(k,k.T)</span>
+<span class="c">#        K[np.diag_indices_from(K)] = False</span>
+<span class="c">#        if K.sum() == 0: # Voxel with its own cluster</span>
+<span class="c">#            s[k[:,0]] = 0.0</span>
+<span class="c">#        else:</span>
+<span class="c">#            s[k[:,0]] = M[K].mean()</span>
+
+
+    <span class="k">return</span> <span class="n">s</span>
+</div>
+<div class="viewcode-block" id="individual_stability_matrix"><a class="viewcode-back" href="../../../basc.html#CPAC.basc.individual_stability_matrix">[docs]</a><span class="k">def</span> <span class="nf">individual_stability_matrix</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">n_bootstraps</span><span class="p">,</span> <span class="n">k_clusters</span><span class="p">,</span> <span class="n">cbb_block_size</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">affinity_threshold</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the individual stability matrix of a single subject by bootstrapping their time-series</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Y : array_like</span>
+<span class="sd">        A matrix of shape (`N`, `V`) with `N` timepoints and `V` voxels</span>
+<span class="sd">    n_bootstraps : integer</span>
+<span class="sd">        Number of bootstrap samples</span>
+<span class="sd">    k_clusters : integer</span>
+<span class="sd">        Number of clusters</span>
+<span class="sd">    cbb_block_size : integer, optional</span>
+<span class="sd">        Block size to use for the Circular Block Bootstrap algorithm</span>
+<span class="sd">    affinity_threshold : float, optional</span>
+<span class="sd">        Minimum threshold for similarity matrix based on correlation to create an edge</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    S : array_like</span>
+<span class="sd">        A matrix of shape (`V`, `V`), each element v_{ij} representing the stability of the adjacency of voxel i with voxel j</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">affinity_threshold</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;affinity_threshold </span><span class="si">%d</span><span class="s"> must be non-negative value&#39;</span> <span class="o">%</span> <span class="n">affinity_threshold</span><span class="p">)</span>
+    
+    <span class="n">N</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">V</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="k">if</span><span class="p">(</span><span class="n">cbb_block_size</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">cbb_block_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">N</span><span class="p">))</span>
+
+    <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">V</span><span class="p">,</span><span class="n">V</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">bootstrap_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_bootstraps</span><span class="p">):</span>
+        <span class="n">Y_b</span> <span class="o">=</span> <span class="n">timeseries_bootstrap</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">cbb_block_size</span><span class="p">)</span>
+        <span class="n">S</span> <span class="o">+=</span> <span class="n">adjacency_matrix</span><span class="p">(</span><span class="n">cluster_timeseries</span><span class="p">(</span><span class="n">Y_b</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">k_clusters</span><span class="p">,</span> <span class="n">similarity_metric</span> <span class="o">=</span> <span class="s">&#39;correlation&#39;</span><span class="p">,</span> <span class="n">affinity_threshold</span> <span class="o">=</span> <span class="n">affinity_threshold</span><span class="p">)[:,</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
+    <span class="n">S</span> <span class="o">/=</span> <span class="n">n_bootstraps</span>
+
+    <span class="k">return</span> <span class="n">S</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

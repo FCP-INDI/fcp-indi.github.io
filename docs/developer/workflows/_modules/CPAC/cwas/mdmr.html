@@ -1,0 +1,267 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>CPAC.cwas.mdmr &mdash; C-PAC 0.3.9 Alpha documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.3.9 Alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="C-PAC 0.3.9 Alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for CPAC.cwas.mdmr</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">hats</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="k">def</span> <span class="nf">permuted_index</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">strata</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">strata</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">perms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">perms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="n">elems</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">strata</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">elems</span><span class="p">:</span>
+            <span class="n">inds</span> <span class="o">=</span> <span class="n">perms</span><span class="p">[</span><span class="n">strata</span> <span class="o">==</span> <span class="n">elem</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">perms</span><span class="p">[</span><span class="n">strata</span> <span class="o">==</span> <span class="n">elem</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">perms</span>
+
+<span class="k">def</span> <span class="nf">gen_perms</span><span class="p">(</span><span class="n">nperms</span><span class="p">,</span> <span class="n">nobs</span><span class="p">,</span> <span class="n">strata</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">perms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nperms</span><span class="p">,</span> <span class="n">nobs</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nperms</span><span class="p">):</span>
+        <span class="n">perms</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">permuted_index</span><span class="p">(</span><span class="n">nobs</span><span class="p">,</span> <span class="n">strata</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">perms</span>
+
+<span class="k">def</span> <span class="nf">add_original_index</span><span class="p">(</span><span class="n">perms</span><span class="p">):</span>
+    <span class="n">nobs</span> <span class="o">=</span> <span class="n">perms</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">perms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="nb">range</span><span class="p">(</span><span class="n">nobs</span><span class="p">),</span> <span class="n">perms</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">perms</span>
+
+<span class="k">def</span> <span class="nf">gower_center</span><span class="p">(</span><span class="n">yDis</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">yDis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">uno</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">n</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+    
+    <span class="n">A</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">yDis</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">I</span> <span class="o">-</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">uno</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">uno</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">G</span>
+
+<span class="k">def</span> <span class="nf">gower_center_many</span><span class="p">(</span><span class="n">dmats</span><span class="p">):</span>
+    <span class="n">nobs</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dmats</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">ntests</span>  <span class="o">=</span> <span class="n">dmats</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">Gs</span>      <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">dmats</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ntests</span><span class="p">):</span>
+        <span class="n">Dmat</span>    <span class="o">=</span> <span class="n">dmats</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nobs</span><span class="p">,</span><span class="n">nobs</span><span class="p">)</span>
+        <span class="n">Gs</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">gower_center</span><span class="p">(</span><span class="n">Dmat</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    
+    <span class="k">return</span> <span class="n">Gs</span>
+
+<span class="k">def</span> <span class="nf">gen_h2_perms</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">perms</span><span class="p">):</span>
+    <span class="n">nperms</span>  <span class="o">=</span> <span class="n">perms</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">nobs</span>    <span class="o">=</span> <span class="n">perms</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="n">H2perms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nobs</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">nperms</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nperms</span><span class="p">):</span>
+        <span class="n">H2</span> <span class="o">=</span> <span class="n">gen_h2</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">perms</span><span class="p">[</span><span class="n">i</span><span class="p">,:])</span>
+        <span class="n">H2perms</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">H2</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    
+    <span class="k">return</span> <span class="n">H2perms</span>
+
+<span class="k">def</span> <span class="nf">gen_ih_perms</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">perms</span><span class="p">):</span>
+    <span class="n">nperms</span>  <span class="o">=</span> <span class="n">perms</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">nobs</span>    <span class="o">=</span> <span class="n">perms</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">I</span>       <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">nobs</span><span class="p">,</span><span class="n">nobs</span><span class="p">)</span>
+    
+    <span class="n">IHperms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nobs</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">nperms</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nperms</span><span class="p">):</span>
+        <span class="n">IH</span> <span class="o">=</span> <span class="n">I</span> <span class="o">-</span> <span class="n">gen_h</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">perms</span><span class="p">[</span><span class="n">i</span><span class="p">,:])</span>
+        <span class="n">IHperms</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">IH</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    
+    <span class="k">return</span> <span class="n">IHperms</span>
+
+<span class="k">def</span> <span class="nf">calc_ssq_fast</span><span class="p">(</span><span class="n">Hs</span><span class="p">,</span> <span class="n">Gs</span><span class="p">,</span> <span class="n">transpose</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">transpose</span><span class="p">:</span>
+        <span class="n">ssq</span> <span class="o">=</span> <span class="n">Hs</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Gs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ssq</span> <span class="o">=</span> <span class="n">Hs</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Gs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ssq</span>
+
+<span class="k">def</span> <span class="nf">ftest_fast</span><span class="p">(</span><span class="n">Hs</span><span class="p">,</span> <span class="n">IHs</span><span class="p">,</span> <span class="n">Gs</span><span class="p">,</span> <span class="n">df_among</span><span class="p">,</span> <span class="n">df_resid</span><span class="p">,</span> <span class="o">**</span><span class="n">ssq_kwrds</span><span class="p">):</span>
+    <span class="n">SS_among</span> <span class="o">=</span> <span class="n">calc_ssq_fast</span><span class="p">(</span><span class="n">Hs</span><span class="p">,</span> <span class="n">Gs</span><span class="p">,</span> <span class="o">**</span><span class="n">ssq_kwrds</span><span class="p">)</span>
+    <span class="n">SS_resid</span> <span class="o">=</span> <span class="n">calc_ssq_fast</span><span class="p">(</span><span class="n">IHs</span><span class="p">,</span> <span class="n">Gs</span><span class="p">,</span> <span class="o">**</span><span class="n">ssq_kwrds</span><span class="p">)</span>
+    <span class="n">F</span> <span class="o">=</span> <span class="p">(</span><span class="n">SS_among</span><span class="o">/</span><span class="n">df_among</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">SS_resid</span><span class="o">/</span><span class="n">df_resid</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">F</span>
+
+<span class="k">def</span> <span class="nf">calc_ssq_slow</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">G</span><span class="p">):</span>
+    <span class="n">ssq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">G</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">H</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ssq</span>
+
+<span class="k">def</span> <span class="nf">ftest_slow</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">IH</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">df_among</span><span class="p">,</span> <span class="n">df_resid</span><span class="p">):</span>
+    <span class="n">SS_among</span> <span class="o">=</span> <span class="n">calc_ssq_slow</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span>
+    <span class="n">SS_resid</span> <span class="o">=</span> <span class="n">calc_ssq_slow</span><span class="p">(</span><span class="n">IH</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span>
+    <span class="n">F</span> <span class="o">=</span> <span class="p">(</span><span class="n">SS_among</span><span class="o">/</span><span class="n">df_among</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">SS_resid</span><span class="o">/</span><span class="n">df_resid</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">F</span>
+
+<span class="k">def</span> <span class="nf">mdmr_single</span><span class="p">(</span><span class="n">yDis</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwrds</span><span class="p">):</span>
+    <span class="n">nobs</span> <span class="o">=</span> <span class="n">yDis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ys</span>   <span class="o">=</span> <span class="n">yDis</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nobs</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mdmr</span><span class="p">(</span><span class="n">ys</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwrds</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">fperms_to_pvals</span><span class="p">(</span><span class="n">fstats</span><span class="p">,</span> <span class="n">F_perms</span><span class="p">):</span>
+    <span class="n">nperms</span><span class="p">,</span><span class="n">ntests</span> <span class="o">=</span> <span class="n">F_perms</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">pvals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ntests</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ntests</span><span class="p">):</span>
+        <span class="n">j</span>        <span class="o">=</span> <span class="p">(</span><span class="n">F_perms</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">fstats</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float&#39;</span><span class="p">)</span>
+        <span class="n">pvals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span><span class="o">/</span><span class="n">nperms</span>
+    <span class="k">return</span> <span class="n">pvals</span>
+
+<div class="viewcode-block" id="mdmr"><a class="viewcode-back" href="../../../cwas.html#CPAC.cwas.mdmr">[docs]</a><span class="k">def</span> <span class="nf">mdmr</span><span class="p">(</span><span class="n">ys</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">perms</span><span class="p">,</span> <span class="n">strata</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">debug_output</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multivariate Distance Matrix Regression</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ys : ndarray</span>
+<span class="sd">    x : ndarray</span>
+<span class="sd">    perms : integer or ndarray</span>
+<span class="sd">    strata : list or ndarray</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    --------</span>
+<span class="sd">    ps : float</span>
+<span class="sd">    Fs : float</span>
+<span class="sd">    Fperms : ndarray</span>
+<span class="sd">    perms : ndarray</span>
+<span class="sd">    </span>
+<span class="sd">    References</span>
+<span class="sd">    -----------</span>
+<span class="sd">    .. [1] Anderson, M. J. 2002. DISTML v.2: a FORTRAN computer program to calculate a distance-based multivariate analysis for a linear model. Dept. of Statistics University of Auckland. (http://www.stat.auckland.ac.nz/PEOPLE/marti/)</span>
+<span class="sd">    .. [2] Anderson, M. J. 2001. A new method for non-parametric multivariate analysis of variance. Austral Ecology 26: 32-46.</span>
+<span class="sd">    .. [3] Legendre, P. &amp; L. Legendre. 1998. Numerical ecology. 2nd English ed. Elsevier Science BV, Amsterdam.</span>
+<span class="sd">    .. [4] McArdle, B. H. and M. J. Anderson. 2001. Fitting multivariate models to community data: a comment on distance-based redundancy analysis. Ecology 290-297.</span>
+<span class="sd">    .. [5] Neter, J., M. H. Kutner, C. J. Nachtsheim, and W. Wasserman. 1996. Applied linear statistical models. 4th ed. Irwin, Chicago, Illinois.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">check_rank</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    
+    <span class="n">ntests</span>  <span class="o">=</span> <span class="n">ys</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">nobs</span>    <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">nobs</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">ys</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;# of observations incompatible between x and ys&quot;</span><span class="p">)</span>
+    
+    <span class="c">## Distance matrix =&gt; Gower&#39;s centered matrix</span>
+    <span class="c"># G is similar to matrix of inner products from distances used in Partha Niyogi&#39;s</span>
+    <span class="c"># multidimensional scaling</span>
+    <span class="n">Gs</span> <span class="o">=</span> <span class="n">gower_center_many</span><span class="p">(</span><span class="n">ys</span><span class="p">)</span>
+    
+    <span class="c"># Degrees of freedom</span>
+    <span class="n">df_among</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
+    <span class="n">df_resid</span> <span class="o">=</span> <span class="n">nobs</span> <span class="o">-</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">df_total</span> <span class="o">=</span> <span class="n">nobs</span> <span class="o">-</span> <span class="mi">1</span>
+    
+    <span class="c"># Permutations</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">perms</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">perms</span> <span class="o">=</span> <span class="n">gen_perms</span><span class="p">(</span><span class="n">perms</span><span class="p">,</span> <span class="n">nobs</span><span class="p">,</span> <span class="n">strata</span><span class="p">)</span>
+    <span class="n">perms</span>  <span class="o">=</span> <span class="n">add_original_index</span><span class="p">(</span><span class="n">perms</span><span class="p">)</span>
+    <span class="n">nperms</span> <span class="o">=</span> <span class="n">perms</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="c"># Permuted versions of H2 and IH</span>
+    <span class="n">H2perms</span> <span class="o">=</span> <span class="n">gen_h2_perms</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">perms</span><span class="p">)</span>
+    <span class="n">IHperms</span> <span class="o">=</span> <span class="n">gen_ih_perms</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">perms</span><span class="p">)</span>
+    
+    <span class="c"># Permutations of Fstats</span>
+    <span class="n">F_perms</span> <span class="o">=</span> <span class="n">ftest_fast</span><span class="p">(</span><span class="n">H2perms</span><span class="p">,</span> <span class="n">IHperms</span><span class="p">,</span> <span class="n">Gs</span><span class="p">,</span>
+                         <span class="n">df_among</span><span class="p">,</span> <span class="n">df_resid</span><span class="p">)</span>
+    
+    <span class="c"># F-values</span>
+    <span class="n">Fs</span> <span class="o">=</span> <span class="n">F_perms</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]</span>
+    
+    <span class="c"># Significance</span>
+    <span class="n">ps</span> <span class="o">=</span> <span class="n">fperms_to_pvals</span><span class="p">(</span><span class="n">Fs</span><span class="p">,</span> <span class="n">F_perms</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">debug_output</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">ps</span><span class="p">,</span> <span class="n">Fs</span><span class="p">,</span> <span class="n">F_perms</span><span class="p">,</span> <span class="n">perms</span><span class="p">,</span> <span class="n">Gs</span><span class="p">,</span> <span class="n">H2perms</span><span class="p">,</span> <span class="n">IHperms</span><span class="p">,</span> <span class="n">df_among</span><span class="p">,</span> <span class="n">df_resid</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">ps</span><span class="p">,</span> <span class="n">Fs</span><span class="p">,</span> <span class="n">F_perms</span><span class="p">,</span> <span class="n">perms</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

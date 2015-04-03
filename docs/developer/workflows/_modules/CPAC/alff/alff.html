@@ -1,0 +1,429 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>CPAC.alff.alff &mdash; C-PAC 0.3.9 Alpha documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.3.9 Alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="C-PAC 0.3.9 Alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for CPAC.alff.alff</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">commands</span>
+<span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="kn">as</span> <span class="nn">pe</span>
+<span class="kn">import</span> <span class="nn">nipype.algorithms.rapidart</span> <span class="kn">as</span> <span class="nn">ra</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="kn">as</span> <span class="nn">fsl</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.io</span> <span class="kn">as</span> <span class="nn">nio</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="kn">as</span> <span class="nn">util</span>
+<span class="kn">from</span> <span class="nn">CPAC.alff.alff</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">CPAC.alff.utils</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.afni</span> <span class="kn">import</span> <span class="n">preprocess</span>
+
+<div class="viewcode-block" id="create_alff"><a class="viewcode-back" href="../../../alff.html#CPAC.alff.create_alff">[docs]</a><span class="k">def</span> <span class="nf">create_alff</span><span class="p">(</span><span class="n">wf_name</span> <span class="o">=</span> <span class="s">&#39;alff_workflow&#39;</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate Amplitude of low frequency oscillations(ALFF) and fractional ALFF maps</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    wf_name : string</span>
+<span class="sd">        Workflow name</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    alff_workflow : workflow object</span>
+<span class="sd">        ALFF workflow</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    `Source &lt;https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/alff/alff.py&gt;`_</span>
+
+<span class="sd">    Workflow Inputs::</span>
+
+<span class="sd">        hp_input.hp : list (float) </span>
+<span class="sd">            high pass frequencies</span>
+
+<span class="sd">        lp_input.lp : list (float) </span>
+<span class="sd">            low pass frequencies</span>
+
+<span class="sd">        inputspec.rest_res : string (existing nifti file)</span>
+<span class="sd">            Nuisance signal regressed functional image</span>
+
+<span class="sd">        inputspec.rest_mask : string (existing nifti file)</span>
+<span class="sd">            A mask volume(derived by dilating the motion corrected functional volume) in native space</span>
+
+
+<span class="sd">    Workflow Outputs::</span>
+
+<span class="sd">        outputspec.alff_img : string (nifti file)</span>
+<span class="sd">            outputs image containing the sum of the amplitudes in the low frequency band</span>
+
+<span class="sd">        outputspec.falff_img : string (nifti file)</span>
+<span class="sd">            outputs image containing the sum of the amplitudes in the low frequency band divided by the amplitude of the total frequency</span>
+
+<span class="sd">        outputspec.alff_Z_img : string (nifti file)</span>
+<span class="sd">            outputs image containing Normalized ALFF Z scores across full brain in native space</span>
+
+<span class="sd">        outputspec.falff_Z_img : string (nifti file)</span>
+<span class="sd">            outputs image containing Normalized fALFF Z scores across full brain in native space</span>
+
+
+<span class="sd">    Order of Commands:</span>
+
+<span class="sd">    - Filter the input file rest file( slice-time, motion corrected and nuisance regressed) ::</span>
+<span class="sd">        3dBandpass -prefix residual_filtered.nii.gz </span>
+<span class="sd">                    0.009 0.08 residual.nii.gz</span>
+<span class="sd">                    </span>
+<span class="sd">    - Calculate ALFF by taking the standard deviation of the filtered file ::</span>
+<span class="sd">        3dTstat -stdev </span>
+<span class="sd">                -mask rest_mask.nii.gz </span>
+<span class="sd">                -prefix residual_filtered_3dT.nii.gz</span>
+<span class="sd">                residual_filtered.nii.gz</span>
+<span class="sd">                  </span>
+<span class="sd">    - Calculate the standard deviation of the unfiltered file ::</span>
+<span class="sd">        3dTstat -stdev </span>
+<span class="sd">                -mask rest_mask.nii.gz </span>
+<span class="sd">                -prefix residual_3dT.nii.gz</span>
+<span class="sd">                residual.nii.gz</span>
+<span class="sd">  </span>
+<span class="sd">    - Calculate fALFF ::</span>
+<span class="sd">        3dcalc -a rest_mask.nii.gz </span>
+<span class="sd">               -b residual_filtered_3dT.nii.gz</span>
+<span class="sd">               -c residual_3dT.nii.gz  </span>
+<span class="sd">               -expr &#39;(1.0*bool(a))*((1.0*b)/(1.0*c))&#39; -float</span>
+
+<span class="sd">    - Normalize ALFF/fALFF to Z-score across full brain ::</span>
+
+<span class="sd">        fslstats</span>
+<span class="sd">        ALFF.nii.gz</span>
+<span class="sd">        -k rest_mask.nii.gz</span>
+<span class="sd">        -m &gt; mean_ALFF.txt ; mean=$( cat mean_ALFF.txt )</span>
+
+<span class="sd">        fslstats</span>
+<span class="sd">        ALFF.nii.gz</span>
+<span class="sd">        -k rest_mask.nii.gz</span>
+<span class="sd">        -s &gt; std_ALFF.txt ; std=$( cat std_ALFF.txt )</span>
+
+<span class="sd">        fslmaths</span>
+<span class="sd">        ALFF.nii.gz</span>
+<span class="sd">        -sub ${mean}</span>
+<span class="sd">        -div ${std}</span>
+<span class="sd">        -mas rest_mask.nii.gz ALFF_Z.nii.gz</span>
+
+<span class="sd">        fslstats</span>
+<span class="sd">        fALFF.nii.gz</span>
+<span class="sd">        -k rest_mask.nii.gz</span>
+<span class="sd">        -m &gt; mean_fALFF.txt ; mean=$( cat mean_fALFF.txt )</span>
+
+<span class="sd">        fslstats</span>
+<span class="sd">        fALFF.nii.gz</span>
+<span class="sd">        -k rest_mask.nii.gz </span>
+<span class="sd">        -s &gt; std_fALFF.txt</span>
+<span class="sd">        std=$( cat std_fALFF.txt )</span>
+
+<span class="sd">        fslmaths</span>
+<span class="sd">        fALFF.nii.gz</span>
+<span class="sd">        -sub ${mean}</span>
+<span class="sd">        -div ${std}</span>
+<span class="sd">        -mas rest_mask.nii.gz</span>
+<span class="sd">        fALFF_Z.nii.gz</span>
+
+<span class="sd">    High Level Workflow Graph:</span>
+<span class="sd">    </span>
+<span class="sd">    .. image:: ../images/alff.dot.png</span>
+<span class="sd">        :width: 500</span>
+
+<span class="sd">    Detailed Workflow Graph:</span>
+
+<span class="sd">    .. image:: ../images/alff_detailed.dot.png</span>
+<span class="sd">        :width: 500</span>
+
+<span class="sd">    </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    .. [1] Zou, Q.-H., Zhu, C.-Z., Yang, Y., Zuo, X.-N., Long, X.-Y., Cao, Q.-J., Wang, Y.-F., et al. (2008). An improved approach to detection of amplitude of low-frequency fluctuation (ALFF) for resting-state fMRI: fractional ALFF. Journal of neuroscience methods, 172(1), 137-41. doi:10.10</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; alff_w = create_alff()</span>
+<span class="sd">    &gt;&gt;&gt; alff_w.inputs.hp_input.hp = [0.01]</span>
+<span class="sd">    &gt;&gt;&gt; alff_w.inputs.lp_input.lp = [0.1]</span>
+<span class="sd">    &gt;&gt;&gt; alff_w.get_node(&#39;hp_input&#39;).iterables = (&#39;hp&#39;,[0.01])</span>
+<span class="sd">    &gt;&gt;&gt; alff_w.get_node(&#39;lp_input&#39;).iterables = (&#39;lp&#39;,[0.1])</span>
+<span class="sd">    &gt;&gt;&gt; alff_w.inputs.inputspec.rest_res = &#39;/home/data/subject/func/rest_bandpassed.nii.gz&#39;</span>
+<span class="sd">    &gt;&gt;&gt; alff_w.inputs.inputspec.rest_mask= &#39;/home/data/subject/func/rest_mask.nii.gz&#39; </span>
+<span class="sd">    &gt;&gt;&gt; alff_w.run() # doctest: +SKIP</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">wf</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span> <span class="n">wf_name</span><span class="p">)</span>
+    <span class="n">inputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;rest_res&#39;</span><span class="p">,</span>
+                                                       <span class="s">&#39;rest_mask&#39;</span><span class="p">]),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s">&#39;inputspec&#39;</span><span class="p">)</span>
+    
+    <span class="n">inputnode_hp</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;hp&#39;</span><span class="p">]),</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s">&#39;hp_input&#39;</span><span class="p">)</span>
+
+    <span class="n">inputnode_lp</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;lp&#39;</span><span class="p">]),</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s">&#39;lp_input&#39;</span><span class="p">)</span>
+    
+    <span class="n">outputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span> <span class="s">&#39;alff_img&#39;</span><span class="p">,</span>
+                                                         <span class="s">&#39;falff_img&#39;</span><span class="p">]),</span>
+                          <span class="n">name</span><span class="o">=</span><span class="s">&#39;outputspec&#39;</span><span class="p">)</span>
+    
+    <span class="c">#filtering</span>
+    <span class="n">bandpass</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">Bandpass</span><span class="p">(),</span>
+                       <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;bandpass_filtering&#39;</span><span class="p">)</span>
+    <span class="n">bandpass</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s">&#39;NIFTI_GZ&#39;</span>
+    <span class="n">bandpass</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">curdir</span><span class="p">,</span> <span class="s">&#39;residual_filtered.nii.gz&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode_hp</span><span class="p">,</span> <span class="s">&#39;hp&#39;</span><span class="p">,</span>
+                 <span class="n">bandpass</span><span class="p">,</span> <span class="s">&#39;highpass&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode_lp</span><span class="p">,</span> <span class="s">&#39;lp&#39;</span><span class="p">,</span>
+                 <span class="n">bandpass</span><span class="p">,</span> <span class="s">&#39;lowpass&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s">&#39;rest_res&#39;</span><span class="p">,</span>
+                 <span class="n">bandpass</span><span class="p">,</span> <span class="s">&#39;in_file&#39;</span><span class="p">)</span> 
+    
+    <span class="n">get_option_string</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;mask&#39;</span><span class="p">],</span>
+                                              <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;option_string&#39;</span><span class="p">],</span>
+                                              <span class="n">function</span> <span class="o">=</span> <span class="n">get_opt_string</span><span class="p">),</span> 
+                                <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;get_option_string&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s">&#39;rest_mask&#39;</span><span class="p">,</span>
+                 <span class="n">get_option_string</span><span class="p">,</span> <span class="s">&#39;mask&#39;</span><span class="p">)</span>
+    
+    <span class="c">#standard deviation over frequency</span>
+    <span class="n">stddev_fltrd</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span> <span class="o">=</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">TStat</span><span class="p">(),</span>
+                            <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;stddev_fltrd&#39;</span><span class="p">)</span>
+    <span class="n">stddev_fltrd</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s">&#39;NIFTI_GZ&#39;</span>
+    <span class="n">stddev_fltrd</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">curdir</span><span class="p">,</span> <span class="s">&#39;residual_filtered_3dT.nii.gz&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">bandpass</span><span class="p">,</span> <span class="s">&#39;out_file&#39;</span><span class="p">,</span>
+               <span class="n">stddev_fltrd</span><span class="p">,</span> <span class="s">&#39;in_file&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">get_option_string</span><span class="p">,</span> <span class="s">&#39;option_string&#39;</span><span class="p">,</span>
+               <span class="n">stddev_fltrd</span><span class="p">,</span> <span class="s">&#39;options&#39;</span><span class="p">)</span> 
+    
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">stddev_fltrd</span><span class="p">,</span> <span class="s">&#39;out_file&#39;</span><span class="p">,</span>
+                 <span class="n">outputNode</span><span class="p">,</span> <span class="s">&#39;alff_img&#39;</span><span class="p">)</span>
+    
+    <span class="c">#standard deviation of the unfiltered nuisance corrected image</span>
+    <span class="n">stddev_unfltrd</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span> <span class="o">=</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">TStat</span><span class="p">(),</span>
+                            <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;stddev_unfltrd&#39;</span><span class="p">)</span>
+    <span class="n">stddev_unfltrd</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s">&#39;NIFTI_GZ&#39;</span>
+    <span class="n">stddev_unfltrd</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">curdir</span><span class="p">,</span> <span class="s">&#39;residual_3dT.nii.gz&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s">&#39;rest_res&#39;</span><span class="p">,</span>
+                 <span class="n">stddev_unfltrd</span><span class="p">,</span> <span class="s">&#39;in_file&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">get_option_string</span><span class="p">,</span> <span class="s">&#39;option_string&#39;</span><span class="p">,</span>
+                 <span class="n">stddev_unfltrd</span><span class="p">,</span> <span class="s">&#39;options&#39;</span><span class="p">)</span> 
+    
+    <span class="c">#falff calculations</span>
+    <span class="n">falff</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span> <span class="o">=</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;falff&#39;</span><span class="p">)</span>
+    <span class="n">falff</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="s">&#39;-float&#39;</span>
+    <span class="n">falff</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="s">&#39;(1.0*bool(a))*((1.0*b)/(1.0*c))&#39;</span>
+    <span class="n">falff</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s">&#39;NIFTI_GZ&#39;</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s">&#39;rest_mask&#39;</span><span class="p">,</span>
+               <span class="n">falff</span><span class="p">,</span> <span class="s">&#39;in_file_a&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">stddev_fltrd</span><span class="p">,</span> <span class="s">&#39;out_file&#39;</span><span class="p">,</span>
+               <span class="n">falff</span><span class="p">,</span> <span class="s">&#39;in_file_b&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">stddev_unfltrd</span><span class="p">,</span> <span class="s">&#39;out_file&#39;</span><span class="p">,</span>
+               <span class="n">falff</span><span class="p">,</span> <span class="s">&#39;in_file_c&#39;</span><span class="p">)</span>
+    
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">falff</span><span class="p">,</span> <span class="s">&#39;out_file&#39;</span><span class="p">,</span>
+               <span class="n">outputNode</span><span class="p">,</span> <span class="s">&#39;falff_img&#39;</span><span class="p">)</span> 
+    
+    
+    <span class="k">return</span> <span class="n">wf</span>
+
+</div>
+<span class="k">def</span> <span class="nf">get_zscore</span><span class="p">(</span><span class="n">wf_name</span> <span class="o">=</span> <span class="s">&#39;z_score&#39;</span><span class="p">):</span>
+    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Workflow to calculate z-scores</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    wf_name : string</span>
+<span class="sd">        name of the workflow</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    wf : workflow object</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    `Source &lt;https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/network_centrality/z_score.py&gt;`_</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    Workflow Inputs::</span>
+<span class="sd">        </span>
+<span class="sd">        inputspec.input_file : string</span>
+<span class="sd">            path to input functional derivative file for which z score has to be calculated</span>
+<span class="sd">        inputspec.mask_file : string</span>
+<span class="sd">            path to whole brain functional mask file required to calculate zscore</span>
+<span class="sd">    </span>
+<span class="sd">    Workflow Outputs::</span>
+<span class="sd">        </span>
+<span class="sd">        outputspec.z_score_img : string</span>
+<span class="sd">             path to image containing Normalized Input Image Z scores across full brain.</span>
+<span class="sd">    </span>
+<span class="sd">    High Level Workflow Graph:</span>
+<span class="sd">    </span>
+<span class="sd">    .. image:: ../images/zscore.dot.png</span>
+<span class="sd">       :width: 500</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    Detailed Workflow Graph:</span>
+<span class="sd">    </span>
+<span class="sd">    .. image:: ../images/zscore_detailed.dot.png</span>
+<span class="sd">       :width: 500</span>
+<span class="sd">    </span>
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    &gt;&gt;&gt; import get_zscore as z</span>
+<span class="sd">    &gt;&gt;&gt; wf = z.get_zscore()</span>
+<span class="sd">    &gt;&gt;&gt; wf.inputs.inputspec.input_file = &#39;/home/data/graph_working_dir/calculate_centrality/degree_centrality_binarize.nii.gz&#39;</span>
+<span class="sd">    &gt;&gt;&gt; wf.inputs.inputspec.mask_file = &#39;/home/data/graphs/GraphGeneration/new_mask_3m.nii.gz&#39;</span>
+<span class="sd">    &gt;&gt;&gt; wf.run()</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="kn">as</span> <span class="nn">pe</span>
+    <span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="kn">as</span> <span class="nn">util</span>
+    <span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="kn">as</span> <span class="nn">fsl</span>
+    
+    <span class="n">wflow</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="n">wf_name</span><span class="p">)</span>
+    
+    <span class="n">inputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;input_file&#39;</span><span class="p">,</span>
+                                                       <span class="s">&#39;mask_file&#39;</span><span class="p">]),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s">&#39;inputspec&#39;</span><span class="p">)</span>
+
+    <span class="n">outputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;z_score_img&#39;</span><span class="p">]),</span>
+                          <span class="n">name</span><span class="o">=</span><span class="s">&#39;outputspec&#39;</span><span class="p">)</span>
+
+    <span class="n">mean</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageStats</span><span class="p">(),</span>
+                   <span class="n">name</span><span class="o">=</span><span class="s">&#39;mean&#39;</span><span class="p">)</span>
+    <span class="n">mean</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s">&#39;-k </span><span class="si">%s</span><span class="s"> -m&#39;</span>    
+    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s">&#39;input_file&#39;</span><span class="p">,</span>
+                  <span class="n">mean</span><span class="p">,</span> <span class="s">&#39;in_file&#39;</span><span class="p">)</span>
+    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s">&#39;mask_file&#39;</span><span class="p">,</span>
+                  <span class="n">mean</span><span class="p">,</span> <span class="s">&#39;mask_file&#39;</span><span class="p">)</span>
+
+
+    <span class="n">standard_deviation</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageStats</span><span class="p">(),</span>
+                                 <span class="n">name</span><span class="o">=</span><span class="s">&#39;standard_deviation&#39;</span><span class="p">)</span>
+    <span class="n">standard_deviation</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s">&#39;-k </span><span class="si">%s</span><span class="s"> -s&#39;</span>
+    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s">&#39;input_file&#39;</span><span class="p">,</span>
+                  <span class="n">standard_deviation</span><span class="p">,</span> <span class="s">&#39;in_file&#39;</span><span class="p">)</span>
+    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s">&#39;mask_file&#39;</span><span class="p">,</span>
+                  <span class="n">standard_deviation</span><span class="p">,</span> <span class="s">&#39;mask_file&#39;</span><span class="p">)</span>
+    
+    
+    <span class="n">op_string</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;mean&#39;</span><span class="p">,</span><span class="s">&#39;std_dev&#39;</span><span class="p">],</span>
+                                      <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;op_string&#39;</span><span class="p">],</span>
+                                      <span class="n">function</span><span class="o">=</span><span class="n">get_operand_string</span><span class="p">),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s">&#39;op_string&#39;</span><span class="p">)</span>
+    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="s">&#39;out_stat&#39;</span><span class="p">,</span>
+                  <span class="n">op_string</span><span class="p">,</span> <span class="s">&#39;mean&#39;</span><span class="p">)</span>
+    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">standard_deviation</span><span class="p">,</span> <span class="s">&#39;out_stat&#39;</span><span class="p">,</span>
+                  <span class="n">op_string</span><span class="p">,</span> <span class="s">&#39;std_dev&#39;</span><span class="p">)</span>
+    
+    
+    <span class="n">z_score</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">MultiImageMaths</span><span class="p">(),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s">&#39;z_score&#39;</span><span class="p">)</span>
+    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">op_string</span><span class="p">,</span> <span class="s">&#39;op_string&#39;</span><span class="p">,</span>
+                  <span class="n">z_score</span><span class="p">,</span> <span class="s">&#39;op_string&#39;</span><span class="p">)</span>
+    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s">&#39;input_file&#39;</span><span class="p">,</span>
+                  <span class="n">z_score</span><span class="p">,</span> <span class="s">&#39;in_file&#39;</span><span class="p">)</span>
+    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s">&#39;mask_file&#39;</span><span class="p">,</span>
+                  <span class="n">z_score</span><span class="p">,</span> <span class="s">&#39;operand_files&#39;</span><span class="p">)</span>
+    
+    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">z_score</span><span class="p">,</span> <span class="s">&#39;out_file&#39;</span><span class="p">,</span>
+                  <span class="n">outputNode</span><span class="p">,</span> <span class="s">&#39;z_score_img&#39;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">wflow</span>
+    
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

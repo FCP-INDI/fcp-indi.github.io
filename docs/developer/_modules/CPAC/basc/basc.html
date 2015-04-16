@@ -1,0 +1,500 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>CPAC.basc.basc &mdash; C-PAC 0.3.9 Alpha documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.3.9 Alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="C-PAC 0.3.9 Alpha documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for CPAC.basc.basc</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="kn">as</span> <span class="nn">pe</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="kn">as</span> <span class="nn">util</span>
+
+<div class="viewcode-block" id="group_stability_matrix"><a class="viewcode-back" href="../../../workflows/basc.html#CPAC.basc.group_stability_matrix">[docs]</a><span class="k">def</span> <span class="nf">group_stability_matrix</span><span class="p">(</span><span class="n">indiv_stability_list</span><span class="p">,</span> <span class="n">n_bootstraps</span><span class="p">,</span> <span class="n">k_clusters</span><span class="p">,</span> <span class="n">stratification</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the group stability matrix of the entire dataset by bootstrapping the dataset</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    indiv_stability_list : list of strings</span>
+<span class="sd">        A length `N` list of file paths to numpy matrices of shape (`V`, `V`), `N` subjects, `V` voxels</span>
+<span class="sd">    n_bootstraps : integer</span>
+<span class="sd">        Number of bootstrap datasets</span>
+<span class="sd">    k_clusters : integer</span>
+<span class="sd">        Number of clusters</span>
+<span class="sd">    stratification : array_like, optional</span>
+<span class="sd">        List of integer entries denoting stratums for indiv_stability_list</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G : array_like</span>
+<span class="sd">        Group stability matrix of shape (`V`, `V`), `V` voxels</span>
+<span class="sd">    clusters_G : array_like</span>
+<span class="sd">        Length `V` array of cluster assignments for each voxel</span>
+<span class="sd">    cluster_voxel_scores : array_like</span>
+<span class="sd">        `K` by `V` matrix of within-cluster average values for each cluster of each voxel</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">print</span> <span class="s">&#39;Calculating group stability matrix for&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">indiv_stability_list</span><span class="p">),</span> <span class="s">&#39;subjects.&#39;</span>
+
+    <span class="k">if</span> <span class="n">stratification</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&#39;Applying stratification to group dataset&#39;</span>
+                
+    <span class="kn">from</span> <span class="nn">CPAC.basc</span> <span class="kn">import</span> <span class="n">standard_bootstrap</span><span class="p">,</span> <span class="n">adjacency_matrix</span><span class="p">,</span> <span class="n">cluster_timeseries</span><span class="p">,</span> <span class="n">cluster_matrix_average</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+    <span class="n">indiv_stability_set</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ism_file</span><span class="p">)</span> <span class="k">for</span> <span class="n">ism_file</span> <span class="ow">in</span> <span class="n">indiv_stability_list</span><span class="p">])</span>
+<span class="c">#    indiv_stability_set = indiv_stability_list</span>
+    <span class="k">print</span> <span class="s">&#39;Individual stability list dimensions:&#39;</span><span class="p">,</span> <span class="n">indiv_stability_set</span><span class="o">.</span><span class="n">shape</span>
+    
+    <span class="n">V</span> <span class="o">=</span> <span class="n">indiv_stability_set</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    
+    <span class="n">G</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">V</span><span class="p">,</span><span class="n">V</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">bootstrap_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_bootstraps</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">stratification</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">strata</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">stratification</span><span class="p">)</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">V</span><span class="p">,</span><span class="n">V</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">stratum</span> <span class="ow">in</span> <span class="n">strata</span><span class="p">:</span>
+                <span class="n">J</span> <span class="o">+=</span> <span class="n">standard_bootstrap</span><span class="p">(</span><span class="n">indiv_stability_set</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">stratification</span> <span class="o">==</span> <span class="n">stratum</span><span class="p">)])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">J</span> <span class="o">/=</span> <span class="n">indiv_stability_set</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">J</span> <span class="o">=</span> <span class="n">standard_bootstrap</span><span class="p">(</span><span class="n">indiv_stability_set</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">G</span> <span class="o">+=</span> <span class="n">adjacency_matrix</span><span class="p">(</span><span class="n">cluster_timeseries</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">k_clusters</span><span class="p">,</span> <span class="n">similarity_metric</span> <span class="o">=</span> <span class="s">&#39;data&#39;</span><span class="p">)[:,</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
+    <span class="n">G</span> <span class="o">/=</span> <span class="n">n_bootstraps</span>
+
+
+    <span class="n">clusters_G</span> <span class="o">=</span> <span class="n">cluster_timeseries</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">k_clusters</span><span class="p">,</span> <span class="n">similarity_metric</span> <span class="o">=</span> <span class="s">&#39;data&#39;</span><span class="p">)</span>
+    
+    <span class="n">cluster_voxel_scores</span> <span class="o">=</span> <span class="n">cluster_matrix_average</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">clusters_G</span><span class="p">)</span>
+    
+    <span class="c"># Cluster labels normally start from 0, start from 1 to provide contrast when viewing between 0 voxels</span>
+    <span class="n">clusters_G</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">G</span><span class="p">,</span> <span class="n">clusters_G</span><span class="p">,</span> <span class="n">cluster_voxel_scores</span>
+</div>
+<span class="k">def</span> <span class="nf">individual_group_clustered_maps</span><span class="p">(</span><span class="n">indiv_stability_list</span><span class="p">,</span> <span class="n">clusters_G</span><span class="p">,</span> <span class="n">roi_mask_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the individual stability maps of each subject based on the group stability clustering solution.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    indiv_stability_list : list of strings</span>
+<span class="sd">        A length `N` list of file paths to numpy matrices of shape (`V`, `V`), `N` subjects, `V` voxels</span>
+<span class="sd">    clusters_G : array_like</span>
+<span class="sd">        Length `V` array of cluster assignments for each voxel</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    individual_cluster_voxel_scores : list of strings</span>
+<span class="sd">        A length `N` list of nifti files of the individual group clustered stability maps for each cluster.  Temporal</span>
+<span class="sd">        dimension of each file corresponds to each subject.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+    <span class="kn">from</span> <span class="nn">CPAC.basc</span> <span class="kn">import</span> <span class="n">cluster_matrix_average</span><span class="p">,</span> <span class="n">ndarray_to_vol</span>
+    
+    <span class="n">indiv_stability_set</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ism_file</span><span class="p">)</span> <span class="k">for</span> <span class="n">ism_file</span> <span class="ow">in</span> <span class="n">indiv_stability_list</span><span class="p">])</span>
+
+    <span class="n">nSubjects</span> <span class="o">=</span> <span class="n">indiv_stability_set</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">nVoxels</span> <span class="o">=</span> <span class="n">indiv_stability_set</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">cluster_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">clusters_G</span><span class="p">)</span>
+    <span class="n">nClusters</span> <span class="o">=</span> <span class="n">cluster_ids</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="n">cluster_voxel_scores</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nClusters</span><span class="p">,</span> <span class="n">nSubjects</span><span class="p">,</span> <span class="n">nVoxels</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nSubjects</span><span class="p">):</span>
+        <span class="n">cluster_voxel_scores</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_matrix_average</span><span class="p">(</span><span class="n">indiv_stability_set</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">clusters_G</span><span class="p">)</span>
+    
+    <span class="n">icvs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">icvs_idx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">cluster_ids</span><span class="p">:</span>
+        <span class="n">icvs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ndarray_to_vol</span><span class="p">(</span><span class="n">cluster_voxel_scores</span><span class="p">[</span><span class="n">icvs_idx</span><span class="p">],</span> <span class="n">roi_mask_file</span><span class="p">,</span> <span class="n">roi_mask_file</span><span class="p">,</span> <span class="s">&#39;individual_group_cluster</span><span class="si">%i</span><span class="s">_stability.nii.gz&#39;</span> <span class="o">%</span> <span class="n">k</span><span class="p">))</span>
+        <span class="n">icvs_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+ 
+    <span class="k">return</span> <span class="n">icvs</span>
+
+<div class="viewcode-block" id="nifti_individual_stability"><a class="viewcode-back" href="../../../workflows/basc.html#CPAC.basc.nifti_individual_stability">[docs]</a><span class="k">def</span> <span class="nf">nifti_individual_stability</span><span class="p">(</span><span class="n">subject_file</span><span class="p">,</span> <span class="n">roi_mask_file</span><span class="p">,</span> <span class="n">n_bootstraps</span><span class="p">,</span> <span class="n">k_clusters</span><span class="p">,</span> <span class="n">cbb_block_size</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">affinity_threshold</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the individual stability matrix for a single subject by using Circular Block Bootstrapping method</span>
+<span class="sd">    for time-series data.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    subject_file : string</span>
+<span class="sd">        Nifti file of a subject</span>
+<span class="sd">    roi_mask_file : string</span>
+<span class="sd">        Region of interest (this method is too computationally intensive to perform on a whole-brain volume)</span>
+<span class="sd">    n_bootstraps : integer</span>
+<span class="sd">        Number of bootstraps</span>
+<span class="sd">    k_clusters : integer</span>
+<span class="sd">        Number of clusters</span>
+<span class="sd">    cbb_block_size : integer, optional</span>
+<span class="sd">        Size of the time-series block when performing circular block bootstrap</span>
+<span class="sd">    affinity_threshold : float, optional</span>
+<span class="sd">        Minimum threshold for similarity matrix based on correlation to create an edge</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ism : array_like</span>
+<span class="sd">        Individual stability matrix of shape (`V`, `V`), `V` voxels</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">print</span> <span class="s">&#39;Calculating individual stability matrix of:&#39;</span><span class="p">,</span> <span class="n">subject_file</span>
+
+    <span class="kn">from</span> <span class="nn">CPAC.basc</span> <span class="kn">import</span> <span class="n">individual_stability_matrix</span>
+    <span class="kn">from</span> <span class="nn">CPAC.utils</span> <span class="kn">import</span> <span class="n">safe_shape</span>
+    <span class="kn">import</span> <span class="nn">nibabel</span> <span class="kn">as</span> <span class="nn">nb</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">subject_file</span><span class="p">)</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float64&#39;</span><span class="p">)</span>
+    <span class="n">roi_mask_file</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">roi_mask_file</span><span class="p">)</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float64&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;bool&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">safe_shape</span><span class="p">(</span><span class="n">roi_mask_file</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Subject </span><span class="si">%s</span><span class="s"> with volume shape </span><span class="si">%s</span><span class="s"> conflicts with mask shape </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">subject_file</span><span class="p">,</span>
+                                                                                           <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">3</span><span class="p">]),</span>
+                                                                                           <span class="nb">str</span><span class="p">(</span><span class="n">roi_mask_file</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span> <span class="p">)</span>
+    
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">roi_mask_file</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">print</span> <span class="s">&#39;(</span><span class="si">%i</span><span class="s"> timepoints, </span><span class="si">%i</span><span class="s"> voxels) and </span><span class="si">%i</span><span class="s"> bootstraps&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n_bootstraps</span><span class="p">)</span>
+    
+    <span class="n">ism</span> <span class="o">=</span> <span class="n">individual_stability_matrix</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">n_bootstraps</span><span class="p">,</span> <span class="n">k_clusters</span><span class="p">,</span> <span class="n">cbb_block_size</span><span class="o">=</span><span class="n">cbb_block_size</span><span class="p">,</span> <span class="n">affinity_threshold</span><span class="o">=</span><span class="n">affinity_threshold</span><span class="p">)</span>
+    <span class="n">ism_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s">&#39;individual_stability_matrix.npy&#39;</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">ism_file</span><span class="p">,</span> <span class="n">ism</span><span class="p">)</span>
+    
+    <span class="k">print</span> <span class="s">&#39;Saving individual stability matrix </span><span class="si">%s</span><span class="s"> for </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ism_file</span><span class="p">,</span> <span class="n">subject_file</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">ism_file</span>
+</div>
+<span class="k">def</span> <span class="nf">ndarray_to_vol</span><span class="p">(</span><span class="n">data_array</span><span class="p">,</span> <span class="n">roi_mask_file</span><span class="p">,</span> <span class="n">sample_file</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a numpy array to a nifti file given an roi mask</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_array : array_like</span>
+<span class="sd">        A data array with the same column length and index alignment as the given roi_mask_file.  If data_array is two dimensional,</span>
+<span class="sd">        first dimension is considered temporal dimension</span>
+<span class="sd">    roi_mask_file : string</span>
+<span class="sd">        Path of the roi_mask_file</span>
+<span class="sd">    sample_file : string or list of strings</span>
+<span class="sd">        Path of sample nifti file(s) to use for header of the output.  If list, the first file is chosen.</span>
+<span class="sd">    filename : string</span>
+<span class="sd">        Name of output file</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    img_file : string</span>
+<span class="sd">        Path of the nifti file output</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">nibabel</span> <span class="kn">as</span> <span class="nn">nb</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    
+    <span class="n">roi_mask_file</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">roi_mask_file</span><span class="p">)</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float64&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;bool&#39;</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data_array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">out_vol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">roi_mask_file</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">data_array</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">out_vol</span><span class="p">[</span><span class="n">roi_mask_file</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_array</span>
+    <span class="k">elif</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data_array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">out_vol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">roi_mask_file</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">roi_mask_file</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">roi_mask_file</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">data_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">data_array</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">out_vol</span><span class="p">[</span><span class="n">roi_mask_file</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_array</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;data_array is </span><span class="si">%i</span><span class="s"> dimensional, must be either 1 or 2 dimensional&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="p">)</span>
+
+    <span class="n">nii</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">sample_file</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="n">nii</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">sample_file</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">nii</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">sample_file</span><span class="p">)</span>
+        
+    <span class="n">img</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">Nifti1Image</span><span class="p">(</span><span class="n">out_vol</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">nii</span><span class="o">.</span><span class="n">get_header</span><span class="p">(),</span> <span class="n">affine</span><span class="o">=</span><span class="n">nii</span><span class="o">.</span><span class="n">get_affine</span><span class="p">())</span>
+    <span class="n">img_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="n">img</span><span class="o">.</span><span class="n">to_filename</span><span class="p">(</span><span class="n">img_file</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">img_file</span>
+
+<div class="viewcode-block" id="create_basc"><a class="viewcode-back" href="../../../workflows/basc.html#CPAC.basc.create_basc">[docs]</a><span class="k">def</span> <span class="nf">create_basc</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;basc&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bootstrap Analysis of Stable Clusters (BASC)</span>
+<span class="sd">    </span>
+<span class="sd">    This workflow performs group-level BASC.  </span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : string, optional</span>
+<span class="sd">        Name of the workflow.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    basc : nipype.pipeline.engine.Workflow</span>
+<span class="sd">        BASC workflow.</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    </span>
+<span class="sd">    Workflow Inputs::</span>
+<span class="sd">        </span>
+<span class="sd">        inputspec.roi : string (nifti file)</span>
+<span class="sd">            Mask of region(s) of interest</span>
+<span class="sd">        inputpsec.subjects : list (nifti files)</span>
+<span class="sd">            4-D timeseries of a group of subjects normalized to MNI space</span>
+<span class="sd">        inputspec.dataset_bootstraps : integer</span>
+<span class="sd">            Number of bootstrap samples of the dataset</span>
+<span class="sd">        inputspec.timeseries_bootstraps : integer</span>
+<span class="sd">            Number of bootstraps of each subject&#39;s timeseries</span>
+<span class="sd">        inputspec.k_clusters : integer</span>
+<span class="sd">            Number of clusters at both the individiual and group level</span>
+<span class="sd">        inputspec.affinity_threshold : list (floats)</span>
+<span class="sd">            Minimum threshold for similarity matrix based on correlation to create an edge</span>
+<span class="sd">            </span>
+<span class="sd">    Workflow Outputs::</span>
+<span class="sd">    </span>
+<span class="sd">        outputspec.gsm : ndarray</span>
+<span class="sd">            Group stability matrix</span>
+<span class="sd">        outputspec.gsclusters: ndarray</span>
+<span class="sd">            Matrix partitioning each cluster of the group stability matrix</span>
+<span class="sd">        outputspec.gsmap: ndarray</span>
+<span class="sd">            Group stability map using gsm and gscluster to calculate average within-cluster stability</span>
+<span class="sd">        outputspec.gsclusters_img : string (nifti file)</span>
+<span class="sd">            3-D volume of brain regions partitioned with gsclusters</span>
+<span class="sd">        outputspec.gsmap_img : string (nifti file)</span>
+<span class="sd">            3-D volume of brain regions associated with gs_map</span>
+<span class="sd">        outputspec.ismap_imgs : list of strings (nifti files)</span>
+<span class="sd">            3-D volumes of stability scores of each cluster based on group clustering</span>
+<span class="sd">            </span>
+<span class="sd">    BASC Procedure:</span>
+<span class="sd">    </span>
+<span class="sd">    1. Generate individual stability matrices based on multiple clusterings of each bootstrap sample for a single subject</span>
+<span class="sd">    2. Use stratified bootstrap to sample new datasets of subjects</span>
+<span class="sd">    3. Calculate average stability matrix of each new dataset using individual stability matrices generated at step 1</span>
+<span class="sd">    4. Cluster each average stabiilty matrix</span>
+<span class="sd">    5. Average to create a group stability matrix</span>
+<span class="sd">    6. Cluster the group stability matrix</span>
+<span class="sd">    7. Calculate average within-cluster stability based on the clustering of step 6</span>
+<span class="sd">    </span>
+<span class="sd">    Workflow Graph:</span>
+<span class="sd">    </span>
+<span class="sd">    .. image:: ../images/basc.dot.png</span>
+<span class="sd">        :width: 500</span>
+<span class="sd">        </span>
+<span class="sd">    Detailed Workflow Graph:</span>
+<span class="sd">    </span>
+<span class="sd">    .. image:: ../images/basc_detailed.dot.png</span>
+<span class="sd">        :width: 500</span>
+<span class="sd">        </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] P. Bellec, P. Rosa-Neto, O. C. Lyttelton, H. Benali, and A. C. Evans, &quot;Multi-level bootstrap analysis of stable clusters in resting-state fMRI.,&quot; NeuroImage, vol. 51, no. 3, pp. 1126-39, Jul. 2010.</span>
+<span class="sd">    </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from CPAC import basc</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">inputspec</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;subjects&#39;</span><span class="p">,</span>
+                                                       <span class="s">&#39;roi&#39;</span><span class="p">,</span>
+                                                       <span class="s">&#39;dataset_bootstraps&#39;</span><span class="p">,</span>
+                                                       <span class="s">&#39;timeseries_bootstraps&#39;</span><span class="p">,</span>
+                                                       <span class="s">&#39;k_clusters&#39;</span><span class="p">,</span>
+                                                       <span class="s">&#39;affinity_threshold&#39;</span><span class="p">]),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s">&#39;inputspec&#39;</span><span class="p">)</span>
+    <span class="n">outputspec</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;gsm&#39;</span><span class="p">,</span>
+                                                        <span class="s">&#39;gsclusters&#39;</span><span class="p">,</span>
+                                                        <span class="s">&#39;gsmap&#39;</span><span class="p">,</span>
+                                                        <span class="s">&#39;gsclusters_img&#39;</span><span class="p">,</span>
+                                                        <span class="s">&#39;gsmap_img&#39;</span><span class="p">,</span>
+                                                        <span class="s">&#39;ismap_imgs&#39;</span><span class="p">]),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s">&#39;outputspec&#39;</span><span class="p">)</span>
+    
+    <span class="n">basc</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    
+    <span class="n">nis</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;subject_file&#39;</span><span class="p">,</span>
+                                                <span class="s">&#39;roi_mask_file&#39;</span><span class="p">,</span>
+                                                <span class="s">&#39;n_bootstraps&#39;</span><span class="p">,</span>
+                                                <span class="s">&#39;k_clusters&#39;</span><span class="p">,</span>
+                                                <span class="s">&#39;cbb_block_size&#39;</span><span class="p">,</span>
+                                                <span class="s">&#39;affinity_threshold&#39;</span><span class="p">],</span>
+                                   <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;individual_stability_matrices&#39;</span><span class="p">],</span>
+                                   <span class="n">function</span><span class="o">=</span><span class="n">nifti_individual_stability</span><span class="p">),</span>
+                     <span class="n">name</span><span class="o">=</span><span class="s">&#39;individual_stability_matrices&#39;</span><span class="p">,</span>
+                     <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;subject_file&#39;</span><span class="p">,</span>
+                                <span class="s">&#39;affinity_threshold&#39;</span><span class="p">])</span>
+    
+    <span class="n">gsm</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;indiv_stability_list&#39;</span><span class="p">,</span>
+                                             <span class="s">&#39;n_bootstraps&#39;</span><span class="p">,</span>
+                                             <span class="s">&#39;k_clusters&#39;</span><span class="p">,</span>
+                                             <span class="s">&#39;stratification&#39;</span><span class="p">],</span>
+                                <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;group_stability_matrix&#39;</span><span class="p">,</span>
+                                              <span class="s">&#39;group_stability_clusters&#39;</span><span class="p">,</span>
+                                              <span class="s">&#39;group_stability_scores&#39;</span><span class="p">],</span>
+                                <span class="n">function</span><span class="o">=</span><span class="n">group_stability_matrix</span><span class="p">),</span>
+                  <span class="n">name</span><span class="o">=</span><span class="s">&#39;group_stability_matrix&#39;</span><span class="p">)</span>
+
+    <span class="n">igcm</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;indiv_stability_list&#39;</span><span class="p">,</span>
+                                              <span class="s">&#39;clusters_G&#39;</span><span class="p">,</span>
+                                              <span class="s">&#39;roi_mask_file&#39;</span><span class="p">],</span>
+                                 <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;individual_cluster_voxel_scores&#39;</span><span class="p">],</span>
+                                 <span class="n">function</span><span class="o">=</span><span class="n">individual_group_clustered_maps</span><span class="p">),</span>
+                   <span class="n">name</span><span class="o">=</span><span class="s">&#39;individual_group_clustered_maps&#39;</span><span class="p">)</span>
+
+    <span class="n">gs_cluster_vol</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;data_array&#39;</span><span class="p">,</span>
+                                                        <span class="s">&#39;roi_mask_file&#39;</span><span class="p">,</span>
+                                                        <span class="s">&#39;sample_file&#39;</span><span class="p">,</span>
+                                                        <span class="s">&#39;filename&#39;</span><span class="p">],</span>
+                                           <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;img_file&#39;</span><span class="p">],</span>
+                                           <span class="n">function</span><span class="o">=</span><span class="n">ndarray_to_vol</span><span class="p">),</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s">&#39;group_stability_cluster_vol&#39;</span><span class="p">)</span>
+
+    <span class="n">gs_score_vol</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;data_array&#39;</span><span class="p">,</span>
+                                                      <span class="s">&#39;roi_mask_file&#39;</span><span class="p">,</span>
+                                                      <span class="s">&#39;sample_file&#39;</span><span class="p">,</span>
+                                                      <span class="s">&#39;filename&#39;</span><span class="p">],</span>
+                                         <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;img_file&#39;</span><span class="p">],</span>
+                                         <span class="n">function</span><span class="o">=</span><span class="n">ndarray_to_vol</span><span class="p">),</span>
+                           <span class="n">name</span><span class="o">=</span><span class="s">&#39;group_stability_score_vol&#39;</span><span class="p">)</span>
+
+    <span class="c"># Gather outside workflow inputs</span>
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s">&#39;subjects&#39;</span><span class="p">,</span>
+                 <span class="n">nis</span><span class="p">,</span> <span class="s">&#39;subject_file&#39;</span><span class="p">)</span>
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s">&#39;roi&#39;</span><span class="p">,</span>
+                 <span class="n">nis</span><span class="p">,</span> <span class="s">&#39;roi_mask_file&#39;</span><span class="p">)</span>
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s">&#39;timeseries_bootstraps&#39;</span><span class="p">,</span>
+                 <span class="n">nis</span><span class="p">,</span> <span class="s">&#39;n_bootstraps&#39;</span><span class="p">)</span>
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s">&#39;k_clusters&#39;</span><span class="p">,</span>
+                 <span class="n">nis</span><span class="p">,</span> <span class="s">&#39;k_clusters&#39;</span><span class="p">)</span>
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s">&#39;affinity_threshold&#39;</span><span class="p">,</span>
+                 <span class="n">nis</span><span class="p">,</span> <span class="s">&#39;affinity_threshold&#39;</span><span class="p">)</span>
+    
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s">&#39;dataset_bootstraps&#39;</span><span class="p">,</span>
+                 <span class="n">gsm</span><span class="p">,</span> <span class="s">&#39;n_bootstraps&#39;</span><span class="p">)</span>
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s">&#39;k_clusters&#39;</span><span class="p">,</span>
+                 <span class="n">gsm</span><span class="p">,</span> <span class="s">&#39;k_clusters&#39;</span><span class="p">)</span>
+    
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">nis</span><span class="p">,</span> <span class="s">&#39;individual_stability_matrices&#39;</span><span class="p">,</span>
+                 <span class="n">gsm</span><span class="p">,</span> <span class="s">&#39;indiv_stability_list&#39;</span><span class="p">)</span>
+
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s">&#39;subjects&#39;</span><span class="p">,</span>
+                 <span class="n">gs_cluster_vol</span><span class="p">,</span> <span class="s">&#39;sample_file&#39;</span><span class="p">)</span>
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s">&#39;roi&#39;</span><span class="p">,</span>
+                 <span class="n">gs_cluster_vol</span><span class="p">,</span> <span class="s">&#39;roi_mask_file&#39;</span><span class="p">)</span>
+    <span class="n">gs_cluster_vol</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="s">&#39;group_stability_clusters.nii.gz&#39;</span>
+    
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">nis</span><span class="p">,</span> <span class="s">&#39;individual_stability_matrices&#39;</span><span class="p">,</span>
+                 <span class="n">igcm</span><span class="p">,</span> <span class="s">&#39;indiv_stability_list&#39;</span><span class="p">)</span>
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gsm</span><span class="p">,</span> <span class="s">&#39;group_stability_clusters&#39;</span><span class="p">,</span>
+                 <span class="n">igcm</span><span class="p">,</span> <span class="s">&#39;clusters_G&#39;</span><span class="p">)</span>
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s">&#39;roi&#39;</span><span class="p">,</span>
+                 <span class="n">igcm</span><span class="p">,</span> <span class="s">&#39;roi_mask_file&#39;</span><span class="p">)</span>
+    
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gsm</span><span class="p">,</span> <span class="s">&#39;group_stability_clusters&#39;</span><span class="p">,</span>
+                 <span class="n">gs_cluster_vol</span><span class="p">,</span> <span class="s">&#39;data_array&#39;</span><span class="p">)</span>
+
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s">&#39;subjects&#39;</span><span class="p">,</span>
+                 <span class="n">gs_score_vol</span><span class="p">,</span> <span class="s">&#39;sample_file&#39;</span><span class="p">)</span>
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s">&#39;roi&#39;</span><span class="p">,</span>
+                 <span class="n">gs_score_vol</span><span class="p">,</span> <span class="s">&#39;roi_mask_file&#39;</span><span class="p">)</span>
+    <span class="n">gs_score_vol</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="s">&#39;group_stability_scores.nii.gz&#39;</span>        
+    
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gsm</span><span class="p">,</span> <span class="s">&#39;group_stability_scores&#39;</span><span class="p">,</span>
+                 <span class="n">gs_score_vol</span><span class="p">,</span> <span class="s">&#39;data_array&#39;</span><span class="p">)</span>
+    
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gsm</span><span class="p">,</span> <span class="s">&#39;group_stability_matrix&#39;</span><span class="p">,</span>
+                 <span class="n">outputspec</span><span class="p">,</span> <span class="s">&#39;gsm&#39;</span><span class="p">)</span>
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gsm</span><span class="p">,</span> <span class="s">&#39;group_stability_clusters&#39;</span><span class="p">,</span>
+                 <span class="n">outputspec</span><span class="p">,</span> <span class="s">&#39;gsclusters&#39;</span><span class="p">)</span>
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gsm</span><span class="p">,</span> <span class="s">&#39;group_stability_scores&#39;</span><span class="p">,</span>
+                 <span class="n">outputspec</span><span class="p">,</span> <span class="s">&#39;gsmap&#39;</span><span class="p">)</span>
+
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gs_cluster_vol</span><span class="p">,</span> <span class="s">&#39;img_file&#39;</span><span class="p">,</span>
+                 <span class="n">outputspec</span><span class="p">,</span> <span class="s">&#39;gsclusters_img&#39;</span><span class="p">)</span>
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gs_score_vol</span><span class="p">,</span> <span class="s">&#39;img_file&#39;</span><span class="p">,</span>
+                 <span class="n">outputspec</span><span class="p">,</span> <span class="s">&#39;gsmap_img&#39;</span><span class="p">)</span>
+    
+    <span class="n">basc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">igcm</span><span class="p">,</span> <span class="s">&#39;individual_cluster_voxel_scores&#39;</span><span class="p">,</span>
+                 <span class="n">outputspec</span><span class="p">,</span> <span class="s">&#39;ismap_imgs&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">basc</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

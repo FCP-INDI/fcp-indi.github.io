@@ -12,9 +12,11 @@ An Amazon Marketplace AMI for C-PAC has been released, making it easier for rese
 
 * Instance Type - The hardware specification for a given instance. A list of the instance types made available by Amazon may be found `here <http://aws.amazon.com/ec2/instance-types>`_.
 
+* Elastic Block Storage (EBS) - A form of persistent storage offered by Amazon for use with instances.
+
 * Head Node - The primary node of a HPC cluster, which all other nodes are connected to.  The head node will run a job scheduler (such as Sun Grid Engine) to allocate jobs to the other nodes.  Jobs may also be run on the head node.
 
-* Worker Node - A node in an HPC cluster to which tasks are delegated by the head node via a job scheduler.
+* Worker Node - A node in a HPC cluster to which tasks are delegated by the head node via a job scheduler.
 
 * Job Scheduler - A program that can allocate computational resources in an HPC cluster to jobs based on availability and distribute jobs across nodes. The C-PAC AMI uses Sun Grid Engine (SGE) as its job scheduler.
 
@@ -56,9 +58,9 @@ Now that you have generated the access keys and a pem file, you may launch a sin
 
 #. Now choose the instance type that you would like to use.  Note that C-PAC requires at least 8 GB of RAM- the m3.xlarge instance type has 15 GB of RAM and 4 CPUs and functions well with C-PAC. To select this type, click on the `General purpose` tab and select the m3.xlarge size instance and click the `Next: Configure Instance Details` button.
 
-#. The details page can be used to request spot instances, as well as other functionality (including VPN, VPC options). For a basic run you do not need to change anything, although you can tailor it it does offer flexibility according to your future needs. Hovering over the 'i' icons on this page will give you more insight into the options available.  When done, click `Next: Add Storage.`
+#. The details page can be used to request spot instances, as well as other functionality (including VPN, VPC options). For a basic run you do not need to change anything, although you can tailor it according to your future needs. Hovering over the 'i' icons on this page will give you more insight into the options available.  When done, click `Next: Add Storage.`
 
-#. On the storage page, you can allocate storage for your dataset. Note that the amount of space you allocate will have to encompass raw data, preprocessed data, and derivatives.  For the C-PAC benchmark, around 125 GB is sufficient. Click `Next: Tag Instance`.
+#. On the storage page, you can allocate storage for your dataset. Note that the amount of space you allocate will have to encompass raw data, preprocessed data, and derivatives.  Click `Next: Tag Instance`.
 
 #. On this page you can tag the instance with metadata (e.g., details related to the specific purpose for the instance).  Tags are key-value pairs, so any contextual data that can be encapsulated in this format can be saved. Click `Next: Configure Security Group`.
 
@@ -66,7 +68,7 @@ Now that you have generated the access keys and a pem file, you may launch a sin
 
 #. This final page summarizes the instance details you are about to launch. You might receive some warnings as a result of security or the instance type not being in the free tier.  These warnings can be ignored.
 
-#. Click the `Launch` button. A dialogue box will ask you to choose a key pair for the instance. Every instance requires a key pair in order for you to securely log in and use it. Change the top drop down menu bar to `Choose an existing key pair` and select the key pair you created in the ``Creating AWS Access and Network Keys`` section in the other drop down menu.  Check the acknowledgement check box and click the blue `Launch Instances` button. 
+#. Click the `Launch` button. A dialogue box will ask you to choose a key pair for the instance. Every instance requires a key pair in order for you to securely log in and use it. Change the top drop down menu bar to `Choose an existing key pair` and select the key pair you created in the `Creating AWS Access and Network Keys` section in the other drop down menu.  Check the acknowledgement check box and click the blue `Launch Instances` button. 
 
 #. You can click the `View Instances` blue button on the lower right of the page after to watch your new instance start up in the instance console.
 
@@ -84,7 +86,7 @@ ssh
 X2Go
 ''''
 
-#. First, install the X2Go client using the instructions `here <http://wiki.x2go.org/doku.php/doc:installation:x2goclient>`_. 
+#. Install the X2Go client using the instructions `here <http://wiki.x2go.org/doku.php/doc:installation:x2goclient>`_. 
 
 #. Open X2go and create a new session. 
 
@@ -106,7 +108,7 @@ When you are done, your session configuration should look similar to the followi
 Starting a C-PAC HPC Cluster via Starcluster
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Starcluster is suggested for more sophisticated C-PAC runs.  Using Starcluster, you can parallelize your analyses by distributing subjects across multiple nodes in a HPC cluster.  The following section describes how toinstall and configure Starcluster to work with C-PAC, dynamically add nodes to your cluster and leverage C-PAC's grid functionality.
+Starcluster is suggested for more sophisticated C-PAC runs.  Using Starcluster, you can parallelize your analyses by distributing subjects across multiple nodes in a HPC cluster.  The following section describes how to install and configure Starcluster to work with C-PAC, dynamically add nodes to your cluster and leverage C-PAC's grid functionality.
 
 Installing Starcluster
 ''''''''''''''''''''''
@@ -134,7 +136,7 @@ The C-PAC Starcluster plug-ins configure the SGE environment that C-PAC uses and
 Creating and Editing Your Configuration File
 ''''''''''''''''''''''''''''''''''''''''''''
 
-Type ``starcluster help`` and select option 2.
+Now you will need to create a Starcluster configuration file so that Starcluster can use your keys and know which instance types you would like to use.  To begin, type ``starcluster help`` and select option 2.
 
 Fill in the AWS access keys from the CVS file that you created in the `Creating AWS Access and Network Keys` section::
 
@@ -142,7 +144,7 @@ Fill in the AWS access keys from the CVS file that you created in the `Creating 
     AWS_ACCESS_KEY_ID = <your_key>
     AWS_SECRET_ACCESS_KEY = <your_secret_key>
 
-You do not need to define the AWS_USER_ID field unless you want to create custom AMIs based off the C-PAC AMI.
+You do not need to define the AWS_USER_ID field unless you want to create custom AMIs based off the C-PAC AMI.  If you would like to use a region other than us-east-1, you may specify the region here by changing ``AWS_REGION_NAME``.
 
 Point your key definition to the pem file you generated in the `Creating AWS Access and Network Keys` section::
 
@@ -173,6 +175,25 @@ Also add the following two plug-in definitions for the C-PAC Starcluster plug-in
     [plugin mnt_config]
     setup_class = mnt_perm.MntPermissions
 
+Attaching Persistent Storage to Your Cluster
+''''''''''''''''''''''''''''''''''''''''''''
+
+By default, the cluster will not have any persistent storage (i.e., all storage devices will be destroyed when the cluster terminates). A shared directory mounted at `/home` on the head node can be used across nodes. If you need more storage than what is available on the head node or if you want to keep your data after the cluster is terminated, you will need to create a new volume that can be attached to all nodes in the cluster.  To do so, begin by creating an EBS-backed volume:
+
+.. code-block:: bash
+
+   starcluster createvolume --shutdown-volume-host <volume_size_in_gigabytes> <region>
+
+Type ``starcluster listvolumes`` and get the `volume-id` for the volume that you just created.  Open up your Starcluster configuration file and add the following volume definition::
+
+    [volume cpac_volume]
+    volume_id = <volume_id>
+    mount_path = /mnt
+
+Append the following line to your `cpac_cluster` definition::
+
+    volumes = cpac_volume
+
 Starting the C-PAC Head Node
 '''''''''''''''''''''''''''''
 
@@ -192,7 +213,7 @@ To add additional nodes to your C-PAC HPC cluster, use the following Starcluster
     starcluster addnode -n <number_of_nodes_to_add> <instance_name>
 
 Accessing the Head Node
-''''''''''''''''''''''
+'''''''''''''''''''''''
 
 If you wish to use the C-PAC GUI while accessing the head node, type the following command:
 
@@ -215,7 +236,7 @@ Via the C-PAC GUI:
 
 #. Type `cpac_gui` while in the shell on the head node.
 #. From the main C-PAC window, load your pipeline configuration file. 
-#. Under `Computer Settings` in the left pane, change 'Run C-PAC on Grid' to True.  Change 'SGE Parallel Environment' to 'mpi_smp'.
+#. Under `Computer Settings` in the left pane, change `Run C-PAC on Grid` to True.  Change `SGE Parallel Environment` to `mpi_smp`.
 
 When you are done, the window should look like this:
 
@@ -266,6 +287,8 @@ If you receive an error from Starcluster while trying to terminate the instance,
 .. code-block:: bash
 
     starcluster terminate -f <instance_name>
+
+**Warning:** If you are not using persistent storage (see `Attaching Persistent Storage to Your Cluster`) then all of your data will be lost upon termination of the cluster.  You will need to copy your data to another drive if you wish to keep it.
 
 Additional Links
 ^^^^^^^^^^^^^^^^

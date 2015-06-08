@@ -8,15 +8,15 @@ An Amazon Marketplace AMI for C-PAC has been released, making it easier for rese
 
 * Amazon Machine Instance (AMI) - A disk image of an operating system and any additional installed software that can be used to create a virtual machine. 
 
-* Instance - A single running virtual machine whose initial state is based on the AMI that it is launched from.  Instances can be classified as spot instances or on-demand instances.  On-demand instances are reliably created the moment they are requested for a fixed rate.  Spot instances are created based on whether or not a bid that you set is accepted by Amazon.  They can be significantly cheaper than on-demand instances, but are not created immediately after they are requested.
+* Instance - A single running virtual machine whose initial state is based on the AMI that it is launched from.  Instances can be classified as spot instances or on-demand instances.  On-demand instances are reliably created the moment they are requested for a fixed rate.  Spot instances are created based on whether or not a bid that you set is accepted by Amazon.  They can be significantly cheaper than on-demand instances, but are only created when Amazon accepts your bid.
 
 * Instance Type - The hardware specification for a given instance. A list of the instance types made available by Amazon may be found `here <http://aws.amazon.com/ec2/instance-types>`_.
 
 * Elastic Block Storage (EBS) - A form of persistent storage offered by Amazon for use with instances.
 
-* Head Node - The primary node of a HPC cluster, which all other nodes are connected to.  The head node will run a job scheduler (such as Sun Grid Engine) to allocate jobs to the other nodes.  Jobs may also be run on the head node.
+* Head Node - The primary node of an HPC cluster, which all other nodes are connected to.  The head node will run a job scheduler (such as Sun Grid Engine) to allocate jobs to the other nodes.  Jobs may also be run on the head node.
 
-* Worker Node - A node in a HPC cluster to which tasks are delegated by the head node via a job scheduler.
+* Worker Node - A node in an HPC cluster to which tasks are delegated by the head node via a job scheduler.
 
 * Job Scheduler - A program that can allocate computational resources in an HPC cluster to jobs based on availability and distribute jobs across nodes. The C-PAC AMI uses Sun Grid Engine (SGE) as its job scheduler.
 
@@ -108,7 +108,7 @@ When you are done, your session configuration should look similar to the followi
 Starting a C-PAC HPC Cluster via Starcluster
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Starcluster is suggested for more sophisticated C-PAC runs.  Using Starcluster, you can parallelize your analyses by distributing subjects across multiple nodes in a HPC cluster.  The following section describes how to install and configure Starcluster to work with C-PAC, dynamically add nodes to your cluster and leverage C-PAC's grid functionality.
+Starcluster is suggested for more sophisticated C-PAC runs.  Using Starcluster, you can parallelize your analyses by distributing subjects across multiple nodes in an HPC cluster.  The following section describes how to install and configure Starcluster to work with C-PAC, dynamically add nodes to your cluster and leverage C-PAC's grid functionality.
 
 Installing Starcluster
 ''''''''''''''''''''''
@@ -144,7 +144,7 @@ Fill in the AWS access keys from the CVS file that you created in the `Creating 
     AWS_ACCESS_KEY_ID = <your_key>
     AWS_SECRET_ACCESS_KEY = <your_secret_key>
 
-You do not need to define the AWS_USER_ID field unless you want to create custom AMIs based off the C-PAC AMI.  If you would like to use a region other than us-east-1, you may specify the region here by changing ``AWS_REGION_NAME``.
+You do not need to define the ``AWS_USER_ID`` field unless you want to create custom AMIs based off the C-PAC AMI.  If you would like to use a region other than us-east-1, you may specify the region here by changing ``AWS_REGION_NAME``.
 
 Point your key definition to the pem file you generated in the `Creating AWS Access and Network Keys` section::
 
@@ -187,12 +187,12 @@ By default, the cluster will not have any persistent storage (i.e., all storage 
 Type ``starcluster listvolumes`` and get the `volume-id` for the volume that you just created.  Open up your Starcluster configuration file and add the following volume definition::
 
     [volume cpac_volume]
-    volume_id = <volume_id>
-    mount_path = /mnt
+    VOLUME_ID = <volume_id>
+    MOUNT_PATH = /mnt
 
 Append the following line to your `cpac_cluster` definition::
 
-    volumes = cpac_volume
+    VOLUMES = cpac_volume
 
 Starting the C-PAC Head Node
 '''''''''''''''''''''''''''''
@@ -227,12 +227,14 @@ If you only wish to access the command line interface, you may omit the `-X` fla
 
     starcluster sshmaster -u ubuntu <instance_name>
 
+You may also use the instructions for X2Go from the above section to access the head node via a graphical shell.  To do so, obtain the public DNS for the head node by typing ``starcluster listclusters``.  The public DNS will be in the last column of the row labeled `master`.
+
 Using C-PAC to Submit an SGE Job
 '''''''''''''''''''''''''''''''''
 
-C-PAC performs the heavy lifting of creating an SGE job submission script and submitting it to the SGE job scheduler seamlessly.  There are two ways to accomplish this- either through C-PAC's GUI or from the command line by editing your pipeline configuration file with a text editor and executing a run with `cpac_run.py`.
+C-PAC performs the heavy lifting of creating an SGE job submission script and submitting it to the SGE job scheduler seamlessly.  There are two ways to accomplish this- either through C-PAC's GUI or from the command line. The command line option will require you to edit your pipeline configuration file with a text editor and execute a run with the `cpac_run.py` script.
 
-Via the C-PAC GUI: 
+**Via the C-PAC GUI:** 
 
 #. Type `cpac_gui` while in the shell on the head node.
 #. From the main C-PAC window, load your pipeline configuration file. 
@@ -244,7 +246,7 @@ When you are done, the window should look like this:
 
 Save the pipeline configuration file and run an analysis as you would normally. 
 
-Via the shell: 
+**Via the shell:**
 
 #. Open your pipeline configuration YAML file in your preferred text editor.
 #. Change the ``runOnGrid`` field to a value of ``True``.
@@ -260,7 +262,7 @@ Via the shell:
 Checking on SGE Jobs
 '''''''''''''''''''''
 
-Once you are done submitting the job, you can check its status by typing `qstat`.  This command will produce output that looks similar to the following::
+Once you are done submitting the job, you can check its status by typing ``qstat``.  This command will produce output that looks similar to the following::
 
     job-ID  prior   name       user         state submit/start at     queue                          slots ja-task-ID 
     -----------------------------------------------------------------------------------------------------------------

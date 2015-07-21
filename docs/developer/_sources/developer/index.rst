@@ -14,4 +14,4 @@ Contents:
    installation
    workflow_documentation
    testing
-
+   cpac_pipeline

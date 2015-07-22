@@ -1,67 +1,50 @@
 ﻿Benchmark Package
 =================
 
-The CPAC Benchmark Package consists of all of the data files, configuration files, and comparison scripts needed to test CPAC on your machine compare your outputs with a standard set of outputs processed by the CPAC team. Specifically, it contains:
+The C-PAC benchmark package consists of all of the data files, configuration files, and scripts needed to test C-PAC on your machine and compare your outputs with a standard set of outputs processed by the C-PAC team. Specifically, it contains:
 
-* Anatomical and Functional images for 40 subjects (20 controls and 20 ADHD; a subset of the ADHD-200 dataset.)
+* A bash script to automatically configure the paths within all of the settings files (``adjustSettingPaths.sh``).
 
-* The configuration files (``benchmark_data_config.yml``, ``benchmark_config.yml``, and ``benchmark_fsl_config.yml``) needed to generate subject lists for these subjects and to run individual- and group-level analyses.
+* Anatomical and functional images for one subject from ADHD-200 dataset.
 
-* Precomputed outputs for the same set of subjects, processed by the CPAC team.
+* A pipeline configuration file using ANTS (``pipeline_config_ANTS_example.yml``).
 
-* Python scripts to compare your outputs with ours.
+* A subject list (``CPAC_subject_list_1sub.yml``).
 
-The following instructions will guide you through the simple process of running the CPAC Benchmark test. This process should require about 30 minutes of your time (the actual data processing will take significantly longer, but requires no input from the user).  Before you begin, make sure that you have installed C-PAC by following the instructions :doc:`here </install>`.
+* Masks, ROIs, spatial maps, and seed specifications (for timeseries extraction, centrality).
 
-Downloading the CPAC Benchmark Package
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The CPAC Benchmark Package is split into two pieces:
+* A Python script to compare your outputs with ours (``correlations_workflow_pipeline.py``).
 
-* Raw data and configuration files needed to process said data (`click here to download <https://www.nitrc.org/frs/downloadlink.php/5881>`_)
-* Precomputed group analysis results from the same data set, group models, and comparison scripts (coming soon)
+The following instructions will guide you through the process of running the C-PAC benchmark. Before you begin, make sure that you have at least 16 GB of RAM.  Also, note that if you chose not to install ANTS along with C-PAC, the benchmark will not work properly.  Click the links below to download the package and the pre-computed outputs for C-PAC 0.3.9.2:
 
-Once downloaded, these packages should be extracted (using the command ``tar -xzvf <filename>``) and their contents combined into a single directory with the following structure.
+* `The C-PAC Benchmark Package <https://www.nitrc.org/frs/downloadlink.php/5881>`_
 
-.. figure:: /_images/file_structure.png
+* `Precomputed Results for an Individual-Level Analysis Using C-PAC 0.3.9.2`
 
-Generating Subject Lists
-^^^^^^^^^^^^^^^^^^^^^^^^^
-Open the CPAC GUI and click to create a new Subject List. In the Subject List Configuration window, select Load and navigate to the ``/settings/configs`` directory of the CPAC Benchmark Package. Select ``benchmark_data_config.yml`` and hit OK. This will load load the pre-configured settings.
+Once downloaded, these packages should be extracted using the command ``tar xzvf <filename>``.  You may also want to consider moving `cpac_team_output` into the main `benchmark_package` directory to keep things organized.
 
-Click Generate Subject Lists. You will be asked to specify a name for a configuration file containing the newly entered settings, as well as for the subject list itself. 
-
-Configuring CPAC
+Configuring C-PAC
 ^^^^^^^^^^^^^^^^^
-In the main CPAC window, under Pipelines, click Load and select the ``benchmark_config.yml`` file located in the ``/configs`` directory of the CPAC Benchmark Package. A new pipeline will show up in the list window; select this pipeline and click Edit. This will load the Pipeline Configuration window.
+First, navigate to ``/scripts`` and execute ``./adjustSettingPaths.sh``.  This will ensure that the paths used in the configuration files are in accord with whichever directory you choose to store ``benchmark_package`` in.  This script assumes that it lives in the ``/scripts`` directory.  If it has been moved elsewhere, it may be executed using ``./adjustSettingPaths.sh <path to benchmark_package directory>``
 
-The majority of the preprocessing and analysis settings will be preloaded, but there are a few system-specific options that must be edited by the user before running CPAC. 
+Next, load in the single subject from the ADHD-200 dataset.  Open the C-PAC GUI and click `Load` next to the subject pane. Select ``CPAC_subject_list_1sub.yml``.
 
+Finally, load in the pipeline configuration.  In the main C-PAC window, under `Pipelines`, click `Load` and select the ``pipeline_config_ANTS_example.yml`` file located in ``/settings/configs`` in the benchmark directory. A new pipeline will show up in the list window.  Select this pipeline and click `Edit` to inspect it.
 
-Running Individual- and Group-Level Analyses
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Once you have configured CPAC, first run the Individual-Level analysis pipeline by clicking the appropriate button at the bottom of the main CPAC window. This will bring up a log window that displays the progress of the CPAC run. When the pipeline has finished, you will see a ``Workflow Complete`` message.
-
-At this point, you can run the Group-Level analysis workflow, again by clicking the appropriate button in the main CPAC window; which will display the same kind of log window seen for the Individual-Level pipeline.
-
+Running An Individual-Level Analyses
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Once you have configured C-PAC by loading in the pipeline configuration YAML and subject list, you may run the individual-level analysis pipeline by clicking the appropriate button at the bottom of the main C-PAC window. This will bring up a log window that displays the progress of the C-PAC run. When the pipeline has finished, you will see a ``Workflow Complete`` message.  On an Intel Core i7 2.4 GHz laptop with 8 cores and 16 GB, this takes around 40 minutes.
 
 Comparing Outputs
 ^^^^^^^^^^^^^^^^^^
-Navigate to the ``/scripts`` directory of the CPAC Benchmark Package. Here you will find a number of scripts to facilitate comparison between the outputs you just generated and the reference outputs included in the Benchmark Package.
+Navigate to the ``/scripts`` directory of the C-PAC Benchmark Package. Here you will find a script named ``correlations_workflow_pipeline.py``, which can help you compare your outputs and the reference outputs from the C-PAC team.
 
-Though it is possible to compare individual outputs, we recommend beginning your comparison by examining the spatial correlation between the statistical maps output during group analysis. These can be found in the following locations:
+This will produce Pearson's r and a concordance correlation coefficient between two sets of output for the following measures:
 
-* Reference Data: ``/path/to/cpac_benchmark/reference/outputs/pipeline_benchmark/group_analysis_results``
+* ALFF and f/ALFF
+* Centrality
+* Dual Regression
+* ReHo
+* VMHC
 
-* User Data ``/path/to/cpac_benchmark/outputs/pipeline_benchmark/group_analysis_results``
-
-We have created a bash script that will automatically compare outputs. 
-
-
-
-Using the ``spatial_correlation.py`` script located in the scripts directory, you can compute the Pearson's r and Kendall's w correlation between a newly generated file and the same file from the reference outputs.
-
-To run this script, simply type ``python spatial_correlation.py file1 file2``, replacing ``file1`` and ``file2`` with the files which you would like to compare.
-
-It is also possible to view a scatterplot of voxelwise correlations of the values in two files. To do this, run the ``voxelwise_correlation.py`` script in the same manner as the script above.
-
-
+To run this script, type ``python correlations_workflow_pipeline.py <path to output1 pipeline> <path to output2 pipeline> <number of cores to use> <descriptive name>``.  Make sure that the paths you use point to the ``pipeline`` directories within the output directories.  To determine the maximum number of cores on your machine, type ``nproc`` in a terminal window..

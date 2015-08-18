@@ -11,6 +11,7 @@ Contents:
 .. toctree::
     :maxdepth: 2
 
+    cpac_pipeline
     anat_preproc
     func_preproc
     seg_preproc

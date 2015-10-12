@@ -40,8 +40,20 @@ Linear and Quadratic Detrending
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Removes linear or quadratic trends in the timeseries. The linear trend is likely due to the scanner heating up as the scan progresses, while the quadratic trend is possibly due to slow movement-related effects.
 
+Temporal Filtering
+^^^^^^^^^^^^^^^^^^
+The overall goal of temporal filtering is to increase the signal-to-noise ratio. Due to the relatively poor temporal resolution of fMRI, time series data contain little high-frequency noise. They do, however, often contain very slow frequency fluctuations that may be unrelated to the signal of interest. Slow changes in magnetic field strength may be responsible for part of the low-frequency signal observed in fMRI time series (Smith et al., 1999). Other factors contributing to noise in a time series are cardiac and respiratory effects, which will often show up as noise around ~0.15 and ~0.34 Hz, respectively (Wager et al., 2007).  The temporal filtering method implemented by C-PAC is relatively simple. Users specify a lower and upper bound for a band-pass filter, which then removes any information in frequencies outside the specified frequency band.
 
-Configuring Nuisance Signal Correction Options
+Recent work has revealed a portion of the low-frequency signal (0.01 to 0.1 Hz) to be the result of slow oscillations intrinsic to brain activity (Gee et al., 2011; Zuo et al., 2010; Schroeder and Lakatos, 2009). Utilizing measures such as Amplitude of Low Frequency Fluctuations (ALFF) and fractional ALFF, the power of these oscillations has been shown to differ both across subjects (Zang et al., 2007) and between conditions (Yan et al., 2009). Resting functional connectivity has been shown to be most prominent at these frequency bands (Cordes et al., 2001), and as such these fluctuations are commonly used to measure functional connectivity in the resting brain (Gee et al., 2010). 
+
+As these low-frequency oscillations are likely of interest to researchers, it is important to take this knowledge into account when deciding on what temporal filtering settings to use. As a general rule, it is safe to filter frequencies below 0.0083 Hz (Ashby, 2011).
+
+Additionally, there is some evidence (Davey et al., 2012) that temporal filtering may induce correlation in resting fMRI data, breaking the assumption of temporal sample independence and potentially invalidating the results of connectivity analysis. This should be taken into account when running temporal filtering on data on which you will later run connectivity analysis.
+
+
+
+
+Configuring Nuisance Signal Regression Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_images/nuisance.png
@@ -72,33 +84,32 @@ To configure the nuisance signal options within a YAML file, add the following l
           quadratic : 0
           gm : 0
     nComponents : [5]
-
-Configuring Median Angle Correction
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. figure:: /_images/median_angle.png
-
-#. **Run Median Angle Correction - [Off, On, On/Off]:**  Correct for the global signal using Median Angle Correction.
-
-#. **Target Angle (degrees) - [numerical value]:** Target angle used during Median Angle Correction.
-
-Configuration Using a YAML File
-""""""""""""""""""""""""""""""""
-
-To configure the median angle options within a YAML file, add the following lines to your file (with appropriate substitutions for paths)::
-
+    runFrequencyFiltering : [1]
+    nuisanceBandpassFreq : [[0.009, 0.1]]
     runMedianAngleCorrection : [0]
     targetAngleDeg : [90]
 
+External Resources
+^^^^^^^^^^^^^^^^^^
+
+* `Temporal Filtering FAQ - MIT Mindhive <http://mindhive.mit.edu/node/116>`_
 
 References
 ^^^^^^^^^^
+
+Ashby, F.G., (2011). Preprocessing. In Statistical Analysis of MRI Data. Cambridge: Cambridge University Press.
+
+Cordes, D., Haughton, V. M., Arfanakis, K., Carew, J. D., Turski, P. A., Moritz, C. H., Quigley, M. A., et al. (2001). `Frequencies contributing to functional connectivity in the cerebral cortex in “resting-state” data <http://www.ajnr.org/content/22/7/1326.long>`_. AJNR. American journal of neuroradiology, 22(7), 1326–1333.
+
 Dagli, M.S., Ingeholm, J.E., Haxby, J.V., 1999. `Localization of cardiac-induced signal
 change in fMRI <http://lbcnimh.nih.gov/OC/Publications/Dagli_et_al_Neuroimage_1999.pdf>`_. NeuroImage 9, 407–415.
 
+Davey, C. E., Grayden, D. B., Egan, G. F., & Johnston, L. A. (2012). `Filtering induces correlation in fMRI resting state data <http://www.ncbi.nlm.nih.gov/pubmed/22939874>`_. Neuroimage. doi:10.1016/j.neuroimage.2012.08.022
 Fox, M.D., Snyder, A.Z., Vincent, J.L., Corbetta, M., Van Essen, D.C., Raichle, M.E., 2005. `The human brain is intrinsically organized into dynamic, anticorrelated functional networks <http://www.pnas.org/content/102/27/9673.long>`_. Proc Natl Acad Sci U S A 102, 9673-9678.
 
 Fox, M.D., Zhang, D., Snyder, A.Z., Raichle, M.E., 2009. `The global signal and observed anticorrelated resting state brain networks <http://jn.physiology.org/content/101/6/3270.full.pdf>`_. J Neurophysiol 101, 3270-3283.
+
+Gee, D. G., Biswal, B. B., Kelly, C., Stark, D. E., Margulies, D. S., Shehzad, Z., Uddin, L. Q., et al. (2011). `Low frequency fluctuations reveal integrated and segregated processing among the cerebral hemispheres <http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3134281/>`_. Neuroimage, 54(1), 517–527.
 
 He Hongjian, Liu Thomas T., `A geometric view of global signal confounds in resting-state functional MRI <http://www.ncbi.nlm.nih.gov/pubmed/21982929>`_, NeuroImage, Volume 59, Issue 3, 1 February 2012, Pages 2339-2348
 
@@ -112,10 +123,22 @@ Saad, Z.S., Gotts, S.J., Murphy, K., Chen, G., Jo, H.J., Martin, A., Cox, R.W., 
 
 Satterthwaite, T.D., Wolf, D.H., Loughead, J., Ruparel, K., Elliott, M.A., Hakonarson, H., Gur, R.C., Gur, R.E., 2012. `Impact of in-scanner head motion on multiple measures of functional connectivity: Relevance for studies of neurodevelopment in youth <http://www.ncbi.nlm.nih.gov/pubmed/22233733>`_. Neuroimage 60, 623-632.
 
+Schroeder, C. E., & Lakatos, P. (2009). `Low-frequency neuronal oscillations as instruments of sensory selection <http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2990947/>`_. Trends in neurosciences, 32(1), 9–18. doi:10.
+
+Smith, AM, Lewis, BK, Ruttimann, UE, Ye, FQ, Sinnwell, TM, Yang, Y, Duyn, JH, & Frank, JA. 1999. `Investigation of low frequency drift in fMRI signal <http://www.ncbi.nlm.nih.gov/pubmed/10329292>`_. Neuroimage, 9, 526–33.
+
 Thomas, C.G., Harshman, R.A., Menon, R.S., 2002. `Noise reduction in BOLD-based fMRI using component analysis <http://www.ncbi.nlm.nih.gov/pubmed/12414291>`_. NeuroImage 17 (3), 1521–1537.
 
 Van Dijk, K.R., Sabuncu, M.R., Buckner, R.L., 2012. `The influence of head motion on intrinsic functional connectivity MRI <http://www.ncbi.nlm.nih.gov/pubmed/21810475>`_. Neuroimage 59, 431-438.
 
+Wager, T.D., Hernandes, L., Jonides, J., and Lindquist, M., Elements of Functional Neuroimaging. In Cacioppo, J.T., Tassinary, L.G., and Berntson, G.G., (2007) Handbook of Psychophysiology, Third Edition.
+
 Weissenbacher, A., Kasess, C., Gerstl, F., Lanzenberger, R., Moser, E., Windischberger, C., 2009. `Correlations and anticorrelations in resting-state functional connectivity MRI: a quantitative comparison of preprocessing strategies <http://www.ncbi.nlm.nih.gov/pubmed/19442749>`_. Neuroimage 47, 1408-1416
 
 Windischberger, C., Langenberger, H., Sycha, T., Tschernko, E.M., Fuchsjager-Mayerl, G., Schmetterer, L., Moser, E., 2002. `On the origin of respiratory artifacts in BOLD-EPI of the human brain <http://www.ncbi.nlm.nih.gov/pubmed/12467863>`_. Magn. Reson. Imaging 20, 575–582.
+
+Yan, C., Liu, D., He, Y., Zou, Q., Zhu, C., Zuo, X., Long, X., et al. (2009). `Spontaneous brain activity in the default mode network is sensitive to different resting-state conditions with limited cognitive load <http://www.plosone.org/article/info:doi/10.1371/journal.pone.0005743>`_. PLoS ONE, 4(5), e5743. 
+
+Zang, Y.-F., He, Y., Zhu, C.-Z., Cao, Q.-J., Sui, M.-Q., Liang, M., Tian, L.-X., et al. (2007). `Altered baseline brain activity in children with ADHD revealed by resting-state functional MRI <http://nlpr-web.ia.ac.cn/2007papers/gjkw/gk38.pdf>`_. Brain & development, 29(2), 83–91. 
+
+Zuo, X.-N., Di Martino, A., Kelly, C., Shehzad, Z. E., Gee, D. G., Klein, D. F., Castellanos, F. X., et al. (2010). `The oscillating brain: complex and reliable <http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2856476/>`_. Neuroimage, 49(2), 1432–1445.

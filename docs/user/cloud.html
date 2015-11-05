@@ -54,16 +54,17 @@
 <h1>Running C-PAC in the Cloud<a class="headerlink" href="#running-c-pac-in-the-cloud" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
-<p>An Amazon Marketplace AMI for C-PAC has been released, making it easier for researchers to use C-PAC in the cloud.  You can use the AMI to either launch a single machine for basic runs or create a high performance computing (HPC) cluster using Starcluster.  Clusters can be dynamically scaled up as your computational needs increase.  Detailed explanations of cloud computing and HPC are beyond the scope of this documentation, but we will define a few key terms before we start.  If these terms are familiar, you may skip them and proceed to later sections.</p>
+<p>The C-PAC team has released an Amazon Marketplace AMI, making it easier for researchers to use C-PAC in the cloud.  You can use the AMI to either launch a single machine for basic runs or create a high performance computing (HPC) cluster using Starcluster.  Clusters can be dynamically scaled up as your computational needs increase.  Detailed explanations of cloud computing and HPC are beyond the scope of this documentation, but we will define a few key terms before we start.  If these terms are familiar, you may skip them and proceed to later sections.</p>
 <ul class="simple">
 <li>Amazon Machine Instance (AMI) - A disk image of an operating system and any additional installed software that can be used to create a virtual machine.</li>
 <li>Instance - A single running virtual machine whose initial state is based on the AMI that it is launched from.  Instances can be classified as spot instances or on-demand instances.  On-demand instances are reliably created the moment they are requested for a fixed rate.  Spot instances are created based on whether or not a bid that you set is accepted by Amazon.  They can be significantly cheaper than on-demand instances, but are only created when Amazon accepts your bid.</li>
 <li>Instance Type - The hardware specification for a given instance. A list of the instance types made available by Amazon may be found <a class="reference external" href="http://aws.amazon.com/ec2/instance-types">here</a>.</li>
-<li>Terminated Instance - An instance is considered terminated when its resources have been completely freed up for use by others in the Amazon cloud.  Any data on a terminated instance that is not relocated to persistent storage such as EBS (see below) will be completely discarded.  Instance termination is the virtual equivalent of throwing out a physical server.  When you have terminated an instance, you are no longer paying for it.  If your data and results are in persistent storage, you should terminate any instances you are using when you are done.  Note that by default, instances do not have persistent storage attached to them- you will need to configure persistent storage when you set up the instance.</li>
+<li>Terminated Instance - An instance is considered terminated when its resources have been completely freed up for use by others in the Amazon cloud.  Any data on a terminated instance that is not relocated to persistent storage such as EBS (see below) will be completely discarded.  Instance termination is the virtual equivalent of throwing out a physical server.  When you have terminated an instance, you are no longer paying for it.  Note that by default, instances do not have persistent storage attached to them- you will need to configure persistent storage when you set up the instance.</li>
 <li>Stopped Instance - An instance is considered stopped when it is not active, but its resources are still available for future use whenever you choose to reactivate it.  Stopping an instance is the virtual equivalent of turning a computer off or putting it in hibernate mode.  When you stop an instance, you continue to pay for the storage associated with it (i.e., the main and other volumes attached to it), but not for the instance itself.  You should stop an instance when the analyses you are working on are not fully done and you would like to preserve the current state of a running instance.</li>
-<li>Simple Storage Service (S3) - A form of storage offered by Amazon.  S3 is not intended for use with instances since it lacks a filesystem, but it can be used to archive large datasets.  It is less costly than EBS.</li>
+<li>Simple Storage Service (S3) - A form of storage offered by Amazon.  S3 is not intended to be directly attached to instances since it lacks a filesystem, but it can be used to archive large datasets.  Amazon provides tools for uploading data to S3 &#8216;buckets&#8217; where it can be stored.  It is less costly than EBS.</li>
 <li>Elastic Block Storage (EBS) - A form of persistent storage offered by Amazon for use with instances.  When you have terminated an instance, items stored in an EBS volume can be accessed by any future instances that you start up.</li>
-<li>Head Node - The primary node of an HPC cluster, which all other nodes are connected to.  The head node will run a job scheduler (such as Sun Grid Engine) to allocate jobs to the other nodes.  Jobs may also be run on the head node.</li>
+<li>EC2 Instance Store - A form of temporary storage that comes included with some instance types.  Instance store volumes must be added manually before launching an instance, and all files stored on them will be lost when the instance is terminated.  The instance store is typically mounted at <tt class="docutils literal"><span class="pre">/mnt</span></tt>.</li>
+<li>Head Node - The primary node of an HPC cluster, to which all other nodes are connected.  The head node will run a job scheduler (such as Sun Grid Engine) to allocate jobs to the other nodes.</li>
 <li>Worker Node - A node in an HPC cluster to which tasks are delegated by the head node via a job scheduler.</li>
 <li>Job Scheduler - A program that can allocate computational resources in an HPC cluster to jobs based on availability and distribute jobs across nodes. The C-PAC AMI uses Sun Grid Engine (SGE) as its job scheduler.</li>
 <li>Job Submission Script - A shell script with a series of commands to be executed as part of the job.  Submission scripts may also include flags that activate functionality specific to the scheduler.</li>
@@ -75,13 +76,13 @@
 <ol class="arabic simple">
 <li>Go to <a class="reference external" href="http://aws.amazon.com/console/">http://aws.amazon.com/console/</a></li>
 <li>Click the <cite>Sign in to the AWS Console</cite> button</li>
-<li>Enter your e-mail address and password.  If you do not already have an account, enter your e-mail address, select <cite>I am a new user.</cite> and click the <cite>Sign in</cite> button.</li>
-<li>Amazon has different regions that it hosts its web services from (e.g. Oregon, Northern Virginia, Tokyo). In the upper right-hand corner there will be a region that you are logged into next to your user name. Change this to your preferred region.</li>
+<li>Enter your e-mail address and password.  If you do not already have an account, enter your e-mail address, select <cite>I am a new user.</cite> and click the <cite>Sign in</cite> button.  Provide Amazon with the information (e-mail address, payment method) needed to create your account.</li>
+<li>Amazon has different regions that it hosts its web services from (e.g. Oregon, Northern Virginia, Tokyo). In the upper right-hand corner there will be a region that you are logged into next to your user name. Change this to your preferred region.  The Marketplace AMI is available in all regions, although public AMIs (non-Marketplace AMIs shared from personal accounts) may not be.</li>
 <li>Click on your name in the upper right corner and navigate to <cite>Security Credentials</cite>.  Accept the disclaimer that appears on the page.</li>
 <li>Click on <cite>Access Keys</cite> and click on the blue <cite>Create New Access Key</cite> button.  Click <cite>Download Key File</cite> and move the resulting csv file to a safe and memorable location on your hard drive.</li>
 <li>Click on the box in the upper left corner of AWS.  Click on <cite>EC2</cite>.  Click on <cite>Key Pairs</cite> in the left-hand column.</li>
-<li>Click on the blue <cite>Create Key Pair</cite> button. Give it an appropriate name and click on the blue <cite>Create</cite> button.  A .pem file will now save to disk.  Move this file to a safe and memorable location on your hard drive.</li>
-<li>On your local drive, open a terminal and run the following command: <tt class="docutils literal"><span class="pre">chmod</span> <span class="pre">600</span> <span class="pre">/path/to/pem/file</span></tt></li>
+<li>Click on the blue <cite>Create Key Pair</cite> button. Give your key an appropriate name and click on the blue <cite>Create</cite> button.  A .pem file will now save to disk.  Move this file to a safe and memorable location on your hard drive.</li>
+<li>On your local drive, open a terminal and run the following command: <tt class="docutils literal"><span class="pre">chmod</span> <span class="pre">400</span> <span class="pre">/path/to/pem/file</span></tt></li>
 </ol>
 </div>
 <div class="section" id="starting-a-single-c-pac-instance-via-the-aws-console">
@@ -91,28 +92,36 @@
 <li>In the left-hand column under the <cite>INSTANCES</cite> header in the AWS console, click <cite>Instances</cite>. This is a dashboard of all instances you currently have running in the AWS cloud. Click the blue <cite>Launch Instance</cite> button.</li>
 <li>On the left-hand side of the new page, click on the <cite>Amazon Marketplace</cite> tab and search <cite>c-pac</cite> in the search text box.</li>
 <li>Click the blue <cite>Select</cite> button next to the C-PAC AMI.  Click the blue <cite>Continue</cite> button on the next screen.</li>
-<li>Now choose the instance type that you would like to use.  Note that C-PAC requires at least 8 GB of RAM- the m3.xlarge instance type has 15 GB of RAM and 4 CPUs and functions well with C-PAC for small runs and experimentation.  This instance type is equivalent to a standard desktop machine in terms of processing power. To select this type, click on the <cite>General purpose</cite> tab and select the m3.xlarge size instance and click the <cite>Next: Configure Instance Details</cite> button.  Note that for most larger runs you will want to choose a more powerful instance type, such as c3.4xlarge or c3.8xlarge.</li>
+<li>Now choose the instance type that you would like to use.  Note that C-PAC requires at least 8 GB of RAM- the m3.xlarge instance type has 15 GB of RAM and 4 CPUs and functions well with C-PAC for small runs and experimentation.  This instance type is equivalent to a standard desktop machine in terms of processing power. To select this type, click on the <cite>General purpose</cite> tab and click the box next to <cite>m3.xlarge</cite>.  Then, click the <cite>Next: Configure Instance Details</cite> button.  Note that for most larger runs you will want to choose a more powerful instance type, such as c3.4xlarge or c3.8xlarge.</li>
 <li>The details page can be used to request spot instances, as well as other functionality (including VPN, VPC options). For a basic run you do not need to change anything, although you can tailor it according to your future needs. Hovering over the &#8216;i&#8217; icons on this page will give you more insight into the options available.  When done, click <cite>Next: Add Storage.</cite></li>
-<li>On the storage page, you can allocate space for the workstation, such as user and system directories.  If you want the files stored in these directories to be kept after the instance is terminated, uncheck the box below the <cite>Delete on Termination</cite> column.  Note that persistent storage for the datasets will be allocated and attached in later steps below. Click <cite>Next: Tag Instance</cite>.</li>
+<li>On the storage page, you can allocate space for the workstation, such as user and system directories.  This is where you can attach instance store volumes if your instance type comes with them.  To do this, click the <cite>Add New Volume</cite> button and select the instance store via the dropdown menu in the <cite>Type</cite> column.  You may need to do this multiple times if your instance comes with multiple instance stores.  If you want the files stored on the root volume to be kept after the instance is terminated, uncheck the box below the <cite>Delete on Termination</cite> column.  Note that persistent storage for the datasets can be allocated and attached as described in a later section. Click <cite>Next: Tag Instance</cite>.</li>
 <li>On this page you can tag the instance with metadata (e.g., details related to the specific purpose for the instance).  Tags are key-value pairs, so any contextual data that can be encapsulated in this format can be saved. Click <cite>Next: Configure Security Group</cite>.</li>
 <li>On this page, you can modify who has access to the instance. The AMI defaults allow remote access from anywhere. If you would like to customize security to allow only a certain set of IP addresses and users access to the instance, you can do so here. If you find that custom settings, such as using the <cite>My IP</cite> setting or specifying a range of IP addresses, do not work, consult with your institution&#8217;s network administrator to make sure that you are entering settings correctly.  Click <cite>Review and Launch</cite> when you are done.</li>
 <li>This final page summarizes the instance details you are about to launch. You might receive some warnings as a result of security or the instance type not being in the free tier.  These warnings can be ignored.</li>
 <li>Click the <cite>Launch</cite> button. A dialogue box will ask you to choose a key pair for the instance. Every instance requires a key pair in order for you to securely log in and use it. Change the top drop down menu bar to <cite>Choose an existing key pair</cite> and select the key pair you created in the <cite>Creating AWS Access and Network Keys</cite> section in the other drop down menu.  Check the acknowledgement check box and click the blue <cite>Launch Instances</cite> button.</li>
 <li>You can click the <cite>View Instances</cite> blue button on the lower right of the page after to watch your new instance start up in the instance console.</li>
 <li>When the <cite>Instance State</cite> column reads <cite>running</cite> and the <cite>Status Checks</cite> column reads <cite>2/2</cite>, the instance should be active. Click on the row for the new instance.  In the bottom pane, take note of the values for the <cite>Instance ID</cite>, <cite>Public DNS</cite>, and <cite>Availability zone</cite> fields under the <cite>Description</cite> tab.</li>
-<li>Now, create a persistent storage volume for your data and results.  In the left-hand column under the <cite>ELASTIC BLOCK STORE</cite> header in the AWS console, click <cite>Volumes</cite>. This is a dashboard of all volumes that you currently have stored in EBS. Click the blue <cite>Create Volume</cite> button.</li>
-<li>Change the size field in the proceeding dialogue to have enough space to encompass your raw data, preprocessed data, and derivatives.  A single volume can be as small as 1 GB or as large as 16 TB.  Change the availability zone to match the zone from your instance&#8217;s <cite>Description</cite> tab.</li>
+</ol>
+</div>
+<div class="section" id="attaching-persistent-ebs-storage-to-an-instance">
+<h2>Attaching Persistent EBS Storage to an Instance<a class="headerlink" href="#attaching-persistent-ebs-storage-to-an-instance" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>Once your instance is up and running, you can create a persistent storage volume for your data and results.  In the left-hand column under the <cite>ELASTIC BLOCK STORE</cite> header in the AWS console, click <cite>Volumes</cite>. This is a dashboard of all volumes that you currently have stored in EBS. Click the blue <cite>Create Volume</cite> button.</li>
+<li>Change the size field in the proceeding dialogue to have enough space to encompass the amount of data you expect to store.  A single volume can be as small as 1 GB or as large as 16 TB.  Change the availability zone to match the zone from your instance&#8217;s <cite>Description</cite> tab.</li>
 <li>Click the checkbox next to the newly-created volume.  Click <cite>Actions</cite> followed by <cite>Attach Volumes</cite>.  Enter the <cite>Instance ID</cite> from the instance&#8217;s <cite>Description</cite> tab in the <cite>Instance</cite> field.  The <cite>Device</cite> field should fill itself automatically and should be of the form <cite>/dev/sdb</cite> or similar.  Note the letter used after the <cite>sd</cite>.  Click the blue <cite>Attach</cite> button.</li>
 <li>Execute the following command from the terminal to make it so that your instance can see the volume (replace the letter <cite>b</cite> at the end of <cite>/dev/xvdb</cite> with the letter from the previous step).</li>
 </ol>
-<div class="highlight-bash"><div class="highlight"><pre>ssh -i /path/to/pem/file ubuntu@&lt;public_dns&gt; <span class="s1">&#39;sudo mkfs -t ext4 /dev/xvdb &amp;&amp; sudo mount /dev/xvdb /mnt &amp;&amp; sudo mkdir /mnt/sgeadmin &amp;&amp; sudo chmod -R 777 /mnt&#39;</span>
+<div class="highlight-bash"><div class="highlight"><pre>ssh -i /path/to/pem/file ubuntu@&lt;public_dns&gt; &#39;sudo mkfs -t ext4 /dev/xvdb &amp;&amp; sudo mount /dev/xvdb /media/ebs
 </pre></div>
 </div>
 <p>To use this volume with future instances, you may attach it to the instance using the AWS console and then use this command:</p>
-<div class="highlight-bash"><div class="highlight"><pre>ssh -i /path/to/pem/file ubuntu@&lt;public_dns&gt; <span class="s1">&#39;sudo mount /dev/xvdb /mnt &amp;&amp; sudo chmod -R 777 /mnt&#39;</span>
+<div class="highlight-bash"><div class="highlight"><pre>ssh -i /path/to/pem/file ubuntu@&lt;public_dns&gt; <span class="s1">&#39;sudo mount /dev/xvdb /media/ebs&#39;</span>
 </pre></div>
 </div>
 <p>Note that the creation of a persistent volume is heavily automated in Starcluster, so if you will be creating many different persistent volumes you should use Starcluster instead.</p>
+</div>
+<div class="section" id="accessing-your-instance">
+<h2>Accessing Your Instance<a class="headerlink" href="#accessing-your-instance" title="Permalink to this headline">¶</a></h2>
 <p>There are now two different means of accessing the instance.  Either through X2Go (a desktop GUI-based session) or through ssh (a command line session).</p>
 <div class="section" id="ssh">
 <h3>ssh<a class="headerlink" href="#ssh" title="Permalink to this headline">¶</a></h3>
@@ -142,10 +151,10 @@
 <div class="section" id="uploading-data-to-your-instance">
 <h2>Uploading Data to Your Instance<a class="headerlink" href="#uploading-data-to-your-instance" title="Permalink to this headline">¶</a></h2>
 <p>To upload data to your newly-created AWS instance, you can run the following command on the computer containing your data:</p>
-<div class="highlight-bash"><div class="highlight"><pre>rsync -avu /path/to/data ubuntu@&lt;public_dns&gt;:/path/to/server/directory
+<div class="highlight-bash"><div class="highlight"><pre>scp -r -i /path/to/pem/key /path/to/data ubuntu@&lt;public_dns&gt;:/path/to/server/directory
 </pre></div>
 </div>
-<p>If you have configured persistent storage, you will want to ensure that <cite>/path/to/server/directory</cite> is pointing to the mount point for the persistent storage.  If you followed the instructions above or the instructions in the Starcluster section below, the mount point should be <cite>/mnt</cite>.</p>
+<p>If you have configured persistent storage, you will want to ensure that <cite>/path/to/server/directory</cite> is pointing to the mount point for the persistent storage.  If you followed the instructions above or the instructions in the Starcluster section below, the mount point should be <cite>/media/ebs</cite>.</p>
 </div>
 <div class="section" id="starting-a-c-pac-hpc-cluster-via-starcluster">
 <h2>Starting a C-PAC HPC Cluster via Starcluster<a class="headerlink" href="#starting-a-c-pac-hpc-cluster-via-starcluster" title="Permalink to this headline">¶</a></h2>
@@ -190,7 +199,7 @@ KEYNAME = cpac_key
 PLUGINS = cpac_sge, mnt_config
 CLUSTER_SIZE = 1
 CLUSTER_SHELL = bash
-NODE_IMAGE_ID = ami-ed993586
+NODE_IMAGE_ID = ami-ffb3cf95
 MASTER_INSTANCE_TYPE = t2.medium
 NODE_INSTANCE_TYPE = c3.8xlarge
 </pre></div>
@@ -211,14 +220,14 @@ setup_class = mnt_perm.MntPermissions
 </div>
 <div class="section" id="attaching-persistent-storage-to-your-cluster">
 <h3>Attaching Persistent Storage to Your Cluster<a class="headerlink" href="#attaching-persistent-storage-to-your-cluster" title="Permalink to this headline">¶</a></h3>
-<p>By default, the cluster will not have any persistent storage (i.e., all storage devices will be destroyed when the cluster terminates). A shared directory mounted at <cite>/home</cite> on the head node can be used across nodes. If you need more storage than what is available on the head node or if you want to keep your data after the cluster is terminated, you will need to create a new volume that can be attached to all nodes in the cluster.  To do so, begin by creating an EBS-backed volume:</p>
+<p>By default, the cluster will have an EBS-backed root volume and, if available, an instance store volume mounted at <tt class="docutils literal"><span class="pre">/mnt</span></tt>.  Neither of these volumes are persistent and they will be destroyed when the cluster terminates. A shared directory mounted at <cite>/home</cite> on the head node can be used across nodes. If you need more storage than what is available on the head node or if you want to keep your data after the cluster is terminated, you will need to create a new volume that can be attached to all nodes in the cluster.  To do so, begin by creating an EBS-backed volume:</p>
 <div class="highlight-bash"><div class="highlight"><pre>starcluster createvolume --shutdown-volume-host &lt;volume_size_in_gigabytes&gt; &lt;region&gt;
 </pre></div>
 </div>
 <p>Type <tt class="docutils literal"><span class="pre">starcluster</span> <span class="pre">listvolumes</span></tt> and get the <cite>volume-id</cite> for the volume that you just created.  Open up your Starcluster configuration file and add the following volume definition:</p>
 <div class="highlight-python"><div class="highlight"><pre>[volume cpac_volume]
 VOLUME_ID = &lt;volume_id&gt;
-MOUNT_PATH = /mnt
+MOUNT_PATH = /media/ebs
 </pre></div>
 </div>
 <p>Append the following line to your <cite>cpac_cluster</cite> definition:</p>
@@ -295,7 +304,7 @@ MOUNT_PATH = /mnt
 </div>
 <div class="section" id="terminating-a-starcluster-instance">
 <h3>Terminating a Starcluster Instance<a class="headerlink" href="#terminating-a-starcluster-instance" title="Permalink to this headline">¶</a></h3>
-<p>When you are done and have exited from your cluster, the following command will stop the cluster:</p>
+<p>When you are done and have exited from your cluster, the following command will terminate the cluster:</p>
 <div class="highlight-bash"><div class="highlight"><pre>starcluster terminate &lt;cluster_name&gt;
 </pre></div>
 </div>

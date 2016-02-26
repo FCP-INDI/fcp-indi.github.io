@@ -1,0 +1,211 @@
+Setting Up A Pipeline Configuration
+====================================
+Overview
+--------
+There are two ways of setting up a pipeline configuration for C-PAC:
+
+* Using a text editor (useful for servers where using the GUI is not possible or impractical)
+* Using the pipeline configuration interface in the GUI
+
+Using a Text Editor
+-------------------
+Pipeline configuration files are stored as YAML files, which are text files meant to encode data in a human-readable markup.  Each of the parameters used by C-PAC to assemble your pipeline can be specified as key-value pairs, so a pipeline configuration YAML might have multiple lines of the form:
+
+.. code-block:: 
+    <key> : <value>
+
+An example of such a YAML file can be found `here <https://raw.githubusercontent.com/FCP-INDI/C-PAC/master/configs/pipeline_config.yml>`_.  Below is a table of keys used in the configuration YAML and their potential values.
+
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | Key                           | Description                                                                                                                  | Potential Values                                                                   |
+    +===============================+==============================================================================================================================+====================================================================================+
+    | runOnGrid                     | Run using a Grid Resource Manager (such as Sun Grid Engine or HTCondor)?                                                     | True,False                                                                         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | resourceManager               | The Grid Resource Manager to use (if runOnGrid is set to True).                                                              | PBS,SGE                                                                            |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | parallelEnvironment           | SGE Parallel Environment to use when running CPAC (if using SGE).                                                            | A string that is the Parallel Environment name.                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | queue                         | SGE Queue to use when running CPAC (if using SGE).                                                                           | A string that is the Queue name.                                                   |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | FSLDIR                        | The path to the FSL directory on your server/workstation.                                                                    | A string that is a path (e.g., /usr/share/fsl/5.0)                                 |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | numCoresPerSubject            | Number of cores (on a single machine) or slots on a node (cluster/grid) per subject. Slots are cores on a cluster/grid node. | An integer.                                                                        |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | numSubjectsAtOnce             | The number of subjects to run at once.                                                                                       | An integer.                                                                        |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | num_ants_threads              | The number of threads to allocate to ANTs.                                                                                   | An integer.                                                                        |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | pipelineName                  | A name that you would like to give to this pipeline.                                                                         | A string.                                                                          |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | workingDirectory              | The working directory to be used by the pipeline during the run.                                                             | A path (e.g.,'/data/my_analysis/working').                                         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | crashLogDirectory             | The directory where C-PAC will store crash logs.                                                                             | A path (e.g.,'/data/my_analysis/crash').                                           |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | outputDirectory               | The output directory for the pipeline.                                                                                       | A path (e.g.,'/data/my_analysis/output').                                          |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | runSymbolicLinks              | Create a user-friendly, well-organized version of the output directory.                                                      | An array where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | generateQualityControlImages  | Generate quality control pages containing preprocessing and derivative outputs.                                              | An array where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | removeWorkingDir              | Deletes the contents of the Working Directory after running.  Saves disk space, but steps will need to be re-run.            | True,False                                                                         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | reGenerateOutputs             | Uses the contents of the Working Directory to regenerate all outputs and their symbolic links.                               | True,False                                                                         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | runAnatomicalDataGathering    | Loads anatomical images for processing by CPAC. Must be enabled to run preprocessing.                                        | An array where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | runFunctionalDataGathering    | Loads functional images for processing by CPAC. Must be enabled to run preprocessing.                                        | An array where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | already_skullstripped         | Disables skull-stripping on the anatomical inputs if they are already skull-stripped.                                        | An array where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | runFunctionalPreprocessing    | Runs the functional preprocessing workflow.  Must be enabled to run other analysis workflows.                                | An array where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | functionalMasking             | Choose which tool to be used in functional masking - AFNI 3dAutoMask or FSL BET.                                             | An array containing '3dAutoMask', 'BET', or both (e.g., ['BET']).                  |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | runZScoring                   | Determines format of outputs. 0 will produce non-z-scored outputs, 1 will produce z-scores of outputs.                       | An array where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | runRegistrationPreprocessing  | Register anatomical images to a template.                                                                                    | An array where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | resolution_for_anat           | The resolution to which anatomical images should be transformed during registration.                                         | 1mm,2mm,3mm                                                                        |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | template_brain_only_for_anat  | Template to be used during registration.  Normally the default value (seen in the example YAML) is fine.                     | A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz).|
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | template_skull_for_anat       | Template to be used during registration.  Normally the default value (seen in the example YAML) is fine.                     | A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz).|
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | regOption                     | Use either ANTS or FSL (FLIRT and FNIRT) as your anatomical registration method.                                             | An array containing 'ANTS', 'FSL', or both (e.g., ['FSL']).                        |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | fnirtConfig                   | Configuration file to be used by FSL to set FNIRT parameters.                                                                | A template name (e.g., 'T1_2_MNI152_2mm').                                         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | ref_mask                      | Configuration file to be used by FSL to set FNIRT parameters.                                                                | A path (e.g.,                                                                      |
+    |                               |                                                                                                                              | $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain_mask_dil.nii.gz).     |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | regWithSkull                  | Register skull-on anatomical image to a template.                                                                            | An array where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | runSegmentationPreprocessing  | Automatically segment anatomical images into white matter, gray matter, and CSF based on prior probability maps.             | An array where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | whiteMatterThreshold          | Only voxels with a White Matter probability greater than this value will be classified as White Matter.                      | An array composed of one or more p-values (e.g., [0.98,0.93]).                     |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | grayMatterThreshold           | Only voxels with a Gray Matter probability greater than this value will be classified as Gray Matter.                        | An array composed of one or more p-values (e.g., [0.70,0.93]).                     |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | cerebralSpinalFluidThreshold  | Only voxels with a CSF probability greater than this value will be classified as CSF.                                        | An array composed of one or more p-values (e.g., [0.98,0.93]).                     |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | priors_path                   | Full path to a directory containing binarized prior probability maps. These maps are included as part of the 'CPAC Image     | A path (e.g., $FSLDIR/data/standard/tissuepriors/${resolution_for_anat}).          |
+    |                               | Resource Files' package from installation. It is not necessary to change this path unless you intend to use non-standard     |                                                                                    |
+    |                               | priors.                                                                                                                      |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | PRIORS_WHITE                  | Full path to a binarized White Matter prior probability map. It is not necessary to change this path unless you intend to use| A path (e.g., $priors_path/avg152T1_white_bin.nii.gz).                             |
+    |                               | non-standard priors.                                                                                                         |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | PRIORS_GRAY                   | Full path to a binarized Gray Matter prior probability map. It is not necessary to change this path unless you intend to use | A path (e.g., $priors_path/avg152T1_gray_bin.nii.gz).                              |
+    |                               | non-standard priors.                                                                                                         |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | PRIORS_CSF                    | Full path to a binarized CSF prior probability map. It is not necessary to change this path unless you intend to use         | A path (e.g., $priors_path/avg152T1_csf_bin.nii.gz).                               |
+    |                               | non-standard priors.                                                                                                         |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | startIdx                      | First timepoint to include in analysis.                                                                                      | An integer.                                                                        |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | stopIdx                       | Last timepoint to include in analysis.                                                                                       | An integer, or Stop or None to use the last possible timepoint.                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | TR                            | The TR at which images were acquired.                                                                                        | A number, or None if the TR is to be read from the NifTI header.                   | 
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | slice_timing_correction       | Interpolate voxel time courses so they are sampled at the same time points.                                                  | An array where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | slice_timing_pattern          | Acquisition strategy for acquiring image slices.                                                                             | An array that can contain one of the following values:                             |
+    |                               |                                                                                                                              | 'Use NIFTI Header','alt+z', 'alt+z2', 'alt-z', 'alt-z2', 'seq+z', 'seq-z'          |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | runRegisterFuncToAnat         | Run Functional to Anatomical Registration.                                                                                   | An array where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | runBBReg                      | Run Functional to Anatomical Registration with BB Register                                                                   | An array where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | boundaryBasedRegistration     | Standard FSL 5.0 Scheduler used for Boundary Based Registration. It is not necessary to change this path unless you intend to| A path (e.g., /usr/share/fsl/5.0/etc/flirtsch/bbr.sch).                            |
+    | Schedule                      | use non-standard MNI registration.                                                                                           |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | func_reg_input                | Choose whether to use the mean of the functional/EPI as the input to functional-to-anatomical registration or one of the     | An array that can contain one of the following values:                             |
+    |                               | volumes from the functional 4D timeseries that you choose.                                                                   | "Mean Functional","Selected Functional Volume"                                     |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | func_reg_input_volume         | Input the index of which volume from the functional 4D timeseries input file you wish to use as the input for                | An integer.                                                                        |
+    |                               | functional-to-anatomical registration.  Only for when func_reg_input is set to 'Selected Functional Volume'.                 |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | runRegisterFuncToMNI          | Register functional images to a standard MNI152 template. This option must be enabled if you wish to calculate any           | An array where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').         |
+    |                               | derivatives.                                                                                                                 |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | resolution_for_func           | The resolution (in mm) to which functional images are transformed during registration.                                       | 1mm,2mm,3mm                                                                        |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | template_brain_only_for_func  | Standard FSL Skull Stripped Template. Used as a reference image for functional registration.                                 | A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_func}_brain.nii.gz).|
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | identityMatrix                | Matrix containing all 1's. Used as an identity matrix during registration. It is not necessary to change this path unless    | A path (e.g., $FSLDIR/etc/flirtsch/ident.mat).                                     |
+    |                               | you intend to use non-standard MNI registration.                                                                             |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | runNuisance                   | Run Nuisance Signal Correction                                                                                               | An array where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | lateral_ventricles_mask       | Standard Lateral Ventricles Binary Mask.                                                                                     | A path (e.g., $FSLDIR/data/atlases/HarvardOxford/                                  |
+    |                               |                                                                                                                              | HarvardOxford-lateral-ventricles-thr25-2mm.nii.gz).                                |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | Corrections                   | The nuisance corrections you wish to apply. Corrections include compcor, wm, csf, gm, global, pc1, motion, linear,           | Another mapping of key value pairs, where values are 0 for 'Disable' and 1 for     |
+    |                               | and quadratic.                                                                                                               | 'Enable'.
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | 
+
+
+Why an Array?
+^^^^^^^^^^^^^
+Arrays containing 1s and 0s (for 'True' and 'False' respectively), allow you to toggle on multiple options at the same time, and branch a pipeline into two different analysis strategies. See the `developer documentation <http://fcp-indi.github.io/docs/developer/workflows/cpac_pipeline.html>`_ for more information.
+    
+Using the GUI
+-------------
+Opening the GUI 
+^^^^^^^^^^^^^^^^
+To open the CPAC GUI, simply enter the command ``cpac_gui`` in a terminal window 
+**Note: You may receive an error about a 'known incorrect sRGB profile' if you are running the GUI within Anaconda/Miniconda on some machines.  This will not affect C-PAC performance and can be ignored.**
+
+Configure a Pipeline
+--------------------
+Once you have specified a subject list, you are ready to create a new analysis pipeline. For detailed instructions on how to configure a particular CPAC function, see the following pages:
+
+* :doc:`Computer Settings </compute_config>`
+* :doc:`Anatomical Preprocessing </anat>`
+* :doc:`Slice Timing Correction </slice>`
+* :doc:`Motion Correction </motion>`
+* :doc:`Nuisance Corrections </nuisance>`
+* :doc:`Temporal Filtering </temporal>`
+* :doc:`Time Series Extraction </tse>`
+* :doc:`Seed-based Correlation Analysis </sca>`
+* :doc:`Dual Regression </dual_reg>`
+* :doc:`Regional Homogeneity </reho>`
+* :doc:`Voxel-mirrored Homotopic Connectivity </vmhc>`
+* :doc:`ALFF and fALFF </alff>`
+* :doc:`Network Centrality </centrality>`
+* :doc:`Smoothing </smoothing>`
+
+When you have finished configuring your pipeline, click Save. You will be asked to specify a location to save a configuration file containing information about the pipeline, and to specify a name for the pipeline.
+
+To modify an existing pipeline, select it and click Edit. To use a previously configured pipeline, click Load and select the appropriate ``.yml`` configuration file. If you have loaded multiple pipelines, use the checkboxes to select which pipelines you would like to run. 
+
+Running Preprocessing and Individual-Level Analysis
+---------------------------------------------------
+When you are ready to run CPAC, select the subject lists and pipelines you would like to run and click the Run Individual Level Analysis button.
+
+The following schematic illustrates the order in which C-PAC executes.
+
+.. figure:: /_images/processing_workflow.png
+
+Viewing CPAC Outputs
+--------------------
+**Note:** QC pages are currently under development, and their look and functionality will change in future releases.
+
+If you have enabled it in your pipeline configuration, the CPAC Quality Control (QC) interface is the most efficient way to rapidly view the outputs of a CPAC run. For each subject, CPAC generates an HTML file containing images of each output and additional information such as motion parameters and signal-to-noise ratios.
+
+.. figure:: /_images/qc_main.png
+
+Though it is possible to view the QC page for each subject individually, we recommend generating a combined QC page that lets you easily navigate between subjects. To do this, open a python terminal and run the following command::
+
+  import CPAC
+  CPAC.utils.create_all_qc.run('/path/to/output_directory')
+
+Alternately, it is of course possible to simply view CPAC outputs using the application of your choice. For more information about the outputs generated by CPAC and the directory structure in which they are organized, please see the :doc:`Outputs Page </outputs>`.
+
+.. toctree::
+   :hidden: 
+
+   Ready Your Data <subject_list_config>
+   Computer Settings <compute_config>
+   Data Output <output>

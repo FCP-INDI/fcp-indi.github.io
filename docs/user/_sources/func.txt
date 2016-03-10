@@ -15,10 +15,27 @@ Timeseries Options
 
 #. **Slice Acquisition Pattern - [Use NifTI Header, alt+z, alt+z2, alt-z, alt-z2, seq+z, seq-z]:** The order of slice acquisition for the scans.
 
-Configuration Using a YAML File
-""""""""""""""""""""""""""""""""
+Configuration Without the GUI
+""""""""""""""""""""""""""""""
 
-To configure the timeseries options within a YAML file, add the following lines to your file (with appropriate substitutions for paths)::
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run slice timing correction and drop TRs:
+
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | Key                           | Description                                                                                                                  | Potential Values                                                                   |
+    +===============================+==============================================================================================================================+====================================================================================+
+    | startIdx                      | First timepoint to include in analysis.                                                                                      | An integer.                                                                        |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | stopIdx                       | Last timepoint to include in analysis.                                                                                       | An integer, or Stop or None to use the last possible timepoint.                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | TR                            | The TR at which images were acquired.                                                                                        | A number, or None if the TR is to be read from the NifTI header.                   | 
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | slice_timing_correction       | Interpolate voxel time courses so they are sampled at the same time points.                                                  | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | slice_timing_pattern          | Acquisition strategy for acquiring image slices.                                                                             | A list that can contain one of the following values:                               |
+    |                               |                                                                                                                              | 'Use NIFTI Header','alt+z', 'alt+z2', 'alt-z', 'alt-z2', 'seq+z', 'seq-z'          |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+The box below contains an example of what these parameters might look like when defined in the YAML::
 
     startIdx : 0
     stopIdx : None
@@ -40,10 +57,29 @@ Functional to Anatomical Registration
 
 #. **Functional Volume to Use as Input (Selected Functional Volume only) - [integer]:** Only for when 'Use as Functional-to-Anatomical Registration Input' is set to 'Selected Functional Volume'. Input the index of which volume from the functional 4D timeseries input file you wish to use as the input for functional-to-anatomical registration.
 
-Configuration Using a YAML File
-""""""""""""""""""""""""""""""""
+Configuration Without the GUI
+""""""""""""""""""""""""""""""
 
-To configure functional to anatomical registration options within a YAML file, add the following lines to your file (with appropriate substitutions for paths)::
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run functional to anatomical registration:
+
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | Key                           | Description                                                                                                                  | Potential Values                                                                   |
+    +===============================+==============================================================================================================================+====================================================================================+
+    | runRegisterFuncToAnat         | Run Functional to Anatomical Registration.                                                                                   | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | runBBReg                      | Run Functional to Anatomical Registration with BB Register                                                                   | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | boundaryBasedRegistration     | Standard FSL 5.0 Scheduler used for Boundary Based Registration. It is not necessary to change this path unless you intend to| A path (e.g., /usr/share/fsl/5.0/etc/flirtsch/bbr.sch).                            |
+    | Schedule                      | use non-standard MNI registration.                                                                                           |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | func_reg_input                | Choose whether to use the mean of the functional/EPI as the input to functional-to-anatomical registration or one of the     | A list that can contain one of the following values:                               |
+    |                               | volumes from the functional 4D timeseries that you choose.                                                                   | "Mean Functional","Selected Functional Volume"                                     |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | func_reg_input_volume         | Input the index of which volume from the functional 4D timeseries input file you wish to use as the input for                | An integer.                                                                        |
+    |                               | functional-to-anatomical registration.  Only for when func_reg_input is set to 'Selected Functional Volume'.                 |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+The box below contains an example of what these parameters might look like when defined in the YAML::
 
     runRegisterFuncToAnat : [1]
     runBBReg : [1]
@@ -65,10 +101,28 @@ Functional to MNI Registration
 
 #. **Standard Identity Matrix - [path]:** Matrix containing all 1's. Used as an identity matrix during registration. It is not necessary to change this path unless you intend to use non-standard MNI registration.
 
-Configuration Using a YAML File
-""""""""""""""""""""""""""""""""
+Configuration Without the GUI
+""""""""""""""""""""""""""""""
 
-To configure functional to MNI registration options within a YAML file, add the following lines to your file (with appropriate substitutions for paths)::
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run functional to anatomical registration:
+
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | Key                           | Description                                                                                                                  | Potential Values                                                                   |
+    +===============================+==============================================================================================================================+====================================================================================+
+    | runRegisterFuncToMNI          | Register functional images to a standard MNI152 template. This option must be enabled if you wish to calculate any           | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
+    |                               | derivatives.                                                                                                                 |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | resolution_for_func           | The resolution (in mm) to which functional images are transformed during registration.                                       | 1mm,2mm,3mm                                                                        |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | template_brain_only_for_func  | Standard FSL Skull Stripped Template. Used as a reference image for functional registration.                                 | A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_func}_brain.nii.gz).|
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | template_skull_for_anat       | Standard FSL Template with skull. Used as a reference image for functional registration.                                     | A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_func}.nii.gz).|
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | identityMatrix                | Matrix containing all 1's. Used as an identity matrix during registration. It is not necessary to change this path unless    | A path (e.g., $FSLDIR/etc/flirtsch/ident.mat).                                     |
+    |                               | you intend to use non-standard MNI registration.                                                                             |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+The box below contains an example of what these parameters might look like when defined in the YAML::
 
     runRegisterFuncToMNI : [1]
     resolution_for_func : 2mm

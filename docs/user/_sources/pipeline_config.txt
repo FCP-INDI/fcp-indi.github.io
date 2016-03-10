@@ -9,32 +9,20 @@ There are two ways of setting up a pipeline configuration for C-PAC:
 
 Using a Text Editor
 -------------------
-Pipeline configuration files are stored as YAML files, which are text files meant to encode data in a human-readable markup (see `here <https://en.wikipedia.org/wiki/YAML>`_ for more details).  Each of the parameters used by C-PAC to assemble your pipeline can be specified as key-value pairs, so a pipeline configuration YAML might have multiple lines of the form:
+Pipeline configuration files, like the data configuration file discussed in the `subject list builder section <subject_list_config>`_, are also stored as YAML files.  Similarly, each of the parameters used by C-PAC to assemble your pipeline can be specified as key-value pairs, so a pipeline configuration YAML would have multiple lines of the form:
 
 .. code-block:: 
     <key> : <value>
 
-An example of such a YAML file can be found `here <https://raw.githubusercontent.com/FCP-INDI/C-PAC/master/configs/pipeline_config.yml>`_.  Below is a table of keys used in the configuration YAML and their potential values.
+An example of a pipeline configuration YAML file can be found `here <https://raw.githubusercontent.com/FCP-INDI/C-PAC/master/configs/pipeline_config.yml>`_.  Tables explaining the keys and their potential values can be found on the individual pages for each of the outputs C-PAC is capable of producing.  
+
+# All
 
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | Key                           | Description                                                                                                                  | Potential Values                                                                   |
     +===============================+==============================================================================================================================+====================================================================================+
-    | runOnGrid                     | Run using a Grid Resource Manager (such as Sun Grid Engine or HTCondor)?                                                     | True,False                                                                         |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | resourceManager               | The Grid Resource Manager to use (if runOnGrid is set to True).                                                              | PBS,SGE                                                                            |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | parallelEnvironment           | SGE Parallel Environment to use when running CPAC (if using SGE).                                                            | A string that is the Parallel Environment name.                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | queue                         | SGE Queue to use when running CPAC (if using SGE).                                                                           | A string that is the Queue name.                                                   |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | FSLDIR                        | The path to the FSL directory on your server/workstation.                                                                    | A string that is a path (e.g., /usr/share/fsl/5.0)                                 |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | numCoresPerSubject            | Number of cores (on a single machine) or slots on a node (cluster/grid) per subject. Slots are cores on a cluster/grid node. | An integer.                                                                        |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | numSubjectsAtOnce             | The number of subjects to run at once.                                                                                       | An integer.                                                                        |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | num_ants_threads              | The number of threads to allocate to ANTs.                                                                                   | An integer.                                                                        |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# Output Settings
     | pipelineName                  | A name that you would like to give to this pipeline.                                                                         | A string.                                                                          |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | workingDirectory              | The working directory to be used by the pipeline during the run.                                                             | A path (e.g.,'/data/my_analysis/working').                                         |
@@ -51,6 +39,8 @@ An example of such a YAML file can be found `here <https://raw.githubusercontent
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | reGenerateOutputs             | Uses the contents of the Working Directory to regenerate all outputs and their symbolic links.                               | True,False                                                                         |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# Preprocessing Workflow Options
     | runAnatomicalDataGathering    | Loads anatomical images for processing by CPAC. Must be enabled to run preprocessing.                                        | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | runFunctionalDataGathering    | Loads functional images for processing by CPAC. Must be enabled to run preprocessing.                                        | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
@@ -61,80 +51,12 @@ An example of such a YAML file can be found `here <https://raw.githubusercontent
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | functionalMasking             | Choose which tool to be used in functional masking - AFNI 3dAutoMask or FSL BET.                                             | A list containing '3dAutoMask', 'BET', or both (e.g., ['BET']).                    |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# Derivatives Settings
     | runZScoring                   | Determines format of outputs. 0 will produce non-z-scored outputs, 1 will produce z-scores of outputs.                       | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | runRegistrationPreprocessing  | Register anatomical images to a template.                                                                                    | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | resolution_for_anat           | The resolution to which anatomical images should be transformed during registration.                                         | 1mm,2mm,3mm                                                                        |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | template_brain_only_for_anat  | Template to be used during registration.  Normally the default value (seen in the example YAML) is fine.                     | A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz).|
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | template_skull_for_anat       | Template to be used during registration.  Normally the default value (seen in the example YAML) is fine.                     | A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz).|
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | regOption                     | Use either ANTS or FSL (FLIRT and FNIRT) as your anatomical registration method.                                             | A list containing 'ANTS', 'FSL', or both (e.g., ['FSL']).                          |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | fnirtConfig                   | Configuration file to be used by FSL to set FNIRT parameters.                                                                | A template name (e.g., 'T1_2_MNI152_2mm').                                         |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | ref_mask                      | Configuration file to be used by FSL to set FNIRT parameters.                                                                | A path (e.g.,                                                                      |
-    |                               |                                                                                                                              | $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain_mask_dil.nii.gz).     |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | regWithSkull                  | Register skull-on anatomical image to a template.                                                                            | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | runSegmentationPreprocessing  | Automatically segment anatomical images into white matter, gray matter, and CSF based on prior probability maps.             | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | whiteMatterThreshold          | Only voxels with a White Matter probability greater than this value will be classified as White Matter.                      | A list composed of one or more p-values (e.g., [0.98,0.93]).                       |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | grayMatterThreshold           | Only voxels with a Gray Matter probability greater than this value will be classified as Gray Matter.                        | A list composed of one or more p-values (e.g., [0.70,0.93]).                       |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | cerebralSpinalFluidThreshold  | Only voxels with a CSF probability greater than this value will be classified as CSF.                                        | A list composed of one or more p-values (e.g., [0.98,0.93]).                       |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | priors_path                   | Full path to a directory containing binarized prior probability maps. These maps are included as part of the 'CPAC Image     | A path (e.g., $FSLDIR/data/standard/tissuepriors/${resolution_for_anat}).          |
-    |                               | Resource Files' package from installation. It is not necessary to change this path unless you intend to use non-standard     |                                                                                    |
-    |                               | priors.                                                                                                                      |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | PRIORS_WHITE                  | Full path to a binarized White Matter prior probability map. It is not necessary to change this path unless you intend to use| A path (e.g., $priors_path/avg152T1_white_bin.nii.gz).                             |
-    |                               | non-standard priors.                                                                                                         |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | PRIORS_GRAY                   | Full path to a binarized Gray Matter prior probability map. It is not necessary to change this path unless you intend to use | A path (e.g., $priors_path/avg152T1_gray_bin.nii.gz).                              |
-    |                               | non-standard priors.                                                                                                         |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | PRIORS_CSF                    | Full path to a binarized CSF prior probability map. It is not necessary to change this path unless you intend to use         | A path (e.g., $priors_path/avg152T1_csf_bin.nii.gz).                               |
-    |                               | non-standard priors.                                                                                                         |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | startIdx                      | First timepoint to include in analysis.                                                                                      | An integer.                                                                        |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | stopIdx                       | Last timepoint to include in analysis.                                                                                       | An integer, or Stop or None to use the last possible timepoint.                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | TR                            | The TR at which images were acquired.                                                                                        | A number, or None if the TR is to be read from the NifTI header.                   | 
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | slice_timing_correction       | Interpolate voxel time courses so they are sampled at the same time points.                                                  | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | slice_timing_pattern          | Acquisition strategy for acquiring image slices.                                                                             | A list that can contain one of the following values:                               |
-    |                               |                                                                                                                              | 'Use NIFTI Header','alt+z', 'alt+z2', 'alt-z', 'alt-z2', 'seq+z', 'seq-z'          |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | runRegisterFuncToAnat         | Run Functional to Anatomical Registration.                                                                                   | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | runBBReg                      | Run Functional to Anatomical Registration with BB Register                                                                   | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | boundaryBasedRegistration     | Standard FSL 5.0 Scheduler used for Boundary Based Registration. It is not necessary to change this path unless you intend to| A path (e.g., /usr/share/fsl/5.0/etc/flirtsch/bbr.sch).                            |
-    | Schedule                      | use non-standard MNI registration.                                                                                           |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | func_reg_input                | Choose whether to use the mean of the functional/EPI as the input to functional-to-anatomical registration or one of the     | A list that can contain one of the following values:                               |
-    |                               | volumes from the functional 4D timeseries that you choose.                                                                   | "Mean Functional","Selected Functional Volume"                                     |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | func_reg_input_volume         | Input the index of which volume from the functional 4D timeseries input file you wish to use as the input for                | An integer.                                                                        |
-    |                               | functional-to-anatomical registration.  Only for when func_reg_input is set to 'Selected Functional Volume'.                 |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | runRegisterFuncToMNI          | Register functional images to a standard MNI152 template. This option must be enabled if you wish to calculate any           | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    |                               | derivatives.                                                                                                                 |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | resolution_for_func           | The resolution (in mm) to which functional images are transformed during registration.                                       | 1mm,2mm,3mm                                                                        |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | template_brain_only_for_func  | Standard FSL Skull Stripped Template. Used as a reference image for functional registration.                                 | A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_func}_brain.nii.gz).|
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | identityMatrix                | Matrix containing all 1's. Used as an identity matrix during registration. It is not necessary to change this path unless    | A path (e.g., $FSLDIR/etc/flirtsch/ident.mat).                                     |
-    |                               | you intend to use non-standard MNI registration.                                                                             |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# Nuisance Correction
     | runNuisance                   | Run Nuisance Signal Correction                                                                                               | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | lateral_ventricles_mask       | Standard Lateral Ventricles Binary Mask.                                                                                     | A path (e.g., $FSLDIR/data/atlases/HarvardOxford/                                  |
@@ -145,15 +67,23 @@ An example of such a YAML file can be found `here <https://raw.githubusercontent
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | nComponents                   | The number of principle components to calculate when running CompCor. We recommend 5 or 6.                                   | A list containing an integer representing the number of PCs (e.g., '[5]').         | 
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# Median Angle (not in table because it doesn't work)
+
+# Temporal Filtering Options
     | runFrequencyFiltering         | Apply a temporal band-pass filter to functional data.                                                                        | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | nuisanceBandpassFreq          | Define one or more band-pass filters.                                                                                        | A list of two-element lists, where the first element in the list is the            |
     |                               |                                                                                                                              | low frequency cutoff and the second element is the high frequency cutoff.          |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# Motion Correction Options
     | runFristonModel               | Use the Friston 24-Parameter Model during volume realignment.                                                                | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | runGenerateMotionStatistics   | Calculate motion statistics including Framewise Displacement (FD) and DVARS. Required for scrubbing.                         | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# Scrubbing Options
     | runScrubbing                  | Remove volumes exhibiting excessive motion.  You must specify a threshold with the 'scrubbingThreshold' key.                 | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | scrubbingThreshold            | The maximum acceptable Framewise Displacement (FD) in millimeters.                                                           | A list containing decimal values.                                                  |
@@ -162,6 +92,8 @@ An example of such a YAML file can be found `here <https://raw.githubusercontent
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | numRemoveSubsequentFrames     | Number of volumes to remove subsequent to a volume with excessive FD.                                                        | An integer.                                                                        |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# Define New Seeds
     | seedSpecificationFile         | If you wish to specify new seeds (for use in Time Series Extraction and/or Seed-based Correlation Analysis), this field      | A path or 'None'.                                                                  |
     |                               | should contain the full path to a text file containing seed definitions. If you do not wish to specify new seeds, this field |                                                                                    |
     |                               | should be set to None.                                                                                                       |                                                                                    |
@@ -173,6 +105,8 @@ An example of such a YAML file can be found `here <https://raw.githubusercontent
     |                               |                                                                                                                              | extraction, 'roi_average' for average ROI time series extraction and seed-based    |
     |                               |                                                                                                                              | correlation analysis, and 'centrality_outputs_smoothed' for network centrality.    |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# ROI Average TSE
     | runROITimeseries              | Extract the average time series of one or more ROIs/seeds. Must be enabled for seed-based correlation analysis.              | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | roiSpecificationFile          | Full path to a text file containing a list of ROI NifTIs.  Each line in this file should be the path to a NIfTI file         | A path.                                                                            |
@@ -184,6 +118,8 @@ An example of such a YAML file can be found `here <https://raw.githubusercontent
     |                               | out as CSV files or Numpy arrays.                                                                                            | whether or not to save out a CSV and the second element is a boolean for whether   |
     |                               |                                                                                                                              | or not to save a Numpy array.                                                      |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# ROI Voxelwise TSE
     | runVoxelTimeseries            | Extract the time series of all voxels within one or more ROIs/seeds.                                                         | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | maskSpecificationFile         | Full path to a text file containing a list of mask NifTIs. Each line in this file should be the path to a NIfTI file         | A path or 'None'.                                                                  |
@@ -196,6 +132,10 @@ An example of such a YAML file can be found `here <https://raw.githubusercontent
     |                               | out as CSV files or Numpy arrays.                                                                                            | whether or not to save out a CSV and the second element is a boolean for whether   |
     |                               |                                                                                                                              | or not to save a Numpy array.                                                      |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# Surface Vertices TSE (not in table because it doesn't work)
+
+# Spatial Regression
     | runSpatialRegression          | Extract the time series from one or more existing spatial maps (such as an ICA map). Required if you wish to run Dual        | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     |                               | Regression.                                                                                                                  |                                                                                    |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
@@ -204,8 +144,12 @@ An example of such a YAML file can be found `here <https://raw.githubusercontent
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | spatialDemean                 | Demean spatial maps before running spatial regression.                                                                       | A boolean ('True' or 'False').                                                     |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# SCA Options
     | runSCA                        | Run seed-based correlation analysis.  Must have defined roiSpecificationFileForSCA and maskSpecificationFileForSCA.          | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# Multiple Regression SCA Options
     | runMultRegSCA                 | CPAC will enter all extracted time series from ROI Average TSE, ROI Voxelwise TSE, and Spatial Regression into a single      | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     |                               | multiple regression model and output a single correlation map.                                                               |                                                                                    |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
@@ -213,10 +157,14 @@ An example of such a YAML file can be found `here <https://raw.githubusercontent
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | mrsNorm                       | Normalize each time series before running Multiple Regression SCA.                                                           | A boolean ('True' or 'False').                                                     |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# Dual Regression Options
     | runDualReg                    | Run dual regression. Requires that Spatial Regression be enabled under Time Series Extraction.                               | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | drNorm                        | Normalize time series before running dual regression.                                                                        | A boolean ('True' or 'False').                                                     |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# VMHC Settings
     | runVMHC                       | Calculate Voxel-mirrored Homotopic Connectivity (VMHC) for all voxels.                                                       | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | template_symmetric_brain_only | The path to the symmetric brain template from the C-PAC resources.  You should be able to use the value from the example     | A path.                                                                            |
@@ -231,17 +179,23 @@ An example of such a YAML file can be found `here <https://raw.githubusercontent
     | configFileTwomm               | The path to the FLIRT configuration file for the symmetric template from the C-PAC resources.  You should be able to use the | A path.                                                                            |
     |                               | value from the example configuration.  You would only use a different path if using a different symmetric template.          |                                                                                    |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# ALFF and f/ALFF Options
     | runALFF                       | Calculate Amplitude of Low Frequency Fluctuations (ALFF) and and fractional ALFF (f/ALFF) for all voxels.                    | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | highPassFreqALFF              | Frequency cutoff (in Hz) for the high-pass filter used when calculating f/ALFF.                                              | A list containing a decimal value (e.g., '[0.01]').                                |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | lowPassFreqALFF               | Frequency cutoff (in Hz) for the low-pass filter used when calculating f/ALFF.                                               | A list containing a decimal value (e.g., '[0.1]').                                 |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# ReHo Options
     | runReHo                       | Calculate Regional Homogeneity (ReHo) for all voxels.                                                                        | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | clusterSize                   | The number of neighboring voxels used when calculating ReHo.  Can be 7 (Faces), 19 (Faces & Edges), or 27 (Faces, Edges, &   | An integer with either 7, 19 or 27 as its value.                                   |
     |                               | corners).                                                                                                                    |                                                                                    |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# Network Centrality Options
     | runNetworkCentrality          | Calculate degree centrality, eigenvector centrality, or functional connectivity density.                                     | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | templateSpecificationFile     | Full path to a text file containing a mask or list of ROIs for centrality.  Each line of this file should contain the path   | A path.                                                                            |
@@ -280,12 +234,18 @@ An example of such a YAML file can be found `here <https://raw.githubusercontent
     | memoryAllocatedForDegree      | Maximum amount of RAM (in GB) to be used when calculating degree centrality.                                                 | A decimal value.                                                                   |
     | Centrality                    |                                                                                                                              |                                                                                    |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+# Spatial Smoothing Options
     | fwhm                          | Full Width at Half Maximum of the Gaussian kernel used during spatial smoothing.                                             | A list of numerical values (e.g.,[2.5,6]).                                         |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
 
+# BASC Settings (not included because not yet implemented)
+# CWAS Settings (not included because not yet implemented)
+# Group Analysis Settings (explained on group analysis page)
+
 Why a list?
 ^^^^^^^^^^^^^
-You may notice that many of the values for C-PAC's configurable settings are stored in lists (i.e., multiple values are separated by commas and surrounded by square brackets).  Such lists containing 1s and 0s (for 'True' and 'False' respectively) allow you to toggle on multiple options at the same time, and branch a pipeline into two different analysis strategies. See the `developer documentation <http://fcp-indi.github.io/docs/developer/workflows/cpac_pipeline.html>`_ for more information.
+You may notice as you learn about the settings for various outputs that many of the values for C-PAC's configurable settings are stored in lists (i.e., multiple values are separated by commas and surrounded by square brackets).  Such lists containing 1s and 0s (for 'True' and 'False' respectively) allow you to toggle on multiple options at the same time, and branch a pipeline into two different analysis strategies. See the `developer documentation <http://fcp-indi.github.io/docs/developer/workflows/cpac_pipeline.html>`_ for more information.
     
 Using the GUI
 -------------

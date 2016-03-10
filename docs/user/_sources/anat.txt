@@ -33,10 +33,33 @@ Configuring CPAC to Run Anatomical Registration
 
 #. **Use skull-on image to calculate transform? (ANTS only) - [Off, On]:** Register skull-on anatomical image to template. Calculating the transform with skull-stripped images is reported to be better, but it requires very high-quality skull-stripping. If skull-stripping is imprecise, registration with skull is preferred. Note: This option only affects ANTS due to the fact that FNIRT already uses skull-on images for calculating warps. 
 
-Configuration Using a YAML File
-""""""""""""""""""""""""""""""""
+Configuration Without the GUI
+""""""""""""""""""""""""""""""
 
-To configure the anatomical registration options within a YAML file, add the following lines to your file (with appropriate substitutions for paths)::
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run anatomical preprocessing:
+
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | Key                           | Description                                                                                                                  | Potential Values                                                                   |
+    +===============================+==============================================================================================================================+====================================================================================+
+    | runRegistrationPreprocessing  | Register anatomical images to a template.                                                                                    | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | resolution_for_anat           | The resolution to which anatomical images should be transformed during registration.                                         | 1mm,2mm,3mm                                                                        |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | template_brain_only_for_anat  | Template to be used during registration.  Normally the default value (seen in the example YAML) is fine.                     | A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz).|
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | template_skull_for_anat       | Template to be used during registration.  Normally the default value (seen in the example YAML) is fine.                     | A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz).|
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | regOption                     | Use either ANTS or FSL (FLIRT and FNIRT) as your anatomical registration method.                                             | A list containing 'ANTS', 'FSL', or both (e.g., ['FSL']).                          |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | fnirtConfig                   | Configuration file to be used by FSL to set FNIRT parameters.                                                                | A template name (e.g., 'T1_2_MNI152_2mm').                                         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | ref_mask                      | Configuration file to be used by FSL to set FNIRT parameters.                                                                | A path (e.g.,                                                                      |
+    |                               |                                                                                                                              | $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain_mask_dil.nii.gz).     |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | regWithSkull                  | Register skull-on anatomical image to a template.                                                                            | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+The box below contains an example of what these parameters might look like when defined in the YAML::
 
     runRegistrationPreprocessing : [1]
     resolution_for_anat : 2mm
@@ -91,10 +114,37 @@ Configuring CPAC to Run Anatomical Tissue Segmentation
 
 #. **CSF Prior Probability Map - [path]:** Full path to a binarized CSF prior probability map. It is not necessary to change this path unless you intend to use non-standard priors.
 
-Configuration Using a YAML File
-""""""""""""""""""""""""""""""""
+Configuration Without the GUI
+""""""""""""""""""""""""""""""
 
-To configure the timeseries options within a YAML file, add the following lines to your file (with appropriate substitutions for paths)::
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run anatomical tissue segmentation:
+
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | Key                           | Description                                                                                                                  | Potential Values                                                                   |
+    +===============================+==============================================================================================================================+====================================================================================+
+    | runSegmentationPreprocessing  | Automatically segment anatomical images into white matter, gray matter, and CSF based on prior probability maps.             | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | whiteMatterThreshold          | Only voxels with a White Matter probability greater than this value will be classified as White Matter.                      | A list composed of one or more p-values (e.g., [0.98,0.93]).                       |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | grayMatterThreshold           | Only voxels with a Gray Matter probability greater than this value will be classified as Gray Matter.                        | A list composed of one or more p-values (e.g., [0.70,0.93]).                       |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | cerebralSpinalFluidThreshold  | Only voxels with a CSF probability greater than this value will be classified as CSF.                                        | A list composed of one or more p-values (e.g., [0.98,0.93]).                       |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | priors_path                   | Full path to a directory containing binarized prior probability maps. These maps are included as part of the 'CPAC Image     | A path (e.g., $FSLDIR/data/standard/tissuepriors/${resolution_for_anat}).          |
+    |                               | Resource Files' package from installation. It is not necessary to change this path unless you intend to use non-standard     |                                                                                    |
+    |                               | priors.                                                                                                                      |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | PRIORS_WHITE                  | Full path to a binarized White Matter prior probability map. It is not necessary to change this path unless you intend to use| A path (e.g., $priors_path/avg152T1_white_bin.nii.gz).                             |
+    |                               | non-standard priors.                                                                                                         |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | PRIORS_GRAY                   | Full path to a binarized Gray Matter prior probability map. It is not necessary to change this path unless you intend to use | A path (e.g., $priors_path/avg152T1_gray_bin.nii.gz).                              |
+    |                               | non-standard priors.                                                                                                         |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | PRIORS_CSF                    | Full path to a binarized CSF prior probability map. It is not necessary to change this path unless you intend to use         | A path (e.g., $priors_path/avg152T1_csf_bin.nii.gz).                               |
+    |                               | non-standard priors.                                                                                                         |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+The box below contains an example of what these parameters might look like when defined in the YAML::
 
     runSegmentationPreprocessing : [1]
     whiteMatterThreshold : [0.98]

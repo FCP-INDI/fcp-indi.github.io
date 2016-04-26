@@ -2,27 +2,37 @@ Setting Up A Pipeline Configuration
 ====================================
 Overview
 --------
+
 There are two ways of setting up a pipeline configuration for C-PAC:
 
 * Using a text editor (useful for remote servers where using the GUI is not possible or impractical)
 * Using the pipeline configuration interface in the GUI
 
+Definitions
+'''''''''''
+* Workflows - A workflow accomplishes a particular processing task (e.g. functional preprocessing, scrubbing, nuisance correction). Each workflow can be turned on or off in :file:`config.yml`. A `complete list of workflows <http://fcp-indi.github.com/docs/developer/workflows/index.html>`_ can be found in the developer documentation.
+* Pipeline - A pipeline is a combination of workflows.
+* Strategy -  A strategy is a set of preprocessing options. Specifically, a strategy is defined by segmentation thresholds, nuisance corrections, and scrubbing settings. Strategies are named based on their settings (e.g. :file:`_compcor_ncomponents_5_linear1.motion1.compcor1.CSF_0.98_GM_0.7_SCRUB_0.2_WM_0.98`). Names are constructed as follows:
+    * Number of principle components calculated by CompCor (if enabled)
+    * Nuisance corrections selected.
+    * CSF, Gray Matter, and White Matter segmentation thresholds.
+    * Scrubbing threshold (if enabled)
+* Derivative - Derivatives are the results of processing a participant's raw data at the individual-level.  They include connectivity measures.
+
 Using a Text Editor
 -------------------
-Pipeline configuration files, like the data configuration file discussed in the `subject list builder section <subject_list_config>`_, are also stored as YAML files.  Similarly, each of the parameters used by C-PAC to assemble your pipeline can be specified as key-value pairs, so a pipeline configuration YAML would have multiple lines of the form:
+Pipeline configuration files, like the data configuration file discussed in the `subject list builder section <subject_list_config>`_, are also stored as YAML files.  Similarly, each of the parameters used by C-PAC to assemble your pipeline can be specified as key-value pairs, so a pipeline configuration YAML would have multiple lines of the form::
 
-.. code-block:: 
-    <key> : <value>
+    key : value
 
-An example of a pipeline configuration YAML file can be found `here <https://raw.githubusercontent.com/FCP-INDI/C-PAC/master/configs/pipeline_config.yml>`_.  Tables explaining the keys and their potential values can be found on the individual pages for each of the outputs C-PAC is capable of producing.  
+An example of a pipeline configuration YAML file can be found `here <https://raw.githubusercontent.com/FCP-INDI/C-PAC/master/configs/pipeline_config.yml>`_.  Tables explaining the keys and their potential values can be found on the individual pages for each of the outputs C-PAC is capable of producing.  All pipeline configuration files should have the keys in the following tables defined.
 
-# All
+Output Settings
+'''''''''''''''
 
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | Key                           | Description                                                                                                                  | Potential Values                                                                   |
     +===============================+==============================================================================================================================+====================================================================================+
-
-# Output Settings
     | pipelineName                  | A name that you would like to give to this pipeline.                                                                         | A string.                                                                          |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | workingDirectory              | The working directory to be used by the pipeline during the run.                                                             | A path (e.g.,'/data/my_analysis/working').                                         |
@@ -40,7 +50,12 @@ An example of a pipeline configuration YAML file can be found `here <https://raw
     | reGenerateOutputs             | Uses the contents of the Working Directory to regenerate all outputs and their symbolic links.                               | True,False                                                                         |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
 
-# Preprocessing Workflow Options
+Preprocessing Workflow Options
+'''''''''''''''''''''''''''''''
+
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | Key                           | Description                                                                                                                  | Potential Values                                                                   |
+    +===============================+==============================================================================================================================+====================================================================================+
     | runAnatomicalDataGathering    | Loads anatomical images for processing by CPAC. Must be enabled to run preprocessing.                                        | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | runFunctionalDataGathering    | Loads functional images for processing by CPAC. Must be enabled to run preprocessing.                                        | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
@@ -52,196 +67,14 @@ An example of a pipeline configuration YAML file can be found `here <https://raw
     | functionalMasking             | Choose which tool to be used in functional masking - AFNI 3dAutoMask or FSL BET.                                             | A list containing '3dAutoMask', 'BET', or both (e.g., ['BET']).                    |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
 
-# Derivatives Settings
+Derivatives Settings
+''''''''''''''''''''
+ 
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | Key                           | Description                                                                                                                  | Potential Values                                                                   |
+    +===============================+==============================================================================================================================+====================================================================================+
     | runZScoring                   | Determines format of outputs. 0 will produce non-z-scored outputs, 1 will produce z-scores of outputs.                       | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# Nuisance Correction
-    | runNuisance                   | Run Nuisance Signal Correction                                                                                               | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | lateral_ventricles_mask       | Standard Lateral Ventricles Binary Mask.                                                                                     | A path (e.g., $FSLDIR/data/atlases/HarvardOxford/                                  |
-    |                               |                                                                                                                              | HarvardOxford-lateral-ventricles-thr25-2mm.nii.gz).                                |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | Corrections                   | The nuisance corrections you wish to apply. Corrections include compcor, wm, csf, gm, global, pc1, motion, linear,           | Another mapping of key value pairs, where values are 0 for 'Disable' and 1 for     |
-    |                               | and quadratic.                                                                                                               | 'Enable'.                                                                          |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | nComponents                   | The number of principle components to calculate when running CompCor. We recommend 5 or 6.                                   | A list containing an integer representing the number of PCs (e.g., '[5]').         | 
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# Median Angle (not in table because it doesn't work)
-
-# Temporal Filtering Options
-    | runFrequencyFiltering         | Apply a temporal band-pass filter to functional data.                                                                        | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | nuisanceBandpassFreq          | Define one or more band-pass filters.                                                                                        | A list of two-element lists, where the first element in the list is the            |
-    |                               |                                                                                                                              | low frequency cutoff and the second element is the high frequency cutoff.          |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# Motion Correction Options
-    | runFristonModel               | Use the Friston 24-Parameter Model during volume realignment.                                                                | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | runGenerateMotionStatistics   | Calculate motion statistics including Framewise Displacement (FD) and DVARS. Required for scrubbing.                         | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# Scrubbing Options
-    | runScrubbing                  | Remove volumes exhibiting excessive motion.  You must specify a threshold with the 'scrubbingThreshold' key.                 | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | scrubbingThreshold            | The maximum acceptable Framewise Displacement (FD) in millimeters.                                                           | A list containing decimal values.                                                  |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | numRemovePrecedingFrames      | Number of volumes to remove preceeding a volume with excessive FD.                                                           | An integer.                                                                        |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | numRemoveSubsequentFrames     | Number of volumes to remove subsequent to a volume with excessive FD.                                                        | An integer.                                                                        |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# Define New Seeds
-    | seedSpecificationFile         | If you wish to specify new seeds (for use in Time Series Extraction and/or Seed-based Correlation Analysis), this field      | A path or 'None'.                                                                  |
-    |                               | should contain the full path to a text file containing seed definitions. If you do not wish to specify new seeds, this field |                                                                                    |
-    |                               | should be set to None.                                                                                                       |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | seedOutputLocation            | Directory where CPAC should write NIfTI files containing new seeds.                                                          | A path.                                                                            |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | useSeedInAnalysis             | Which analyses to use the seeds that have been specified in.  Can be ROI Average time series extraction, ROI Voxelwise       | A list of strings, where each string is a different analysis to use the seeds in.  |
-    |                               | time series extraction, network centrality, or seed-based correlation analysis.                                              | Valid strings are the following: 'roi_voxelwise' for voxelwise ROI time series     |
-    |                               |                                                                                                                              | extraction, 'roi_average' for average ROI time series extraction and seed-based    |
-    |                               |                                                                                                                              | correlation analysis, and 'centrality_outputs_smoothed' for network centrality.    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# ROI Average TSE
-    | runROITimeseries              | Extract the average time series of one or more ROIs/seeds. Must be enabled for seed-based correlation analysis.              | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | roiSpecificationFile          | Full path to a text file containing a list of ROI NifTIs.  Each line in this file should be the path to a NIfTI file         | A path.                                                                            |
-    |                               | containing one or more ROIs.  All ROI mask values are converted to integers in C-PAC.                                        |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | roiSpecificationFileForSCA    | Same as roiSpecificationFile, but used for seed-based correlation analysis.                                                  | A path.                                                                            |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | roiTSOutputs                  | Extracted time series are written as both a text file and a 1D file by default.  With this option, you may also save them    | A two-element list, where the first element is a boolean ('True' or 'False') for   |
-    |                               | out as CSV files or Numpy arrays.                                                                                            | whether or not to save out a CSV and the second element is a boolean for whether   |
-    |                               |                                                                                                                              | or not to save a Numpy array.                                                      |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# ROI Voxelwise TSE
-    | runVoxelTimeseries            | Extract the time series of all voxels within one or more ROIs/seeds.                                                         | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | maskSpecificationFile         | Full path to a text file containing a list of mask NifTIs. Each line in this file should be the path to a NIfTI file         | A path or 'None'.                                                                  |
-    |                               | containing a single mask. If you only wish to extract time series for newly defined spherical seed ROIs, set this field      |                                                                                    |
-    |                               | to None.                                                                                                                     |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | maskSpecificationFileForSCA   | Same as maskSpecificationFile, but used for seed-based correlation analysis.                                                 | A path or 'None'.                                                                  |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | voxelTSOutputs                | Extracted time series are written as both a text file and a 1D file by default.  With this option, you may also save them    | A two-element list, where the first element is a boolean ('True' or 'False') for   |
-    |                               | out as CSV files or Numpy arrays.                                                                                            | whether or not to save out a CSV and the second element is a boolean for whether   |
-    |                               |                                                                                                                              | or not to save a Numpy array.                                                      |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# Surface Vertices TSE (not in table because it doesn't work)
-
-# Spatial Regression
-    | runSpatialRegression          | Extract the time series from one or more existing spatial maps (such as an ICA map). Required if you wish to run Dual        | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    |                               | Regression.                                                                                                                  |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | spatialPatternMaps            | Full path to a text file containing a list spatial maps. Each line in this file should be the path to a 4D NIfTI file        | A path.                                                                            |
-    |                               | containing one spatial map per volume.                                                                                       |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | spatialDemean                 | Demean spatial maps before running spatial regression.                                                                       | A boolean ('True' or 'False').                                                     |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# SCA Options
-    | runSCA                        | Run seed-based correlation analysis.  Must have defined roiSpecificationFileForSCA and maskSpecificationFileForSCA.          | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# Multiple Regression SCA Options
-    | runMultRegSCA                 | CPAC will enter all extracted time series from ROI Average TSE, ROI Voxelwise TSE, and Spatial Regression into a single      | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    |                               | multiple regression model and output a single correlation map.                                                               |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | mrsDemean                     | Demean each time series before running Multiple Regression SCA.                                                              | A boolean ('True' or 'False').                                                     |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | mrsNorm                       | Normalize each time series before running Multiple Regression SCA.                                                           | A boolean ('True' or 'False').                                                     |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# Dual Regression Options
-    | runDualReg                    | Run dual regression. Requires that Spatial Regression be enabled under Time Series Extraction.                               | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | drNorm                        | Normalize time series before running dual regression.                                                                        | A boolean ('True' or 'False').                                                     |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# VMHC Settings
-    | runVMHC                       | Calculate Voxel-mirrored Homotopic Connectivity (VMHC) for all voxels.                                                       | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | template_symmetric_brain_only | The path to the symmetric brain template from the C-PAC resources.  You should be able to use the value from the example     | A path.                                                                            |
-    |                               | configuration.  You would only use a different path if using a different symmetric template.                                 |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | template_symmetric_skull      | The path to the symmetric brain template (with skull) from the C-PAC resources.  You should be able to use the               | A path.                                                                            |
-    |                               | value from the example configuration.  You would only use a different path if using a different symmetric template.          |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | dilated_symmetric_brain_mask  | The path to the symmetric brain template (dilated) from the C-PAC resources.  You should be able to use the                  | A path.                                                                            |
-    |                               | value from the example configuration.  You would only use a different path if using a different symmetric template.          |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | configFileTwomm               | The path to the FLIRT configuration file for the symmetric template from the C-PAC resources.  You should be able to use the | A path.                                                                            |
-    |                               | value from the example configuration.  You would only use a different path if using a different symmetric template.          |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# ALFF and f/ALFF Options
-    | runALFF                       | Calculate Amplitude of Low Frequency Fluctuations (ALFF) and and fractional ALFF (f/ALFF) for all voxels.                    | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | highPassFreqALFF              | Frequency cutoff (in Hz) for the high-pass filter used when calculating f/ALFF.                                              | A list containing a decimal value (e.g., '[0.01]').                                |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | lowPassFreqALFF               | Frequency cutoff (in Hz) for the low-pass filter used when calculating f/ALFF.                                               | A list containing a decimal value (e.g., '[0.1]').                                 |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# ReHo Options
-    | runReHo                       | Calculate Regional Homogeneity (ReHo) for all voxels.                                                                        | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | clusterSize                   | The number of neighboring voxels used when calculating ReHo.  Can be 7 (Faces), 19 (Faces & Edges), or 27 (Faces, Edges, &   | An integer with either 7, 19 or 27 as its value.                                   |
-    |                               | corners).                                                                                                                    |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# Network Centrality Options
-    | runNetworkCentrality          | Calculate degree centrality, eigenvector centrality, or functional connectivity density.                                     | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | templateSpecificationFile     | Full path to a text file containing a mask or list of ROIs for centrality.  Each line of this file should contain the path   | A path.                                                                            |
-    |                               | to an ROI or mask. If a mask is specified, centrality will be calculated for all voxels within the mask. If a list of ROIs   |                                                                                    |
-    |                               | is specified, each ROI will be treated as a node, and centrality will be calculated for each node.                           |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | degWeightOptions              | Enable/disable degree centrality by selecting the connectivity weights.                                                      | A two-element list where the first element is a boolean ('True' or 'False')        |
-    |                               |                                                                                                                              | indicating whether or not the weights used should be binarized and the second      |
-    |                               |                                                                                                                              | element is a boolean indicating whether or not the weights used should be weighted.|
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | degCorrelationThresholdOption | Select the type of threshold used when creating the degree centrality adjacency matrix. Choose 0 for significance threshold, | An integer with one of the following values: 0, 1, and 2.                          |
-    |                               | 1 for sparsity threshold, and 2 for correlation threshold.                                                                   |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | degCorrelationThreshold       | A threshold value for whichever option from degCorrelationThresholdOption was selected. For significance threshold, this     | A decimal value.                                                                   |
-    |                               | would be a p-value, a sparsity value for sparsity threshold, and a Pearson's r value for correlation threshold.              |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | eigWeightOptions              | Enable/disable eigenvector centrality by selecting the connectivity weights.                                                 | A two-element list where the first element is a boolean ('True' or 'False')        |
-    |                               |                                                                                                                              | indicating whether or not the weights used should be binarized and the second      |
-    |                               |                                                                                                                              | element is a boolean indicating whether or not the weights used should be weighted.|
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | eigCorrelationThresholdOption | Select the type of threshold used when creating the eigenvector centrality adjacency matrix. Choose 0 for significance       | An integer with one of the following values: 0, 1, and 2.                          |
-    |                               | threshold, 1 for sparsity threshold, and 2 for correlation threshold.                                                        |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | eigCorrelationThreshold       | A threshold value for whichever option from eigCorrelationThresholdOption was selected. For significance threshold, this     | A decimal value.                                                                   |
-    |                               | would be a p-value, a sparsity value for sparsity threshold, and a Pearson's r value for correlation threshold.              |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | lfcdWeightOptions             | Enable/disable eigree centrality by selecting the connectivity weights.                                                      | A two-element list where the first element is a boolean ('True' or 'False')        |
-    |                               |                                                                                                                              | indicating whether or not the weights used should be binarized and the second      |
-    |                               |                                                                                                                              | element is a boolean indicating whether or not the weights used should be weighted.|
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | lfcdCorrelationThresholdOption| Select the type of threshold used when creating the lFCD adjacency matrix. Choose 2 for correlation threshold (the only      | An integer with one of the following values: 2.                                    |
-    |                               | option).                                                                                                                     |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | lfcdCorrelationThreshold      | A threshold value for whichever option from eigCorrelationThresholdOption was selected. This would be a p-value.             | A decimal value.                                                                   |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | memoryAllocatedForDegree      | Maximum amount of RAM (in GB) to be used when calculating degree centrality.                                                 | A decimal value.                                                                   |
-    | Centrality                    |                                                                                                                              |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# Spatial Smoothing Options
-    | fwhm                          | Full Width at Half Maximum of the Gaussian kernel used during spatial smoothing.                                             | A list of numerical values (e.g.,[2.5,6]).                                         |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-
-# BASC Settings (not included because not yet implemented)
-# CWAS Settings (not included because not yet implemented)
-# Group Analysis Settings (explained on group analysis page)
 
 Why a list?
 ^^^^^^^^^^^^^
@@ -251,31 +84,39 @@ Using the GUI
 -------------
 Opening the GUI 
 ^^^^^^^^^^^^^^^^
-To open the CPAC GUI, simply enter the command ``cpac_gui`` in a terminal window 
+To open the CPAC GUI, simply enter the command ``cpac_gui`` in a terminal window.  Then, on the main screen click on *New* next to *Pipelines*.  For each of the settings in the lefthand pane, refer to the pages linked to below.
 **Note: You may receive an error about a 'known incorrect sRGB profile' if you are running the GUI within Anaconda/Miniconda on some machines.  This will not affect C-PAC performance and can be ignored.**
-
-Configure a Pipeline
---------------------
-Once you have specified a subject list, you are ready to create a new analysis pipeline. For detailed instructions on how to configure a particular CPAC function, see the following pages:
-
-* :doc:`Computer Settings </compute_config>`
-* :doc:`Anatomical Preprocessing </anat>`
-* :doc:`Slice Timing Correction </slice>`
-* :doc:`Motion Correction </motion>`
-* :doc:`Nuisance Corrections </nuisance>`
-* :doc:`Temporal Filtering </temporal>`
-* :doc:`Time Series Extraction </tse>`
-* :doc:`Seed-based Correlation Analysis </sca>`
-* :doc:`Dual Regression </dual_reg>`
-* :doc:`Regional Homogeneity </reho>`
-* :doc:`Voxel-mirrored Homotopic Connectivity </vmhc>`
-* :doc:`ALFF and fALFF </alff>`
-* :doc:`Network Centrality </centrality>`
-* :doc:`Smoothing </smoothing>`
 
 When you have finished configuring your pipeline, click Save. You will be asked to specify a location to save a configuration file containing information about the pipeline, and to specify a name for the pipeline.
 
 To modify an existing pipeline, select it and click Edit. To use a previously configured pipeline, click Load and select the appropriate ``.yml`` configuration file. If you have loaded multiple pipelines, use the checkboxes to select which pipelines you would like to run. 
+
+Configurable Settings
+----------------------
+
+* Environment Settings
+    * :doc:`Computer Settings </compute_config>`
+    * Output Settings
+    * Preprocessing Workflow Options
+    * Derivatives Settings
+* :doc:`Anatomical Preprocessing </anat>`
+* :doc:`Functional Preprocessing </func>`
+    * :doc:`Slice Timing Correction </slice>`
+* :doc:`Nuisance Corrections </nuisance>`
+* :doc:`Temporal Filtering </nuisance>`
+* :doc:`Motion Correction </motion>`
+* :doc:`Time Series Extraction </tse>`
+* :doc:`Smoothing </smoothing>`
+
+Derivatives
+^^^^^^^^^^^
+
+* :doc:`Seed-based Correlation Analysis (SCA) </sca>` - Analyze the connectivity between brain regions.
+* :doc:`Dual Regression </dual_reg>` - Compare large-scale networks.
+* :doc:`Voxel-mirrored Homotopic Connectivity (VMHC) </vmhc>` - Investigate connectivity between hemispheres.
+* :doc:`Amplitude of Low Frequency Fluctuations (ALFF) and fractional ALFF (fALFF) </alff>` - Measure the power of slow fluctuations in brain activity.
+* :doc:`Regional Homogeneity (ReHo) </reho>` - Measure the similarity of activity patterns across neighboring voxels.
+* :doc:`Network Centrality </centrality>` - Analyze the structure of functional networks.
 
 Running Preprocessing and Individual-Level Analysis
 ---------------------------------------------------
@@ -285,11 +126,43 @@ The following schematic illustrates the order in which C-PAC executes.
 
 .. figure:: /_images/processing_workflow.png
 
-Viewing CPAC Outputs
---------------------
+
+Output Structure
+^^^^^^^^^^^^^^^^
+
+Symbolic Links
+""""""""""""""
+C-PAC gives users the option (:file:`runSymbolicLinks : [1]` in :file:`config.yml`) of creating an output directory containing `symbolic links <http://en.wikipedia.org/wiki/Symbolic_link>`_ to processed files. We strongly recommend this setting be enabled by all users, as it makes it much easier to navigate output files. The following schematic shows the structure of the resulting :file:`sym_links` directory:
+
+.. figure:: /_images/symlink_structure.png
+
+Pipeline and strategy folders are named as described above. 
+
+File Descriptions
+"""""""""""""""""
+Preprocessed anatomical data from the Anatomical Preprocessing, Registration, and Segmentation workflows can be found in :file:`../scan/anat/` directory for each subject. The following diagram shows processing steps and standard output files for these workflows.
+
+.. figure:: /_images/anat_prepro_schematic.png
+
+Preprocessed functional data from the Functional Preprocessing workflow can be found in the :file:`../scan_<name>/func` directory for each subject. The following diagram shows processing steps and standard output files for this workflow.
+
+.. figure:: /_images/functional_preprocessing.png
+
+Derivative Outputs
+""""""""""""""""""
+Derivatives for each subject can be found in the :file:`../scan_<name>` directory of each subject. This folder also contains the outputs of the registration and segmentation workflows.
+
+.. figure:: /_images/derivs_outputs.png
+
+Within each derivative folder will be sub-folders for each set of frequency filters set in :file:`config.yml`, as well as a folder containing smoothed outputs.
+
+Derivatives are output in both native space (:file:`*_img.nii.gz` and :file:`*_map.nii.gz` files), with values transformed to z-scores (:file:`*_Z_*.nii.gz`) and in standard space (:file:`*_to_standard.nii.gz`).
+
+QC Interface
+-------------
 **Note:** QC pages are currently under development, and their look and functionality will change in future releases.
 
-If you have enabled it in your pipeline configuration, the CPAC Quality Control (QC) interface is the most efficient way to rapidly view the outputs of a CPAC run. For each subject, CPAC generates an HTML file containing images of each output and additional information such as motion parameters and signal-to-noise ratios.
+If you have enabled it in your pipeline configuration, the CPAC Quality Control (QC) interface is an efficient way to rapidly view the outputs of a CPAC run. For each subject, CPAC generates an HTML file containing images of each output and additional information such as motion parameters and signal-to-noise ratios.
 
 .. figure:: /_images/qc_main.png
 
@@ -298,11 +171,4 @@ Though it is possible to view the QC page for each subject individually, we reco
   import CPAC
   CPAC.utils.create_all_qc.run('/path/to/output_directory')
 
-Alternately, it is of course possible to simply view CPAC outputs using the application of your choice. For more information about the outputs generated by CPAC and the directory structure in which they are organized, please see the :doc:`Outputs Page </outputs>`.
-
-.. toctree::
-   :hidden: 
-
-   Ready Your Data <subject_list_config>
-   Computer Settings <compute_config>
-   Data Output <output>
+Alternately, it is of course possible to simply view CPAC outputs using the application of your choice. 

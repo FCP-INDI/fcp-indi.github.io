@@ -26,11 +26,79 @@ As with subject list and pipeline configuration, there are two ways to set up FS
 Using a Text Editor
 ^^^^^^^^^^^^^^^^^^^^
 
-#TODO
+Similar to the pipeline and data configuration YAMLs for the pipeline and subject list specification steps, you can generate a group analysis configuration as a YAML.  A list of possible keys and values for this YAML are listed below.
 
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | Key                           | Description                                                                                                                  | Potential Values                                                                   |
+    +===============================+==============================================================================================================================+====================================================================================+
+    | subject_list                  | A list of subjects to be included in the model. This should be a text file with one subject per line.                        | A path (e.g., '/data/my_analysis/subject_list.txt').                               |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | pheno_file                    | A csv file containing EV information for each subject.                                                                       | A path (e.g., '/data/my_analysis/ev.csv').                                         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | subject_id_label              | Name of the subjects column in your EV file.                                                                                 | A string.                                                                          |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | ev_selections                 | Specify which EVs from your phenotype are categorical or numerical. Of those which are numerical, specify which are to be    | A dictionary with two keys, 'demean' and 'categorical'.  Each of these keys has a  |
+    |                               | demeaned.                                                                                                                    | list as its value, with the names of the EVs that are categorical and which are    |
+    |                               |                                                                                                                              | to be demeaned.  For example:                                                      |
+    |                               |                                                                                                                              |  {'demean': ['age'], 'categorical': ['sex', 'diagnosis']}                          |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | design_formula                | Specify the formula to describe your model design. Essentially, including EVs in this formula inserts them into the model.   | A formula (e.g., 'sex + diagnosis + age + MeanFD_Jenkinson').                      |
+    |                               | The most basic format to include each EV you select would be 'EV + EV + EV + ..', etc. You can also select to include MeanFD,|                                                                                    |
+    |                               | Measure_Mean, and Custom_ROI_Mean here. See the GUI instructions for more details.                                           |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | mean_mask                     | Choose whether to use a group mask or individual-specific mask when calculating the output means to be used as a regressor.  | A string within a list- can be ['Group Mask'] or ['Individual Mask'].              |
+    |                               | This only takes effect if you include the 'Measure_Mean' regressor in your Design Matrix Formula.                            |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | custom_roi_mask               | Full path to a NIFTI file containing one or more ROI masks. The means of the masked regions will then be computed for each   | A path (e.g., '/data/my_analysis/ROI.nii.gz') or None.                             |
+    |                               | subject's output and will be included in the model as regressors (one for each ROI in the mask file) if you include          |                                                                                    |
+    |                               | 'Custom_ROI_Mean' in the Design Matrix Formula.                                                                              |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | use_zscore                    | Run the group analysis model on the z-score standardized version of the derivatives you choose in the list below.            | True,False                                                                         |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | derivative_list               | Choose the derivatives to run the group model on. These must be written out as a list, and must be one of the options listed | A list (e.g., ['alff_to_standard_smooth_zstd',                                     |
+    |                               | below this table.                                                                                                            | 'sca_roi_to_standard_smooth_fisher_zstd'] ).                                       |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | coding_scheme                 | Choose the coding scheme to use when generating your model. 'Treatment' encoding is generally considered the typical scheme. | Either 'Treatment' or 'Sum'.                                                       |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | group_sep                     | Specify whether FSL should model the variance for each group separately. If this option is enabled, you must specify a       | On,Off (no quotes)                                                                 |
+    |                               | grouping variable with the key 'group_var'.                                                                                  |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | grouping_var                  | The name of the EV that should be used to group subjects when modeling variances. If you do not wish to model group variances| An EV name without quotes (e.g., 'sex') or None.                                   |
+    |                               | separately, set this value to None.                                                                                          |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | z_threshold                   | Only voxels with a Z-score higher than this value will be considered significant.                                            | A list containing a decimal value as a string (e.g., ['2.3']).                     |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | p_threshold                   | Significance threshold (P-value) to use when doing cluster correction for multiple comparisons.                              | A list containing a decimal value as a string (e.g., ['0.05']).                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | repeated_measures             | Run repeated measures to compare different scans (must use the group analysis subject list and phenotypic file formatted     | True,False                                                                         |
+    |                               | for repeated measures).                                                                                                      |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | contrasts                     | The contrasts to be run as part of the group analysis.  See the GUI instructions for more details.                           | A list of contrast descriptions (e.g., ['diagnosis+']).                            | 
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | f_tests                       | An optional list of f-test strings containing contrasts. If you do not wish to run f-tests, leave this blank.                | A list of strings containing all the contrasts to be included in the f-test        |
+    |                               |                                                                                                                              | separated by commas (e.g., ['diagnosis+,age+']).                                   |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | custom_contrasts              | An optional path to a CSV file which specifies the contrasts you wish to run in group analysis. See 'Custom Contrasts'       | A path (e.g., '/data/my_analysis/custom_contrasts.csv').                           |
+    |                               | section below.                                                                                                               |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | model_name                    | A name for the new model.                                                                                                    | A string.                                                                          |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | output_dir                    | Full path to the directory where CPAC should place model files.                                                              | A path (e.g.,'/data/my_analysis/output').                                          |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+
+The possible values for the items in the *derivatives* key are as follows:
+
+*  For z-scored analyses:
+
+ 'alff_to_standard_zstd', 'alff_to_standard_smooth_zstd', 'falff_to_standard_zstd', 'falff_to_standard_smooth_zstd', 'reho_to_standard_zstd', 'reho_to_standard_smooth_zstd', 'sca_roi_to_standard_fisher_zstd', 'sca_roi_to_standard_smooth_fisher_zstd', 'sca_seed_to_standard_fisher_zstd', 'sca_seed_to_standard_smooth_fisher_zstd', 'vmhc_fisher_zstd', 'vmhc_fisher_zstd_zstat_map', 'dr_tempreg_maps_zstat_files_to_standard', 'dr_tempreg_maps_zstat_files_to_standard_smooth', 'sca_tempreg_maps_zstat_files', 'sca_tempreg_maps_zstat_files_smooth', 'centrality_outputs_zstd', 'centrality_outputs_smoothed_zstd'
+ 
+*  For raw (non-z-scored) analyses:
+
+ 'alff_to_standard', 'alff_to_standard_smooth', 'falff_to_standard', 'falff_to_standard_smooth', 'reho_to_standard', 'reho_to_standard_smooth', 'sca_roi_to_standard', 'sca_roi_to_standard_smooth', 'sca_seed_to_standard', 'sca_seed_to_standard_smooth', 'centrality_outputs', 'centrality_outputs_smoothed', 'dr_tempreg_maps_files_to_standard', 'dr_tempreg_maps_files_to_standard_smooth', 'sca_tempreg_maps_files', 'sca_tempreg_maps_files_smooth'
+ 
 Using the GUI
 ^^^^^^^^^^^^^^
-To configure group-level analysis from the main screen of the GUI, select a pipeline for which you have run preprocessing and individual-level analysis, then click *Edit*.  Then, navigate to *Group Analysis Settings* and click on the *+* symbol.  Here you may select an FSL model configuration (.fcon) file to use by clicking on the folder to the right to select a file or by typing in a path.  Clicking *Create or Load FSL Model* will allow you to specify models via the C-PAC interface, or load a YAML configuration file containing model settings.
+To configure group-level analysis from the main screen of the GUI, select a pipeline for which you have run preprocessing and individual-level analysis, then click *Edit*.  Then, navigate to *Group Analysis Settings* and click on the *+* symbol.  Here you may select a model configuration YAML file to use by clicking on the folder to the right to select a file or by typing in a path.  Clicking *Create or Load FSL Model* will allow you to specify models via the C-PAC interface, or load a YAML configuration file containing model settings that can then be adjusted interactively.
 
 .. figure:: /_images/ga_main.png
 
@@ -105,7 +173,7 @@ When you are done, the contrast screen should look like this:
 Click `Save Settings` and place your model specification within an appropriate directory.  You are now able to reload it for future use.
 
 Creating a Custom CSV File
-"""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_images/ga_contrast_csv.png
 

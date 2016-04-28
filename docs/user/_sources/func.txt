@@ -1,8 +1,13 @@
 Functional Preprocessing
 -------------------------
 
-Timeseries Options
-^^^^^^^^^^^^^^^^^^
+Slice Timing Correction 
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Most fMRI images are created by combining multiple 2D slices into a single 3D volume. Slices are acquired one after another, either sequentially in ascending or descending order, or in an interleaved manner, such that every other slice is acquired in a first pass, and the remaining slices are acquired in a second pass. The time between the acquisition of the first and last slice depends on the TR used (e.g. 2.5 seconds for a TR of 2500ms). Slice timing correction acts to adjust the timecourse of voxels in each slice to account for these differences. This is done by interpolating the data in each slice to match the timing of a reference slice. Slice timing correction is necessary because many statistical models used for fMRI analysis assume that all voxels are measured simultaneously. As such, differences in acquisition time between slices can cause confounds.
+
+You can configure your slice time correction settings through the C-PAC pipeline configuration editor, under the *Time Series Options* tab in the *Functional Preprocessing* section. Here you can select whether or not to run Slice Time Correction, as well as which slice acquisition pattern to enter.
+
 .. figure:: /_images/ts_options.png
 
 #. **First Timepoint - [integer]:** The starting volume of the scan.  If you need to censor the first volumes of a scan to facilitate stable magnetization, you can do so here.
@@ -42,6 +47,52 @@ The box below contains an example of what these parameters might look like when 
     TR : None
     slice_timing_correction : [0]
     slice_timing_pattern : ['Use NIFTI Header']
+
+Through the Subject List
+""""""""""""""""""""""""
+
+You can also specify slice timing parameters within the subject list.  If you wish to specify slice timing correction parameters in this way, scan parameters must be supplied to C-PAC in a ``.csv`` file, and the path to this file provided when :doc:`setting up a new subject list </subject_list_config>`.
+
+.. line-block::
+  **If all subjects within a site have the same acquisition order:** 
+  Use the template :file:`scan_parameters.csv` file available for download `here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/scan_parameters.csv>`_. 
+
+  **If subjects within a site have different acquisition orders:**
+  Use the template :file:`scan_parameters_multiscan.csv` file available for download `here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/scan_parameters_multiscan.csv>`_. 
+
+Slice Timing information should be entered into these files as follows:
+
+* **Site** - Site name corresponding to a site-level folder in your directory structure (e.g. :file:`site_1`).
+* **Scan** - Only for :file:`scan_parameters_multiscan.csv`. Scan name corresponding to a scan-level folder in your directory structure (e.g. :file:`anat`, :file:`rest`)
+* **TR** - TR in seconds.
+* **Reference** - Desired reference slice (usually the middle slice).
+* **Acquisition** - Acquisition order.
+
+    * **altplus** - Alternating in the +z direction
+    * **alt+z** - Alternating in the +z direction
+    * **alt+z2** - Alternating, but beginning at slice #1 
+    * **altminus** - Alternating in the -z direction
+    * **alt-z** - Alternating in the -z direction
+    * **alt-z2** - Alternating, starting at slice #nz-2 instead of #nz-1
+    * **seqplus** - Sequential in the plus direction
+    * **seqminus** - Sequential in the minus direction
+
+* **FirstTR** - First volume to include in analysis. (Reminder, volumes start at 0)
+* **LastTR** - Last volume to include in analysis.
+
+If your data does not conform to one of the 6 acquisition orders in the list above (as would be the case for multiband and multi-echo sequences), you must generate acquisition order files before running slice timing correction. This is done using the AFNI command ``dicom_hdr`` and specifying the first DICOM file in an image sequence, as well as the name of an output :file:`.txt` file.::
+
+    dicom_hdr -slice_times /path/to/file.dcm > output_name.txt
+
+This will output a text file with the name you specified. Each number in this file corresponds to a slice and the time when it was acquired (relative to the beginning of the TR). The following is an example of an acquisition order file for a a multiband fMRI scan with 40 slices and TR=645ms::
+
+    0.0 452.5 257.5 65.0 517.5 322.5 130.0 582.5 387.5 195.0 0.0 452.5 257.5 65.0 517.5 322.5 130.0 582.5 387.5 195.0 0.0 452.5 257.5 65.0 517.5 322.5 130.0 582.5 387.5 195.0 0.0 452.5 257.5 65.0 517.5 322.5 130.0 582.5 387.5 195.0
+
+The path to the acquisition order file for each scan should be specified in the "Acquisition" column of your :file:`scan_parameters.csv` or :file:`scan_parameters_multiscan.csv` file.
+
+**Note:** alt+z2 is the order most commonly used on Siemens scanners for interleaved scans with an even number of slices.
+
+**Note:** Scan parameter information specified for slice timing correction will override the settings specified in the pipeline configuration YAML.
 
 Functional to Anatomical Registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

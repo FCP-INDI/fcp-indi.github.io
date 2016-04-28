@@ -2,12 +2,12 @@
 ==========================
 Overview
 --------
-There are two ways of setting up a pipeline configuration for C-PAC:
+For C-PAC to run an analysis, it must have at least one pipeline configuration file and one subject list.  The creation of a pipeline configuration file is treated in the next section.  This section will deal with how to create a C-PAC subject list.  There are two ways to set up such a list:
 
-* Using a text editor (useful for servers where using the GUI is not possible or impractical)
-* Using the subject list builder interface in the GUI
+* Using a text editor (useful for servers where using the C-PAC GUI is not possible or impractical)
+* Using the subject list builder interface in the C-PAC GUI
 
-The first method requires you to create a data configuration file, which encodes settings that you would normally enter through the subject list builder GUI (such as a template file path used to grab T1 anatomical data; see the sections below for more information on these parameters).  Both methods will result in the creation of a subject list, which can be re-used for future runs with different pipelines.
+The first method requires you to create a data configuration file, which encodes settings that you would normally enter through the subject list builder GUI (such as a template file path used to grab T1 anatomical data; see *Defining Anatomical and Functional File Path Templates* below).  Both methods will result in the creation of a subject list, which can be re-used for future runs with different pipelines.
 
 Using a Text Editor
 -------------------
@@ -15,7 +15,7 @@ Data configuration files are stored as YAML files, which are text files meant to
 
     key : value
 
-An example of such a YAML file can be found `here <https://raw.githubusercontent.com/FCP-INDI/C-PAC/master/configs/data_config.yml>`_.  Below is a table of keys used in the configuration YAML and their potential values.
+An example of such a YAML file can be found `here <https://raw.githubusercontent.com/FCP-INDI/C-PAC/master/configs/data_config.yml>`_.  You can create your own configuration file using your favorite text editor and the table of keys and their potential values in the table below.
 
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | Key                           | Description                                                                                                                  | Potential Values                                                                   |
@@ -40,41 +40,41 @@ An example of such a YAML file can be found `here <https://raw.githubusercontent
     | subjectListName               | A name for the subject list.                                                                                                 | A list containing a string (e.g.,['ABIDE']).                                       |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
  
-Generate Subject Lists
-^^^^^^^^^^^^^^^^^^^^^^
-When you are done setting up :file:`data_config.yml`, save your changes. If you are using a :doc:`preconfigured file </files>`, make sure that the file templates have been modified to match the specific location of files on your system.
+Generating Subject Lists with the Data Configuration File
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+When you are done setting up the data configuration file, navigate in a terminal to the directory where you would like to store your subject list.  Then, open iPython by typing :file:`ipython` and run one of the following commands from the iPython prompt.
 
-In the terminal, navigate to the directory where you would like to store subject lists for use by C-PAC. Open iPython by typing :file:`ipython`. From the iPython prompt, run one of the following commands.
-
-If you are not running Slice Timing Correction, or all subjects within a site have the same acquisition order::
+If you are not running slice timing correction, or all subjects within a site have the same acquisition order::
 
   import CPAC
-  CPAC.utils.extract_data.run ('/path/to/data_config.yml')
+  CPAC.utils.extract_data.run('/path/to/data_config.yml')
 
-If you are running Slice Timing Correction and subjects within a site have differing acquisition orders::
+If you are running slice timing correction and subjects within a site have differing acquisition orders::
 
   import CPAC
-  CPAC.utils.extract_data_multiscan_params.run ('/path/to/data_config.yml')
+  CPAC.utils.extract_data_multiscan_params.run('/path/to/data_config.yml')
 
-This will output three files needed to run C-PAC:
+This will the subject list in your current directory, as well as two other files needed to run group-level analyses:
 
-* :file:`CPAC_subject_list_<name>.yml` - Subject list used when running preprocessing and individual-level analyses. Contains subject IDs and paths to their associated data files.
-* :file:`template_phenotypic.csv` - Used by the :doc:`FSL Model Script </group_analysis>`.
-* :file:`subject_list_group_analysis.txt` - Subject list used when running group-level analyses.
+* :file:`CPAC_subject_list_<name>.yml` - The subject list used when running preprocessing and individual-level analyses. Contains subject IDs and paths to their associated data files.  Subject lists are also stored as YAMLs.
+* :file:`template_phenotypic.csv` - A template phenotypic file for use with the :doc:`group-level analysis builder</group_analysis>`.
+* :file:`subject_list_group_analysis.txt` - The subject list used when running group-level analyses.
 
 Note: An alternate version of the phenotype template and the group analysis subject list will be created that are pre-formatted for use in repeated measures or within-subject group-level analysis.
 
+For INDI releases, we have available :doc:`preconfigured data configuration files </files>`, to generate subject lists. You will need to make sure that the file templates have been modified to match the specific location on your system for these files.
+
 Using the GUI
 --------------
-First, open the CPAC GUI by entering the command ``cpac_gui`` in a terminal window. You will be presented with the main CPAC window.
+First, open the C-PAC GUI by entering the command ``cpac_gui`` in a terminal window. You will be presented with the main C-PAC window.
 
-**Note: You may receive an error about a 'known incorrect sRGB profile' if you are running the GUI within Anaconda/Miniconda on some machines.  This will not affect C-PAC performance and can be ignored.**
+**Note: You may receive an error about a 'known incorrect sRGB profile' on some machines.  This will not affect C-PAC performance and can be ignored.**
 
 .. figure:: /_images/main_gui.png
 
-In order to run CPAC, you must specify a list of subjects and data files to process. This is done by generating or loading a subject list file that contains information about each subject to be run, their associated image files, and (optionally) scan parameter information for use during :doc:`Slice Timing Correction </func>`.
+In order to run C-PAC, you must specify a list of subjects and data files to process. This is done by generating or loading a subject list file that contains information about each subject to be run, their associated image files, and (optionally) scan parameter information for use during :doc:`Slice Timing Correction </func>`.
 
-If you would like to use a previously generated subject list, click the *Load* button and select the appropriate ``.yml`` subject list file. If you have loaded multiple subject lists, use the checkboxes to select which subject lists you would like to run with the pipelines that have been checked in the adjacent *Pipelines* box.
+If you would like to use a previously generated subject list, click the *Load* button and select the appropriate YAML subject list file. If you have loaded multiple subject lists, use the checkboxes to select which subject lists you would like to run with the pipelines that have been checked in the adjacent *Pipelines* box.
 
 If you do not already have a subject list file prepared, click on the *New* button next to the *Subject Lists* box.  This will bring up the following dialog window:
 
@@ -82,10 +82,10 @@ If you do not already have a subject list file prepared, click on the *New* butt
 
 Each of the options in this window will now be described in the sections below.
 
-**Note: Do not confuse the *Load* button on the main window of the GUI with the *Load Settings* button on the Subject List Setup window shown above.  The latter button is intended to reload configuration files that the subject list setup dialogue can use to create subject lists and will not work with other YAML files.  The former button is for already generated subject list files.**
+**Note: Do not confuse the *Load* button on the main window of the GUI with the *Load Settings* button on the Subject List Setup window shown above.  The latter button is intended to load data configuration files that the subject list setup dialogue can use to create subject lists and will not work with other YAML files.  The former button is for already generated subject list files.**
 
 Defining Anatomical and Functional File Path Templates
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------------------------
 CPAC has been designed to process large, complex data sets, and supports processing of multiple scans per subject, multiple scan sessions, and multiple data acquisition sites with differing scan acquisition parameters. Because the file directory structures resulting from such data sets can be complex, it is necessary to manually define the location of the image files to be processed for each subject.
 
 File path templates are defined by adding wildcard characters (``%s``) to the file path of each type of image file to be processed (anatomical and functional). For each file path, you will need to add two of these wildcard characters, one in the place of the acquisition site directory, and one in the place of the subject directory. For example, if the full paths to the image files for :file:`subject_01` were:: 
@@ -126,11 +126,11 @@ A final example is the file structure used by the `Enhanced Nathan Kline Institu
 If you experience difficulties defining file path templates, you may want to re-organize your data to match one of the examples above. If you manually define a file path template and encounter an error when attempting to generate subject lists, please :doc:`contact us </help>` and we will be happy to help.
 
 Selectively Include or Exclude Subjects
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------------
 By default, C-PAC will process data for all subjects matching the file templates defined above. In many cases however, a user may want to run only a subset of the subjects within a particular data set. In others, a user may want to exclude particular subjects from analysis. This can be done by specifying a list of subjects through the :file:`subjectList` or :file:`exclusionSubjectList` options. Lists can be specified either as a text file or directly in :file:`data_config.yml`. Text files should contain one subject ID per line, with each subject ID matching the name of a subject folder. The same steps can used with the :file:`siteList` option to selectively process data from specific acquisition sites.
 
 Set Up Slice Timing Correction
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------
 If you wish to run :doc:`Slice Timing Correction </func>`, you must specify the path to a spreadsheet file containing scan acquisition parameters and slice timing information. Instructions for creating this file can be :doc:`found here </func>`, and we provide preconfigured versions for INDI data releases on the :doc:`Preconfigured Files </files>` page. If you do not wish to run Slice Timing Correction, set :file:`scanParametersCSV = None`.
 
 

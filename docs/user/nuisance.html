@@ -1,3 +1,4 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -13,7 +14,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
+        URL_ROOT:    '',
         VERSION:     '0.3.9 Alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -25,9 +26,9 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="C-PAC 0.3.9 Alpha documentation" href="index.html" />
-    <link rel="up" title="Data Preprocessing" href="preproc.html" />
-    <link rel="next" title="Temporal Filtering" href="temporal.html" />
-    <link rel="prev" title="Motion Correction" href="motion.html" /> 
+    <link rel="up" title="Setting Up A Pipeline Configuration" href="pipeline_config.html" />
+    <link rel="next" title="Motion Correction" href="motion.html" />
+    <link rel="prev" title="Nuisance Signal Regression" href="" /> 
   </head>
   <body>
     <div class="related">
@@ -37,13 +38,13 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="temporal.html" title="Temporal Filtering"
+          <a href="motion.html" title="Motion Correction"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="motion.html" title="Motion Correction"
+          <a href="#" title="Nuisance Signal Regression"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li>
-          <li><a href="preproc.html" accesskey="U">Data Preprocessing</a> &raquo;</li> 
+          <li><a href="pipeline_config.html" accesskey="U">Setting Up A Pipeline Configuration</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -90,8 +91,15 @@
 <h2>Linear and Quadratic Detrending<a class="headerlink" href="#linear-and-quadratic-detrending" title="Permalink to this headline">¶</a></h2>
 <p>Removes linear or quadratic trends in the timeseries. The linear trend is likely due to the scanner heating up as the scan progresses, while the quadratic trend is possibly due to slow movement-related effects.</p>
 </div>
-<div class="section" id="configuring-nuisance-signal-correction-options">
-<h2>Configuring Nuisance Signal Correction Options<a class="headerlink" href="#configuring-nuisance-signal-correction-options" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="temporal-filtering">
+<h2>Temporal Filtering<a class="headerlink" href="#temporal-filtering" title="Permalink to this headline">¶</a></h2>
+<p>The overall goal of temporal filtering is to increase the signal-to-noise ratio. Due to the relatively poor temporal resolution of fMRI, time series data contain little high-frequency noise. They do, however, often contain very slow frequency fluctuations that may be unrelated to the signal of interest. Slow changes in magnetic field strength may be responsible for part of the low-frequency signal observed in fMRI time series (Smith et al., 1999). Other factors contributing to noise in a time series are cardiac and respiratory effects, which will often show up as noise around ~0.15 and ~0.34 Hz, respectively (Wager et al., 2007).  The temporal filtering method implemented by C-PAC is relatively simple. Users specify a lower and upper bound for a band-pass filter, which then removes any information in frequencies outside the specified frequency band.</p>
+<p>Recent work has revealed a portion of the low-frequency signal (0.01 to 0.1 Hz) to be the result of slow oscillations intrinsic to brain activity (Gee et al., 2011; Zuo et al., 2010; Schroeder and Lakatos, 2009). Utilizing measures such as Amplitude of Low Frequency Fluctuations (ALFF) and fractional ALFF, the power of these oscillations has been shown to differ both across subjects (Zang et al., 2007) and between conditions (Yan et al., 2009). Resting functional connectivity has been shown to be most prominent at these frequency bands (Cordes et al., 2001), and as such these fluctuations are commonly used to measure functional connectivity in the resting brain (Gee et al., 2010).</p>
+<p>As these low-frequency oscillations are likely of interest to researchers, it is important to take this knowledge into account when deciding on what temporal filtering settings to use. As a general rule, it is safe to filter frequencies below 0.0083 Hz (Ashby, 2011).</p>
+<p>Additionally, there is some evidence (Davey et al., 2012) that temporal filtering may induce correlation in resting fMRI data, breaking the assumption of temporal sample independence and potentially invalidating the results of connectivity analysis. This should be taken into account when running temporal filtering on data on which you will later run connectivity analysis.</p>
+</div>
+<div class="section" id="configuring-nuisance-signal-regression-options">
+<h2>Configuring Nuisance Signal Regression Options<a class="headerlink" href="#configuring-nuisance-signal-regression-options" title="Permalink to this headline">¶</a></h2>
 <div class="figure">
 <img alt="_images/nuisance.png" src="_images/nuisance.png" />
 </div>
@@ -101,10 +109,78 @@
 <li><strong>Corrections: - [compcor, wm, csf, global, pc1, motion, linear, quadratic, gm]:</strong> The nuisance regressors to covary out.</li>
 <li><strong>CompCor Components - [integer]:</strong> Number of principle components to calculate when running CompCor.  5 or 6 is recommended.</li>
 </ol>
-<div class="section" id="configuration-using-a-yaml-file">
-<h3>Configuration Using a YAML File<a class="headerlink" href="#configuration-using-a-yaml-file" title="Permalink to this headline">¶</a></h3>
-<p>To configure the nuisance signal options within a YAML file, add the following lines to your file (with appropriate substitutions for paths):</p>
-<div class="highlight-python"><div class="highlight"><pre>runNuisance : [1]
+<div class="section" id="configuration-without-the-gui">
+<h3>Configuration Without the GUI<a class="headerlink" href="#configuration-without-the-gui" title="Permalink to this headline">¶</a></h3>
+<p>The following key/value pairs must be defined in your <a class="reference internal" href="pipeline_config.html"><em>pipeline configuration YAML</em></a> for C-PAC to run anatomical preprocessing:</p>
+<div class="section" id="nuisance-correction">
+<h4>Nuisance Correction<a class="headerlink" href="#nuisance-correction" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="52%" />
+<col width="35%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Key</th>
+<th class="head">Description</th>
+<th class="head">Potential Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>runNuisance</td>
+<td>Run Nuisance Signal Correction</td>
+<td>A list where &#8216;1&#8217; represents &#8216;yes&#8217; and &#8216;0&#8217; represents &#8216;no&#8217; (e.g., &#8216;[1]&#8217;).</td>
+</tr>
+<tr class="row-odd"><td>lateral_ventricles_mask</td>
+<td>Standard Lateral Ventricles Binary Mask.</td>
+<td>A path (e.g., $FSLDIR/data/atlases/HarvardOxford/
+HarvardOxford-lateral-ventricles-thr25-2mm.nii.gz).</td>
+</tr>
+<tr class="row-even"><td>Corrections</td>
+<td>The nuisance corrections you wish to apply. Corrections include compcor, wm, csf, gm, global, pc1, motion, linear,
+and quadratic.</td>
+<td>Another mapping of key value pairs, where values are 0 for &#8216;Disable&#8217; and 1 for
+&#8216;Enable&#8217;.</td>
+</tr>
+<tr class="row-odd"><td>nComponents</td>
+<td>The number of principle components to calculate when running CompCor. We recommend 5 or 6.</td>
+<td>A list containing an integer representing the number of PCs (e.g., &#8216;[5]&#8217;).</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+<div class="section" id="temporal-filtering-options">
+<h4>Temporal Filtering Options<a class="headerlink" href="#temporal-filtering-options" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="52%" />
+<col width="35%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Key</th>
+<th class="head">Description</th>
+<th class="head">Potential Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>runFrequencyFiltering</td>
+<td>Apply a temporal band-pass filter to functional data.</td>
+<td>A list where &#8216;1&#8217; represents &#8216;yes&#8217; and &#8216;0&#8217; represents &#8216;no&#8217; (e.g., &#8216;[1]&#8217;).</td>
+</tr>
+<tr class="row-odd"><td>nuisanceBandpassFreq</td>
+<td>Define one or more band-pass filters.</td>
+<td>A list of two-element lists, where the first element in the list is the
+low frequency cutoff and the second element is the high frequency cutoff.</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The box below contains an example of what these parameters might look like when defined in the YAML:</p>
+<div class="highlight-python"><pre>runNuisance : [1]
 lateral_ventricles_mask : /usr/share/fsl/5.0/data/atlases/HarvardOxford/HarvardOxford-lateral-ventricles-thr25-2mm.nii.gz
 Corrections :
     - compcor : 0
@@ -117,44 +193,46 @@ Corrections :
       quadratic : 0
       gm : 0
 nComponents : [5]
-</pre></div>
+runFrequencyFiltering : [1]
+nuisanceBandpassFreq : [[0.009, 0.1]]
+runMedianAngleCorrection : [0]
+targetAngleDeg : [90]</pre>
 </div>
 </div>
 </div>
-<div class="section" id="configuring-median-angle-correction">
-<h2>Configuring Median Angle Correction<a class="headerlink" href="#configuring-median-angle-correction" title="Permalink to this headline">¶</a></h2>
-<div class="figure">
-<img alt="_images/median_angle.png" src="_images/median_angle.png" />
 </div>
-<ol class="arabic simple">
-<li><strong>Run Median Angle Correction - [Off, On, On/Off]:</strong>  Correct for the global signal using Median Angle Correction.</li>
-<li><strong>Target Angle (degrees) - [numerical value]:</strong> Target angle used during Median Angle Correction.</li>
-</ol>
-<div class="section" id="id1">
-<h3>Configuration Using a YAML File<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
-<p>To configure the median angle options within a YAML file, add the following lines to your file (with appropriate substitutions for paths):</p>
-<div class="highlight-python"><div class="highlight"><pre>runMedianAngleCorrection : [0]
-targetAngleDeg : [90]
-</pre></div>
-</div>
-</div>
+<div class="section" id="external-resources">
+<h2>External Resources<a class="headerlink" href="#external-resources" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="http://mindhive.mit.edu/node/116">Temporal Filtering FAQ - MIT Mindhive</a></li>
+</ul>
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>Ashby, F.G., (2011). Preprocessing. In Statistical Analysis of MRI Data. Cambridge: Cambridge University Press.</p>
+<p>Cordes, D., Haughton, V. M., Arfanakis, K., Carew, J. D., Turski, P. A., Moritz, C. H., Quigley, M. A., et al. (2001). <a class="reference external" href="http://www.ajnr.org/content/22/7/1326.long">Frequencies contributing to functional connectivity in the cerebral cortex in “resting-state” data</a>. AJNR. American journal of neuroradiology, 22(7), 1326–1333.</p>
 <p>Dagli, M.S., Ingeholm, J.E., Haxby, J.V., 1999. <a class="reference external" href="http://lbcnimh.nih.gov/OC/Publications/Dagli_et_al_Neuroimage_1999.pdf">Localization of cardiac-induced signal
 change in fMRI</a>. NeuroImage 9, 407–415.</p>
-<p>Fox, M.D., Snyder, A.Z., Vincent, J.L., Corbetta, M., Van Essen, D.C., Raichle, M.E., 2005. <a class="reference external" href="http://www.pnas.org/content/102/27/9673.long">The human brain is intrinsically organized into dynamic, anticorrelated functional networks</a>. Proc Natl Acad Sci U S A 102, 9673-9678.</p>
+<p>Davey, C. E., Grayden, D. B., Egan, G. F., &amp; Johnston, L. A. (2012). <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pubmed/22939874">Filtering induces correlation in fMRI resting state data</a>. Neuroimage. doi:10.1016/j.neuroimage.2012.08.022
+Fox, M.D., Snyder, A.Z., Vincent, J.L., Corbetta, M., Van Essen, D.C., Raichle, M.E., 2005. <a class="reference external" href="http://www.pnas.org/content/102/27/9673.long">The human brain is intrinsically organized into dynamic, anticorrelated functional networks</a>. Proc Natl Acad Sci U S A 102, 9673-9678.</p>
 <p>Fox, M.D., Zhang, D., Snyder, A.Z., Raichle, M.E., 2009. <a class="reference external" href="http://jn.physiology.org/content/101/6/3270.full.pdf">The global signal and observed anticorrelated resting state brain networks</a>. J Neurophysiol 101, 3270-3283.</p>
+<p>Gee, D. G., Biswal, B. B., Kelly, C., Stark, D. E., Margulies, D. S., Shehzad, Z., Uddin, L. Q., et al. (2011). <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3134281/">Low frequency fluctuations reveal integrated and segregated processing among the cerebral hemispheres</a>. Neuroimage, 54(1), 517–527.</p>
 <p>He Hongjian, Liu Thomas T., <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pubmed/21982929">A geometric view of global signal confounds in resting-state functional MRI</a>, NeuroImage, Volume 59, Issue 3, 1 February 2012, Pages 2339-2348</p>
 <p>Murphy, K., Birn, R.M., Handwerker, D.A., Jones, T.B., Bandettini, P.A., 2009. <a class="reference external" href="http://intramural.nimh.nih.gov/research/pubs/bandettini07.pdf">The impact of global signal regression on resting state correlations: are anti-correlated networks introduced</a>? Neuroimage 44, 893-905.</p>
 <p>Power, J.D., Barnes, K.A., Snyder, A.Z., Schlaggar, B.L., Petersen, S.E., 2011. <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pubmed/22019881">Spurious but systematic correlations in functional connectivity MRI networks arise from subject motion</a>. Neuroimage 59, 2142-2154.</p>
 <p>Power, J.D., Barnes, K.A., Snyder, A.Z., Schlaggar, B.L., Petersen, S.E., 2012. <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pubmed/22440651">Steps toward optimizing motion artifact removal in functional connectivity MRI; a reply to Carp</a>. Neuroimage.</p>
 <p>Saad, Z.S., Gotts, S.J., Murphy, K., Chen, G., Jo, H.J., Martin, A., Cox, R.W., 2012. <a class="reference external" href="http://afni.nimh.nih.gov/sscc/rwcox/papers/TroubleAtRest2012.pdf">Trouble at rest: how correlation patterns and group differences become distorted after global signal regression</a>. Brain Connect 2, 25-32.</p>
 <p>Satterthwaite, T.D., Wolf, D.H., Loughead, J., Ruparel, K., Elliott, M.A., Hakonarson, H., Gur, R.C., Gur, R.E., 2012. <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pubmed/22233733">Impact of in-scanner head motion on multiple measures of functional connectivity: Relevance for studies of neurodevelopment in youth</a>. Neuroimage 60, 623-632.</p>
+<p>Schroeder, C. E., &amp; Lakatos, P. (2009). <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2990947/">Low-frequency neuronal oscillations as instruments of sensory selection</a>. Trends in neurosciences, 32(1), 9–18. doi:10.</p>
+<p>Smith, AM, Lewis, BK, Ruttimann, UE, Ye, FQ, Sinnwell, TM, Yang, Y, Duyn, JH, &amp; Frank, JA. 1999. <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pubmed/10329292">Investigation of low frequency drift in fMRI signal</a>. Neuroimage, 9, 526–33.</p>
 <p>Thomas, C.G., Harshman, R.A., Menon, R.S., 2002. <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pubmed/12414291">Noise reduction in BOLD-based fMRI using component analysis</a>. NeuroImage 17 (3), 1521–1537.</p>
 <p>Van Dijk, K.R., Sabuncu, M.R., Buckner, R.L., 2012. <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pubmed/21810475">The influence of head motion on intrinsic functional connectivity MRI</a>. Neuroimage 59, 431-438.</p>
+<p>Wager, T.D., Hernandes, L., Jonides, J., and Lindquist, M., Elements of Functional Neuroimaging. In Cacioppo, J.T., Tassinary, L.G., and Berntson, G.G., (2007) Handbook of Psychophysiology, Third Edition.</p>
 <p>Weissenbacher, A., Kasess, C., Gerstl, F., Lanzenberger, R., Moser, E., Windischberger, C., 2009. <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pubmed/19442749">Correlations and anticorrelations in resting-state functional connectivity MRI: a quantitative comparison of preprocessing strategies</a>. Neuroimage 47, 1408-1416</p>
 <p>Windischberger, C., Langenberger, H., Sycha, T., Tschernko, E.M., Fuchsjager-Mayerl, G., Schmetterer, L., Moser, E., 2002. <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pubmed/12467863">On the origin of respiratory artifacts in BOLD-EPI of the human brain</a>. Magn. Reson. Imaging 20, 575–582.</p>
+<p>Yan, C., Liu, D., He, Y., Zou, Q., Zhu, C., Zuo, X., Long, X., et al. (2009). <a class="reference external" href="http://www.plosone.org/article/info:doi/10.1371/journal.pone.0005743">Spontaneous brain activity in the default mode network is sensitive to different resting-state conditions with limited cognitive load</a>. PLoS ONE, 4(5), e5743.</p>
+<p>Zang, Y.-F., He, Y., Zhu, C.-Z., Cao, Q.-J., Sui, M.-Q., Liang, M., Tian, L.-X., et al. (2007). <a class="reference external" href="http://nlpr-web.ia.ac.cn/2007papers/gjkw/gk38.pdf">Altered baseline brain activity in children with ADHD revealed by resting-state functional MRI</a>. Brain &amp; development, 29(2), 83–91.</p>
+<p>Zuo, X.-N., Di Martino, A., Kelly, C., Shehzad, Z. E., Gee, D. G., Klein, D. F., Castellanos, F. X., et al. (2010). <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2856476/">The oscillating brain: complex and reliable</a>. Neuroimage, 49(2), 1432–1445.</p>
 </div>
 </div>
 
@@ -170,10 +248,11 @@ change in fMRI</a>. NeuroImage 9, 407–415.</p>
 <h3><a href="index.html">Table Of Contents</a></h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installing C-PAC</a></li>
-<li class="toctree-l1"><a class="reference internal" href="use.html">Using C-PAC</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cloud.html">Running C-PAC in the Cloud</a></li>
-<li class="toctree-l1"><a class="reference internal" href="preproc.html">Data Preprocessing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="outputs.html">Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="subject_list_config.html">Setting Up A Subject List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline_config.html">Setting Up A Pipeline Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group_analysis.html">Setting Up Group Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">Running C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cloud.html">Using C-PAC in the AWS Cloud</a></li>
 <li class="toctree-l1"><a class="reference internal" href="files.html">Preconfigured Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">C-PAC Benchmark</a></li>
 <li class="toctree-l1"><a class="reference internal" href="help.html">Troubleshooting and Help</a></li>
@@ -204,18 +283,18 @@ change in fMRI</a>. NeuroImage 9, 407–415.</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="temporal.html" title="Temporal Filtering"
+          <a href="motion.html" title="Motion Correction"
              >next</a> |</li>
         <li class="right" >
-          <a href="motion.html" title="Motion Correction"
+          <a href="#" title="Nuisance Signal Regression"
              >previous</a> |</li>
         <li><a href="index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li>
-          <li><a href="preproc.html" >Data Preprocessing</a> &raquo;</li> 
+          <li><a href="pipeline_config.html" >Setting Up A Pipeline Configuration</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2015, C-PAC Team.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

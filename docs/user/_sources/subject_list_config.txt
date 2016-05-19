@@ -34,12 +34,13 @@ An example of such a YAML file can be found `here <https://raw.githubusercontent
     |                               | A value of 'None' means all sites will be run. This list can also be read from a text file.                                  | file with site IDs separated by new lines, or 'None'.                              |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | scanParametersCSV             | Path to a CSV specifying the slice time acquisition parameters for scans.  If set to 'None', the NifTI headers will be used. | A path or 'None'.                                                                  |
+    |                               | Instructions for creating such a file can be found :doc:`here </func>`.                                                      |                                                                                    |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | outputSubjectListLocation     | The directory where the subject list will be generated.                                                                      | A path.                                                                            |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | subjectListName               | A name for the subject list.                                                                                                 | A list containing a string (e.g.,['ABIDE']).                                       |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
- 
+
 Generating Subject Lists with the Data Configuration File
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 When you are done setting up the data configuration file, navigate in a terminal to the directory where you would like to store your subject list.  Then, open iPython by typing :file:`ipython` and run one of the following commands from the iPython prompt.
@@ -72,12 +73,27 @@ First, open the C-PAC GUI by entering the command ``cpac_gui`` in a terminal win
 
 .. figure:: /_images/main_gui.png
 
-Now, to generate a subject list file, click on the *New* button next to the *Subject Lists* box.  This will bring up the following dialog window:
+Now, to generate a subject list file, click on the *New* button next to the *Subject Lists* box.  This will bring up the following dialog window, which will allow you to define the parameters of the data configuration YAML:
 
 .. figure:: /_images/subject_list_gui.png
 
-Each of the options in this window will now be described in the sections below.
+#. **Anatomical File Path Template - [text]:** A file path template for anatomical scans (see below for how to define templates).
 
+#. **Functional File Path Template - [text]:** A file path template for functional scans (see below for how to define templates).
+
+#. **Subjects to Include (Optional) - [text/path]:** An optional comma-separated list of subjects to include (if you wish to include only a subset of subjects whose scans match the templates).  A value of 'None' means all subjects will be run. This list can also be read from a text file whose path is given in this field.
+
+#. **Subjects to Exclude (Optional) - [text/path]:** An optional comma-separated list of subjects to exclude (if you wish to exclude only a subset of subjects whose scans match the templates).  A value of 'None' means all subjects will be run. This list can also be read from a text file whose path is given in this field.
+
+#. **Sites to Include (Optional) - [text/path]:** An optional comma-separated list of sites to include (if you wish to include only a subset of sites whose scans match the templates).  A value of 'None' means all sites will be run. This list can also be read from a text file whose path is given in this field.
+
+#. **Scan Parameters File (Optional) - [path]:**  Path to a CSV specifying the slice time acquisition parameters for scans.  If set to 'None', the NifTI headers will be used. Instructions for creating such a file can be found :doc:`here </func>`.
+
+#. **Output Directory - [path]:** The directory where the subject list will be generated.
+
+#. **Subject List Name - [text]:** A name for the subject list.
+
+#. **Multiscan Data [checkbox]:** Check this box only if the scans have different slice timing information.
 
 Defining Anatomical and Functional File Path Templates
 -------------------------------------------------------
@@ -90,8 +106,8 @@ File path templates are defined by adding wildcard characters (``%s``) to the fi
 
 Then the file path templates would would be::
 
- anatomicalTemplate = '/home/data/%s/%s/anat/mprage.nii.gz'
- functionalTemplate = '/home/data/%s/%s/func/rest.nii.gz'
+ anatomicalTemplate : /home/data/%s/%s/anat/mprage.nii.gz
+ functionalTemplate : /home/data/%s/%s/func/rest.nii.gz
 
 It should be noted that C-PAC currently requires subject directories to be within a site level directory. If your data set does not contain scans from multiple acquisition sites, we recommend creating a dummy :file:`site_1` directory and placing subject files inside this directory. This peculiarity will be fixed in future versions of C-PAC.
 
@@ -104,7 +120,7 @@ In cases where file paths differ in more than just the site and subject director
 
 The file path template would be::
 
-    functionalTemplate = '/home/data/%s/%s/*_func/session_*/rest_*.nii.gz'
+    functionalTemplate : /home/data/%s/%s/*_func/session_*/rest_*.nii.gz
 
 As an example of how the templates work, the image below illustrates the file structure used by the `1000 Functional Connectomes <http://fcon_1000.projects.nitrc.org/fcpClassic/FcpTable.html>`_ data release and the resulting file path templates.
 
@@ -119,13 +135,3 @@ A final example is the file structure used by the `Enhanced Nathan Kline Institu
 .. figure:: /_images/nki-rs_template.png
 
 If you experience difficulties defining file path templates, you may want to re-organize your data to match one of the examples above. If you manually define a file path template and encounter an error when attempting to generate subject lists, please :doc:`contact us </help>` and we will be happy to help.
-
-Selectively Include or Exclude Subjects
----------------------------------------
-By default, C-PAC will process data for all subjects matching the file templates defined above. In many cases however, you may want to run only a subset of the subjects within a particular data set. In others, you may want to exclude particular subjects from analysis. This can be done by specifying a list of subjects through the :file:`subjectList` or :file:`exclusionSubjectList` options. Lists can be specified either as a text file or directly in :file:`data_config.yml`. Text files should contain one subject ID per line, with each subject ID matching the name of a subject folder. The same steps can used with the :file:`siteList` option to selectively process data from specific acquisition sites.
-
-Set Up Slice Timing Correction
-------------------------------
-If you wish to run :doc:`Slice Timing Correction </func>`, you must specify the path to a spreadsheet file containing scan acquisition parameters and slice timing information. Instructions for creating this file can be :doc:`found here </func>`, and we provide preconfigured versions for INDI data releases on the :doc:`Preconfigured Files </files>` page. If you do not wish to run Slice Timing Correction, set :file:`scanParametersCSV = None`.
-
-

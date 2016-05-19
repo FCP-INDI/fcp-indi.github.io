@@ -1,0 +1,270 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Setting Up A Subject List &mdash; C-PAC 0.3.9 Alpha documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.3.9 Alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="C-PAC 0.3.9 Alpha documentation" href="index.html" />
+    <link rel="next" title="Setting Up A Pipeline Configuration" href="pipeline_config.html" />
+    <link rel="prev" title="Installing C-PAC" href="install.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="pipeline_config.html" title="Setting Up A Pipeline Configuration"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installing C-PAC"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="setting-up-a-subject-list">
+<h1>Setting Up A Subject List<a class="headerlink" href="#setting-up-a-subject-list" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>For C-PAC to run an analysis, it must have at least one pipeline configuration file and one subject list.  The creation of a pipeline configuration file is treated in the next section.  This section will deal with how to create a C-PAC subject list, which specifies a set of subjects, where to find each subject&#8217;s associated image files, and (optionally) scan parameter information for use during <a class="reference internal" href="func.html"><em>Slice Timing Correction</em></a>.  There are two ways to set up such a list:</p>
+<ul class="simple">
+<li>Using a text editor (useful for servers where using the C-PAC GUI is not possible or impractical)</li>
+<li>Using the subject list builder interface in the C-PAC GUI</li>
+</ul>
+<p>The first method requires you to create a data configuration file, which encodes settings that you would normally enter through the subject list builder GUI (such as a template file path used to grab T1 anatomical data; see <em>Defining Anatomical and Functional File Path Templates</em> below).  Both methods will result in the creation of a list that can be re-used for future runs with different pipelines.</p>
+</div>
+<div class="section" id="using-a-text-editor">
+<h2>Using a Text Editor<a class="headerlink" href="#using-a-text-editor" title="Permalink to this headline">¶</a></h2>
+<p>Data configuration files are stored as YAML files, which are text files meant to encode data in a human-readable markup (see <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">here</a> for more details).  Each of the parameters used by C-PAC to assemble your subject list can be specified as key-value pairs, so a data configuration YAML might have multiple lines of the form:</p>
+<div class="highlight-python"><pre>key : value</pre>
+</div>
+<p>An example of such a YAML file can be found <a class="reference external" href="https://raw.githubusercontent.com/FCP-INDI/C-PAC/master/configs/data_config.yml">here</a>.  You can create your own configuration file using your favorite text editor and the table of keys and their potential values in the table below.</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="52%" />
+<col width="35%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Key</th>
+<th class="head">Description</th>
+<th class="head">Potential Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>anatomicalTemplate</td>
+<td>A file path template for anatomical scans (see below for how to define templates).</td>
+<td>A path template.</td>
+</tr>
+<tr class="row-odd"><td>functionalTemplate</td>
+<td>A file path template for functional scans (see below for how to define templates).</td>
+<td>A path template.</td>
+</tr>
+<tr class="row-even"><td>subjectList</td>
+<td>An optional list of subjects to include (if you wish to include only a subset of subjects whose scans match the templates).
+A value of &#8216;None&#8217; means all subjects will be run. This list can also be read from a text file.</td>
+<td>A list of strings with subject IDs (e.g., [&#8216;sub-1&#8217;,&#8217;sub-2&#8217;]), a path to a text
+file with subject IDs separated by new lines, or &#8216;None&#8217;.</td>
+</tr>
+<tr class="row-odd"><td>exclusionSubjectList</td>
+<td>An optional list of subjects to exclude (if you wish to exclude a subset of subjects whose scans match the templates).
+A value of &#8216;None&#8217; means all subjects will be run. This list can also be read from a text file.</td>
+<td>A list of strings with subject IDs (e.g., [&#8216;sub-1&#8217;,&#8217;sub-2&#8217;]), a path to a text
+file with subject IDs separated by new lines, or &#8216;None&#8217;.</td>
+</tr>
+<tr class="row-even"><td>siteList</td>
+<td>An optional list of sites to include (if you wish to include only a subset of sites whose scans match the templates).
+A value of &#8216;None&#8217; means all sites will be run. This list can also be read from a text file.</td>
+<td>A list of strings with site IDs (e.g., [&#8216;Lexington&#8217;,&#8217;Albany&#8217;]), a path to a text
+file with site IDs separated by new lines, or &#8216;None&#8217;.</td>
+</tr>
+<tr class="row-odd"><td>scanParametersCSV</td>
+<td>Path to a CSV specifying the slice time acquisition parameters for scans.  If set to &#8216;None&#8217;, the NifTI headers will be used.
+Instructions for creating such a file can be found <a class="reference internal" href="func.html"><em>here</em></a>.</td>
+<td>A path or &#8216;None&#8217;.</td>
+</tr>
+<tr class="row-even"><td>outputSubjectListLocation</td>
+<td>The directory where the subject list will be generated.</td>
+<td>A path.</td>
+</tr>
+<tr class="row-odd"><td>subjectListName</td>
+<td>A name for the subject list.</td>
+<td>A list containing a string (e.g.,[&#8216;ABIDE&#8217;]).</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<div class="section" id="generating-subject-lists-with-the-data-configuration-file">
+<h3>Generating Subject Lists with the Data Configuration File<a class="headerlink" href="#generating-subject-lists-with-the-data-configuration-file" title="Permalink to this headline">¶</a></h3>
+<p>When you are done setting up the data configuration file, navigate in a terminal to the directory where you would like to store your subject list.  Then, open iPython by typing <tt class="file docutils literal"><span class="pre">ipython</span></tt> and run one of the following commands from the iPython prompt.</p>
+<p>If you are not running slice timing correction, or all subjects within a site have the same acquisition order:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">CPAC</span>
+<span class="n">CPAC</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">extract_data</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s">&#39;/path/to/data_config.yml&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you are running slice timing correction and subjects within a site have differing acquisition orders:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">CPAC</span>
+<span class="n">CPAC</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">extract_data_multiscan_params</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s">&#39;/path/to/data_config.yml&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will the subject list in your current directory, as well as two other files needed to run group-level analyses:</p>
+<ul class="simple">
+<li><tt class="file docutils literal"><span class="pre">CPAC_subject_list_&lt;name&gt;.yml</span></tt> - The subject list used when running preprocessing and individual-level analyses. Contains subject IDs and paths to their associated data files.  Subject lists are also stored as YAMLs.</li>
+<li><tt class="file docutils literal"><span class="pre">template_phenotypic.csv</span></tt> - A template phenotypic file for use with the <a class="reference internal" href="group_analysis.html"><em>group-level analysis builder</em></a>.</li>
+<li><tt class="file docutils literal"><span class="pre">subject_list_group_analysis.txt</span></tt> - The subject list used when running group-level analyses.</li>
+</ul>
+<p>Note: An alternate version of the phenotype template and the group analysis subject list will be created that are pre-formatted for use in repeated measures or within-subject group-level analysis.</p>
+<p>For INDI releases, we have available <a class="reference internal" href="files.html"><em>preconfigured data configuration files</em></a>, to generate subject lists. You will need to make sure that the file templates have been modified to match the specific location on your system for these files.</p>
+</div>
+</div>
+<div class="section" id="using-the-gui">
+<h2>Using the GUI<a class="headerlink" href="#using-the-gui" title="Permalink to this headline">¶</a></h2>
+<p>First, open the C-PAC GUI by entering the command <tt class="docutils literal"><span class="pre">cpac_gui</span></tt> in a terminal window. You will be presented with the main C-PAC window.</p>
+<p><strong>Note: You may receive an error about a &#8216;known incorrect sRGB profile&#8217; on some machines.  This will not affect C-PAC performance and can be ignored.</strong></p>
+<div class="figure">
+<img alt="_images/main_gui.png" src="_images/main_gui.png" />
+</div>
+<p>Now, to generate a subject list file, click on the <em>New</em> button next to the <em>Subject Lists</em> box.  This will bring up the following dialog window, which will allow you to define the parameters of the data configuration YAML:</p>
+<div class="figure">
+<img alt="_images/subject_list_gui.png" src="_images/subject_list_gui.png" />
+</div>
+<ol class="arabic simple">
+<li><strong>Anatomical File Path Template - [text]:</strong> A file path template for anatomical scans (see below for how to define templates).</li>
+<li><strong>Functional File Path Template - [text]:</strong> A file path template for functional scans (see below for how to define templates).</li>
+<li><strong>Subjects to Include (Optional) - [text/path]:</strong> An optional comma-separated list of subjects to include (if you wish to include only a subset of subjects whose scans match the templates).  A value of &#8216;None&#8217; means all subjects will be run. This list can also be read from a text file whose path is given in this field.</li>
+<li><strong>Subjects to Exclude (Optional) - [text/path]:</strong> An optional comma-separated list of subjects to exclude (if you wish to exclude only a subset of subjects whose scans match the templates).  A value of &#8216;None&#8217; means all subjects will be run. This list can also be read from a text file whose path is given in this field.</li>
+<li><strong>Sites to Include (Optional) - [text/path]:</strong> An optional comma-separated list of sites to include (if you wish to include only a subset of sites whose scans match the templates).  A value of &#8216;None&#8217; means all sites will be run. This list can also be read from a text file whose path is given in this field.</li>
+<li><strong>Scan Parameters File (Optional) - [path]:</strong>  Path to a CSV specifying the slice time acquisition parameters for scans.  If set to &#8216;None&#8217;, the NifTI headers will be used. Instructions for creating such a file can be found <a class="reference internal" href="func.html"><em>here</em></a>.</li>
+<li><strong>Output Directory - [path]:</strong> The directory where the subject list will be generated.</li>
+<li><strong>Subject List Name - [text]:</strong> A name for the subject list.</li>
+<li><strong>Multiscan Data [checkbox]:</strong> Check this box only if the scans have different slice timing information.</li>
+</ol>
+</div>
+<div class="section" id="defining-anatomical-and-functional-file-path-templates">
+<h2>Defining Anatomical and Functional File Path Templates<a class="headerlink" href="#defining-anatomical-and-functional-file-path-templates" title="Permalink to this headline">¶</a></h2>
+<p>C-PAC has been designed to process large, complex data sets, and supports processing of multiple scans per subject, multiple scan sessions, and multiple data acquisition sites with differing scan acquisition parameters. Because the file directory structures resulting from such data sets can be complex, it is necessary to manually define the location of the image files to be processed for each subject.</p>
+<p>File path templates are defined by adding wildcard characters (<tt class="docutils literal"><span class="pre">%s</span></tt>) to the file path of each type of image file to be processed (anatomical and functional). For each file path, you will need to add two of these wildcard characters, one in the place of the acquisition site directory, and one in the place of the subject directory. For example, if the full paths to the image files for <tt class="file docutils literal"><span class="pre">subject_01</span></tt> were:</p>
+<div class="highlight-python"><pre>/home/data/site_1/subject_1/anat/mprage.nii.gz
+/home/data/site_1/subject_1/func/rest.nii.gz</pre>
+</div>
+<p>Then the file path templates would would be:</p>
+<div class="highlight-python"><pre>anatomicalTemplate : /home/data/%s/%s/anat/mprage.nii.gz
+functionalTemplate : /home/data/%s/%s/func/rest.nii.gz</pre>
+</div>
+<p>It should be noted that C-PAC currently requires subject directories to be within a site level directory. If your data set does not contain scans from multiple acquisition sites, we recommend creating a dummy <tt class="file docutils literal"><span class="pre">site_1</span></tt> directory and placing subject files inside this directory. This peculiarity will be fixed in future versions of C-PAC.</p>
+<p>In cases where file paths differ in more than just the site and subject directories, asterisks can be used. This is useful for data sets containing multiple scans per subject, multiple scan sessions, or subject-specific information in file or folder names. You may use as many asterisks as necessary to to define your file path templates. For example, if the paths to functional image files for a subject were:</p>
+<div class="highlight-python"><pre>/home/data/site_1/subject_1/s01_func/session_1/rest_1.nii.gz
+/home/data/site_1/subject_1/s01_func/session_1/rest_2.nii.gz
+/home/data/site_1/subject_1/s01_func/session_2/rest_1.nii.gz
+/home/data/site_1/subject_1/s01_func/session_2/rest_2.nii.gz</pre>
+</div>
+<p>The file path template would be:</p>
+<div class="highlight-python"><pre>functionalTemplate : /home/data/%s/%s/*_func/session_*/rest_*.nii.gz</pre>
+</div>
+<p>As an example of how the templates work, the image below illustrates the file structure used by the <a class="reference external" href="http://fcon_1000.projects.nitrc.org/fcpClassic/FcpTable.html">1000 Functional Connectomes</a> data release and the resulting file path templates.</p>
+<div class="figure">
+<img alt="_images/fcon_structure.png" src="_images/fcon_structure.png" />
+</div>
+<p>Another example is the file structure used by the <a class="reference external" href="http://fcon_1000.projects.nitrc.org/indi/abide/">ABIDE</a> and <a class="reference external" href="http://fcon_1000.projects.nitrc.org/indi/adhd200/">ADHD-200</a> releases.</p>
+<div class="figure">
+<img alt="_images/abide_adhd_structure.png" src="_images/abide_adhd_structure.png" />
+</div>
+<p>A final example is the file structure used by the <a class="reference external" href="http://fcon_1000.projects.nitrc.org/indi/enhanced/">Enhanced Nathan Kline Institute-Rockland Sample</a>.</p>
+<div class="figure">
+<img alt="_images/nki-rs_template.png" src="_images/nki-rs_template.png" />
+</div>
+<p>If you experience difficulties defining file path templates, you may want to re-organize your data to match one of the examples above. If you manually define a file path template and encounter an error when attempting to generate subject lists, please <a class="reference internal" href="help.html"><em>contact us</em></a> and we will be happy to help.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/cpac_logo.jpg" alt="Logo"/>
+            </a></p>
+<h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installing C-PAC</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Setting Up A Subject List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline_config.html">Setting Up A Pipeline Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group_analysis.html">Setting Up Group Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">Running C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cloud.html">Using C-PAC in the AWS Cloud</a></li>
+<li class="toctree-l1"><a class="reference internal" href="files.html">Preconfigured Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmark.html">C-PAC Benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="help.html">Troubleshooting and Help</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnotes.html">Release Notes</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="pipeline_config.html" title="Setting Up A Pipeline Configuration"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installing C-PAC"
+             >previous</a> |</li>
+        <li><a href="index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, C-PAC Team.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

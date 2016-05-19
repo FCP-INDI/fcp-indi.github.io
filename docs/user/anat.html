@@ -1,3 +1,4 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -13,7 +14,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
+        URL_ROOT:    '',
         VERSION:     '0.3.9 Alpha',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -25,9 +26,9 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="C-PAC 0.3.9 Alpha documentation" href="index.html" />
-    <link rel="up" title="Data Preprocessing" href="preproc.html" />
+    <link rel="up" title="Setting Up A Pipeline Configuration" href="pipeline_config.html" />
     <link rel="next" title="Functional Preprocessing" href="func.html" />
-    <link rel="prev" title="Data Preprocessing" href="preproc.html" /> 
+    <link rel="prev" title="Derivatives Settings" href="deriv_config.html" /> 
   </head>
   <body>
     <div class="related">
@@ -40,10 +41,10 @@
           <a href="func.html" title="Functional Preprocessing"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="preproc.html" title="Data Preprocessing"
+          <a href="deriv_config.html" title="Derivatives Settings"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li>
-          <li><a href="preproc.html" accesskey="U">Data Preprocessing</a> &raquo;</li> 
+          <li><a href="pipeline_config.html" accesskey="U">Setting Up A Pipeline Configuration</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -79,18 +80,68 @@
 <li><strong>FSL FNIRT Reference Mask - [path]:</strong> A reference mask to be used by FNIRT.</li>
 <li><strong>Use skull-on image to calculate transform? (ANTS only) - [Off, On]:</strong> Register skull-on anatomical image to template. Calculating the transform with skull-stripped images is reported to be better, but it requires very high-quality skull-stripping. If skull-stripping is imprecise, registration with skull is preferred. Note: This option only affects ANTS due to the fact that FNIRT already uses skull-on images for calculating warps.</li>
 </ol>
-<div class="section" id="configuration-using-a-yaml-file">
-<h3>Configuration Using a YAML File<a class="headerlink" href="#configuration-using-a-yaml-file" title="Permalink to this headline">¶</a></h3>
-<p>To configure the anatomical registration options within a YAML file, add the following lines to your file (with appropriate substitutions for paths):</p>
-<div class="highlight-python"><div class="highlight"><pre>runRegistrationPreprocessing : [1]
+<div class="section" id="configuration-without-the-gui">
+<h3>Configuration Without the GUI<a class="headerlink" href="#configuration-without-the-gui" title="Permalink to this headline">¶</a></h3>
+<p>The following key/value pairs must be defined in your <a class="reference internal" href="pipeline_config.html"><em>pipeline configuration YAML</em></a> for C-PAC to run anatomical preprocessing:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="52%" />
+<col width="35%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Key</th>
+<th class="head">Description</th>
+<th class="head">Potential Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>runRegistrationPreprocessing</td>
+<td>Register anatomical images to a template.</td>
+<td>A list where &#8216;1&#8217; represents &#8216;yes&#8217; and &#8216;0&#8217; represents &#8216;no&#8217; (e.g., &#8216;[1]&#8217;).</td>
+</tr>
+<tr class="row-odd"><td>resolution_for_anat</td>
+<td>The resolution to which anatomical images should be transformed during registration.</td>
+<td>1mm,2mm,3mm</td>
+</tr>
+<tr class="row-even"><td>template_brain_only_for_anat</td>
+<td>Template to be used during registration.  Normally the default value (seen in the example YAML) is fine.</td>
+<td>A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz).</td>
+</tr>
+<tr class="row-odd"><td>template_skull_for_anat</td>
+<td>Template to be used during registration.  Normally the default value (seen in the example YAML) is fine.</td>
+<td>A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz).</td>
+</tr>
+<tr class="row-even"><td>regOption</td>
+<td>Use either ANTS or FSL (FLIRT and FNIRT) as your anatomical registration method.</td>
+<td>A list containing &#8216;ANTS&#8217;, &#8216;FSL&#8217;, or both (e.g., [&#8216;FSL&#8217;]).</td>
+</tr>
+<tr class="row-odd"><td>fnirtConfig</td>
+<td>Configuration file to be used by FSL to set FNIRT parameters.</td>
+<td>A template name (e.g., &#8216;T1_2_MNI152_2mm&#8217;).</td>
+</tr>
+<tr class="row-even"><td>ref_mask</td>
+<td>Configuration file to be used by FSL to set FNIRT parameters.</td>
+<td>A path (e.g.,
+$FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain_mask_dil.nii.gz).</td>
+</tr>
+<tr class="row-odd"><td>regWithSkull</td>
+<td>Register skull-on anatomical image to a template.</td>
+<td>A list where &#8216;1&#8217; represents &#8216;yes&#8217; and &#8216;0&#8217; represents &#8216;no&#8217; (e.g., &#8216;[1]&#8217;).</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The box below contains an example of what these parameters might look like when defined in the YAML:</p>
+<div class="highlight-python"><pre>runRegistrationPreprocessing : [1]
 resolution_for_anat : 2mm
 template_brain_only_for_anat : /usr/share/fsl/5.0/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz
 template_skull_for_anat : /usr/share/fsl/5.0/data/standard/MNI152_T1_${resolution_for_anat}.nii.gz
-regOption : [&#39;ANTS&#39;]
+regOption : ['ANTS']
 fnirtConfig : T1_2_MNI152_2mm
 ref_mask : $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain_mask_symmetric_dil.nii.gz
-regWithSkull : [0]
-</pre></div>
+regWithSkull : [0]</pre>
 </div>
 </div>
 </div>
@@ -103,7 +154,7 @@ regWithSkull : [0]
 <p>The default tissue probability maps (referred to as Prior Probability Maps) used during segmentation are based on information from a large number of brains, and are based on the priors distributed with FSL and are included in the &#8220;Image Resource Files&#8221; package downloaded during installation. For more detail on how CPAC computes these steps, please see the <a class="reference external" href="http://fcp-indi.github.io/docs/developer/workflows/seg_preproc.html">Segmentation Page of the developer documentation</a>.</p>
 <p>If you would like to use different priors, they must first be binarized such that for each voxel the probability for each tissue type is set to either 0% or 100%.</p>
 <p>The following bash script will binarize existing priors:</p>
-<div class="highlight-python"><div class="highlight"><pre># Define what kind of priors to generate (gray, white, or csf)
+<div class="highlight-python"><pre># Define what kind of priors to generate (gray, white, or csf)
 tissue=gray
 
 # Define threshold to use when binarizing data
@@ -113,8 +164,7 @@ threshold=0.5
 3dcopy $FSL_DIR/data/standard/tissuepriors/avg152T1_${tissue}.hdr avg152T1_${tissue}.nii.gz
 
 # Binarize image using threshold set above
-fslmaths avg152T1_${tissue}.nii.gz -thr $threshold -bin avg152T1_${tissue}_2mm_bin
-</pre></div>
+fslmaths avg152T1_${tissue}.nii.gz -thr $threshold -bin avg152T1_${tissue}_2mm_bin</pre>
 </div>
 </div>
 <div class="section" id="configuring-cpac-to-run-anatomical-tissue-segmentation">
@@ -133,17 +183,71 @@ fslmaths avg152T1_${tissue}.nii.gz -thr $threshold -bin avg152T1_${tissue}_2mm_b
 <li><strong>CSF Prior Probability Map - [path]:</strong> Full path to a binarized CSF prior probability map. It is not necessary to change this path unless you intend to use non-standard priors.</li>
 </ol>
 <div class="section" id="id1">
-<h3>Configuration Using a YAML File<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
-<p>To configure the timeseries options within a YAML file, add the following lines to your file (with appropriate substitutions for paths):</p>
-<div class="highlight-python"><div class="highlight"><pre>runSegmentationPreprocessing : [1]
+<h3>Configuration Without the GUI<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>The following key/value pairs must be defined in your <a class="reference internal" href="pipeline_config.html"><em>pipeline configuration YAML</em></a> for C-PAC to run anatomical tissue segmentation:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="52%" />
+<col width="35%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Key</th>
+<th class="head">Description</th>
+<th class="head">Potential Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>runSegmentationPreprocessing</td>
+<td>Automatically segment anatomical images into white matter, gray matter, and CSF based on prior probability maps.</td>
+<td>A list where &#8216;1&#8217; represents &#8216;yes&#8217; and &#8216;0&#8217; represents &#8216;no&#8217; (e.g., &#8216;[1]&#8217;).</td>
+</tr>
+<tr class="row-odd"><td>whiteMatterThreshold</td>
+<td>Only voxels with a White Matter probability greater than this value will be classified as White Matter.</td>
+<td>A list composed of one or more p-values (e.g., [0.98,0.93]).</td>
+</tr>
+<tr class="row-even"><td>grayMatterThreshold</td>
+<td>Only voxels with a Gray Matter probability greater than this value will be classified as Gray Matter.</td>
+<td>A list composed of one or more p-values (e.g., [0.70,0.93]).</td>
+</tr>
+<tr class="row-odd"><td>cerebralSpinalFluidThreshold</td>
+<td>Only voxels with a CSF probability greater than this value will be classified as CSF.</td>
+<td>A list composed of one or more p-values (e.g., [0.98,0.93]).</td>
+</tr>
+<tr class="row-even"><td>priors_path</td>
+<td>Full path to a directory containing binarized prior probability maps. These maps are included as part of the &#8216;CPAC Image
+Resource Files&#8217; package from installation. It is not necessary to change this path unless you intend to use non-standard
+priors.</td>
+<td>A path (e.g., $FSLDIR/data/standard/tissuepriors/${resolution_for_anat}).</td>
+</tr>
+<tr class="row-odd"><td>PRIORS_WHITE</td>
+<td>Full path to a binarized White Matter prior probability map. It is not necessary to change this path unless you intend to use
+non-standard priors.</td>
+<td>A path (e.g., $priors_path/avg152T1_white_bin.nii.gz).</td>
+</tr>
+<tr class="row-even"><td>PRIORS_GRAY</td>
+<td>Full path to a binarized Gray Matter prior probability map. It is not necessary to change this path unless you intend to use
+non-standard priors.</td>
+<td>A path (e.g., $priors_path/avg152T1_gray_bin.nii.gz).</td>
+</tr>
+<tr class="row-odd"><td>PRIORS_CSF</td>
+<td>Full path to a binarized CSF prior probability map. It is not necessary to change this path unless you intend to use
+non-standard priors.</td>
+<td>A path (e.g., $priors_path/avg152T1_csf_bin.nii.gz).</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>The box below contains an example of what these parameters might look like when defined in the YAML:</p>
+<div class="highlight-python"><pre>runSegmentationPreprocessing : [1]
 whiteMatterThreshold : [0.98]
 grayMatterThreshold : [0.7]
 cerebralSpinalFluidThreshold : [0.98]
 priors_path : /usr/share/fsl/5.0/data/standard/tissuepriors/${resolution_for_anat}
 PRIORS_WHITE : $priors_path/avg152T1_white_bin.nii.gz
 PRIORS_GRAY : $priors_path/avg152T1_gray_bin.nii.gz
-PRIORS_CSF : $priors_path/avg152T1_csf_bin.nii.gz
-</pre></div>
+PRIORS_CSF : $priors_path/avg152T1_csf_bin.nii.gz</pre>
 </div>
 </div>
 </div>
@@ -161,10 +265,11 @@ PRIORS_CSF : $priors_path/avg152T1_csf_bin.nii.gz
 <h3><a href="index.html">Table Of Contents</a></h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installing C-PAC</a></li>
-<li class="toctree-l1"><a class="reference internal" href="use.html">Using C-PAC</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cloud.html">Running C-PAC in the Cloud</a></li>
-<li class="toctree-l1"><a class="reference internal" href="preproc.html">Data Preprocessing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="outputs.html">Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="subject_list_config.html">Setting Up A Subject List</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline_config.html">Setting Up A Pipeline Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group_analysis.html">Setting Up Group Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">Running C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cloud.html">Using C-PAC in the AWS Cloud</a></li>
 <li class="toctree-l1"><a class="reference internal" href="files.html">Preconfigured Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">C-PAC Benchmark</a></li>
 <li class="toctree-l1"><a class="reference internal" href="help.html">Troubleshooting and Help</a></li>
@@ -198,15 +303,15 @@ PRIORS_CSF : $priors_path/avg152T1_csf_bin.nii.gz
           <a href="func.html" title="Functional Preprocessing"
              >next</a> |</li>
         <li class="right" >
-          <a href="preproc.html" title="Data Preprocessing"
+          <a href="deriv_config.html" title="Derivatives Settings"
              >previous</a> |</li>
         <li><a href="index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li>
-          <li><a href="preproc.html" >Data Preprocessing</a> &raquo;</li> 
+          <li><a href="pipeline_config.html" >Setting Up A Pipeline Configuration</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2015, C-PAC Team.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

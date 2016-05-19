@@ -62,53 +62,79 @@ Spatial Regression
 
 See: :doc:`Dual Regression </dual_reg>`.
 
+Configuration Without the GUI
+""""""""""""""""""""""""""""""
 
-Configuration Using a YAML File
-""""""""""""""""""""""""""""""""
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run anatomical preprocessing:
 
-To configure time series extraction options within a YAML file, add the following lines to your file (with appropriate substitutions for paths)::
-    
-    # Extract an average timeseries for each ROI
-    # Required if you wish to run ROI-based SCA
-    runROITimeseries = [0]
+Defining New Seeds
+''''''''''''''''''
 
-    # Export ROI timeseries data
-    # First value = Output .csv
-    # Second value = Output numPy array
-    # Options are True/False
-    roiTSOutputs = [True, True]
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | Key                           | Description                                                                                                                  | Potential Values                                                                   |
+    +===============================+==============================================================================================================================+====================================================================================+
+    | seedSpecificationFile         | If you wish to specify new seeds (for use in Time Series Extraction and/or Seed-based Correlation Analysis), this field      | A path or 'None'.                                                                  |
+    |                               | should contain the full path to a text file containing seed definitions. If you do not wish to specify new seeds, this field |                                                                                    |
+    |                               | should be set to None.                                                                                                       |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | seedOutputLocation            | Directory where CPAC should write NIfTI files containing new seeds.                                                          | A path.                                                                            |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | useSeedInAnalysis             | Which analyses to use the seeds that have been specified in.  Can be ROI Average time series extraction, ROI Voxelwise       | A list of strings, where each string is a different analysis to use the seeds in.  |
+    |                               | time series extraction, network centrality, or seed-based correlation analysis.                                              | Valid strings are the following: 'roi_voxelwise' for voxelwise ROI time series     |
+    |                               |                                                                                                                              | extraction, 'roi_average' for average ROI time series extraction and seed-based    |
+    |                               |                                                                                                                              | correlation analysis, and 'centrality_outputs_smoothed' for network centrality.    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
 
-    # Directory containing ROI definitions
-    # For best performance, all ROIs should be in a single file (see User Guide)
-    roiDirectoryPath = '/path/to/roi_definitions_directory'
+ROI Average TSE
+'''''''''''''''
 
-    # Extract timeseries data for all individual voxels within a mask
-    # Required if you wish to run voxel-based SCA
-    runVoxelTimeseries = [0]
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | Key                           | Description                                                                                                                  | Potential Values                                                                   |
+    +===============================+==============================================================================================================================+====================================================================================+
+    | runROITimeseries              | Extract the average time series of one or more ROIs/seeds. Must be enabled for seed-based correlation analysis.              | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | roiSpecificationFile          | Full path to a text file containing a list of ROI NifTIs.  Each line in this file should be the path to a NIfTI file         | A path.                                                                            |
+    |                               | containing one or more ROIs.  All ROI mask values are converted to integers in C-PAC.                                        |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | roiSpecificationFileForSCA    | Same as roiSpecificationFile, but used for seed-based correlation analysis.                                                  | A path.                                                                            |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | roiTSOutputs                  | Extracted time series are written as both a text file and a 1D file by default.  With this option, you may also save them    | A two-element list, where the first element is a boolean ('True' or 'False') for   |
+    |                               | out as CSV files or Numpy arrays.                                                                                            | whether or not to save out a CSV and the second element is a boolean for whether   |
+    |                               |                                                                                                                              | or not to save a Numpy array.                                                      |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
 
-    # Export voxel timeseries data
-    # First value = Output .csv
-    # Second value = Output numPy array
-    # Options are True/False
-    voxelTSOutputs = [False, False]
+ROI Voxelwise TSE
+'''''''''''''''''
 
-    # Directory contaning masks
-    # For best performance, all masks should be in a single file (see User Guide)
-    maskDirectoryPath = '/path/to/mask_definitions_directory'
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | Key                           | Description                                                                                                                  | Potential Values                                                                   |
+    +===============================+==============================================================================================================================+====================================================================================+
+    | runVoxelTimeseries            | Extract the time series of all voxels within one or more ROIs/seeds.                                                         | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | maskSpecificationFile         | Full path to a text file containing a list of mask NifTIs. Each line in this file should be the path to a NIfTI file         | A path or 'None'.                                                                  |
+    |                               | containing a single mask. If you only wish to extract time series for newly defined spherical seed ROIs, set this field      |                                                                                    |
+    |                               | to None.                                                                                                                     |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | maskSpecificationFileForSCA   | Same as maskSpecificationFile, but used for seed-based correlation analysis.                                                 | A path or 'None'.                                                                  |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | voxelTSOutputs                | Extracted time series are written as both a text file and a 1D file by default.  With this option, you may also save them    | A two-element list, where the first element is a boolean ('True' or 'False') for   |
+    |                               | out as CSV files or Numpy arrays.                                                                                            | whether or not to save out a CSV and the second element is a boolean for whether   |
+    |                               |                                                                                                                              | or not to save a Numpy array.                                                      |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
 
-    # Register timeseries data to a surface model built by FreeSurfer
-    # Required to run vertex timeseries extraction
-    runSurfaceRegistraion = [0]
 
-    # Directory where FreeSurfer outputs surface data
-    # This should be the same as SUBJECTS_DIR in .bashrc
-    reconSubjectsDirectory = '/path/to/fs_output_directory'
+Spatial Regression
+''''''''''''''''''
 
-    # Extract timeseries data for surface vertices
-    runVerticesTimeSeries = [0]
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | Key                           | Description                                                                                                                  | Potential Values                                                                   |
+    +===============================+==============================================================================================================================+====================================================================================+
+    | runSpatialRegression          | Extract the time series from one or more existing spatial maps (such as an ICA map). Required if you wish to run Dual        | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
+    |                               | Regression.                                                                                                                  |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | spatialPatternMaps            | Full path to a text file containing a list spatial maps. Each line in this file should be the path to a 4D NIfTI file        | A path.                                                                            |
+    |                               | containing one spatial map per volume.                                                                                       |                                                                                    |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | spatialDemean                 | Demean spatial maps before running spatial regression.                                                                       | A boolean ('True' or 'False').                                                     |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
 
-    # Export vertex timeseries data
-    # First value = Output .csv
-    # Second value = Output numPy array
-    # Options are True/False
-    verticesTSOutputs = [False, False]

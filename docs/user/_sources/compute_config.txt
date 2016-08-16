@@ -6,11 +6,11 @@ Computer Settings
 
 #. **FSL Path - [path]:** Full path to the FSL version to be used by CPAC. If you have specified an FSL path in your .bashrc file, this path will be set automatically.
 
-#. **Job Scheduler / Resource Manager - [SGE, PBS]:** Sun Grid Engine (SGE) or Portable Batch System (PBS). Only applies if you are running on a grid or compute cluster.  See the section below entitled `SGE Configuration` for more information on how to set up a SGE.
+#. **Job Scheduler / Resource Manager - [SGE, PBS]:** Sun Grid Engine (SGE) or Portable Batch System (PBS). Only applies if you are running on a grid or compute cluster.  See the section below entitled `SGE Configuration` for more information on how to set up SGE.
 
-#. **SGE Parallel Environment - [text]:** SGE Parallel Environment to use when running CPAC. Only applies when you are running on a grid or compute cluster using SGE.  See the section below entitled `SGE Configuration` for more information on how to set up a SGE.
+#. **SGE Parallel Environment - [text]:** SGE Parallel Environment to use when running CPAC. Only applies when you are running on a grid or compute cluster using SGE.  See the section below entitled `SGE Configuration` for more information on how to set up SGE.
 
-#. **SGE Queue - [text]:** SGE Queue to use when running CPAC. Only applies when you are running on a grid or compute cluster using SGE.  See the section below entitled `SGE Configuration` for more information on how to set up a SGE.
+#. **SGE Queue - [text]:** SGE Queue to use when running CPAC. Only applies when you are running on a grid or compute cluster using SGE.  See the section below entitled `SGE Configuration` for more information on how to set up SGE.
 
 #. **Number of Cores Per Subject - [integer]:** Number of cores (on a single machine) or slots on a node (cluster/grid) per subject. Slots are cores on a cluster/grid node. 'Number of Cores Per Subject' multiplied by 'Number of Subjects to Run Simultaneously' multiplied by 'Number of Cores for Anatomical Registration (ANTS)' must not be greater than the total number of cores.
 
@@ -61,7 +61,7 @@ Preliminaries
 
 Before you configure Sun Grid Engine so that it works with C-PAC, you should understand the following concepts:
 
-* **Job Scheduler** - A program that can allocate computational resources in an HPC cluster to jobs based on availability and distribute jobs across nodes. C-PAC can use Sun Grid Engine (SGE) as its job scheduler (and SGE is comes pre-configured with C-PAC's :doc:`cloud image <cloud>`).
+* **Job Scheduler** - A program that can allocate computational resources in an HPC cluster to jobs based on availability and distribute jobs across nodes. C-PAC can use Sun Grid Engine (SGE) as its job scheduler (and SGE comes pre-configured with C-PAC's :doc:`cloud image <cloud>`).
 
 * **Parallel Environment** - A specification for how SGE parallelizes work.  Parallel environments can have limits on the number of CPUs used, whitelists and blacklists that dictate who can use resources, and specific methods for balancing server load during distributed tasks.
 
@@ -76,9 +76,10 @@ Before you configure Sun Grid Engine so that it works with C-PAC, you should und
 Configuring A Parallel Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The specifics of configuring a parallel environment in SGE are beyond the scope of this guide (see `Oracle's blog <https://blogs.oracle.com/templedf/entry/configuring_a_new_parallel_environment>`_ for a good primer on how to prepare a parallel environment).  Nevertheless, we will discuss how to configure a simple example (the `mpi_conf` environment used by the C-PAC cloud image).  To do this, we will first create a file named mpi_smp.conf that will appear as follows:
+The specifics of configuring a parallel environment in SGE more broadly are beyond the scope of this guide (see `Oracle's blog <https://blogs.oracle.com/templedf/entry/configuring_a_new_parallel_environment>`_ for a good primer).  Nevertheless, we will discuss how to configure an environment that is compatible with C-PAC.  To do this, we will first create a file named *mpi_smp.conf* that will appear as follows:
 
 .. code-block:: bash
+
     pe_name            mpi_smp
     slots              999
     user_lists         NONE
@@ -92,20 +93,22 @@ The specifics of configuring a parallel environment in SGE are beyond the scope 
     accounting_summary TRUE
 
 This configuration ensures that:
-* Up to 999 slots will be used.
+
+* All of the cores will be used (assuming your system has fewer than 999 cores; if you are lucky enough to have more than this, the maximum value for this field is 9999999).
 * No users are whitelisted or blacklisted and no special hooks or cleanup tasks occur before or after a job.
-* All job slots that a C-PAC job submission requests are on the same machine.
+* All job slots that a C-PAC job submission requests are on the same machine (this ensures that each unique subject's computations are taken care of by the same node and the cores allocated for one of C-PAC's steps are not distributed across different machines).
 * SGE has full control over the jobs submitted (in terms of resource scheduling).
-* The C-PAC run is not part of a parallel job that would require an awareness of which task was performed first.
+* The C-PAC run is not part of a parallel job that would require an awareness of which task was performed first (the subjects can be assigned to nodes in any order).
 * An accounting record is written concerning how the job used resources.
 
-To activate this parallel environment and tie it to a job queue named 'all.q', use the following commands:
+To activate this parallel environment and tie it to a job queue named *all.q*, execute the following commands on your cluster's master node:
 
 .. code-block:: bash
+
     qconf -Ap /path/to/mpi_smp.conf
     qconf -mattr queue pe_list "mpi_smp" all.q
 
-You would then set the SGE Parallel Environment to "mpi_smp" and the SGE queue to "all.q" in your pipeline configuration file before starting your C-PAC run.
+You would then set the SGE Parallel Environment to *mpi_smp* and the SGE queue to *all.q* in your pipeline configuration file before starting your C-PAC run.
 
 Additional Links
 """"""""""""""""

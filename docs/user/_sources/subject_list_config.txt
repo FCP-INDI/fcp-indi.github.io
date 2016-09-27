@@ -20,6 +20,10 @@ An example of such a YAML file can be found `here <https://raw.githubusercontent
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | Key                           | Description                                                                                                                  | Potential Values                                                                   |
     +===============================+==============================================================================================================================+====================================================================================+
+    | dataFormat                    | Whether or not the dataset is organized according to BIDS or a custom format.                                                | A string- can be either "BIDS" or "Custom".                                        |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | bidsBaseDir                   | The base directory for the BIDS dataset (if the data is organized according to BIDS).                                        | A path.                                                                            |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | anatomicalTemplate            | A file path template for anatomical scans (see below for how to define templates).                                           | A path template.                                                                   |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | functionalTemplate            | A file path template for functional scans (see below for how to define templates).                                           | A path template.                                                                   |
@@ -39,6 +43,8 @@ An example of such a YAML file can be found `here <https://raw.githubusercontent
     | outputSubjectListLocation     | The directory where the subject list will be generated.                                                                      | A path.                                                                            |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
     | subjectListName               | A name for the subject list.                                                                                                 | A list containing a string (e.g.,['ABIDE']).                                       |
+    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+    | awsCredentialsFile            | A credential file for downloading data stored using Amazon's Simple Storage Service.                                         | A path.                                                                            |
     +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
 
 Generating Subject Lists with the Data Configuration File
@@ -77,9 +83,13 @@ Now, to generate a subject list file, click on the *New* button next to the *Sub
 
 .. figure:: /_images/subject_list_gui.png
 
-#. **Anatomical File Path Template - [text]:** A file path template for anatomical scans (see below for how to define templates).
+#. **Data format - [BIDS, Custom]:** Select if data is organized using the `BIDS <http://bids.neuroimaging.io>`_ standard or a custom format (see *Defining Anatomical and Functional File Path Templates* below for more information on forming templates for custom data organization).
 
-#. **Functional File Path Template - [text]:** A file path template for functional scans (see below for how to define templates).
+#. **BIDS Base Directory - [path]:** The base directory of BIDS-organized data if you are using BIDS.
+
+#. **Anatomical File Path Template - [text]:** A file path template for anatomical scans (see below for how to define templates).  Used when a custom data organization scheme is enabled.
+
+#. **Functional File Path Template - [text]:** A file path template for functional scans (see below for how to define templates).  Used when a custom data organization scheme is enabled.
 
 #. **Subjects to Include (Optional) - [text/path]:** An optional comma-separated list of subjects to include (if you wish to include only a subset of subjects whose scans match the templates).  A value of 'None' means all subjects will be run. This list can also be read from a text file whose path is given in this field.
 
@@ -89,6 +99,8 @@ Now, to generate a subject list file, click on the *New* button next to the *Sub
 
 #. **Scan Parameters File (Optional) - [path]:**  Path to a CSV specifying the slice time acquisition parameters for scans.  If set to 'None', the NifTI headers will be used. Instructions for creating such a file can be found :doc:`here </func>`.
 
+#. **AWS Credentials File (Optional)- [path]:** Required if downloading data from a non-public S3  bucket on Amazon Web Services instead of using local files.
+
 #. **Output Directory - [path]:** The directory where the subject list will be generated.
 
 #. **Subject List Name - [text]:** A name for the subject list.
@@ -96,20 +108,20 @@ Now, to generate a subject list file, click on the *New* button next to the *Sub
 #. **Multiscan Data [checkbox]:** Check this box only if the scans have different slice timing information.
 
 Defining Anatomical and Functional File Path Templates
--------------------------------------------------------
-C-PAC has been designed to process large, complex data sets, and supports processing of multiple scans per subject, multiple scan sessions, and multiple data acquisition sites with differing scan acquisition parameters. Because the file directory structures resulting from such data sets can be complex, it is necessary to manually define the location of the image files to be processed for each subject.
+------------------------------------------------------
+C-PAC has been designed to process large, complex data sets, and supports processing of multiple scans per participant, multiple scan sessions, and multiple data acquisition sites with differing scan acquisition parameters. Because the file directory structures resulting from such data sets can be complex, it is necessary to define the location of the image files to be processed for each participant.  If you are using the `BIDS <http://bids.neuroimaging.io>`_ directory structure, the location of image files is defined via the BIDS specification, and C-PAC is able to automatically find all of the files needed to run the pipeline.  Otherwise, you will need to manually define path templates using the conventions described below.
 
-File path templates are defined by adding wildcard characters (``%s``) to the file path of each type of image file to be processed (anatomical and functional). For each file path, you will need to add two of these wildcard characters, one in the place of the acquisition site directory, and one in the place of the subject directory. For example, if the full paths to the image files for :file:`subject_01` were:: 
+File path templates are defined by adding placeholder variables nested within curly brackets to the file path of each type of image file to be processed (anatomical and functional).  The possible placeholders are `site`, `participant` and `session`.  `session` is optional, while the other two placeholders are not.  To illustrate, if the full paths to the image files for :file:`participant_01` were:: 
 
-  /home/data/site_1/subject_1/anat/mprage.nii.gz
-  /home/data/site_1/subject_1/func/rest.nii.gz
+  /home/data/site_1/participant_1/anat/mprage.nii.gz
+  /home/data/site_1/participant_1/func/rest.nii.gz
 
-Then the file path templates would would be::
+Then the anatomical and functional file path templates would would be::
 
- anatomicalTemplate : /home/data/%s/%s/anat/mprage.nii.gz
- functionalTemplate : /home/data/%s/%s/func/rest.nii.gz
+   Anatomical Template:  /home/data/{site}/{participant}/anat/mprage.nii.gz
+   Functional Template:  /home/data/{site}/{participant}/func/rest.nii.gz
 
-It should be noted that C-PAC currently requires subject directories to be within a site level directory. If your data set does not contain scans from multiple acquisition sites, we recommend creating a dummy :file:`site_1` directory and placing subject files inside this directory. This peculiarity will be fixed in future versions of C-PAC.
+It should be noted that C-PAC currently requires participant directories to be within a site level directory. If your data set does not contain scans from multiple acquisition sites, we recommend creating a dummy :file:`site_1` directory and placing participant files inside this directory. This peculiarity will be fixed in future versions of C-PAC.
 
 In cases where file paths differ in more than just the site and subject directories, asterisks can be used. This is useful for data sets containing multiple scans per subject, multiple scan sessions, or subject-specific information in file or folder names. You may use as many asterisks as necessary to to define your file path templates. For example, if the paths to functional image files for a subject were::
 
@@ -120,18 +132,30 @@ In cases where file paths differ in more than just the site and subject director
 
 The file path template would be::
 
-    functionalTemplate : /home/data/%s/%s/*_func/session_*/rest_*.nii.gz
+    /home/data/{site}/{participant}/*_func/{session}/rest_*.nii.gz
 
-As an example of how the templates work, the image below illustrates the file structure used by the `1000 Functional Connectomes <http://fcon_1000.projects.nitrc.org/fcpClassic/FcpTable.html>`_ data release and the resulting file path templates.
+Example File Path Templates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Here are the file path templates used for the `1000 Functional Connectomes <http://fcon_1000.projects.nitrc.org/fcpClassic/FcpTable.html>`_ data release, as well as an illustration of the directory structure used for the release::
+
+   Anatomical Template:  /path/to/data/{site}/{participant}/anat/mprage_anonymized.nii.gz
+   Functional Template:  /path/to/data/{site}/{participant}/func/rest.nii.gz
 
 .. figure:: /_images/fcon_structure.png
+  
+Another example is the file structure used by the `ABIDE <http://fcon_1000.projects.nitrc.org/indi/abide/>`_ and `ADHD-200 <http://fcon_1000.projects.nitrc.org/indi/adhd200/>`_ releases::
 
-Another example is the file structure used by the `ABIDE <http://fcon_1000.projects.nitrc.org/indi/abide/>`_ and `ADHD-200 <http://fcon_1000.projects.nitrc.org/indi/adhd200/>`_ releases.
+   Anatomical Template:  /path/to/data/{site}/{participant}/{session}/anat_*/mprage.nii.gz
+   Functional Template:  /path/to/data/{site}/{participant}/{session}/rest_*/rest.nii.gz
 
 .. figure:: /_images/abide_adhd_structure.png
 
-A final example is the file structure used by the `Enhanced Nathan Kline Institute-Rockland Sample <http://fcon_1000.projects.nitrc.org/indi/enhanced/>`_.
+A final example is the file structure used by the `Enhanced Nathan Kline Institute-Rockland Sample <http://fcon_1000.projects.nitrc.org/indi/enhanced/>`_::
+
+   Anatomical Template:  /path/to/data/{site}/{participant}/anat/mprage.nii.gz
+   Functional Template:  /path/to/data/{site}/{participant}/{session}/RfMRI_*/rest.nii.gz
 
 .. figure:: /_images/nki-rs_template.png
 
-If you experience difficulties defining file path templates, you may want to re-organize your data to match one of the examples above. If you manually define a file path template and encounter an error when attempting to generate subject lists, please :doc:`contact us </help>` and we will be happy to help.
+Users experiencing difficulties defining file path templates may want to re-organize their data to match one of the examples above. If you manually define a file path template and encounter an error when attempting to generate participant lists, please :doc:`contact us </help>` and we will be happy to help.
+

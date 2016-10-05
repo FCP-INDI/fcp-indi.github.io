@@ -41,10 +41,6 @@ The possible values for the items in the *derivatives* key are as follows:
 
  'alff_to_standard_zstd', 'alff_to_standard_smooth_zstd', 'falff_to_standard_zstd', 'falff_to_standard_smooth_zstd', 'reho_to_standard_zstd', 'reho_to_standard_smooth_zstd', 'sca_roi_to_standard_fisher_zstd', 'sca_roi_to_standard_smooth_fisher_zstd', 'sca_seed_to_standard_fisher_zstd', 'sca_seed_to_standard_smooth_fisher_zstd', 'vmhc_fisher_zstd', 'vmhc_fisher_zstd_zstat_map', 'dr_tempreg_maps_zstat_files_to_standard', 'dr_tempreg_maps_zstat_files_to_standard_smooth', 'sca_tempreg_maps_zstat_files', 'sca_tempreg_maps_zstat_files_smooth', 'centrality_outputs_zstd', 'centrality_outputs_smoothed_zstd'
  
-*  For raw (non-z-scored) analyses:
-
- 'alff_to_standard', 'alff_to_standard_smooth', 'falff_to_standard', 'falff_to_standard_smooth', 'reho_to_standard', 'reho_to_standard_smooth', 'sca_roi_to_standard', 'sca_roi_to_standard_smooth', 'sca_seed_to_standard', 'sca_seed_to_standard_smooth', 'centrality_outputs', 'centrality_outputs_smoothed', 'dr_tempreg_maps_files_to_standard', 'dr_tempreg_maps_files_to_standard_smooth', 'sca_tempreg_maps_files', 'sca_tempreg_maps_files_smooth'
- 
 Using the GUI
 ^^^^^^^^^^^^^^
 To configure group-level analysis from the main screen of the GUI, select a pipeline for which you have run preprocessing and individual-level analysis, then click *Edit*.  Then, navigate to *Group Analysis Settings* and click on the *+* symbol.  Here you may select a model configuration YAML file to use by clicking on the folder to the right to select a file or by typing in a path.  Clicking *Create or Load FSL Model* will allow you to specify models via the C-PAC interface, or load a YAML configuration file containing model settings that can then be adjusted interactively.
@@ -66,11 +62,11 @@ Specifying Models to Run
 
 #. **Participant Column Name [text]:** Name of the subjects column in your EV file.
 
-#. **Model Setup - [checkboxes]:** A list of EVs from your phenotype file will populate in this window. From here, you can select whether the EVs should be treated as categorical or if they should be demeaned (continuous/non-categorical EVs only). 'MeanFD' and 'Measure Mean' will also appear in this window automatically as options to be used as regressors that can be included in your model design. Note that the MeanFD and mean of measure values are automatically calculated and supplied by C-PAC via individual-level analysis.  Also, MeanFD and mean of measure values are automatically demeaned prior to being inserted into the group analysis model.
+#. **Model Setup - [checkboxes]:** A list of EVs from your phenotype file will populate in this window. From here, you can select whether the EVs should be treated as categorical or if they should be demeaned (continuous/non-categorical EVs only). 'MeanFD' and 'Measure Mean' will also appear in this window automatically as options to be used as regressors that can be included in your model design. Note that the MeanFD and mean of measure values are automatically calculated and supplied by C-PAC via individual-level analysis. Measure mean is calculated using the mean signal from raw data rather than z-score data, which is then demeaned.  Also, MeanFD and mean of measure values are automatically demeaned prior to being inserted into the group analysis model.
 
-#. **Design Matrix Formula - [Patsy formula]:** Specify the formula to describe your model design. Essentially, including EVs in this formula inserts them into the model. The most basic format to include each EV you select would be 'EV + EV + EV + ..', etc. You can also select to include MeanFD and Measure_Mean here. Note that this design formula is pre-generated for the user depending on the EVs in the phenotype file, but can be edited at any time. C-PAC uses the Python library Patsy to generate the design matrices, so more information on how to format your design formula for specific designs can be found here- `Patsy formula documentation <https://patsy.readthedocs.org/en/latest/formulas.html>`_.  If you have used R in the past, Patsy's formula syntax should be familiar.
+#. **Design Matrix Formula - [Patsy formula]:** Specify the formula to describe your model design. Essentially, including EVs in this formula inserts them into the model. The most basic format to include each EV you select would be 'EV + EV + EV + ..', etc. You can also select to include MeanFD, Measure_Mean, or an intercept here (by adding ' + Measure_Mean', ' + MeanFD_<Power/Jenkinson>' or ' + Intercept ' respectively). Note that when you add an intercept to your formula categorical variables will automatically be demeaned since this is a requirement for FLAME to run properly. This design formula is pre-generated for the user depending on the EVs in the phenotype file, but can be edited at any time. C-PAC uses the Python library Patsy to generate the design matrices, so more information on how to format your design formula for specific designs can be found here- `Patsy formula documentation <https://patsy.readthedocs.org/en/latest/formulas.html>`_.  If you have used R in the past, Patsy's formula syntax should be familiar.  
 
-#. **Custom ROI Mean Mask (optional) - [path]:** Use a binarized mask with one or more ROIs to add averages for those ROIs to the model as EVs.  Mask file must be in NifTI format.
+#. **Custom ROI Mean Mask (optional) - [path]:** Use a binarized mask with one or more ROIs to add averages for those ROIs to the model as EVs.  Mask file must be in NifTI format.  These averages will be calculated using the raw data, rather than z-scored data, and will then be demeaned afterwards.
 
 #. **Select Derivatives - [checkboxes]:** Select which derivatives you would like to include when running group analysis. When including Dual Regression, make sure to correct your P-value for the number of maps you are comparing. When including Multiple Regression SCA, you must have more degrees of freedom (subjects) than there were time series.
 
@@ -89,9 +85,11 @@ Specifying Models to Run
 
 #. **Grouping Variable - [text]:** The name of the EV that should be used to group subjects when modeling variances. If you do not wish to model group variances separately, set this value to None.
 
-#. **Sessions (Repeated Measures Only) - []:** Enter the session names in your dataset   that you wish to include within the same   model (this is for repeated measures/  within-subject designs).Tip: These   will be the names listed as "unique_id" in  the original individual-level participant   list, or the labels in the original data   directories you marked as {session} while   creating the CPAC participant list.,  
+#. **Sessions (Repeated Measures Only) - [dialogue: list of session names]:** Enter the session names in your dataset that you wish to include within the same model (this is for repeated measures/  within-subject designs).  These will be the names listed as "unique_id" in  the original individual-level participant list, or the labels in the original data directories you marked as {session} while creating the C-PAC participant list.  Do not adjust your phenotype CSV- C-PAC will re-formulate it internally before passing it to FLAME.
 
-#. **Series/Scans (Repeated Measures Only) - []:**  Enter the series names in your dataset   that you wish to include within the same   model (this is for repeated measures/  within-subject designs).Tip: These   will be the labels listed under "rest:""  in the original individual-level   participant list, or the labels in the   original data directories you marked as   {series} while creating the CPAC   participant list., 
+#. **Series/Scans (Repeated Measures Only) - [dialogue: list of scan names]:**  Enter the series names in your dataset that you wish to include within the same model (this is for repeated measure / within-subject designs).  These will be the labels listed under "rest:" in the original individual-level participant list, or the labels in the original data directories you marked as {series} while creating the C-PAC participant list.  Do not adjust your phenotype CSV- C-PAC will re-formulate it internally before passing it to FLAME. 
+
+
 Upon populating these fields and clicking `Load Phenotype File`, your model builder will look something like this:
 
 .. figure:: /_images/ga_model_setup_populated.png
@@ -103,11 +101,7 @@ Specifying Contrasts
 
 .. figure:: /_images/ga_contrasts.png
 
-#. **Contrasts - [checkboxes]:** Specify your contrasts in this box. When the model builder builds the design matrix, it will process the categorical variables appropriately and provide the names of the different levels available as contrast labels, listed under 'Available Contrasts'. When you are done specifying contrasts check the contrasts you wish to run.  The contrast operators available include:
-    * **>** Greater than
-    * **+** Positive
-    * **-** Negative
-    For categorical contrasts, use the + and - operators.  Using a phenotype file with two groups coded as 'ADHD' or 'TD' will produce an EV for 'TD'.  'diagnosisTD+' will perform the contrast 'TD > ADHD' and 'diagnosisTD-' will perform the contrast 'ADHD > TD'.  Using these two operators avoids issues of multicollinearity introduced by dummy coding.
+#. **Contrasts - [checkboxes]:** Specify your contrasts in this box.   When the model builder builds the design matrix, it will process the categorical variables appropriately and provide the names of the different levels available as contrast labels (printed in `Patsy syntax <https://patsy.readthedocs.org/en/latest/formulas.html>`_) , listed under 'Available Contrasts'. Contrasts are specified as formulas (e.g., C(diagnosis)[ADHD] + C(diagnosis)[TD]) = 0 for an ADHD > TD contrast or age = 0 for an age > 0 contrast).  Note that the way in which you define your model will determine which contrasts are capable of being run.  When you are done specifying contrasts check the contrasts you wish to run.
 
 #. **f-Tests - [checkboxes]:** Define an f-test by selecting two or more contrasts to include.  When you are done, select the f-tests that you wish to run.  
 
@@ -115,7 +109,7 @@ Specifying Contrasts
 
 #. **Model Name - [text]:** Specify a name for the new model.
 
-#. **Output Directory - [path]:** Full path to the directory where CPAC should place the model files (.mat, .con, .grp) and the outputs of group analysis.
+#. **Output Directory - [path]:** Full path to the directory where CPAC should place the model files (.mat, .con, .grp, .csv) and the outputs of group analysis.  The CSV file is a human-readable version of the .mat file used by FLAME that you can use to examine the exact model that C-PAC generated.
 
 When you are done, the contrast screen should look like this:
 

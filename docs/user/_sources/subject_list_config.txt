@@ -83,7 +83,7 @@ Defining Anatomical and Functional File Path Templates
 ------------------------------------------------------
 C-PAC has been designed to process large, complex data sets, and supports processing of multiple scans per participant, multiple scan sessions, and multiple data acquisition sites with differing scan acquisition parameters. Because the file directory structures resulting from such data sets can be complex, it is necessary to define the location of the image files to be processed for each participant.  If you are using the `BIDS <http://bids.neuroimaging.io>`_ directory structure, the location of image files is defined via the BIDS specification, and C-PAC is able to automatically find all of the files needed to run the pipeline.  Otherwise, you will need to manually define path templates using the conventions described below.
 
-File path templates are defined by adding placeholder variables nested within curly brackets to the file path of each type of image file to be processed (anatomical and functional).  The possible placeholders are `site`, `participant` and `session`.  `session` is optional, while the other two placeholders are not.  To illustrate, if the full paths to the image files for :file:`participant_01` were:: 
+File path templates are defined by adding placeholder variables nested within curly brackets to the file path of each type of image file to be processed (anatomical and functional).  The possible placeholders are `site`, `participant` and `session`.  `session` is optional, while the other two placeholders are not.  To illustrate, if the full paths to the image files for a hypothetical :file:`participant_1` were:: 
 
   /home/data/site_1/participant_1/anat/mprage.nii.gz
   /home/data/site_1/participant_1/func/rest.nii.gz
@@ -95,16 +95,16 @@ Then the anatomical and functional file path templates would would be::
 
 It should be noted that C-PAC currently requires participant directories to be within a site level directory. If your data set does not contain scans from multiple acquisition sites, we recommend creating a dummy :file:`site_1` directory and placing participant files inside this directory. This peculiarity will be fixed in future versions of C-PAC.
 
-In cases where file paths differ in more than just the site and subject directories, asterisks can be used. This is useful for data sets containing multiple scans per subject, multiple scan sessions, or subject-specific information in file or folder names. You may use as many asterisks as necessary to to define your file path templates. For example, if the paths to functional image files for a subject were::
+In cases where file paths differ in more than just the site, session and subject directories, asterisks can be used. This is useful for data sets containing multiple sessions in a single scan date or other subject-specific information in file or folder names. You may use as many asterisks as necessary to to define your file path templates. For example, if the paths to functional image files for a subject were::
 
-    /home/data/site_1/subject_1/s01_func/session_1/rest_1.nii.gz
-    /home/data/site_1/subject_1/s01_func/session_1/rest_2.nii.gz
-    /home/data/site_1/subject_1/s01_func/session_2/rest_1.nii.gz
-    /home/data/site_1/subject_1/s01_func/session_2/rest_2.nii.gz
+    /home/data/site_1/subject_1/scan_1/session_1/rest_1.nii.gz
+    /home/data/site_1/subject_1/scan_1/session_2/rest_2.nii.gz
+    /home/data/site_1/subject_1/scan_2/session_1/rest_1.nii.gz
+    /home/data/site_1/subject_1/scan_2/session_2/rest_2.nii.gz
 
 The file path template would be::
 
-    /home/data/{site}/{participant}/*_func/{session}/rest_*.nii.gz
+    /home/data/{site}/{participant}/scan_*/{session}/rest_*.nii.gz
 
 Example File Path Templates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -151,4 +151,4 @@ The subject list builder GUI or the command line utility will produce a YAML fil
             first_tr: ''
             last_tr: ''
 
-Note that more than one resting state scan is defined under the `rest` key, and that individual scan parameters can be defined to override the settings used in the C-PAC GUI.
+Note that more than one resting state scan is defined under the `rest` key (i.e., multiple sessions), and that individual scan parameters can be defined to override the settings used in the C-PAC GUI.  Be careful not to name the multiple sessions under the `rest` key using dashes or periods, as this input will not be parsed by C-PAC and may cause errors.

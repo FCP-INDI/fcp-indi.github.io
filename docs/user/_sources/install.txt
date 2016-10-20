@@ -167,53 +167,54 @@ Installing AFNI and FSL
 """""""""""""""""""""""
 C-PAC harnesses the power of two leading neuroimaging software packages (`AFNI <http://afni.nimh.nih.gov/>`_ and `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_) to perform key analyses. These packages must be installed before running C-PAC. 
 
-For instructions on how to install AFNI, `click here <https://afni.nimh.nih.gov/pub/dist/doc/htmldoc/background_install/install_instructs/index.html>`_. 
-
-For instructions on how to install FSL, `click here <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation>`_. Users should ensure they download and install FSL -5.0. 
-
-
-Check AFNI and FSL Paths
-''''''''''''''''''''''''
-Application paths for AFNI and FSL should have been added to your user profile when they were installed, but it is useful to double-check this before continuing (as the absence of these paths is a common cause of C-PAC errors). If the application paths have been set properly, you should be able to open AFNI and FSL by running the commands ``afni`` and ``fsl`` in a new terminal window.
-
-If either of these commands fail, you will have to add the AFNI and FSL application paths manually. To do this, run the command ``nano ~/.bashrc``. This will open your :file:`.bashrc` file in the `nano text editor <http://mintaka.sdsu.edu/reu/nano.html>`_.  If you are using the C shell instead of bash, replace ``.bashrc`` with ``.cshrc``. Scroll to the bottom of the file (navigate using the arrow keys on your keyboard) and paste the following text
+To install AFNI on a non-Fedora 21 64-bit Linux machine you may run the follow commands as the super user:
 
 .. code-block:: bash
+    cd /tmp
+    wget http://afni.nimh.nih.gov/pub/dist/tgz/linux_openmp_64.tgz
+    tar xfz linux_openmp_64.tgz
+    mv linux_openmp_64 /opt/afni
 
-    # Path to FSL
-    FSLDIR=/path/to/fsl
-    . ${FSLDIR}/etc/fslconf/fsl.sh
-    PATH=${FSLDIR}/bin:${PATH}
-    export FSLDIR PATH
+For AFNI to be available globally on your machine, you should then add the following lines to the file located at `/etc/bash.bashrc`:
 
-    # Path to AFNI
-    export PATH=$PATH:/path/to/afni
-    export DYLD_FALLBACK_LIBRARY_PATH=/path/to/afni
+.. code-block:: bash
+    export PATH=/opt/afni:$PATH
+    export DYLD_FALLBACK_LIBRARY_PATH=/opt/afni
 
-Where :file:`/path/to/fsl` and :file:`/path/to/afni` are the locations where FSL and AFNI are installed (by default, these are :file:`/usr/local/fsl` for FSL and :file:`~/abin` for AFNI). When you have added the paths, save your changes (control + O) and exit nano (control + X).
+If you open a new shell and type `afni` the AFNI console should now appear.  If not, double-check the lines added to `/etc/bash.bashrc` for typos and make sure that `/opt/afni` contains the AFNI commands.
 
-To confirm that the changes have worked, open a new terminal window and try again to open AFNI and FSL.
+For more details about installing AFNI (including instructions for other architectures) please refer to the AFNI manual `here <https://afni.nimh.nih.gov/pub/dist/doc/htmldoc/background_install/install_instructs/index.html>`_.
 
-OS-Specific Instructions 
-''''''''''''''''''''''''
+To install FSL on a Debian or Ubuntu-based Linux machine you may run the follow commands as the super user to install the `Neurodebian <http://neuro.debian.net/>`_ repository, which contains a pre-packaged version of FSL that integrates seamlessly with the Debian ecosystem:
 
-**Ubuntu/Neurodebian:**
-
-* Installing the key for the Neurodebian repository (must have superuser privileges or use sudo)::
-
+.. code-block:: bash
     wget -O- http://neuro.debian.net/lists/$(lsb_release -cs).us-nh.full | tee /etc/apt/sources.list.d/neurodebian.sources.list
     apt-key adv --recv-keys --keyserver pgp.mit.edu 2649A5A9
     apt-get update
 
-* FSL : ``apt-get install -y fsl-5.0-complete``
+A note regarding the Neurodebian repository: We have encountered compatibility issues in the past with the Neurodebian binary for AFNI.  For this reason, it is suggested that you follow the installation instructions above or the instructions from the AFNI homepage.
 
-We have encountered compatibility issues in the past with the Neurodebian binary for AFNI.  For this reason, it is suggested that you follow the official installation instructions from the AFNI homepage (see above).
+Now install FSL using:
+
+.. code-block:: bash
+    apt-get install -y fsl-5.0-complete
+
+For FSL to be available globally on your machine, you should then add the following lines to the file located at `/etc/bash.bashrc`:
+
+.. code-block:: bash
+    FSLDIR=/usr/share/fsl/5.0
+    . ${FSLDIR}/etc/fslconf/fsl.sh
+    PATH=${FSLDIR}/bin:${PATH}
+    export FSLDIR PATH
+
+For more details about installing FSL (including instructions for other architectures) please refer to the FSL documentation `here <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation>`_.
+
+OS-Specific Instructions 
+''''''''''''''''''''''''
 
 **Mac OS X:**
 
-* FSL - Follow the instructions on the `FSL Download Page <http://fsl.fmrib.ox.ac.uk/fsldownloads/fsldownloadmain.html>`_.
-* AFNI - Follow the instructions to do a `Basic Install <http://afni.nimh.nih.gov/pub/dist/HOWTO/howto/ht00_inst/html/mac_10.78.html>`_.
-* Checking the AFNI and FSL paths - You must also add these paths to both your :file:`.bashrc` and :file:`.bash_profile` files. The best way to go about this is to follow the instructions above and then add the follow lines to :file:`.bash_profile`:
+* In Mac OS X, you can make it so that a local user account can find AFNI by adding the lines in the instructions above to the :file:`.bashrc` file in your home directory and then adding the following code to the :file:`.bash_profile` file in your home directory.
 
     .. code-block:: bash
 
@@ -253,11 +254,11 @@ Installing ANTS
 
 To install ANTS, follow the instructions below. 
 
-For Debian-based platforms, install the Neurodebian keys (see above) and run the following command:
+For Debian-based platforms, install the Neurodebian keys (see the FSL installation instructions above) and run the following command as the super user:
 
 .. code-block:: bash
 
-    sudo apt-get install ants
+    apt-get install ants
 
 For other platforms, download ANTS from Github and compile from source:
 

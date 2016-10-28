@@ -166,7 +166,7 @@
 <li><strong>Subjects to Include (Optional) - [text/path]:</strong> An optional comma-separated list of subjects to include (if you wish to include only a subset of subjects whose scans match the templates).  A value of &#8216;None&#8217; means all subjects will be run. This list can also be read from a text file whose path is given in this field.</li>
 <li><strong>Subjects to Exclude (Optional) - [text/path]:</strong> An optional comma-separated list of subjects to exclude (if you wish to exclude only a subset of subjects whose scans match the templates).  A value of &#8216;None&#8217; means all subjects will be run. This list can also be read from a text file whose path is given in this field.</li>
 <li><strong>Sites to Include (Optional) - [text/path]:</strong> An optional comma-separated list of sites to include (if you wish to include only a subset of sites whose scans match the templates).  A value of &#8216;None&#8217; means all sites will be run. This list can also be read from a text file whose path is given in this field.</li>
-<li><strong>Scan Parameters File (Optional) - [path]:</strong>  Path to a CSV specifying the slice time acquisition parameters for scans.  If set to &#8216;None&#8217;, the NifTI headers will be used. Instructions for creating such a file can be found <a class="reference internal" href="func.html"><em>here</em></a>.</li>
+<li><strong>Scan Parameters File (Optional) - [path]:</strong>  Path to a CSV specifying the slice time acquisition parameters for scans.  If set to &#8216;None&#8217;, these parameters will either be defined by the NifTI headers or by an explicit slice order specified in the pipeline configuration builder. Instructions for creating such a file can be found <a class="reference internal" href="func.html"><em>here</em></a>.  Note that a scan parameters file will also override the settings used in the slice timing screen of the pipeline configuration builder.</li>
 <li><strong>AWS Credentials File (Optional)- [path]:</strong> Required if downloading data from a non-public S3  bucket on Amazon Web Services instead of using local files.</li>
 <li><strong>Output Directory - [path]:</strong> The directory where the subject list will be generated.</li>
 <li><strong>Subject List Name - [text]:</strong> A name for the subject list.</li>
@@ -176,7 +176,7 @@
 <div class="section" id="defining-anatomical-and-functional-file-path-templates">
 <h2>Defining Anatomical and Functional File Path Templates<a class="headerlink" href="#defining-anatomical-and-functional-file-path-templates" title="Permalink to this headline">¶</a></h2>
 <p>C-PAC has been designed to process large, complex data sets, and supports processing of multiple scans per participant, multiple scan sessions, and multiple data acquisition sites with differing scan acquisition parameters. Because the file directory structures resulting from such data sets can be complex, it is necessary to define the location of the image files to be processed for each participant.  If you are using the <a class="reference external" href="http://bids.neuroimaging.io">BIDS</a> directory structure, the location of image files is defined via the BIDS specification, and C-PAC is able to automatically find all of the files needed to run the pipeline.  Otherwise, you will need to manually define path templates using the conventions described below.</p>
-<p>File path templates are defined by adding placeholder variables nested within curly brackets to the file path of each type of image file to be processed (anatomical and functional).  The possible placeholders are <cite>site</cite>, <cite>participant</cite> and <cite>session</cite>.  <cite>session</cite> is optional, while the other two placeholders are not.  To illustrate, if the full paths to the image files for <tt class="file docutils literal"><span class="pre">participant_01</span></tt> were:</p>
+<p>File path templates are defined by adding placeholder variables nested within curly brackets to the file path of each type of image file to be processed (anatomical and functional).  The possible placeholders are <cite>site</cite>, <cite>participant</cite> and <cite>session</cite>.  <cite>session</cite> is optional, while the other two placeholders are not.  To illustrate, if the full paths to the image files for a hypothetical <tt class="file docutils literal"><span class="pre">participant_1</span></tt> were:</p>
 <div class="highlight-python"><pre>/home/data/site_1/participant_1/anat/mprage.nii.gz
 /home/data/site_1/participant_1/func/rest.nii.gz</pre>
 </div>
@@ -185,14 +185,14 @@
 Functional Template:  /home/data/{site}/{participant}/func/rest.nii.gz</pre>
 </div>
 <p>It should be noted that C-PAC currently requires participant directories to be within a site level directory. If your data set does not contain scans from multiple acquisition sites, we recommend creating a dummy <tt class="file docutils literal"><span class="pre">site_1</span></tt> directory and placing participant files inside this directory. This peculiarity will be fixed in future versions of C-PAC.</p>
-<p>In cases where file paths differ in more than just the site and subject directories, asterisks can be used. This is useful for data sets containing multiple scans per subject, multiple scan sessions, or subject-specific information in file or folder names. You may use as many asterisks as necessary to to define your file path templates. For example, if the paths to functional image files for a subject were:</p>
-<div class="highlight-python"><pre>/home/data/site_1/subject_1/s01_func/session_1/rest_1.nii.gz
-/home/data/site_1/subject_1/s01_func/session_1/rest_2.nii.gz
-/home/data/site_1/subject_1/s01_func/session_2/rest_1.nii.gz
-/home/data/site_1/subject_1/s01_func/session_2/rest_2.nii.gz</pre>
+<p>In cases where file paths differ in more than just the site, session and subject directories, asterisks can be used. This is useful for data sets containing multiple sessions in a single scan date or other subject-specific information in file or folder names. You may use as many asterisks as necessary to to define your file path templates. For example, if the paths to functional image files for a subject were:</p>
+<div class="highlight-python"><pre>/home/data/site_1/subject_1/scan_1/session_1/rest_1.nii.gz
+/home/data/site_1/subject_1/scan_1/session_2/rest_2.nii.gz
+/home/data/site_1/subject_1/scan_2/session_1/rest_1.nii.gz
+/home/data/site_1/subject_1/scan_2/session_2/rest_2.nii.gz</pre>
 </div>
 <p>The file path template would be:</p>
-<div class="highlight-python"><pre>/home/data/{site}/{participant}/*_func/{session}/rest_*.nii.gz</pre>
+<div class="highlight-python"><pre>/home/data/{site}/{participant}/scan_*/{session}/rest_*.nii.gz</pre>
 </div>
 <div class="section" id="example-file-path-templates">
 <h3>Example File Path Templates<a class="headerlink" href="#example-file-path-templates" title="Permalink to this headline">¶</a></h3>
@@ -237,7 +237,7 @@ Functional Template:  /path/to/data/{site}/{participant}/{session}/RfMRI_*/rest.
         <span class="l l-Scalar l-Scalar-Plain">last_tr</span><span class="p p-Indicator">:</span> <span class="s">&#39;&#39;</span>
 </pre></div>
 </div>
-<p>Note that more than one resting state scan is defined under the <cite>rest</cite> key, and that individual scan parameters can be defined to override the settings used in the C-PAC GUI.</p>
+<p>Note that more than one resting state scan is defined under the <cite>rest</cite> key (i.e., multiple sessions), and that individual scan parameters can be defined to override the settings used in the C-PAC pipeline configuration GUI.  Be careful not to name the multiple sessions under the <cite>rest</cite> key using dashes or periods, as this input will not be parsed by C-PAC and may cause errors.</p>
 </div>
 </div>
 </div>
@@ -265,6 +265,7 @@ Functional Template:  /path/to/data/{site}/{participant}/{session}/RfMRI_*/rest.
 <li class="toctree-l1"><a class="reference internal" href="derivatives.html">Computable Derivatives</a></li>
 <li class="toctree-l1"><a class="reference internal" href="group_analysis.html">Setting Up Group Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="running.html">Running C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker.html">Running C-PAC as a Docker App</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cloud.html">Using C-PAC in the AWS Cloud</a></li>
 <li class="toctree-l1"><a class="reference internal" href="files.html">Preconfigured Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">C-PAC Benchmark</a></li>

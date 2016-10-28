@@ -52,7 +52,7 @@
 <div class="section" id="mean-white-matter-csf">
 <h3>Mean White Matter / CSF<a class="headerlink" href="#mean-white-matter-csf" title="Permalink to this headline">¶</a></h3>
 <p>The mean WM and CSF time series are calculated by averaging signal over all voxels within a WM or CSF mask for each time point. Mean WM and CSF time series are then used as temporal covariates and removed from the raw data through linear regression.</p>
-<p><strong>Note:</strong> The <strong>Lateral Ventricles Mask</strong> in standard space is provided for isolating signal changes in the CSF. This mask is based off of the HarvardOxford atlas that is in standard MNI space. If you wish to use your own standard and lateral ventricles mask, and wish to run CSF nuisance regression, you must provide it here.</p>
+<p><strong>Note:</strong> The <strong>Lateral Ventricles Mask</strong> in standard space is provided for isolating signal changes in the CSF. This mask is based off of the HarvardOxford atlas that is in standard MNI space. If you wish to use your own standard and lateral ventricles mask, and wish to run CSF nuisance regression, you must specify it in your pipeline configuration.</p>
 </div>
 <div class="section" id="compcor">
 <h3>CompCor<a class="headerlink" href="#compcor" title="Permalink to this headline">¶</a></h3>
@@ -83,12 +83,12 @@
 </div>
 <div class="section" id="motion-correction">
 <h2>Motion Correction<a class="headerlink" href="#motion-correction" title="Permalink to this headline">¶</a></h2>
-<p>Movement during scanning is one of of the largest factors influencing the quality of fMRI data. Movement of the head between the acquisition of each volume can cause brain images to become misaligned. Head motion during scanning can also cause spurious changes in signal intensity. If they are not corrected, these changes can influence the results of activation and connectivity analyses. Recent studies have shown that motion as small as 0.1mm can systematically bias both within- and between- group effects during the analysis of fMRI data (Power et al., 2011; Satterhwaite et al., 2012; Van Dijk et al., 2012). Even the most cooperative subjects often still show displacements of up to a millimeter, and head movements of several millimeters are not uncommon in studies of hyperkinetic subjects such as young children, older adults, or patient populations.</p>
+<p>Movement during scanning is one of of the largest factors influencing the quality of fMRI data. Movement of the head between the acquisition of each volume can cause brain images to become misaligned. Head motion during scanning can also cause spurious changes in signal intensity. If they are not corrected, these changes can influence the results of activation and connectivity analyses. Recent studies have shown that motion as small as 0.1 mm can systematically bias both within- and between- group effects during the analysis of fMRI data (Power et al., 2011; Satterhwaite et al., 2012; Van Dijk et al., 2012). Even the most cooperative participants often still show displacements of up to a millimeter, and head movements of several millimeters are not uncommon in studies of hyperkinetic subjects such as young children, older adults, or patient populations.</p>
 <p>There are three main approaches to motion correction: volume realignment, using a general linear model to regress out motion-related artifacts (i.e. regression of motion parameters), and censoring of motion confounded time points (i.e. &#8220;scrubbing&#8221;)</p>
 <div class="section" id="volume-realignment">
 <h3>Volume Realignment<a class="headerlink" href="#volume-realignment" title="Permalink to this headline">¶</a></h3>
 <p>Volume realignment aligns reconstructed volumes by calculating motion parameters based on a solid-body model of the head and brain (Friston 1996). Based on these parameters, each volume is registered to the volume preceding it.</p>
-<p>CPAC runs volume realignment on all functional images during functional preprocessing. You can select from two sets of motion parameters to use during this process:</p>
+<p>C-PAC runs volume realignment on all functional images during functional preprocessing. You can select from two sets of motion parameters to use during this process:</p>
 <ul class="simple">
 <li><strong>6-Parameter Model</strong> - Three translation and three rotation parameters as described in Friston 1996.</li>
 <li><strong>Friston 24-Parameter Model</strong> - The 6 motion parameters of the current volume and the preceding volume, plus each of these values squared.</li>
@@ -96,10 +96,11 @@
 </div>
 <div class="section" id="regression-of-motion-parameters">
 <h3>Regression of Motion Parameters<a class="headerlink" href="#regression-of-motion-parameters" title="Permalink to this headline">¶</a></h3>
-<p>Another approach to motion correction is to regress-out the effects of motion when running statistical analysis. This is done by calculating motion parameters and including them in your General Linear Model (Fox et al., 2005; Weissenbacher et al., 2009).</p>
+<p>Another approach to motion correction is to regress out the effects of motion when running statistical analysis. This is done by calculating motion parameters and including them in your General Linear Model (Fox et al., 2005; Weissenbacher et al., 2009).</p>
 <p>By default, C-PAC will calculate and output the motion parameters used during volume realignment. You can optionally enable the calculation of additional motion parameters, including Framewise Displacement (FD) and DVARS (as described below and in Power et al., 2011).</p>
-<p>To view motion parameters generated by C-PAC, <a class="reference external" href="https://raw.githubusercontent.com/FCP-INDI/C-PAC/master/CPAC/utils/extract_parameters.py">download</a> the <tt class="file docutils literal"><span class="pre">extract_parameters.py</span></tt> script. Navigate to your main C-PAC output directory and run it by typing:</p>
-<div class="highlight-python"><pre>python extract_parameters.py /path/to/datasink/directory</pre>
+<p>To view motion parameters generated by C-PAC, type the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">cpac_extract_parameters</span><span class="o">.</span><span class="n">py</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">datasink</span><span class="o">/</span><span class="n">directory</span>
+</pre></div>
 </div>
 <p>Where <tt class="file docutils literal"><span class="pre">/path/to/output/directory</span></tt> is the path to your output directory (<tt class="file docutils literal"><span class="pre">outputDirectory</span></tt> as specified in <tt class="file docutils literal"><span class="pre">config.yml</span></tt>). This will output a <tt class="file docutils literal"><span class="pre">...all_params.csv</span></tt> file in the top level of each pipeline directory which contains all motion parameters calculated by C-PAC.</p>
 </div>
@@ -132,7 +133,6 @@ Power and colleagues (2011) proposed two measures to identify volumes contaminat
 <li><strong>Run Nuisance Signal Correction - [Off, On, On/Off]:</strong> Covary out various sources of noise.</li>
 <li><strong>Lateral Ventricles Mask (Standard Space) - [path]:</strong> A binary mask of the lateral ventricles.</li>
 <li><strong>Select regressors: - [checkbox: compcor, wm, csf, global, pc1, motion, linear, quadratic]:</strong>  Clicking on the <em>+</em> icon to the right of the box here will bring up a dialog where you can check off which nuisance variables you would like to include.  You may generate multiple sets of nuisance regression strategies in this way.  When you are done defining nuisance regression strategies, check the box next to each strategy you would like to run.</li>
-<li><strong>Corrections: - [compcor, wm, csf, global, pc1, motion, linear, quadratic, gm]:</strong> The nuisance regressors to covary out.</li>
 <li><strong>CompCor Components - [integer]:</strong> Number of principle components to calculate when running CompCor.  5 or 6 is recommended.</li>
 <li><strong>Use Friston 24-Parameter Model - [On, Off, On/Off]:</strong> Use the Friston 24-Parameter Model during volume realignment. If this option is turned off, only 6 parameters will be used. These parameters will also be output as a spreadsheet.</li>
 </ol>
@@ -379,6 +379,7 @@ Fox, M.D., Snyder, A.Z., Vincent, J.L., Corbetta, M., Van Essen, D.C., Raichle, 
 <li class="toctree-l1"><a class="reference internal" href="derivatives.html">Computable Derivatives</a></li>
 <li class="toctree-l1"><a class="reference internal" href="group_analysis.html">Setting Up Group Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="running.html">Running C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker.html">Running C-PAC as a Docker App</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cloud.html">Using C-PAC in the AWS Cloud</a></li>
 <li class="toctree-l1"><a class="reference internal" href="files.html">Preconfigured Files</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmark.html">C-PAC Benchmark</a></li>

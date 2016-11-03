@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Benchmark Package &mdash; C-PAC 0.3.9 Alpha documentation</title>
+    <title>Benchmark Package &mdash; C-PAC 1.0.0 Beta documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.3.9 Alpha',
+        VERSION:     '1.0.0 Beta',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="C-PAC 0.3.9 Alpha documentation" href="index.html" />
+    <link rel="top" title="C-PAC 1.0.0 Beta documentation" href="index.html" />
     <link rel="next" title="Troubleshooting and Help" href="help.html" />
     <link rel="prev" title="Preconfigured Files" href="files.html" /> 
   </head>
@@ -42,7 +42,7 @@
         <li class="right" >
           <a href="files.html" title="Preconfigured Files"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li> 
+        <li><a href="index.html">C-PAC 1.0.0 Beta documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -53,34 +53,50 @@
             
   <div class="section" id="benchmark-package">
 <h1>Benchmark Package<a class="headerlink" href="#benchmark-package" title="Permalink to this headline">¶</a></h1>
-<p>The C-PAC benchmark package consists of all of the data files, configuration files, and scripts needed to test C-PAC on your machine and compare your outputs with a standard set of outputs processed by the C-PAC team. Specifically, it contains:</p>
+<p>The C-PAC benchmark package consists of all of the configuration files and scripts needed to test C-PAC on your machine and compare your outputs with a standard set of outputs processed by the C-PAC team. Specifically, it contains:</p>
 <ul class="simple">
-<li>A bash script to automatically configure the paths within all of the settings files (<tt class="docutils literal"><span class="pre">adjustSettingPaths.sh</span></tt>).</li>
-<li>Anatomical and functional images for one subject from the ADHD-200 dataset.</li>
-<li>A pipeline configuration file using ANTS (<tt class="docutils literal"><span class="pre">pipeline_config_ANTS_example.yml</span></tt>).</li>
-<li>A subject list (<tt class="docutils literal"><span class="pre">CPAC_subject_list_1sub.yml</span></tt>).</li>
-<li>Masks, ROIs, spatial maps, and seed specifications (for timeseries extraction, centrality, etc).</li>
+<li>A shell script to automatically configure the paths within all of the settings files (<tt class="docutils literal"><span class="pre">adjustSettingPaths.sh</span></tt>).</li>
+<li>A pipeline configuration file using ANTS (<tt class="docutils literal"><span class="pre">pipeline_config_benchmark.yml</span></tt>).</li>
+<li>A participant list (<tt class="docutils literal"><span class="pre">CPAC_benchmark_participants.yml</span></tt>).</li>
+<li>Masks, and ROIs for timeseries extraction, centrality, dual regression, etc.</li>
 <li>A Python script to compare your outputs with ours (<tt class="docutils literal"><span class="pre">correlations_workflow_pipeline.py</span></tt>).</li>
 </ul>
-<p>The following instructions will guide you through the process of running the C-PAC benchmark. Before you begin, make sure that you have at least 24 GB of RAM.  Also, note that if you chose not to install ANTS along with C-PAC, the benchmark will not work properly.  Click the links below to download the package and the pre-computed outputs for C-PAC 0.3.9.2:</p>
-<ul class="simple">
-<li><a class="reference external" href="https://s3.amazonaws.com/fcp-indi/data/test_resources/benchmark_package.tar.gz">The C-PAC Benchmark Package</a></li>
-<li><a class="reference external" href="https://s3.amazonaws.com/fcp-indi/data/test_resources/output_v0392.tar.gz">Precomputed Results for an Individual-Level Analysis Using C-PAC 0.3.9.2</a></li>
-</ul>
-<p>Once downloaded, these packages should be extracted using the command <tt class="docutils literal"><span class="pre">tar</span> <span class="pre">xzvf</span> <span class="pre">&lt;filename&gt;</span></tt>.  You may also want to consider moving <cite>output_v0392</cite> into the main <cite>benchmark_package</cite> directory to keep things organized.</p>
+<p>The benchmark package can be downloaded <a class="reference external" href="https://s3.amazonaws.com/fcp-indi/resources/benchmark_package.tar.gz">here</a>.  The following instructions will guide you through the process of running the C-PAC benchmark.</p>
+<div class="section" id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<p>Before running the benchmark, make sure that your computer has at least 56 GB of RAM.  The benchmark pipeline configuration runs 4 participants at a time with 12 GB allocated for each participant, so 56 GB will give you enough RAM to accommodate these participants plus some extra RAM for any other applications that are running.  If you do not have 56 GB of RAM, you can modify the benchmark pipeline configuration to run fewer participants at a time- just ensure that you have around 14 GB available for each participant.</p>
+<p>Also ensure that you have at least 721 GB of free space on the volume you&#8217;re running the benchmark on.  This will allow you to keep a working directory (which is chronically emptied as participants are run and should not exceed 55 GB) and two copies of the outputs (one 333 GB copy of our team&#8217;s pre-computed outputs, and another 333 GB for the outputs generated by your server or workstation).</p>
+</div>
+<div class="section" id="downloading-the-precomputed-c-pac-outputs-from-the-fcp-indi-s3-bucket">
+<h2>Downloading the Precomputed C-PAC Outputs from the FCP-INDI S3 Bucket<a class="headerlink" href="#downloading-the-precomputed-c-pac-outputs-from-the-fcp-indi-s3-bucket" title="Permalink to this headline">¶</a></h2>
+<p>The C-PAC precomputed outputs are stored in Amazon Web Service&#8217;s Simple Storage Service (S3). They can be accessed using <a class="reference external" href="https://cyberduck.io/">Cyberduck</a>, a file transfer programs for Mac OS X and Windows that handles S3 natively and allow you to navigate through the data using a file browser. For individuals who are more comfortable with the terminal, Cyberduck also has a <a class="reference external" href="https://duck.sh">command line version</a> that works with Windows, Mac OS X, and Linux.  There is also an official <a class="reference external" href="https://aws.amazon.com/cli/">AWS command line tool</a> that can also be used. Instructions for using the grpahical version of Cyberduck are as follows:</p>
+<ol class="arabic simple">
+<li>Open Cyberduck and click on <em>Open Connection</em>.</li>
+<li>Set the application protocol in the dropdown menu to <em>S3 (Amazon Simple Storage Service)</em>.</li>
+<li>Set the server to <em>s3.amazonaws.com</em>.</li>
+<li>Check the box labelled <em>Anonymous Login</em>.</li>
+<li>Expand the More Options tab and set Path to <em>fcp-indi/resources/cpac_benchmark</em>.</li>
+<li>Click <em>Connect</em>.</li>
+</ol>
+<p>The end result should appear similar to the following:</p>
+<div class="figure">
+<img alt="_images/cyberduck.png" src="_images/cyberduck.png" />
+</div>
+<p>The pre-computed outputs are separated by version number within the directory that will now appear so that you can download the outputs for the version that you are testing out.</p>
+</div>
 <div class="section" id="configuring-c-pac">
 <h2>Configuring C-PAC<a class="headerlink" href="#configuring-c-pac" title="Permalink to this headline">¶</a></h2>
-<p>First, navigate to <tt class="docutils literal"><span class="pre">/scripts</span></tt> and execute <tt class="docutils literal"><span class="pre">./adjustSettingPaths.sh</span></tt>.  This will ensure that the paths used in the configuration files are in accord with whichever directory you choose to store <tt class="docutils literal"><span class="pre">benchmark_package</span></tt> in.  This script assumes that it lives in the <tt class="docutils literal"><span class="pre">/scripts</span></tt> directory.  If it has been moved elsewhere, it may be executed using <tt class="docutils literal"><span class="pre">./adjustSettingPaths.sh</span> <span class="pre">&lt;path</span> <span class="pre">to</span> <span class="pre">benchmark_package</span> <span class="pre">directory&gt;</span></tt></p>
-<p>Next, load in the single subject from the ADHD-200 dataset.  Open the C-PAC GUI and click <cite>Load</cite> next to the subject pane. Select <tt class="docutils literal"><span class="pre">CPAC_subject_list_1sub.yml</span></tt>.</p>
-<p>Finally, load in the pipeline configuration.  In the main C-PAC window, under <cite>Pipelines</cite>, click <cite>Load</cite> and select the <tt class="docutils literal"><span class="pre">pipeline_config_ANTS_example.yml</span></tt> file located in <tt class="docutils literal"><span class="pre">/settings/configs</span></tt> in the benchmark directory. A new pipeline will show up in the list window.  Select this pipeline and click <cite>Edit</cite> to inspect it.</p>
+<p>First, extract the package using the command <tt class="docutils literal"><span class="pre">tar</span> <span class="pre">xzvf</span> <span class="pre">benchmark_package.tar.gz</span></tt>. Then, navigate to <tt class="docutils literal"><span class="pre">benchmark_package/scripts</span></tt> in the terminal and execute <tt class="docutils literal"><span class="pre">./adjustSettingPaths.sh</span></tt>.  This will ensure that the paths used in the configuration files are in accord with whichever directory you choose to store <tt class="docutils literal"><span class="pre">benchmark_package</span></tt> in.  This script assumes that it lives in the <tt class="docutils literal"><span class="pre">/scripts</span></tt> directory.  If it has been moved elsewhere, it may be executed using <tt class="docutils literal"><span class="pre">./adjustSettingPaths.sh</span> <span class="pre">&lt;path</span> <span class="pre">to</span> <span class="pre">benchmark_package</span> <span class="pre">directory&gt;</span></tt></p>
+<p>Next, load in the participant list.  This contains paths to images that are publicly downloadable from Amazon Webs Services S3.  Open the C-PAC GUI and click <cite>Load</cite> next to the subject pane. Select <tt class="docutils literal"><span class="pre">CPAC_benchmark_participants.yml</span></tt>.</p>
+<p>Finally, load in the pipeline configuration.  In the main C-PAC window, under <cite>Pipelines</cite>, click <cite>Load</cite> and select the <tt class="docutils literal"><span class="pre">pipeline_config_benchmark.yml</span></tt> file located in <tt class="docutils literal"><span class="pre">/settings/configs</span></tt> in the benchmark directory. A new pipeline will show up in the list window.  Select this pipeline and click <cite>Edit</cite> to inspect it.</p>
 </div>
-<div class="section" id="running-an-individual-level-analyses">
-<h2>Running An Individual-Level Analyses<a class="headerlink" href="#running-an-individual-level-analyses" title="Permalink to this headline">¶</a></h2>
-<p>Once you have configured C-PAC by loading in the pipeline configuration YAML and subject list, you may run the individual-level analysis pipeline by clicking the appropriate button at the bottom of the main C-PAC window. This will bring up a log window that displays the progress of the C-PAC run. On an Intel Core i7 2.4 GHz laptop with 8 cores and 16 GB RAM, the pipeline finishes executing in around 40 minutes.</p>
+<div class="section" id="running-an-individual-level-analysis">
+<h2>Running An Individual-Level Analysis<a class="headerlink" href="#running-an-individual-level-analysis" title="Permalink to this headline">¶</a></h2>
+<p>Once you have configured C-PAC by loading in the pipeline configuration YAML and subject list, you may run the individual-level analysis pipeline by clicking the appropriate button at the bottom of the main C-PAC window. This will bring up a log window that displays the progress of the C-PAC run.</p>
 </div>
 <div class="section" id="comparing-outputs">
 <h2>Comparing Outputs<a class="headerlink" href="#comparing-outputs" title="Permalink to this headline">¶</a></h2>
-<p>Navigate to the <tt class="docutils literal"><span class="pre">/scripts</span></tt> directory of the C-PAC Benchmark Package. Here you will find a script named <tt class="docutils literal"><span class="pre">correlations_workflow_pipeline.py</span></tt>, which can help you compare your outputs and the reference outputs from the C-PAC team.</p>
+<p>Navigate to the <tt class="docutils literal"><span class="pre">benchmark_packages/scripts</span></tt> directory within the benchmark package. Here you will find a script named <tt class="docutils literal"><span class="pre">correlations_workflow_pipeline.py</span></tt>, which can help you compare your outputs and the reference outputs from the C-PAC team.</p>
 <p>This will produce Pearson&#8217;s r and a concordance correlation coefficient between two sets of output for the following measures:</p>
 <ul class="simple">
 <li>ALFF and f/ALFF</li>
@@ -108,11 +124,20 @@
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installing C-PAC</a></li>
 <li class="toctree-l1"><a class="reference internal" href="subject_list_config.html">Setting Up A Subject List</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pipeline_config.html">Setting Up A Pipeline Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="derivatives.html">Computable Derivatives</a></li>
 <li class="toctree-l1"><a class="reference internal" href="group_analysis.html">Setting Up Group Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="running.html">Running C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker.html">Running C-PAC as a Docker App</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cloud.html">Using C-PAC in the AWS Cloud</a></li>
 <li class="toctree-l1"><a class="reference internal" href="files.html">Preconfigured Files</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">C-PAC Benchmark</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">C-PAC Benchmark</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#downloading-the-precomputed-c-pac-outputs-from-the-fcp-indi-s3-bucket">Downloading the Precomputed C-PAC Outputs from the FCP-INDI S3 Bucket</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuring-c-pac">Configuring C-PAC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-an-individual-level-analysis">Running An Individual-Level Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#comparing-outputs">Comparing Outputs</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="help.html">Troubleshooting and Help</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rnotes.html">Release Notes</a></li>
 </ul>
@@ -146,7 +171,7 @@
         <li class="right" >
           <a href="files.html" title="Preconfigured Files"
              >previous</a> |</li>
-        <li><a href="index.html">C-PAC 0.3.9 Alpha documentation</a> &raquo;</li> 
+        <li><a href="index.html">C-PAC 1.0.0 Beta documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

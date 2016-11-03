@@ -29,70 +29,45 @@ Degree centrality has been widely used to identify "functional hubs" and examine
 
 Beyond detecting functional hubs, both DC and EC have been used as a way of characterizing information flow through the functional connectome at the voxel level. These voxel-wise centrality analyses (depicted in the figure above, taken from Zuo et al., 2012) showed both short and long-term test-retest reliability, and appear to be modulated by age and sex (Zuo et al., 2012). Additionally, EC has been shown to be modulated by subjects' states of hunger or satiety (Lohmann et al. 2010).
 
-Configuring CPAC to Run Network Centrality
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Configuring C-PAC to Run Network Centrality
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. figure:: /_images/centrality_gui.png
 
 #. **Calculate Network Centrality Measures - [Off, On]:** Calculate Degree Centrality and/or Eigenvector Centrality and/or Local Functional Connectivity Density. Note that calculating Eigenvector Centrality will take significantly longer and require significantly more computing power to calculate than Degree Centrality.
 
-#. **ROI / Mask Specification File - [path]:** Full path to a text file containing a mask or list of ROIs. Each line of this file should contain the path to an ROI or mask. If a mask is specified, centrality will be calculated for all voxels within the mask. If a list of ROIs is specified, each ROI will be treated as a node, and centrality will be calculated for each node.
+#. **Mask Specification File - [path]:** Full path to a text file containing a mask or list of ROIs. Each line of this file should contain the path to an ROI or mask. If a mask is specified, centrality will be calculated for all voxels within the mask. If a list of ROIs is specified, each ROI will be treated as a node, and centrality will be calculated for each node.
 
-#. **Measures to Calculate - [Degree Centrality, Eigenvector Centrality]:** Note that calculating Eigenvector Centrality will take significantly longer and require significantly more computing power to calculate than Degree Centrality.
+#. **Degree Centrality Weight Options - [Binarized, Weighted]:** Specify how connections are represented during graph construction for degree centrality. Binarized: Connection strength is either 1 or 0. Weighted: Connection strength is a correlation value.
 
-#. **Connection Weight Options - [Binarized, Weighted]:** Specify how connections are represented during graph construction. Binarized: Connection strength is either 1 or 0. Weighted: Connection strength is a correlation value.
+#. **Degree Centrality Threshold Type - [Significance threshold, Sparsity threshold, Correlation threshold]:** Select the type of threshold used when creating the adjacency matrix for degree centrality.
 
-#. **Threshold Type - [Significance threshold, Sparsity threshold, Correlation threshold]:** Select the type of threshold used when creating the adjacency matrix.
+#. **Degree Centrality Threshold Value - [decimal]:** Based on the Threshold Type selected above, enter a Threshold Value. P-value for Significance Threshold, Sparsity value for Sparsity Threshold, Pearson's r value for Correlation Threshold.
 
-#. **Threshold Value - [decimal]:** Based on the Threshold Type selected above, enter a Threshold Value. P-value for Significance Threshold, Sparsity value for Sparsity Threshold, Pearson's r value for Correlation Threshold.
+#. **Eigenvector Centrality Weight Options - [Binarized, Weighted]:** Specify how connections are represented during graph construction for eigenvector centrality. Binarized: Connection strength is either 1 or 0. Weighted: Connection strength is a correlation value.
+
+#. **Eigenvector Centrality Threshold Type - [Significance threshold, Sparsity threshold, Correlation threshold]:** Select the type of threshold used when creating the adjacency matrix for eigenvector centrality. 
+
+#. **Eigenvector Centrality Threshold Value - [decimal]:** Based on the Threshold Type selected above, enter a Threshold Value. P-value for Significance Threshold, Sparsity value for Sparsity Threshold, Pearson's r value for Correlation Threshold.
+
+#. **Local Functional Connectivity Density Weight Options - [Binarized, Weighted]:** Specify how connections are represented during graph construction for LFCD. Binarized: Connection strength is either 1 or 0. Weighted: Connection strength is a correlation value.
+
+#. **Local Functional Connectivity Density Threshold Type - [Significance threshold, Sparsity threshold, Correlation threshold]:** Select the type of threshold used when creating the adjacency matrix for LFCD.
+
+#. **Local Functional Connectivity Density Threshold Value - [decimal]:** Based on the Threshold Type selected above, enter a Threshold Value. P-value for Significance Threshold, Sparsity value for Sparsity Threshold, Pearson's r value for Correlation Threshold.
 
 #. **Maximum RAM Use (GB) - [decimal]:** Maximum amount of RAM (in GB) to be used when calculating Degree Centrality and local Functional Connectivity Density. Calculating Eigenvector Centrality will require additional memory based on the size of the mask or number of ROI nodes. Setting this measure is still recommended as a way to check whether your machine has enough memory to run Eigenvector Centrality.
+
+Note that only centrality measures that have binarized/weighted checked on this screen will be run.
 
 Configuration Without the GUI
 """"""""""""""""""""""""""""""
 
 The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run anatomical preprocessing:
 
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | Key                           | Description                                                                                                                  | Potential Values                                                                   |
-    +===============================+==============================================================================================================================+====================================================================================+
-    | runNetworkCentrality          | Calculate degree centrality, eigenvector centrality, or functional connectivity density.                                     | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | templateSpecificationFile     | Full path to a text file containing a mask or list of ROIs for centrality.  Each line of this file should contain the path   | A path.                                                                            |
-    |                               | to an ROI or mask. If a mask is specified, centrality will be calculated for all voxels within the mask. If a list of ROIs   |                                                                                    |
-    |                               | is specified, each ROI will be treated as a node, and centrality will be calculated for each node.                           |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | degWeightOptions              | Enable/disable degree centrality by selecting the connectivity weights.                                                      | A two-element list where the first element is a boolean ('True' or 'False')        |
-    |                               |                                                                                                                              | indicating whether or not the weights used should be binarized and the second      |
-    |                               |                                                                                                                              | element is a boolean indicating whether or not the weights used should be weighted.|
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | degCorrelationThresholdOption | Select the type of threshold used when creating the degree centrality adjacency matrix. Choose 0 for significance threshold, | An integer with one of the following values: 0, 1, and 2.                          |
-    |                               | 1 for sparsity threshold, and 2 for correlation threshold.                                                                   |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | degCorrelationThreshold       | A threshold value for whichever option from degCorrelationThresholdOption was selected. For significance threshold, this     | A decimal value.                                                                   |
-    |                               | would be a p-value, a sparsity value for sparsity threshold, and a Pearson's r value for correlation threshold.              |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | eigWeightOptions              | Enable/disable eigenvector centrality by selecting the connectivity weights.                                                 | A two-element list where the first element is a boolean ('True' or 'False')        |
-    |                               |                                                                                                                              | indicating whether or not the weights used should be binarized and the second      |
-    |                               |                                                                                                                              | element is a boolean indicating whether or not the weights used should be weighted.|
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | eigCorrelationThresholdOption | Select the type of threshold used when creating the eigenvector centrality adjacency matrix. Choose 0 for significance       | An integer with one of the following values: 0, 1, and 2.                          |
-    |                               | threshold, 1 for sparsity threshold, and 2 for correlation threshold.                                                        |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | eigCorrelationThreshold       | A threshold value for whichever option from eigCorrelationThresholdOption was selected. For significance threshold, this     | A decimal value.                                                                   |
-    |                               | would be a p-value, a sparsity value for sparsity threshold, and a Pearson's r value for correlation threshold.              |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | lfcdWeightOptions             | Enable/disable eigree centrality by selecting the connectivity weights.                                                      | A two-element list where the first element is a boolean ('True' or 'False')        |
-    |                               |                                                                                                                              | indicating whether or not the weights used should be binarized and the second      |
-    |                               |                                                                                                                              | element is a boolean indicating whether or not the weights used should be weighted.|
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | lfcdCorrelationThresholdOption| Select the type of threshold used when creating the lFCD adjacency matrix. Choose 2 for correlation threshold (the only      | An integer with one of the following values: 2.                                    |
-    |                               | option).                                                                                                                     |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | lfcdCorrelationThreshold      | A threshold value for whichever option from eigCorrelationThresholdOption was selected. This would be a p-value.             | A decimal value.                                                                   |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | memoryAllocatedForDegree      | Maximum amount of RAM (in GB) to be used when calculating degree centrality.                                                 | A decimal value.                                                                   |
-    | Centrality                    |                                                                                                                              |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+.. csv-table::
+    :header: "Key","Description","Potential Values"
+    :widths: 5,30,15
+    :file: _static/params/centrality_config.csv
 
 References
 ^^^^^^^^^^

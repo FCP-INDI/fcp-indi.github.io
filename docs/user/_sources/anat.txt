@@ -7,25 +7,23 @@ In order to compare brain activations between subjects, individual functional an
 
 .. figure:: /_images/registration.png
 
-CPAC provides the option of either using FSL (`FLIRT <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT>`_ and `FNIRT <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FNIRT>`_) or `Advanced Normalization Tools (ANTS) <http://stnava.github.io/ANTs/>`_ to register images. Although the use of ANTS requires an extra step during the CPAC install process, we have found its results to be significantly better than those produced by FSL (a conclusion supported by a `recent systematic analysis by Klein et al. <http://mindboggle.info/papers/Evaluation_Klein_NeuroImage2010.pdf>`_).
+C-PAC provides the option of either using FSL (`FLIRT <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT>`_ and `FNIRT <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FNIRT>`_) or `Advanced Normalization Tools (ANTS) <http://stnava.github.io/ANTs/>`_ to register images. Although the use of ANTS requires an extra step during the C-PAC install process, we have found its results to be significantly better than those produced by FSL (a conclusion supported by a `recent systematic analysis by Klein et al. <https://www.ncbi.nlm.nih.gov/pubmed/20123029>`_).
 
-During registration, individual anatomical images are first transformed to match the common template. Then, the functional data for each subject is registered to their own transformed anatomical image. Finally, functional derivative files are transformed to the common template. For more detail on how CPAC computes these steps, please see the `Registration Page of the developer documentation <http://fcp-indi.github.io/docs/developer/workflows/registration.html>`_.
+During registration, individual anatomical images are first transformed to match the common template. Then, the functional data for each subject is registered to their own transformed anatomical image. Finally, functional derivative files are transformed to the common template. For more detail on how C-PAC computes these steps, please see the `Registration Page of the developer documentation <http://fcp-indi.github.io/docs/developer/workflows/registration.html>`_.
 
-By default, CPAC will register subject brains to the MNI152 template included with FSL. Users wishing to register their data to a different template (such as a group specific template) can specify alternative template files.
+By default, C-PAC will register subject brains to the MNI152 template included with FSL. Users wishing to register their data to a different template (such as a group specific template) can specify alternative template files.
 
 Configuring CPAC to Run Anatomical Registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. figure:: /_images/anat_reg_gui.png
 
-#. **Run Anatomical Registration - [On, Off, On/Off]:** Register anatomical images to a template.
-
-#. **Anatomical Template Resolution - [1mm, 2mm, 3mm]:** The resolution to which anatomical images should be transformed during registration. This is the resolution at which processed anatomical files will be output.
+#. **Anatomical Template Resolution - [1mm, 2mm, 3mm, 4mm]:** The resolution to which anatomical images should be transformed during registration. This is the resolution at which processed anatomical files will be output.
 
 #. **Anatomical Template (Brain Only) - [path]:** Template to be used during registration. It is not necessary to change this path unless you intend to use a non-standard template.
 
 #. **Anatomical Template (With Skull) - [path]:** Template to be used during registration. It is not necessary to change this path unless you intend to use a non-standard template.
 
-#. **Registration Method - [ANTS, FSL, ANTS & FSL]:** Registration methods to be used. Options are `ANTS <http://stnava.github.io/ANTs/>`_ and `FSL <http://fsl.fmrib.ox.ac.uk/fslcourse/lectures/practicals/reg/>`_.
+#. **Anatomical to Template Registration Method - [ANTS, FSL, ANTS & FSL]:** Registration method(s) to be used. Options are `ANTS <http://stnava.github.io/ANTs/>`_, `FSL <http://fsl.fmrib.ox.ac.uk/fslcourse/lectures/practicals/reg/>`_, or both.
 
 #. **FSL FNIRT Configuration File - [path]:** Configuration file specifying settings used during registration. Required if FSL is selected as the registration method. This file can be found in the :file:`/etc/flirtsch` directory of your FSL install.
 
@@ -33,35 +31,20 @@ Configuring CPAC to Run Anatomical Registration
 
 #. **Use skull-on image to calculate transform? (ANTS only) - [Off, On]:** Register skull-on anatomical image to template. Calculating the transform with skull-stripped images is reported to be better, but it requires very high-quality skull-stripping. If skull-stripping is imprecise, registration with skull is preferred. Note: This option only affects ANTS due to the fact that FNIRT already uses skull-on images for calculating warps. 
 
+#. **Inputs Already Skull-stripped? - [On, Off]**: Disables skull-stripping on the anatomical inputs if they are already skull-stripped.
+
 Configuration Without the GUI
 """"""""""""""""""""""""""""""
 
 The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run anatomical preprocessing:
 
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | Key                           | Description                                                                                                                  | Potential Values                                                                   |
-    +===============================+==============================================================================================================================+====================================================================================+
-    | runRegistrationPreprocessing  | Register anatomical images to a template.                                                                                    | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | resolution_for_anat           | The resolution to which anatomical images should be transformed during registration.                                         | 1mm,2mm,3mm                                                                        |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | template_brain_only_for_anat  | Template to be used during registration.  Normally the default value (seen in the example YAML) is fine.                     | A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz).|
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | template_skull_for_anat       | Template to be used during registration.  Normally the default value (seen in the example YAML) is fine.                     | A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz).|
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | regOption                     | Use either ANTS or FSL (FLIRT and FNIRT) as your anatomical registration method.                                             | A list containing 'ANTS', 'FSL', or both (e.g., ['FSL']).                          |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | fnirtConfig                   | Configuration file to be used by FSL to set FNIRT parameters.                                                                | A template name (e.g., 'T1_2_MNI152_2mm').                                         |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | ref_mask                      | Configuration file to be used by FSL to set FNIRT parameters.                                                                | A path (e.g.,                                                                      |
-    |                               |                                                                                                                              | $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain_mask_dil.nii.gz).     |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | regWithSkull                  | Register skull-on anatomical image to a template.                                                                            | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+.. csv-table::
+    :header: "Key","Description","Potential Values"
+    :widths: 5,30,15
+    :file: _static/params/anat_config.csv
 
 The box below contains an example of what these parameters might look like when defined in the YAML::
 
-    runRegistrationPreprocessing : [1]
     resolution_for_anat : 2mm
     template_brain_only_for_anat : /usr/share/fsl/5.0/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz
     template_skull_for_anat : /usr/share/fsl/5.0/data/standard/MNI152_T1_${resolution_for_anat}.nii.gz
@@ -69,10 +52,11 @@ The box below contains an example of what these parameters might look like when 
     fnirtConfig : T1_2_MNI152_2mm
     ref_mask : $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain_mask_symmetric_dil.nii.gz
     regWithSkull : [0]
+    already_skullstripped : [0]
 
 Anatomical Tissue Segmentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-CPAC uses `FSL/FAST <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FAST>`_ to automatically segment brain images into white matter, gray matter, and CSF. This is done using probability maps that contain information about the likelihood that a given voxel will be of a particular tissue type. Users specify a probability threshold such that voxels meeting a minimum probability of being a particular tissue will be classified as such. This results in masks containing voxels of only a single tissue type.
+C-PAC uses `FSL/FAST <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FAST>`_ to automatically segment brain images into white matter, gray matter, and CSF. This is done using probability maps that contain information about the likelihood that a given voxel will be of a particular tissue type. Users specify a probability threshold such that voxels meeting a minimum probability of being a particular tissue will be classified as such. This results in masks containing voxels of only a single tissue type.
 
 .. figure:: /_images/segmentation.png
 
@@ -100,12 +84,6 @@ Configuring CPAC to Run Anatomical Tissue Segmentation
 
 #. **Run Tissue Segmentation - [On, Off, On/Off]:** Automatically segment anatomical images into white matter, gray matter, and CSF based on prior probability maps.
 
-#. **White Matter Probability Threshold - [decimal]:** Only voxels with a White Matter probability greater than this value will be classified as White Matter. Can be a single value or a list of values separated by commas.
-
-#. **Gray Matter Probability Threshold - [decimal]:** Only voxels with a Gray Matter probability greater than this value will be classified as Gray Matter. Can be a single value or a list of values separated by commas.
-
-#. **CSF Probability Threshold - [decimal]:** Only voxels with a CSF probability greater than this value will be classified as CSF. Can be a single value or a list of values separated by commas.
-
 #. **Priors Directory - [path]:** Full path to a directory containing binarized prior probability maps. These maps are included as part of the 'Image Resource Files' package available on the Install page of the User Guide. It is not necessary to change this path unless you intend to use non-standard priors.
 
 #. **White Matter Prior Probability Map - [path]:** Full path to a binarized White Matter prior probability map. It is not necessary to change this path unless you intend to use non-standard priors.
@@ -119,37 +97,15 @@ Configuration Without the GUI
 
 The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run anatomical tissue segmentation:
 
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | Key                           | Description                                                                                                                  | Potential Values                                                                   |
-    +===============================+==============================================================================================================================+====================================================================================+
-    | runSegmentationPreprocessing  | Automatically segment anatomical images into white matter, gray matter, and CSF based on prior probability maps.             | A list where '1' represents 'yes' and '0' represents 'no' (e.g., '[1]').           |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | whiteMatterThreshold          | Only voxels with a White Matter probability greater than this value will be classified as White Matter.                      | A list composed of one or more p-values (e.g., [0.98,0.93]).                       |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | grayMatterThreshold           | Only voxels with a Gray Matter probability greater than this value will be classified as Gray Matter.                        | A list composed of one or more p-values (e.g., [0.70,0.93]).                       |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | cerebralSpinalFluidThreshold  | Only voxels with a CSF probability greater than this value will be classified as CSF.                                        | A list composed of one or more p-values (e.g., [0.98,0.93]).                       |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | priors_path                   | Full path to a directory containing binarized prior probability maps. These maps are included as part of the 'CPAC Image     | A path (e.g., $FSLDIR/data/standard/tissuepriors/${resolution_for_anat}).          |
-    |                               | Resource Files' package from installation. It is not necessary to change this path unless you intend to use non-standard     |                                                                                    |
-    |                               | priors.                                                                                                                      |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | PRIORS_WHITE                  | Full path to a binarized White Matter prior probability map. It is not necessary to change this path unless you intend to use| A path (e.g., $priors_path/avg152T1_white_bin.nii.gz).                             |
-    |                               | non-standard priors.                                                                                                         |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | PRIORS_GRAY                   | Full path to a binarized Gray Matter prior probability map. It is not necessary to change this path unless you intend to use | A path (e.g., $priors_path/avg152T1_gray_bin.nii.gz).                              |
-    |                               | non-standard priors.                                                                                                         |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
-    | PRIORS_CSF                    | Full path to a binarized CSF prior probability map. It is not necessary to change this path unless you intend to use         | A path (e.g., $priors_path/avg152T1_csf_bin.nii.gz).                               |
-    |                               | non-standard priors.                                                                                                         |                                                                                    |
-    +-------------------------------+------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
+.. csv-table::
+    :header: "Key","Description","Potential Values"
+    :widths: 5,30,15
+    :file: _static/params/seg_config.csv
+
 
 The box below contains an example of what these parameters might look like when defined in the YAML::
 
     runSegmentationPreprocessing : [1]
-    whiteMatterThreshold : [0.98]
-    grayMatterThreshold : [0.7]
-    cerebralSpinalFluidThreshold : [0.98]
     priors_path : /usr/share/fsl/5.0/data/standard/tissuepriors/${resolution_for_anat}
     PRIORS_WHITE : $priors_path/avg152T1_white_bin.nii.gz
     PRIORS_GRAY : $priors_path/avg152T1_gray_bin.nii.gz

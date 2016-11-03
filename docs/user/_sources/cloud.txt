@@ -22,7 +22,7 @@ The C-PAC team has released an Amazon Marketplace AMI, making it easier for rese
 
 * **EC2 Instance Store** - A form of temporary storage that comes included with some instance types.  Instance store volumes must be added manually before launching an instance, and all files stored on them will be lost when the instance is terminated.  The instance store is typically mounted at ``/mnt``.
 
-Lastly, it would be import to review any terms related to :doc:`the Sun Grid Engine job scheduler <compute_config>`.
+Lastly, it would be important to review any terms related to :doc:`the Sun Grid Engine job scheduler <compute_config>`.
 
 Creating AWS Access and Network Keys
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -89,13 +89,13 @@ Attaching Persistent EBS Storage to an Instance
 
 .. code-block:: bash
 
-    ssh -i /path/to/pem/file ubuntu@<public_dns> 'sudo mkfs -t ext4 /dev/xvdb && sudo mount /dev/xvdb /media/ebs
+    ssh -i /path/to/pem/file ubuntu@<Public Domain Name> 'sudo mkfs -t ext4 /dev/xvdb && sudo mount /dev/xvdb /media/ebs
 
 To use this volume with future instances, you may attach it to the instance using the AWS console and then use this command:
 
 .. code-block:: bash
 
-    ssh -i /path/to/pem/file ubuntu@<public_dns> 'sudo mount /dev/xvdb /media/ebs'
+    ssh -i /path/to/pem/file ubuntu@<Public Domain Name> 'sudo mount /dev/xvdb /media/ebs'
 
 Note that the creation of a persistent volume is heavily automated in Starcluster, so if you will be creating many different persistent volumes you should use Starcluster instead.
 
@@ -107,7 +107,7 @@ There are now two different means of accessing the instance.  Either through X2G
 ssh
 '''
 
-#. Open a terminal and type ``ssh -i /path/to/pem/file ubuntu@<public_dns>``.  
+#. Open a terminal and type ``ssh -i /path/to/pem/file ubuntu@<Public Domain Name>``.  
 
 #. Type `yes` when asked if you trust the source.
 
@@ -132,7 +132,7 @@ When you are done, your session configuration should look similar to the followi
 
 .. figure:: /_images/cloud_x2go.png
 
-Note: If X2Go does not work on your computer, you can also access the C-PAC GUI by adding the ``-X`` flag to the ssh command to enable X11 port forwarding (i.e., the ssh command would be ``ssh -X -i /path/to/pem/file ubuntu@<public_dns>``).  X11 port forwarding is very slow compared to X2Go, however, so it is recommended that you troubleshoot X2Go further before turning to this option.
+Note: If X2Go does not work on your computer, you can also access the C-PAC GUI by adding the ``-X`` flag to the ssh command to enable X11 port forwarding (i.e., the ssh command would be ``ssh -X -i /path/to/pem/file ubuntu@<Public Domain Name>``).  X11 port forwarding is very slow compared to X2Go, however, so it is recommended that you troubleshoot X2Go further before turning to this option.
 
 Uploading Data to Your Instance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -141,7 +141,7 @@ To upload data to your newly-created AWS instance, you can run the following com
 
 .. code-block:: bash
 
-    scp -r -i /path/to/pem/key /path/to/data ubuntu@<public_dns>:/path/to/server/directory
+    scp -r -i /path/to/pem/key /path/to/data ubuntu@<Public Domain Name>:/path/to/server/directory
 
 If you have configured persistent storage, you will want to ensure that `/path/to/server/directory` is pointing to the mount point for the persistent storage.  If you followed the instructions above or the instructions in the Starcluster section below, the mount point should be `/media/ebs`.
 
@@ -183,15 +183,17 @@ Now you will need to create a Starcluster configuration file so that Starcluster
 Fill in the AWS access keys from the CVS file that you created in the `Creating AWS Access and Network Keys` section::
 
     [aws info]
-    AWS_ACCESS_KEY_ID = <your_key>
-    AWS_SECRET_ACCESS_KEY = <your_secret_key>
+    AWS_ACCESS_KEY_ID = <Your Acces Key>
+    AWS_SECRET_ACCESS_KEY = <Your Secret Key>
 
-You do not need to define the ``AWS_USER_ID`` field unless you want to create custom AMIs based off the C-PAC AMI.  If you would like to use a region other than us-east-1, you may specify the region here by changing ``AWS_REGION_NAME``.
+You do not need to define the ``AWS_USER_ID`` field unless you want to create custom AMIs based off the C-PAC AMI.  The public C-PAC AMI is available in us-east-1, so you should not change the value of ``AWS_REGION_NAME``.
 
 Point your key definition to the pem file you generated in the `Creating AWS Access and Network Keys` section::
 
     [key cpac_key]
     KEY_LOCATION=/path/to/pem/file
+
+Find the image ID for the C-PAC AMI by logging into the AWS Console using your favorite web browser.  Make sure that you are in the `N. Virginia` region.  Navigate to the EC2 service click `Images` -> `AMIs`.  Then click `Owned by Me` in the upper left corner and switch it to `Public images`.  Search for 'CPAC'.  Select the version of C-PAC that you wish to use and look in the lower pane for the `AMI ID` field.
 
 Add the following cluster definition to your configuration file::
 
@@ -200,7 +202,7 @@ Add the following cluster definition to your configuration file::
     PLUGINS = cpac_sge, mnt_config
     CLUSTER_SIZE = 1
     CLUSTER_SHELL = bash
-    NODE_IMAGE_ID = ami-ffb3cf95
+    NODE_IMAGE_ID = <Image ID>
     MASTER_INSTANCE_TYPE = t2.medium
     NODE_INSTANCE_TYPE = c3.8xlarge
 
@@ -224,12 +226,12 @@ By default, the cluster will have an EBS-backed root volume and, if available, a
 
 .. code-block:: bash
 
-   starcluster createvolume --shutdown-volume-host <volume_size_in_gigabytes> <region> -I t2.micro -i ami-6b211202
+   starcluster createvolume --shutdown-volume-host <volume_size_in_gigabytes> <region> -I t2.micro -i <Image ID>
 
 Type ``starcluster listvolumes`` and get the `volume-id` for the volume that you just created.  Open up your Starcluster configuration file and add the following volume definition::
 
     [volume cpac_volume]
-    VOLUME_ID = <volume_id>
+    VOLUME_ID = <Volume ID>
     MOUNT_PATH = /media/ebs
 
 Append the following line to your `cpac_cluster` definition::

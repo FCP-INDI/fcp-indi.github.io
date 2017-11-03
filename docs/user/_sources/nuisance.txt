@@ -2,8 +2,11 @@ Nuisance Signal Regression
 --------------------------
 A key step in preparing fMRI data for statistical analysis is the removal of nusiance signals and noise. C-PAC provides a number of options for removing nuisance signals. These methods can be combined as desired by you, and are described below.
 
+Regressors
+^^^^^^^^^^
+
 White Matter / CSF Regression
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""""""""
 Signal changes in the white matter (WM) and cerebrospinal fluid (CSF) primarily reflect non-neural fluctuations such as scanner instabilities, subject motion, and physiological artifacts (e.g. respiration and cardiac effects) (Dagli et al., 1999; Windischberger et al., 2002). These signals are largely independent from the BOLD signal fluctuations recorded in gray matter, and may introduce temporal coherences that lead to an overestimation of functional connectivity strength. Successful estimation and correction for this non-neural noise allows for the exclusion such confounding effects.
 
 Mean White Matter / CSF
@@ -19,7 +22,7 @@ The term "noise region-of-interest" (noise ROI) refers to areas such as white ma
 The first step of CompCor is to determine noise ROIs. This can be done either by using anatomical data to identify voxels that consist primarily of either WM or CSF, or by defining noise ROIs as voxels with high temporal standard deviation. A principal component analysis (PCA) is then applied to characterize the time series data from the noise ROIs. Significant principal components are then introduced as covariates in a general linear model (GLM) as an estimate of the physiological noise signal space (Behzadi et al., 2007).
 
 Global Signal Regression 
-^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""
 Global signal, the average signal across all voxels in the brain, is assumed to reflect a combination of resting-state fluctuations, physiological noise (e.g. respiratory and cardiac noise), and other noise signals with non-neural origin. Global signal regression (GSR) is a preprocessing technique for removing the spontaneous BOLD fluctuations common to the whole brain using a general linear model (GLM). Although GSR can potentially change functional connectivity distributions and result in increased negative correlations (Murphy et al., 2009; Saad et al., 2012; Weissenbacher et al., 2009), this technique has been shown to facilitate the detection of localized neuronal signals and improve the specificity of functional connectivity analysis (Fox et al., 2005; Fox et al., 2009). Thus, GSR remains a common and useful processing technique in some situations.
 
 Global Mean
@@ -30,21 +33,15 @@ First Principle Component Removal (PC1)
 """""""""""""""""""""""""""""""""""""""
 Performs a Principal Components Analysis and regresses out the first principal component, which is assumed to be the global mean signal.
 
-Median Angle Correction 
-""""""""""""""""""""""""
-Median angle correction is another global signal correction approach. It is assumed that the global signal in resting-state fMRI can be viewed as the sum of two components: a component that reflects the intrinsic correlations of resting state fMRI signals between regions, and a nuisance component that reflects an additive global signal confound. Unlike the GSR method which removes both components, median angle correction can characterize the properties of the global signal and effectively minimize the effects of the additive global signal confound while preserving the desired components.
-
-Principal component analysis (PCA) is used to decompose the resting-state data. Median angle is computed by taking the inverse cosine of each voxel’s time series vector's projection onto the first principal component (i.e. the global mean signal) and then calculating the median over the angles from all the vectors. If an inverse relation is found between the median angle and the mean BOLD signal amplitude, then an additive signal confound is present. As resting-state data sets with high median angles and low mean BOLD magnitudes are likely to be the least contaminated by an additive global confound (He and Liu, 2011), the inverse relation between median angle and mean BOLD magnitude is used to correct for differences in the additive confound. Specifically, the angular distributions of datasets with small median angles can be shifted to attain a larger target median angle to effectively minimize the effects of the global signal confound. The calculation of target angle for median angle correction is described in He and Liu (2011).
-
 Linear and Quadratic Detrending
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""""""""""
 Removes linear or quadratic trends in the timeseries. The linear trend is likely due to the scanner heating up as the scan progresses, while the quadratic trend is possibly due to slow movement-related effects.
 
 Motion Correction
 ^^^^^^^^^^^^^^^^^^
 Movement during scanning is one of of the largest factors influencing the quality of fMRI data. Movement of the head between the acquisition of each volume can cause brain images to become misaligned. Head motion during scanning can also cause spurious changes in signal intensity. If they are not corrected, these changes can influence the results of activation and connectivity analyses. Recent studies have shown that motion as small as 0.1 mm can systematically bias both within- and between- group effects during the analysis of fMRI data (Power et al., 2011; Satterhwaite et al., 2012; Van Dijk et al., 2012). Even the most cooperative participants often still show displacements of up to a millimeter, and head movements of several millimeters are not uncommon in studies of hyperkinetic subjects such as young children, older adults, or patient populations.
 
-There are three main approaches to motion correction: volume realignment, using a general linear model to regress out motion-related artifacts (i.e. regression of motion parameters), and censoring of motion confounded time points (i.e. "scrubbing")
+There are four main approaches to motion correction: volume realignment, using a general linear model to regress out motion-related artifacts (i.e. regression of motion parameters, as described as one of the regressors in nuisance regression above), de-spiking of motion confounded time points, and censoring of motion confounded time points (i.e. "scrubbing").
 
 Volume Realignment
 """"""""""""""""""
@@ -68,6 +65,33 @@ To view motion parameters generated by C-PAC, type the following::
 
 Where :file:`/path/to/output/directory` is the path to your output directory (:file:`outputDirectory` as specified in :file:`config.yml`). This will output a :file:`...all_params.csv` file in the top level of each pipeline directory which contains all motion parameters calculated by C-PAC.
 
+De-Spiking
+^^^^^^^^^^
+**Note:** You cannot run De-Spiking and Scrubbing at the same time.
+
+Scrubbing
+^^^^^^^^^
+One way to ensure that your results are have not been influenced by spurious, motion-related noise is to remove volumes during which significant movement occurred. This is known as volume censoring, or scrubbing.
+Power and colleagues (2011) proposed two measures to identify volumes contaminated by excessive motion; framewise displacement (FD) and DVARS:
+
+* FD is calculated from derivatives of the six rigid-body realignment parameters estimated during standard volume realignment, and is a compressed single index of the six realignment parameters.
+
+* DVARS is the root mean squared (RMS) change in BOLD signal from volume to volume (D referring to temporal derivative of time courses and VARS referring to RMS variance over voxels). DVARS is calculated by first differentiating the volumetric time series and then calculating the RMS signal change over the whole brain. This measure indexes the change rate of BOLD signal across the entire brain at each frame of data or, in other words, how much the intensity of a brain image changes relative to the previous time point.
+
+Together, these two measures capture the head displacements and the brain-wide BOLD signal displacements from volume to volume over all voxels within the brain (Power et al., 2011).
+
+After calculating FD and DVARS, thresholds can be applied to censor the data. Selecting thresholds for scrubbing is a trade-off. More stringent thresholds allow more complete removal of motion-contaminated data, and minimize motion-induced artifacts. Meanwhile, more stringent scrubbing will also remove more data, which may increase the variability and decrease the test-retest reliability of the data. Commonly used thresholds are FD > 0.2 to 0.5 mm and DVARS > 0.3 to 0.5% of BOLD.
+
+**IMPORTANT:** Removing time points from a continuous time series (as is done during scrubbing) disrupts the temporal structure of the data and precludes frequency-based analyses such as `ALFF/fAlff <alff>`_. However, scrubbing can effectively be used to minimize motion-related artifacts in seed-based correlation analyses (Power et al., 2011; 2012).
+
+**Note:** You cannot run De-Spiking and Scrubbing at the same time.
+
+Median Angle Correction
+^^^^^^^^^^^^^^^^^^^^^^^
+Median angle correction is another global signal correction approach. It is assumed that the global signal in resting-state fMRI can be viewed as the sum of two components: a component that reflects the intrinsic correlations of resting state fMRI signals between regions, and a nuisance component that reflects an additive global signal confound. Unlike the GSR method which removes both components, median angle correction can characterize the properties of the global signal and effectively minimize the effects of the additive global signal confound while preserving the desired components.
+
+Principal component analysis (PCA) is used to decompose the resting-state data. Median angle is computed by taking the inverse cosine of each voxel’s time series vector's projection onto the first principal component (i.e. the global mean signal) and then calculating the median over the angles from all the vectors. If an inverse relation is found between the median angle and the mean BOLD signal amplitude, then an additive signal confound is present. As resting-state data sets with high median angles and low mean BOLD magnitudes are likely to be the least contaminated by an additive global confound (He and Liu, 2011), the inverse relation between median angle and mean BOLD magnitude is used to correct for differences in the additive confound. Specifically, the angular distributions of datasets with small median angles can be shifted to attain a larger target median angle to effectively minimize the effects of the global signal confound. The calculation of target angle for median angle correction is described in He and Liu (2011).
+
 Temporal Filtering
 ^^^^^^^^^^^^^^^^^^
 The overall goal of temporal filtering is to increase the signal-to-noise ratio. Due to the relatively poor temporal resolution of fMRI, time series data contain little high-frequency noise. They do, however, often contain very slow frequency fluctuations that may be unrelated to the signal of interest. Slow changes in magnetic field strength may be responsible for part of the low-frequency signal observed in fMRI time series (Smith et al., 1999). Other factors contributing to noise in a time series are cardiac and respiratory effects, which will often show up as noise around ~0.15 and ~0.34 Hz, respectively (Wager et al., 2007).  The temporal filtering method implemented by C-PAC is relatively simple. You specify a lower and upper bound for a band-pass filter, which then removes any information in frequencies outside the specified frequency band.
@@ -78,21 +102,6 @@ As these low-frequency oscillations are likely of interest to researchers, it is
 
 Additionally, there is some evidence (Davey et al., 2012) that temporal filtering may induce correlation in resting fMRI data, breaking the assumption of temporal sample independence and potentially invalidating the results of connectivity analysis. This should be taken into account when running temporal filtering on data on which you will later run connectivity analysis.
 
-Scrubbing 
-^^^^^^^^^
-The most effective way to ensure that your results are have not been influenced by spurious, motion-related noise is to remove volumes during which significant movement occurred. This is known as volume censoring, or scrubbing. 
-Power and colleagues (2011) proposed two measures to identify volumes contaminated by excessive motion; framewise displacement (FD) and DVARS:
-
-* FD is calculated from derivatives of the six rigid-body realignment parameters estimated during standard volume realignment, and is a compressed single index of the six realignment parameters.
-
-* DVARS is the root mean squared (RMS) change in BOLD signal from volume to volume (D referring to temporal derivative of time courses and VARS referring to RMS variance over voxels). DVARS is calculated by first differentiating the volumetric time series and then calculating the RMS signal change over the whole brain. This measure indexes the change rate of BOLD signal across the entire brain at each frame of data or, in other words, how much the intensity of a brain image changes relative to the previous time point.  
-
-Together, these two measures capture the head displacements and the brain-wide BOLD signal displacements from volume to volume over all voxels within the brain (Power et al., 2011).
-
-After calculating FD and DVARS, thresholds can be applied to censor the data. Selecting thresholds for scrubbing is a trade-off. More stringent thresholds allow more complete removal of motion-contaminated data, and minimize motion-induced artifacts. Meanwhile, more stringent scrubbing will also remove more data, which may increase the variability and decrease the test-retest reliability of the data. Commonly used thresholds are FD > 0.2 to 0.5 mm and DVARS > 0.3 to 0.5% of BOLD.
-
-**IMPORTANT:** Removing time points from a continuous time series (as is done during scrubbing) disrupts the temporal structure of the data and precludes frequency-based analyses such as `ALFF/fAlff <alff>`_. However, scrubbing can effectively be used to minimize motion-related artifacts in seed-based correlation analyses (Power et al., 2011; 2012).
-
 Configuring Nuisance Signal Regression Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -102,11 +111,21 @@ Configuring Nuisance Signal Regression Options
 
 #. **Lateral Ventricles Mask (Standard Space) - [path]:** A binary mask of the lateral ventricles.
 
-#. **Select regressors: - [checkbox: compcor, wm, csf, global, pc1, motion, linear, quadratic]:**  Clicking on the *+* icon to the right of the box here will bring up a dialog where you can check off which nuisance variables you would like to include.  You may generate multiple sets of nuisance regression strategies in this way.  When you are done defining nuisance regression strategies, check the box next to each strategy you would like to run.
+#. **Select Regressors: - [checkbox: compcor, wm, csf, global, pc1, motion, linear, quadratic]:**  Clicking on the *+* icon to the right of the box here will bring up a dialog where you can check off which nuisance variables you would like to include.  You may generate multiple sets of nuisance regression strategies in this way.  When you are done defining nuisance regression strategies, check the box next to each strategy you would like to run.
 
 #. **CompCor Components - [integer]:** Number of principle components to calculate when running CompCor.  5 or 6 is recommended.
 
 #. **Use Friston 24-Parameter Model - [On, Off, On/Off]:** Use the Friston 24-Parameter Model during volume realignment. If this option is turned off, only 6 parameters will be used. These parameters will also be output as a spreadsheet.
+
+#. **Motion Spike De-Noising - [Off, De-Spiking, Scrubbing]:** Remove or regress out volumes exhibiting excessive motion. De-Spiking will regress out the contribution of motion spikes in the volumes above the selected motion threshold, and Scrubbing will remove the volumes above the threshold, as described above.
+
+#. **Framewise Displacement (FD) Calculation - [Jenkinson, Power]:** (Motion Spike De-Noising only) Choose which Framewise Displacement (FD) calculation to apply the threshold to during de-spiking or scrubbing.
+
+#. **Framewise Displacement (FD) Threshold - [decimal] or a string like ['5%']:** (Motion Spike De-Noising Only) Specify the maximum acceptable Framewise Displacement (FD) in millimeters or in percentage (with a %). Any volume exhibiting FD greater than the decimal value in mm (or within the top percentage of the percent value, if a percent is given) will be regressed out or scrubbed. For example, if the threshold given is 0.5, CPAC will apply de-spiking or scrubbing (whichever chosen, if either) to all volumes with a calculated mean FD value above 0.5mm. If a percentage such as "5%" is provided, CPAC will select a threshold which would exclude the top 5% of volumes most impacted by motion artifacts, and apply de-spiking or scrubbing to all volumes above that selected threshold.
+
+#. **Number of Preceding Volumes to Remove - [integer]:** (Motion Spike De-Noising Only) Number of volumes to remove preceding a volume with excessive FD.
+
+#. **Number of Subsequent Volumes to Remove - [integer]:** (Motion Spike De-Noising Only) Number of volumes to remove subsequent to a volume with excessive FD.
 
 Configuration Without the GUI
 """"""""""""""""""""""""""""""
@@ -133,13 +152,18 @@ The box below contains an example of what these parameters might look like when 
           quadratic : 0
           gm : 0
     nComponents : [5]
+    runMotionSpike :  ['Scrubbing']
+    fdCalc: ['Jenkinson']
+    spikeThreshold : [0.2]
+    numRemovePrecedingFrames : 2
+    numRemoveSubsequentFrames : 2
 
 Configuring Median Angle Correction Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_images/median_angle.png
 
-#. **Run Nuisance Signal Correction - [Off, On, On/Off]:** Correct for the global signal using median angle regression.
+#. **Run Median Angle Correction - [Off, On, On/Off]:** Correct for the global signal using median angle regression.
 
 #. **Target Angle (degrees) - [number]:** The target angle used during median angle correction.
 
@@ -181,35 +205,6 @@ The box below contains an example of what these parameters might look like when 
 
     runFrequencyFiltering : [1]
     nuisanceBandpassFreq : [[0.009, 0.1]]
-
-Configuring Scrubbing Options
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: /_images/scrubbing_gui.png
-
-#. **Run Scrubbing - [Off, On, On/Off]:** Remove volumes exhibiting excessive motion.
-
-#. **Framewise Displacement (FD) Threshold - [decimal]:** Specify the maximum acceptable Framewise Displacement (FD) in millimeters. Any volume exhibiting FD greater than this value will be removed.
-
-#. **Number of Preceding Volumes to Remove - [integer]:** Number of volumes to remove preceeding a volume with excessive FD.
-
-#. **Number of Subsequent Volumes to Remove - [integer]:** Number of volumes to remove subsequent to a volume with excessive FD.
-
-Configuration Without the GUI
-""""""""""""""""""""""""""""""
-
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run temporal filtering:
-
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: _static/params/scrubbing_config.csv
-
-The box below contains an example of what these parameters might look like when defined in the YAML::
-
-    runScrubbing : [1]
-    scrubbingThreshold : [2]
-    numRemovePrecedingFrames : 2
-    numRemoveSubsequentFrames : 2
 
 External Resources
 ^^^^^^^^^^^^^^^^^^

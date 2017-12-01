@@ -99,11 +99,11 @@ html_theme = 'classic'
 # documentation.
 html_theme_options = {
     "relbarbgcolor": "#0067a0",
-    "sidebarbgcolor": "#eff3f5",
+    "sidebarbgcolor": "#e4e4e4",
     "sidebartextcolor": "#000000",
     "sidebarlinkcolor": "#0067a0",
-    "headbgcolor": "#eff3f5",
-    "headtextcolor": "#000000"
+    "headbgcolor": "#919d9d",
+    "headtextcolor": "#e4e4e4"
 }
 
 # Add any paths that contain custom themes here, relative to this directory.

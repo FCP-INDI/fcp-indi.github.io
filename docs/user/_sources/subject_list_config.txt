@@ -1,49 +1,50 @@
-﻿Setting Up A Subject List
-==========================
+﻿Setting Up A Data Configuration File (Participant/Subject List)
+===============================================================
 Overview
 --------
-For C-PAC to run an analysis, it must have at least one pipeline configuration file and one subject list.  The creation of a pipeline configuration file is treated in the next section.  This section will deal with how to create a C-PAC subject list, which specifies a set of subjects, where to find each subject's associated image files, and (optionally) scan parameter information for use during :doc:`Slice Timing Correction </func>`.  There are two ways to set up such a list:
+C-PAC requires at least one pipeline configuration file and one data configuration file (also known as the participant list/subject list) in order to run an analysis. These configuration files are in the YAML file format, which matches contents in a key: value relationship much like a dictionary. This section will focus on the data configuration file setup. The data configuration file is essentially a list of file paths to anatomical and functional MRI scans keyed by their unique IDs, and listed with any additional information as necessary.
 
-* Using a text editor (useful for servers where using the C-PAC GUI is not possible or impractical)
-* Using the subject list builder interface in the C-PAC GUI
+Data Settings vs. Data Configuration
+------------------------------------
+As **data configuration** files can become very long because of large datasets (n > 1000 participants), the setup and modification of **data configuration** files can be facilitated using C-PAC's **data settings** YAML files. Once you have your data settings file, you can modify and re-generate the data configuration list repeatedly with ease. Different use cases are explained below.
 
-The first method requires you to create a data configuration file, which encodes settings that you would normally enter through the subject list builder GUI (such as a template file path used to grab T1 anatomical data; see *Defining Anatomical and Functional File Path Templates* below).  Both methods will result in the creation of a list that can be re-used for future runs with different pipelines.
+The data is in BIDS format
+--------------------------
+The Brain Imaging Data Structure (BIDS) is a brain imaging data storage and description standard that aims to make organizing neuroimaging scans and files simpler and more intuitive, and to establish one common standard that many researchers can adhere to. C-PAC is compatible with the BIDS standard, and you can easily generate your data configuration lists pointing to your BIDS dataset files in a few ways.
 
-Using a Text Editor
--------------------
-Data configuration files are stored as YAML files, which are text files meant to encode data in a human-readable markup (see `here <https://en.wikipedia.org/wiki/YAML>`_ for more details).  Each of the parameters used by C-PAC to assemble your subject list can be specified as key-value pairs, so a data configuration YAML might have multiple lines of the form::
+### With the GUI
 
-    key : value
+Hi there
 
-An example of such a YAML file can be found `here <https://raw.githubusercontent.com/FCP-INDI/C-PAC/master/configs/data_config.yml>`_.  You can create your own configuration file using your favorite text editor and the table of keys and their potential values in the table below.
+### With the cpac_data_config_setup.py script
+this is cool too
 
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: _static/params/data_config.csv
+### With a text editor
+the simplest way
 
-Generating Subject Lists with the Data Configuration File
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-When you are done setting up the data configuration file, navigate in a terminal to the directory where you would like to store your subject list.  If you are not running slice timing correction, or all subjects within a site have the same acquisition order, type the following command:
+The data is NOT in BIDS format
+------------------------------
 
-.. code-block:: bash
+The data (BIDS or not) is on the Amazon AWS S3 cloud
+----------------------------------------------------
 
-    cpac_setup.py /path/to/data_config
 
-If you are running slice timing correction and subjects within a site have differing acquisition orders open iPython by typing :file:`ipython` and run the following command from the iPython prompt::
 
-  import CPAC
-  CPAC.utils.extract_data_multiscan_params.run('/path/to/data_config.yml')
 
-Either of these methods will produce the subject list in your current directory, as well as two other files needed to run group-level analyses:
 
-* :file:`CPAC_subject_list_<name>.yml` - The subject list used when running preprocessing and individual-level analyses. Contains subject IDs and paths to their associated data files.  Subject lists are also stored as YAMLs.
-* :file:`template_phenotypic.csv` - A template phenotypic file for use with the :doc:`group-level analysis builder</group_analysis>`.
-* :file:`subject_list_group_analysis.txt` - The subject list used when running group-level analyses.
 
-Note: An alternate version of the phenotype template and the group analysis subject list will be created that are pre-formatted for use in repeated measures or within-subject group-level analysis.
 
-For INDI releases, we have available :doc:`preconfigured data configuration files </files>`, to generate subject lists. You will need to make sure that the file templates have been modified to match the specific location on your system for these files.
+For C-PAC to run an analysis, it must have at least one pipeline configuration file and one data configuration file (participant/subject list).  The creation of a pipeline configuration file is treated in the next section. This section will deal with how to create a C-PAC data configuration, which specifies a set of participants, where to find each participant's associated image files, and (optionally) scan parameter information for use during :doc:`Slice Timing Correction </func>`.  There are three ways to set up such a list:
+
+* Using the data configuration builder interface in the C-PAC GUI
+* Using the cpac_data_config_setup.py script
+* Using a text editor
+
+The first two involve creating a YAML file called the **"data settings"** file, which is a short list of options describing where your data can be found, what format the directory levels are in, and which sites, participants, sessions, or series you wish to include or exclude. This **data settings** file can then be used by the data config builder GUI, or the cpac_data_config_setup.py script, to generate the **data configuration** file, which is a list of every single input file you intend to enter into your C-PAC pipeline.
+
+As the actual **data configuration** files can be very large (n > 1000 size datasets), having the precursor **data settings** file allows you to make quick changes and re-generate the **data configuration** file without having to search through the large list of file path entries. Note that the cpac_data_config_setup.py script also has a "--generate_template" argument that writes out a blank template of this **data settings** file for an easy and quick setup.
+
+The third method involves simply listing the file paths yourself in a manually created **data configuration** file, in the YAML file format. This is a less convenient approach for starting from scratch, but allows you to make quick modifications to already-existing **data configuration** files, if needed.
 
 Using the GUI
 --------------
@@ -51,7 +52,7 @@ First, open the C-PAC GUI by entering the command ``cpac_gui`` in a terminal win
 
 .. figure:: /_images/main_gui.png
 
-Now, to generate a subject list file, click on the *New* button next to the *Subject Lists* box.  This will bring up the following dialog window, which will allow you to define the parameters of the data configuration YAML:
+To generate a data configuration file, click on the *New* button next to the *Subject Lists* box. This will bring up the following dialog window, which will allow you to define the parameters of the data settings YAML:
 
 .. figure:: /_images/subject_list_gui.png
 
@@ -78,6 +79,156 @@ Now, to generate a subject list file, click on the *New* button next to the *Sub
 #. **Subject List Name - [text]:** A name for the subject list.
 
 #. **Multiscan Data [checkbox]:** Check this box only if the scans have different slice timing information.
+
+Data Settings YAML File Format
+------------------------------
+
+The data settings file is a quick way to describe where your data is, how it is laid out, what the scan parameters are (if relevant), and what you want to include or exclude.
+
+.. code-block:: yaml
+
+    # Options: ['BIDS'] or ['Custom']
+    dataFormat: ['']
+
+    # BIDS Data Format only.
+    # This should be the path to the overarching directory containing the entire dataset.
+    bidsBaseDir: ['']
+
+    # Custom Data Format only.
+    # Place tags for the appropriate data directory levels with the tags {site}, {participant}, and {session}. Only {participant} is required.
+    anatomicalTemplate:
+
+    # Custom Data Format only.
+    # Place tags for the appropriate data directory levels with the tags {site}, {participant}, {session}, and {series}. Only {participant} is required.
+    functionalTemplate:
+
+    # Required if downloading data from a non-public S3 bucket on Amazon Web Services instead of using local files.
+    awsCredentialsFile: None
+
+    # Directory where CPAC should place data configuration files.
+    outputSubjectListLocation:
+
+    # A label to be appended to the generated participant list files.
+    subjectListName:
+
+    # Custom Data Format only.
+    # Path to a .csv file (if not using BIDS-format JSON files) containing information about scan acquisition parameters.
+    scanParametersCSV: None
+
+    # Custom Data Format only.
+    # Place tags for the appropriate data directory levels with the tags {site}, {participant}, and {session}.
+    fieldMapPhase: None
+
+    # Custom Data Format only.
+    # Place tags for the appropriate data directory levels with the tags {site}, {participant}, and {session}.
+    fieldMapMagnitude: None
+
+
+    # Include only a sub-set of the participants present in the folders defined above.
+    #
+    # List participants in this box (e.g., sub101, sub102) or provide the path to a text file with one participant ID on each line.
+    #
+    # If 'None' is specified, CPAC will include all participants.
+    subjectList: None
+
+
+    # Exclude a sub-set of the participants present in the folders defined above.
+    #
+    # List participants in this box (e.g., sub101, sub102) or provide the path to a text file with one participant ID on each line.
+    #
+    # If 'None' is specified, CPAC will not exclude any participants.
+    exclusionSubjectList: None
+
+
+    # Include only a sub-set of the sites present in the folders defined above.
+    #
+    # List sites in this box (e.g., NYU, UCLA) or provide the path to a text file with one site name on each line.
+    #
+    # If 'None' is specified, CPAC will include all sites.
+    siteList: None
+
+
+    # Exclude a sub-set of the sites present in the folders defined above.
+    #
+    # List sites in this box (e.g., NYU, UCLA) or provide the path to a text file with one site name on each line.
+    #
+    # If 'None' is specified, CPAC will include all sites.
+    exclusionSiteList: None
+
+
+    # Include only a sub-set of the sessions present in the folders defined above.
+    #
+    # List sessions in this box (e.g., session-1, session-2) or provide the path to a text file with one session name on each line.
+    #
+    # If 'None' is specified, CPAC will include all sessions.
+    sessionList: None
+
+
+    # Exclude a sub-set of the sessions present in the folders defined above.
+    #
+    # List sessions in this box (e.g., session-1, session-2) or provide the path to a text file with one session name on each line.
+    #
+    # If 'None' is specified, CPAC will include all sessions.
+    exclusionSessionList: None
+
+
+    # Include only a sub-set of the series present in the folders defined above.
+    #
+    # List series in this box (e.g., func-1, func-2) or provide the path to a text file with one series name on each line.
+    #
+    # If 'None' is specified, CPAC will include all series.
+    scanList: None
+
+
+    # Exclude a sub-set of the series present in the folders defined above.
+    #
+    # List series in this box (e.g., func-1, func-2) or provide the path to a text file with one series name on each line.
+    #
+    # If 'None' is specified, CPAC will include all series.
+    exclusionScanList: None
+
+
+Using the cpac_data_config_setup.py Script
+------------------------------------------
+
+
+Using a Text Editor
+-------------------
+Data settings files are stored as YAML files, which are text files meant to encode data in a human-readable markup (see `here <https://en.wikipedia.org/wiki/YAML>`_ for more details).  Each of the parameters used by C-PAC to assemble your subject list can be specified as key-value pairs, so a data configuration YAML might have multiple lines of the form::
+
+    key : value
+
+An example of such a YAML file can be found `here <https://raw.githubusercontent.com/FCP-INDI/C-PAC/master/configs/data_config.yml>`_.  You can create your own configuration file using your favorite text editor and the table of keys and their potential values in the table below.
+
+.. csv-table::
+    :header: "Key","Description","Potential Values"
+    :widths: 5,30,15
+    :file: _static/params/data_config.csv
+
+Generating Data Configurations with the Data Settings File
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+When you are done setting up the data configuration file, navigate in a terminal to the directory where you would like to store your subject list.  If you are not running slice timing correction, or all subjects within a site have the same acquisition order, type the following command:
+
+.. code-block:: bash
+
+    cpac_setup.py /path/to/data_config
+
+If you are running slice timing correction and subjects within a site have differing acquisition orders open iPython by typing :file:`ipython` and run the following command from the iPython prompt::
+
+  import CPAC
+  CPAC.utils.extract_data_multiscan_params.run('/path/to/data_config.yml')
+
+Either of these methods will produce the subject list in your current directory, as well as two other files needed to run group-level analyses:
+
+* :file:`CPAC_subject_list_<name>.yml` - The subject list used when running preprocessing and individual-level analyses. Contains subject IDs and paths to their associated data files.  Subject lists are also stored as YAMLs.
+* :file:`template_phenotypic.csv` - A template phenotypic file for use with the :doc:`group-level analysis builder</group_analysis>`.
+* :file:`subject_list_group_analysis.txt` - The subject list used when running group-level analyses.
+
+Note: An alternate version of the phenotype template and the group analysis subject list will be created that are pre-formatted for use in repeated measures or within-subject group-level analysis.
+
+For INDI releases, we have available :doc:`preconfigured data configuration files </files>`, to generate subject lists. You will need to make sure that the file templates have been modified to match the specific location on your system for these files.
+
+
 
 Defining Anatomical and Functional File Path Templates
 ------------------------------------------------------

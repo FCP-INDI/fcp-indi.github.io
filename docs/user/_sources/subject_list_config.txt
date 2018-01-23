@@ -12,9 +12,11 @@ The data configuration file is essentially a list of file paths to anatomical an
 
 Creating the Data Configuration File via the GUI
 ------------------------------------------------
-The C-PAC data configuration builder window accepts information about where to find your data, and allows you to customize what gets included in the final list. Once you're done, it generates a **data settings** YAML file, which saves your preferences, so that you can easily edit and re-generate your **data configuration** YAML file later on, easily and quickly.
+The C-PAC data configuration builder window accepts information about where to find your data, and allows you to customize what gets included in the final list. Once you're done, it generates a **data settings** YAML file, which saves your preferences, so that you can easily edit and re-generate your **data configuration** YAML file later on.
 
 .. figure:: /_images/subject_list_gui.png
+
+.. figure:: /_images/subject_list_gui2.png
 
 #. **Data format - [BIDS, Custom]:** Whether or not the data is organized in accordance with the BIDS specification. More details below.
 
@@ -52,7 +54,22 @@ The C-PAC data configuration builder window accepts information about where to f
 
 #. **(Optional) Exclude: Series - [text/path]:** Which series to exclude - can be a list or a text file, as described above.
 
-Continue below for some example use cases. There are also instructions on how to generate your data configuration via the terminal, further below.
+Continue below for some example use cases.
+
+Creating the Data Configuration File from terminal
+--------------------------------------------------
+You can configure the settings explained above in the **data settings** YAML file, then use the ``cpac_data_config_setup.py`` script to generate your **data configuration** file.
+
+If you don't already have a data settings YAML file, either get the template from `our GitHub repo <https://github.com/FCP-INDI/C-PAC/blob/1.0.3_development/CPAC/resources/configs/data_settings_template.yml>`_, or generate one by running::
+
+   cpac_data_config_setup.py --generate_template
+
+Once your data settings file is ready, you can generate your data configuration file by running::
+
+   cpac_data_config_setup.py --data_settings_file /path/to/data_settings.yml
+
+Continue below for some example use cases.
+
 
 My Data is in BIDS Format
 -------------------------
@@ -66,11 +83,7 @@ Select "BIDS" as your Data Format, and specify where to save the configuration f
 
 **Using the cpac_data_config_setup.py script**
 
-If you don't already have a data settings YAML file, either get the template from `our GitHub repo <https://github.com/FCP-INDI/C-PAC/blob/1.0.3_development/CPAC/resources/configs/data_settings_template.yml>`_, or generate one by running::
-
-   cpac_data_config_setup.py --generate_template
-
-Then, populate these fields::
+In the data settings file, populate these fields::
 
    dataFormat:                  ['BIDS']
    bidsBaseDir:                 /path/to/BIDS/directory
@@ -122,11 +135,7 @@ Once your settings are complete, nt list name. click ``Generate Data Config`` in
 
 **Using the cpac_data_config_setup.py script**
 
-If you don't already have a data settings YAML file, either get the template from `our GitHub repo <https://github.com/FCP-INDI/C-PAC/blob/1.0.3_development/CPAC/resources/configs/data_settings_template.yml>`_, or generate one by running::
-
-   cpac_data_config_setup.py --generate_template
-
-Then, following the instructions for formatting your path templates given above, populate these fields::
+Following the instructions for formatting your path templates given above, populate these fields in your data settings file::
 
    dataFormat:                  ['Custom']
    anatomicalTemplate:          /path/to/{site}/{participant}/{series}/anat/mprage.nii.gz
@@ -165,9 +174,9 @@ A final example is the file structure used by the `Enhanced Nathan Kline Institu
 
 Users experiencing difficulties defining file path templates may want to re-organize their data to match one of the examples above. If you manually define a file path template and encounter an error when attempting to generate participant lists, please :doc:`contact us </help>` and we will be happy to help.
 
-Subject List YAML Fields
-^^^^^^^^^^^^^^^^^^^^^^^^^
-The subject list builder GUI or the command line utility will produce a YAML file containing all of the subjects and various properties associated with that subject, such as its ID, session number, the location of its resting-state/functional and anatomical scans.  Before each subject definition there is a single line with a dash, which indicates that start of the property defintions.  Subject properties are indented under this dash.  To illustrate, see the sample subject definition below:
+Data Configuration File YAML Fields
+-----------------------------------
+The data configuration builder GUI or the ``cpac_data_config_setup.py`` command line utility will produce a YAML file containing all of the participants and various properties associated with that participant, such as its ID, session number, the location of its resting-state/functional and anatomical scans. Before each participant definition there is a single line with a dash, which indicates that start of the property definitions. Participant properties are indented under this dash. To illustrate, see the sample participant definition below:
 
 .. code-block:: yaml
 
@@ -175,9 +184,9 @@ The subject list builder GUI or the command line utility will produce a YAML fil
         subject_id: 'subj_1'
         unique_id: 'session_1'
         anat: '/data/subj_1/session_1/anat_1/mprage.nii.gz'
-        rest: 
-          rest_1_rest: '/data/subj_1/session_1/rest_1/rest.nii.gz'
-          rest_2_rest: '/data/subj_1/session_1/rest_2/rest.nii.gz'
+        func:
+          rest_1: '/data/subj_1/session_1/rest_1/rest.nii.gz'
+          rest_2: '/data/subj_1/session_1/rest_2/rest.nii.gz'
         scan_parameters:
             tr: '2.5'
             acquisition: 'seq+z'
@@ -185,4 +194,4 @@ The subject list builder GUI or the command line utility will produce a YAML fil
             first_tr: ''
             last_tr: ''
 
-Note that more than one resting state scan is defined under the `rest` key (i.e., multiple sessions), and that individual scan parameters can be defined to override the settings used in the C-PAC pipeline configuration GUI.  Be careful not to name the multiple sessions under the `rest` key using dashes or periods, as this input will not be parsed by C-PAC and may cause errors.
+Note that more than one functional scan is defined under the `func` key (i.e., multiple series), and that individual scan parameters can be defined to override the settings used in the C-PAC pipeline configuration GUI.

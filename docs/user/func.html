@@ -5,13 +5,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Functional Preprocessing &#8212; C-PAC 1.0.2 Beta documentation</title>
+    <title>Functional Preprocessing &#8212; C-PAC 1.0.3 Beta documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0.2 Beta',
+        VERSION:     '1.0.3 Beta',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -32,7 +32,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.0.2 Beta documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.0.3 Beta documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -157,6 +157,29 @@
 <p><strong>Note:</strong> Scan parameter information specified for slice timing correction will override the settings specified in the pipeline configuration YAML.</p>
 </div>
 </div>
+<div class="section" id="field-map-based-distortion-correction">
+<h2>Field Map-Based Distortion Correction<a class="headerlink" href="#field-map-based-distortion-correction" title="Permalink to this headline">¶</a></h2>
+<div class="figure">
+<img alt="_images/fmap_dist_corr.png" src="_images/fmap_dist_corr.png" />
+</div>
+<p>Distortion correction is a method used for minimizing noise primarily in images obtained by echo-planar imaging (EPI). Using EPI, it has been possible to obtain individual MR slices in time frames of 50 - 100 ms, which minimizes losses in signal due to patient motion. However,EPI sequences have other sources of signal loss, primarily arising from tissue differences in the brain which result in static field inhomogenities {<a class="reference external" href="https://en.wikibooks.org/wiki/Neuroimaging_Data_Processing/Field_map_correction">https://en.wikibooks.org/wiki/Neuroimaging_Data_Processing/Field_map_correction</a>}
+C-PAC provides options for configuring the Distortion Correction workflow, either directly by manipulating the pipeline configuration, or by using the GUI. The field maps are generated within the distortion correction workflow, and subsequently sent to the functional-to-anatomical registration.
+FSL’s fieldmap correction takes in as it’s input a magnitude image, and a phase image which is obtained by phase subtraction between two magnitude images obtained in series. If the user has two input magnitude images, both should be inspected using fsleyes or afni to determine the image with “better quality” which can then be used.</p>
+<ol class="arabic simple">
+<li><strong>Perform Field Map Distortion correction - [On, Off]:</strong> Perform field map-based distortion correction.</li>
+<li><strong>Skull-strip the magnitude file with - [BET, 3dSkullStrip]:</strong> Since the results of the distortion correction relies heavily on the skull strip, you could choose between AFNI-3d Skull-Strip and FSL-BET. The choice of tool to be used is currently only a feature for Distortion correction workflow. Both the workflows have identical options, thereby preventing any bias towards one tool.</li>
+<li><strong>BET threshold/AFNI shrink factor - [float]:</strong> The threshold for brain extraction. FSL requires tight skull-stripping, erring on the side of ignoring brain voxels rather than adding noise. However, it might not be required to increase the threshold in all datasets, so it is important to check your dataset before changing the threshold.In FSL-BET, this is referred to as “threshold intensity” and in AFNI’S 3dSkull Strip, it is the -shrink_facto. The default value is 0.5.</li>
+<li><strong>DeltaTE, in ms - [float]:</strong> The time difference between the first magnitude image and the second magnitude image. The default value is 2.46 ms, which is widely used for SIEMENS, but it may differ with different datasets.</li>
+<li><strong>Dwell Time, in s - [float]:</strong> The dwell time is also known as echo spacing, and it is the time between the start of the readout of two successive lines in k-space during the EPI acquisition. This is a value obtained from the functional epi (NOT the fieldmap)  Here, the default value is 0.0005s.</li>
+<li><strong>Dwell to asymmetric ratio - [float]:</strong> This is the ratio between the Dwell time, as referenced above and the asymmetric time. Here, the default value is 0.93902439.</li>
+<li><strong>Phase encoding direction - [string]:</strong> This is the position of the voxels in the input image, and can have values of x/y/z or -x/-y/-z. This is predominantly a trail and error based parameter.</li>
+</ol>
+<div class="section" id="id2">
+<h3>Configuration Without the GUI<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>The following key/value pairs must be defined in your <a class="reference internal" href="pipeline_config.html"><span class="doc">pipeline configuration YAML</span></a> for C-PAC to run distortion correction:</p>
+<p>The box below contains an example of what these parameters might look like when defined in the YAML:</p>
+</div>
+</div>
 <div class="section" id="functional-to-anatomical-registration">
 <h2>Functional to Anatomical Registration<a class="headerlink" href="#functional-to-anatomical-registration" title="Permalink to this headline">¶</a></h2>
 <div class="figure">
@@ -169,8 +192,8 @@
 <li><strong>Use as Functional-to-Anatomical Registration Input - [Mean Functional, Selected Functional Volume]:</strong> Choose whether to use the mean of the functional/EPI as the input to functional-to-anatomical registration or one of the volumes from the functional 4D timeseries that you choose.</li>
 <li><strong>Functional Volume to Use as Input (Selected Functional Volume only) - [integer]:</strong> Only for when ‘Use as Functional-to-Anatomical Registration Input’ is set to ‘Selected Functional Volume’. Input the index of which volume from the functional 4D timeseries input file you wish to use as the input for functional-to-anatomical registration.</li>
 </ol>
-<div class="section" id="id2">
-<h3>Configuration Without the GUI<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id3">
+<h3>Configuration Without the GUI<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <p>The following key/value pairs must be defined in your <a class="reference internal" href="pipeline_config.html"><span class="doc">pipeline configuration YAML</span></a> for C-PAC to run functional to anatomical registration:</p>
 <table border="1" class="colwidths-given docutils">
 <colgroup>
@@ -230,8 +253,8 @@
 <li><strong>Standard Identity Matrix - [path]:</strong> Matrix containing all 1’s. Used as an identity matrix during registration. It is not necessary to change this path unless you intend to use non-standard MNI registration.</li>
 <li><strong>Resolutions to Resample to - [1mm, 2mm, 3mm, 4mm]:</strong> The resolution (in mm) to which functional images are transformed during registration.  Note that selecting a 1 mm or 2 mm resolution will substantially increase your RAM needs.  For most cases, 3 mm or 4 mm resolutions are suggested.</li>
 </ol>
-<div class="section" id="id3">
-<h3>Configuration Without the GUI<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h3>Configuration Without the GUI<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <p>The following key/value pairs must be defined in your <a class="reference internal" href="pipeline_config.html"><span class="doc">pipeline configuration YAML</span></a> for C-PAC to run functional to anatomical registration:</p>
 <table border="1" class="colwidths-given docutils">
 <colgroup>
@@ -303,6 +326,7 @@ resolution_for_func_derivative : 2mm
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installing C-PAC</a></li>
 <li class="toctree-l1"><a class="reference internal" href="subject_list_config.html">Setting Up A Subject List</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pipeline_config.html">Setting Up A Pipeline Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Pre-Processing Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="derivatives.html">Computable Derivatives</a></li>
 <li class="toctree-l1"><a class="reference internal" href="group_analysis.html">Setting Up Group Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="running.html">Running C-PAC</a></li>
@@ -335,7 +359,7 @@ resolution_for_func_derivative : 2mm
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
-        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.0.2 Beta documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.0.3 Beta documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

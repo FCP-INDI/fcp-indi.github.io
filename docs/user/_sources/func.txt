@@ -86,6 +86,50 @@ The path to the acquisition order file for each scan should be specified in the 
 
 **Note:** Scan parameter information specified for slice timing correction will override the settings specified in the pipeline configuration YAML.
 
+Field Map-Based Distortion Correction
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Distortion correction is a method that aims to reduce distortion in EPI (fMRI) images caused by inhomogeneities in the magnetic field (which often stem from differences in tissue across tissue boundaries in the head). C-PAC has the option of including field map-based distortion correction into your pre-processing pipeline, through a collection of tools produced by FMRIB's FSL- primarily, a script which prepares field maps, and the FUGUE tool. Performing field map distortion correction requires the acquisition of a phase difference image and two magnitude images. The "best of the two" magnitude images is chosen, and a final input of one phase difference file and one magnitude file are then used by the pre-processing pipeline.
+
+These files are used to generate the field map during pre-processing, and they can be provided to the C-PAC pipeline through the data configuration (participant list) file. More information on how to set this data configuration file is `available here <http://fcp-indi.github.io/docs/user/subject_list_config.html>`_.
+
+The C-PAC pipeline configuration builder provides options for configuring the Distortion Correction workflow. The field maps are generated within the distortion correction workflow, and the result is subsequently sent to the functional-to-anatomical registration step (FSL FLIRT, and with Boundary-Based Registration if selected and if tissue segmentation is run), where the distortion is "un-warped" during the transform.
+
+.. figure:: /_images/fmap_dist_corr.png
+
+#. **Perform Field Map Distortion correction - [On, Off]:** Perform field map-based distortion correction.
+
+#. **Skull-strip the magnitude file with - [BET, 3dSkullStrip]:** Since the results of the distortion correction can be strongly affected by the strength of the skull-stripping of the magnitude file, the choice between using FSL's BET or AFNI's 3dSkullStrip is left open, as these tools can have varying results depending on the data itself. The choice of tool is only for skull-stripping the magnitude file, and not for the skull-stripping step of the main anatomical pre-processing part of the pipeline.
+
+#. **BET threshold/AFNI shrink factor - [float]:** The threshold for brain extraction. FSL requires tight skull-stripping, erring on the side of ignoring brain voxels rather than adding noise. However, it might not be required to increase the threshold in all datasets, so it is important to check your dataset before changing the threshold.In FSL-BET, this is referred to as "threshold intensity” and in AFNI'S 3dSkull Strip, it is the -shrink_factor. The default value is 0.5.
+
+#. **DeltaTE, in ms - [float]:** The time difference between the first magnitude image and the second magnitude image. The default value is 2.46 ms, which is widely used for SIEMENS, but it may differ with different datasets acquired by other MRI scanner brands, so it is important to ascertain this value specific to your data.
+
+#. **Dwell Time, in s - [float]:** The dwell time is also known as echo spacing, and it is the time between the start of the readout of two successive lines in k-space during the EPI acquisition. This is a value obtained from the functional EPI (NOT the fieldmap). Here, the default value is 0.0005s.
+
+#. **Dwell to asymmetric ratio - [float]:** This is the ratio between the Dwell time, as referenced above, and the asymmetric time. Here, the default value is 0.93902439.
+
+#. **Phase encoding direction - [string]:** This is the position of the voxels in the input image, and can have values of x/y/z or -x/-y/-z.
+
+Configuration Without the GUI
+"""""""""""""""""""""""""""""
+
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run distortion correction:
+
+.. csv-table::
+    :header: "Key","Description","Potential Values"
+    :widths: 5,30,15
+    :file: _static/params/fmap_distcorr_config.csv
+
+The box below contains an example of what these parameters might look like when defined in the pipeline configuration YAML::
+
+    runEPI_DistCorr: [1]
+    fmap_distcorr_skullstrip: ["BET"]
+    fmap_distcorr_frac: [0.5]
+    fmap_distcorr_deltaTE : 2.46
+    fmap_distcorr_dwell_time : [0.0005]
+    fmap_distcorr_dwell_asym_ratio : [0.93902439]
+    fmap_distcorr_pedir: -y
+
 Functional to Anatomical Registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. figure:: /_images/func_to_anat_reg.png

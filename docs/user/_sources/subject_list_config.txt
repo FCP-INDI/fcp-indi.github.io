@@ -1,110 +1,153 @@
-﻿Setting Up A Subject List
-==========================
+﻿Setting Up A Data Configuration File (Participant/Subject List)
+===============================================================
 Overview
 --------
-For C-PAC to run an analysis, it must have at least one pipeline configuration file and one subject list.  The creation of a pipeline configuration file is treated in the next section.  This section will deal with how to create a C-PAC subject list, which specifies a set of subjects, where to find each subject's associated image files, and (optionally) scan parameter information for use during :doc:`Slice Timing Correction </func>`.  There are two ways to set up such a list:
+**C-PAC's Configuration YAML Files**
 
-* Using a text editor (useful for servers where using the C-PAC GUI is not possible or impractical)
-* Using the subject list builder interface in the C-PAC GUI
+C-PAC requires at least one pipeline configuration file and one data configuration file (also known as the participant list/subject list) in order to run an analysis. These configuration files are in the YAML file format, which matches contents in a key: value relationship much like a dictionary. This section will focus on the data configuration file setup.
 
-The first method requires you to create a data configuration file, which encodes settings that you would normally enter through the subject list builder GUI (such as a template file path used to grab T1 anatomical data; see *Defining Anatomical and Functional File Path Templates* below).  Both methods will result in the creation of a list that can be re-used for future runs with different pipelines.
+**The Data Configuration (Participant List)**
 
-Using a Text Editor
--------------------
-Data configuration files are stored as YAML files, which are text files meant to encode data in a human-readable markup (see `here <https://en.wikipedia.org/wiki/YAML>`_ for more details).  Each of the parameters used by C-PAC to assemble your subject list can be specified as key-value pairs, so a data configuration YAML might have multiple lines of the form::
+The data configuration file is essentially a list of file paths to anatomical and functional MRI scans keyed by their unique IDs, and listed with any additional information as necessary. This file can be generated both via the GUI and the terminal. Both ways are explained below.
 
-    key : value
-
-An example of such a YAML file can be found `here <https://raw.githubusercontent.com/FCP-INDI/C-PAC/master/configs/data_config.yml>`_.  You can create your own configuration file using your favorite text editor and the table of keys and their potential values in the table below.
-
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: _static/params/data_config.csv
-
-Generating Subject Lists with the Data Configuration File
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-When you are done setting up the data configuration file, navigate in a terminal to the directory where you would like to store your subject list.  If you are not running slice timing correction, or all subjects within a site have the same acquisition order, type the following command:
-
-.. code-block:: bash
-
-    cpac_setup.py /path/to/data_config
-
-If you are running slice timing correction and subjects within a site have differing acquisition orders open iPython by typing :file:`ipython` and run the following command from the iPython prompt::
-
-  import CPAC
-  CPAC.utils.extract_data_multiscan_params.run('/path/to/data_config.yml')
-
-Either of these methods will produce the subject list in your current directory, as well as two other files needed to run group-level analyses:
-
-* :file:`CPAC_subject_list_<name>.yml` - The subject list used when running preprocessing and individual-level analyses. Contains subject IDs and paths to their associated data files.  Subject lists are also stored as YAMLs.
-* :file:`template_phenotypic.csv` - A template phenotypic file for use with the :doc:`group-level analysis builder</group_analysis>`.
-* :file:`subject_list_group_analysis.txt` - The subject list used when running group-level analyses.
-
-Note: An alternate version of the phenotype template and the group analysis subject list will be created that are pre-formatted for use in repeated measures or within-subject group-level analysis.
-
-For INDI releases, we have available :doc:`preconfigured data configuration files </files>`, to generate subject lists. You will need to make sure that the file templates have been modified to match the specific location on your system for these files.
-
-Using the GUI
---------------
-First, open the C-PAC GUI by entering the command ``cpac_gui`` in a terminal window. You will be presented with the main C-PAC window.
-
-.. figure:: /_images/main_gui.png
-
-Now, to generate a subject list file, click on the *New* button next to the *Subject Lists* box.  This will bring up the following dialog window, which will allow you to define the parameters of the data configuration YAML:
+Creating the Data Configuration File via the GUI
+------------------------------------------------
+The C-PAC data configuration builder window accepts information about where to find your data, and allows you to customize what gets included in the final list. Once you're done, it generates a **data settings** YAML file, which saves your preferences, so that you can easily edit and re-generate your **data configuration** YAML file later on.
 
 .. figure:: /_images/subject_list_gui.png
 
-#. **Data format - [BIDS, Custom]:** Select if data is organized using the `BIDS <http://bids.neuroimaging.io>`_ standard or a custom format (see *Defining Anatomical and Functional File Path Templates* below for more information on forming templates for custom data organization).
+.. figure:: /_images/subject_list_gui2.png
 
-#. **BIDS Base Directory - [path]:** The base directory of BIDS-organized data if you are using BIDS.
+#. **Data format - [BIDS, Custom]:** Whether or not the data is organized in accordance with the BIDS specification. More details below.
 
-#. **Anatomical File Path Template - [text]:** A file path template for anatomical scans (see below for how to define templates).  Used when a custom data organization scheme is enabled.
+#. **BIDS Base Directory - [path]:** The base directory of the BIDS-organized data, if you are using BIDS.
 
-#. **Functional File Path Template - [text]:** A file path template for functional scans (see below for how to define templates).  Used when a custom data organization scheme is enabled.
+#. **Anatomical File Path Template - [text]:** If the data is NOT in BIDS format, you can provide a file path template describing the anatomical scans here. More details below.
 
-#. **Subjects to Include (Optional) - [text/path]:** An optional comma-separated list of subjects to include (if you wish to include only a subset of subjects whose scans match the templates).  A value of 'None' means all subjects will be run. This list can also be read from a text file whose path is given in this field.
+#. **Functional File Path Template - [text]:** If the data is NOT in BIDS format, you can provide a file path template describing the functional scans here. More details below.
 
-#. **Subjects to Exclude (Optional) - [text/path]:** An optional comma-separated list of subjects to exclude (if you wish to exclude only a subset of subjects whose scans match the templates).  A value of 'None' means all subjects will be run. This list can also be read from a text file whose path is given in this field.
+#. **Save Config Files Here - [path]:** The directory where you want the data configuration builder to save both the **data settings** file (these configured options) and the **data configuration** file (the list of input data to be provided to CPAC).
 
-#. **Sites to Include (Optional) - [text/path]:** An optional comma-separated list of sites to include (if you wish to include only a subset of sites whose scans match the templates).  A value of 'None' means all sites will be run. This list can also be read from a text file whose path is given in this field.
+#. **Participant List Name - [text]:** The name/label for your data configuration and data settings files.
 
-#. **Scan Parameters File (Optional) - [path]:**  Path to a CSV specifying the slice time acquisition parameters for scans.  If set to 'None', these parameters will either be defined by the NifTI headers or by an explicit slice order specified in the pipeline configuration builder. Instructions for creating such a file can be found :doc:`here </func>`.  Note that a scan parameters file will also override the settings used in the slice timing screen of the pipeline configuration builder.
+#. **(Optional) AWS Credentials File - [path]:** Required if downloading data from a non-public S3 bucket on Amazon Web Services (AWS). This usually takes the form of a CSV file.
 
-#. **AWS Credentials File (Optional)- [path]:** Required if downloading data from a non-public S3  bucket on Amazon Web Services instead of using local files.
+#. **(Optional) Scan Parameters File - [path]:**  Path to a CSV file specifying the slice time acquisition parameters for scans.  If set to 'None', these parameters will either be defined by the NifTI headers or by an explicit slice order specified in the pipeline configuration builder. Instructions for creating this CSV file can be found :doc:`here </func>`. **Note:** If your data is in BIDS format, the data configuration builder will read the scan parameters described in the data's affiliated JSON file(s), if they exist, and a scan parameters CSV file is not required.
 
-#. **Output Directory - [path]:** The directory where the subject list will be generated.
+#. **(Optional) Field Map Phase File Path Template - [text]:** If you are running field map-based distortion correction, AND your data is not in BIDS format, provide the file path template to your phase files here. If your data is in BIDS format, the data configuration builder will find these files automatically.
 
-#. **Subject List Name - [text]:** A name for the subject list.
+#. **(Optional) Field Map Magnitude File Path Template - [text]:** If you are running field map-based distortion correction, AND your data is not in BIDS format, provide the file path template to your magnitude difference files here. If your data is in BIDS format, the data configuration builder will find these files automatically.
 
-#. **Multiscan Data [checkbox]:** Check this box only if the scans have different slice timing information.
+#. **(Optional) Include: Subjects - [text/path]:** List the participant IDs to include, to have only those participants included in the list. Either enter it here (ex. "1001, 1002, 1007, .."), or enter the file path of a text file containing each participant ID on its own line.
 
-Defining Anatomical and Functional File Path Templates
-------------------------------------------------------
-C-PAC has been designed to process large, complex data sets, and supports processing of multiple scans per participant, multiple scan sessions, and multiple data acquisition sites with differing scan acquisition parameters. Because the file directory structures resulting from such data sets can be complex, it is necessary to define the location of the image files to be processed for each participant.  If you are using the `BIDS <http://bids.neuroimaging.io>`_ directory structure, the location of image files is defined via the BIDS specification, and C-PAC is able to automatically find all of the files needed to run the pipeline.  Otherwise, you will need to manually define path templates using the conventions described below.
+#. **(Optional) Exclude: Subjects - [text/path]:** The same as above, except to exclude the participants you list here. Useful for when you only need a few dropped from the list of many.
 
-File path templates are defined by adding placeholder variables nested within curly brackets to the file path of each type of image file to be processed (anatomical and functional).  The possible placeholders are `site`, `participant` and `session`.  `session` is optional, while the other two placeholders are not.  To illustrate, if the full paths to the image files for a hypothetical :file:`participant_1` were:: 
+#. **(Optional) Include: Sites - [text/path]:** Which sites to include - can be a list or a text file, as described above.
 
-  /home/data/site_1/participant_1/anat/mprage.nii.gz
-  /home/data/site_1/participant_1/func/rest.nii.gz
+#. **(Optional) Exclude: Sites - [text/path]:** Which sites to exclude - can be a list or a text file, as described above.
 
-Then the anatomical and functional file path templates would would be::
+#. **(Optional) Include: Sessions - [text/path]:** Which sessions to include - can be a list or a text file, as described above.
 
-   Anatomical Template:  /home/data/{site}/{participant}/anat/mprage.nii.gz
-   Functional Template:  /home/data/{site}/{participant}/func/rest.nii.gz
+#. **(Optional) Exclude: Sessions - [text/path]:** Which sessions to exclude - can be a list or a text file, as described above.
 
-It should be noted that C-PAC currently requires participant directories to be within a site level directory. If your data set does not contain scans from multiple acquisition sites, we recommend creating a dummy :file:`site_1` directory and placing participant files inside this directory. This peculiarity will be fixed in future versions of C-PAC.
+#. **(Optional) Include: Series - [text/path]:** Which series to include - can be a list or a text file, as described above.
 
-In cases where file paths differ in more than just the site, session and subject directories, asterisks can be used. This is useful for data sets containing multiple sessions in a single scan date or other subject-specific information in file or folder names. You may use as many asterisks as necessary to to define your file path templates. For example, if the paths to functional image files for a subject were::
+#. **(Optional) Exclude: Series - [text/path]:** Which series to exclude - can be a list or a text file, as described above.
 
-    /home/data/site_1/subject_1/scan_1/session_1/rest_1.nii.gz
-    /home/data/site_1/subject_1/scan_1/session_2/rest_2.nii.gz
-    /home/data/site_1/subject_1/scan_2/session_1/rest_1.nii.gz
-    /home/data/site_1/subject_1/scan_2/session_2/rest_2.nii.gz
+Continue below for some example use cases.
 
-The file path template would be::
+Creating the Data Configuration File from terminal
+--------------------------------------------------
+You can configure the settings explained above in the **data settings** YAML file, then use the ``cpac_data_config_setup.py`` script to generate your **data configuration** file.
 
-    /home/data/{site}/{participant}/scan_*/{session}/rest_*.nii.gz
+If you don't already have a data settings YAML file, either get the template from `our GitHub repo <https://github.com/FCP-INDI/C-PAC/blob/1.0.3_development/CPAC/resources/configs/data_settings_template.yml>`_, or generate one by running::
+
+   cpac_data_config_setup.py --generate_template
+
+Once your data settings file is ready, you can generate your data configuration file by running::
+
+   cpac_data_config_setup.py --data_settings_file /path/to/data_settings.yml
+
+Continue below for some example use cases.
+
+
+My Data is in BIDS Format
+-------------------------
+A full description of the BIDS data organization specification can be found at `bids.neuroimaging.io <http://bids.neuroimaging.io/>`_.
+
+This is the simplest option. As the data is in BIDS format, the C-PAC data configuration builder will know where to find all of the input files, the scan parameters (if available), site information, and field map files (if applicable). The inclusion and exclusion options for the different data levels (participant, site, etc.) work as usual.
+
+**Using the GUI**
+
+Select "BIDS" as your Data Format, and specify where to save the configuration files and the participant list name. Then, provide the BIDS Base Directory, which is the top-most directory level within which your BIDS-organized data set is stored. Click ``Generate Data Config`` in the bottom-right corner to generate the data configuration, and to also save this setup into a data settings file. If you only want to save the settings to generate the data configuration for later, click ``Save Preset``.
+
+**Using the cpac_data_config_setup.py script**
+
+In the data settings file, populate these fields::
+
+   dataFormat:                  ['BIDS']
+   bidsBaseDir:                 /path/to/BIDS/directory
+   outputSubjectListLocation:   /save/configs/here
+   subjectListName:             data_config_name
+
+You can also fill in the AWS credentials file field, and the inclusion and exclusion fields, as needed.
+
+Once your data settings file is ready, generate your data configuration file by running::
+
+   cpac_data_config_setup.py --data_settings_file /path/to/data_settings.yml
+
+My Data is stored in a custom layout
+------------------------------------
+The C-PAC Data Configuration builder can handle a wide range of different directory organization layouts, but can only do it seamlessly for you if all of your data is organized in that same layout. If you have input files arranged in different ways, simply generate two different data configuration files, and then manually add one to the end of the other, in a text editor.
+
+**Using the GUI**
+
+Set your Data Format to "Custom", and leave the BIDS Base Directory blank.
+
+In the Anatomical File Path Template field, enter the full file path to any of your anatomical/structural input files (including the file extension .nii/.nii.gz), and then replace the appropriate directory levels with these tags::
+
+   {participant}
+   {site}           (if applicable)
+   {session}        (if applicable)
+
+**Note:** C-PAC currently does not support multiple anatomical series/scans/runs at this time, but will do so in the following release!
+
+Your template paths should look something like this, for the corresponding directory layouts::
+
+   Actual file:     /home/data/site-01/sub1003/session-A1/anat/mprage.nii.gz
+   Template path:   /home/data/{site}/{participant}/{session}/anat/mprage.nii.gz
+
+   Actual file:     /home/data/site-03/sub-1005_session-B1/anat/anat.nii
+   Template path:   /home/data/{site}/{participant}_{session}/anat/anat.nii
+
+For the Functional File Path Template field, repeat the process with your functional input files. In addition, different levels of series/scans can be denoted with the following tag::
+
+   {series}
+
+If you have field map files, and wish to perform field map-based distortion correction, the same process can be repeated for your field map phase and magnitude files, via the Field Map Phase File Path Template and Field Map Magnitude File Path Template fields in the GUI.
+
+For the file path templates, only the ``{participant}`` tags are required. Defaults will be assigned to the other levels if they do not exist.
+
+Then, fill in the fields for where you want the data configuration builder to save your files, and the name/label to use to name the files.
+
+Once your settings are complete, nt list name. click ``Generate Data Config`` in the bottom-right corner to generate the data configuration, and to also save this setup into a data settings file. If you only want to save the settings to generate the data configuration for later, click ``Save Preset``.
+
+
+**Using the cpac_data_config_setup.py script**
+
+Following the instructions for formatting your path templates given above, populate these fields in your data settings file::
+
+   dataFormat:                  ['Custom']
+   anatomicalTemplate:          /path/to/{site}/{participant}/{series}/anat/mprage.nii.gz
+   functionalTemplate:          /path/to/{site}/{participant}/{series}/func/{series}/bold.nii.gz
+   outputSubjectListLocation:   /save/configs/here
+   subjectListName:             data_config_name
+
+You can also fill in the AWS credentials file field, and the inclusion and exclusion fields, as needed.
+
+Once your data settings file is ready, generate your data configuration file by running::
+
+   cpac_data_config_setup.py --data_settings_file /path/to/data_settings.yml
 
 Example File Path Templates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -131,9 +174,9 @@ A final example is the file structure used by the `Enhanced Nathan Kline Institu
 
 Users experiencing difficulties defining file path templates may want to re-organize their data to match one of the examples above. If you manually define a file path template and encounter an error when attempting to generate participant lists, please :doc:`contact us </help>` and we will be happy to help.
 
-Subject List YAML Fields
-^^^^^^^^^^^^^^^^^^^^^^^^^
-The subject list builder GUI or the command line utility will produce a YAML file containing all of the subjects and various properties associated with that subject, such as its ID, session number, the location of its resting-state/functional and anatomical scans.  Before each subject definition there is a single line with a dash, which indicates that start of the property defintions.  Subject properties are indented under this dash.  To illustrate, see the sample subject definition below:
+Data Configuration File YAML Fields
+-----------------------------------
+The data configuration builder GUI or the ``cpac_data_config_setup.py`` command line utility will produce a YAML file containing all of the participants and various properties associated with that participant, such as its ID, session number, the location of its resting-state/functional and anatomical scans. Before each participant definition there is a single line with a dash, which indicates that start of the property definitions. Participant properties are indented under this dash. To illustrate, see the sample participant definition below:
 
 .. code-block:: yaml
 
@@ -141,9 +184,9 @@ The subject list builder GUI or the command line utility will produce a YAML fil
         subject_id: 'subj_1'
         unique_id: 'session_1'
         anat: '/data/subj_1/session_1/anat_1/mprage.nii.gz'
-        rest: 
-          rest_1_rest: '/data/subj_1/session_1/rest_1/rest.nii.gz'
-          rest_2_rest: '/data/subj_1/session_1/rest_2/rest.nii.gz'
+        func:
+          rest_1: '/data/subj_1/session_1/rest_1/rest.nii.gz'
+          rest_2: '/data/subj_1/session_1/rest_2/rest.nii.gz'
         scan_parameters:
             tr: '2.5'
             acquisition: 'seq+z'
@@ -151,4 +194,4 @@ The subject list builder GUI or the command line utility will produce a YAML fil
             first_tr: ''
             last_tr: ''
 
-Note that more than one resting state scan is defined under the `rest` key (i.e., multiple sessions), and that individual scan parameters can be defined to override the settings used in the C-PAC pipeline configuration GUI.  Be careful not to name the multiple sessions under the `rest` key using dashes or periods, as this input will not be parsed by C-PAC and may cause errors.
+Note that more than one functional scan is defined under the `func` key (i.e., multiple series), and that individual scan parameters can be defined to override the settings used in the C-PAC pipeline configuration GUI.

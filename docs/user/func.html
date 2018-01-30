@@ -159,25 +159,34 @@
 </div>
 <div class="section" id="field-map-based-distortion-correction">
 <h2>Field Map-Based Distortion Correction<a class="headerlink" href="#field-map-based-distortion-correction" title="Permalink to this headline">¶</a></h2>
+<p>Distortion correction is a method that aims to reduce distortion in EPI (fMRI) images caused by inhomogeneities in the magnetic field (which often stem from differences in tissue across tissue boundaries in the head). C-PAC has the option of including field map-based distortion correction into your pre-processing pipeline, through a collection of tools produced by FMRIB’s FSL- primarily, a script which prepares field maps, and the FUGUE tool. Performing field map distortion correction requires the acquisition of a phase difference image and two magnitude images. The “best of the two” magnitude images is chosen, and a final input of one phase difference file and one magnitude file are then used by the pre-processing pipeline.</p>
+<p>These files are used to generate the field map during pre-processing, and they can be provided to the C-PAC pipeline through the data configuration (participant list) file. More information on how to set this data configuration file is <a class="reference external" href="http://fcp-indi.github.io/docs/user/subject_list_config.html">available here</a>.</p>
+<p>The C-PAC pipeline configuration builder provides options for configuring the Distortion Correction workflow. The field maps are generated within the distortion correction workflow, and the result is subsequently sent to the functional-to-anatomical registration step (FSL FLIRT, and with Boundary-Based Registration if selected and if tissue segmentation is run), where the distortion is “un-warped” during the transform.</p>
 <div class="figure">
 <img alt="_images/fmap_dist_corr.png" src="_images/fmap_dist_corr.png" />
 </div>
-<p>Distortion correction is a method used for minimizing noise primarily in images obtained by echo-planar imaging (EPI). Using EPI, it has been possible to obtain individual MR slices in time frames of 50 - 100 ms, which minimizes losses in signal due to patient motion. However,EPI sequences have other sources of signal loss, primarily arising from tissue differences in the brain which result in static field inhomogenities {<a class="reference external" href="https://en.wikibooks.org/wiki/Neuroimaging_Data_Processing/Field_map_correction">https://en.wikibooks.org/wiki/Neuroimaging_Data_Processing/Field_map_correction</a>}
-C-PAC provides options for configuring the Distortion Correction workflow, either directly by manipulating the pipeline configuration, or by using the GUI. The field maps are generated within the distortion correction workflow, and subsequently sent to the functional-to-anatomical registration.
-FSL’s fieldmap correction takes in as it’s input a magnitude image, and a phase image which is obtained by phase subtraction between two magnitude images obtained in series. If the user has two input magnitude images, both should be inspected using fsleyes or afni to determine the image with “better quality” which can then be used.</p>
 <ol class="arabic simple">
 <li><strong>Perform Field Map Distortion correction - [On, Off]:</strong> Perform field map-based distortion correction.</li>
-<li><strong>Skull-strip the magnitude file with - [BET, 3dSkullStrip]:</strong> Since the results of the distortion correction relies heavily on the skull strip, you could choose between AFNI-3d Skull-Strip and FSL-BET. The choice of tool to be used is currently only a feature for Distortion correction workflow. Both the workflows have identical options, thereby preventing any bias towards one tool.</li>
-<li><strong>BET threshold/AFNI shrink factor - [float]:</strong> The threshold for brain extraction. FSL requires tight skull-stripping, erring on the side of ignoring brain voxels rather than adding noise. However, it might not be required to increase the threshold in all datasets, so it is important to check your dataset before changing the threshold.In FSL-BET, this is referred to as “threshold intensity” and in AFNI’S 3dSkull Strip, it is the -shrink_facto. The default value is 0.5.</li>
-<li><strong>DeltaTE, in ms - [float]:</strong> The time difference between the first magnitude image and the second magnitude image. The default value is 2.46 ms, which is widely used for SIEMENS, but it may differ with different datasets.</li>
-<li><strong>Dwell Time, in s - [float]:</strong> The dwell time is also known as echo spacing, and it is the time between the start of the readout of two successive lines in k-space during the EPI acquisition. This is a value obtained from the functional epi (NOT the fieldmap)  Here, the default value is 0.0005s.</li>
-<li><strong>Dwell to asymmetric ratio - [float]:</strong> This is the ratio between the Dwell time, as referenced above and the asymmetric time. Here, the default value is 0.93902439.</li>
-<li><strong>Phase encoding direction - [string]:</strong> This is the position of the voxels in the input image, and can have values of x/y/z or -x/-y/-z. This is predominantly a trail and error based parameter.</li>
+<li><strong>Skull-strip the magnitude file with - [BET, 3dSkullStrip]:</strong> Since the results of the distortion correction can be strongly affected by the strength of the skull-stripping of the magnitude file, the choice between using FSL’s BET or AFNI’s 3dSkullStrip is left open, as these tools can have varying results depending on the data itself. The choice of tool is only for skull-stripping the magnitude file, and not for the skull-stripping step of the main anatomical pre-processing part of the pipeline.</li>
+<li><strong>BET threshold/AFNI shrink factor - [float]:</strong> The threshold for brain extraction. FSL requires tight skull-stripping, erring on the side of ignoring brain voxels rather than adding noise. However, it might not be required to increase the threshold in all datasets, so it is important to check your dataset before changing the threshold.In FSL-BET, this is referred to as “threshold intensity” and in AFNI’S 3dSkull Strip, it is the -shrink_factor. The default value is 0.5.</li>
+<li><strong>DeltaTE, in ms - [float]:</strong> The time difference between the first magnitude image and the second magnitude image. The default value is 2.46 ms, which is widely used for SIEMENS, but it may differ with different datasets acquired by other MRI scanner brands, so it is important to ascertain this value specific to your data.</li>
+<li><strong>Dwell Time, in s - [float]:</strong> The dwell time is also known as echo spacing, and it is the time between the start of the readout of two successive lines in k-space during the EPI acquisition. This is a value obtained from the functional EPI (NOT the fieldmap). Here, the default value is 0.0005s.</li>
+<li><strong>Dwell to asymmetric ratio - [float]:</strong> This is the ratio between the Dwell time, as referenced above, and the asymmetric time. Here, the default value is 0.93902439.</li>
+<li><strong>Phase encoding direction - [string]:</strong> This is the position of the voxels in the input image, and can have values of x/y/z or -x/-y/-z.</li>
 </ol>
 <div class="section" id="id2">
 <h3>Configuration Without the GUI<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <p>The following key/value pairs must be defined in your <a class="reference internal" href="pipeline_config.html"><span class="doc">pipeline configuration YAML</span></a> for C-PAC to run distortion correction:</p>
-<p>The box below contains an example of what these parameters might look like when defined in the YAML:</p>
+<p>The box below contains an example of what these parameters might look like when defined in the pipeline configuration YAML:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">runEPI_DistCorr</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">fmap_distcorr_skullstrip</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;BET&quot;</span><span class="p">]</span>
+<span class="n">fmap_distcorr_frac</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">]</span>
+<span class="n">fmap_distcorr_deltaTE</span> <span class="p">:</span> <span class="mf">2.46</span>
+<span class="n">fmap_distcorr_dwell_time</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.0005</span><span class="p">]</span>
+<span class="n">fmap_distcorr_dwell_asym_ratio</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.93902439</span><span class="p">]</span>
+<span class="n">fmap_distcorr_pedir</span><span class="p">:</span> <span class="o">-</span><span class="n">y</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="functional-to-anatomical-registration">
@@ -363,7 +372,7 @@ resolution_for_func_derivative : 2mm
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2017, C-PAC Team.
+        &#169; Copyright 2018, C-PAC Team.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
     </div>
   </body>

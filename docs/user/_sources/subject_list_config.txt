@@ -10,6 +10,13 @@ C-PAC requires at least one pipeline configuration file and one data configurati
 
 The data configuration file is essentially a list of file paths to anatomical and functional MRI scans keyed by their unique IDs, and listed with any additional information as necessary. This file can be generated both via the GUI and the terminal. Both ways are explained below.
 
+UPDATE (May 15, 2018): C-PAC v1.1.0 and Later
+---------------------------------------------
+The data configuration file layout has changed significantly from older versions. Functional scan file paths, and scan parameter information (or scan parameter file paths) are now nested beneath the "func:" key. See the "Data Configuration File YAML Fields" section below for examples.
+
+If you have already-existing data configuration files and wish to update these for the new version, you can simply use your already-existing data settings preset files to regenerate the data configuration files using your new/upgraded install of C-PAC v1.1.0. If you have any questions, please feel free to reach us at our `support forum <https://groups.google.com/forum/#!forum/cpax_forum>`_.
+
+
 Creating the Data Configuration File via the GUI
 ------------------------------------------------
 The C-PAC data configuration builder window accepts information about where to find your data, and allows you to customize what gets included in the final list. Once you're done, it generates a **data settings** YAML file, which saves your preferences, so that you can easily edit and re-generate your **data configuration** YAML file later on.
@@ -27,6 +34,8 @@ The C-PAC data configuration builder window accepts information about where to f
 #. **Save Config Files Here - [path]:** The directory where you want the data configuration builder to save both the **data settings** file (these configured options) and the **data configuration** file (the list of input data to be provided to CPAC).
 
 #. **Participant List Name - [text]:** The name/label for your data configuration and data settings files.
+
+#. **(Optional) Which Anatomical Scan? - [text]:** Sometimes, there are multiple anatomical scans per participant in a dataset. To make life easier, you can tell the data configuration builder which anatomical scan to select for each participant by entering a sub-string here that can be found in the name or label of the anatomical scan you'd like to use for the run. Also, if you are using the Custom Anatomical File Path Template, you can enter a wildcard (*) in the path template in the anatomical scan file name, and the sub-string you enter here will determine which of the files returned by that wildcard is written into the data configuration.
 
 #. **(Optional) AWS Credentials File - [path]:** Required if downloading data from a non-public S3 bucket on Amazon Web Services (AWS). This usually takes the form of a CSV file.
 
@@ -178,18 +187,56 @@ The data configuration builder GUI or the ``cpac_data_config_setup.py`` command 
 
 .. code-block:: yaml
 
+    # example of data stored locally
     -
-        subject_id: 'subj_1'
-        unique_id: 'session_1'
-        anat: '/data/subj_1/session_1/anat_1/mprage.nii.gz'
+        subject_id: sub01
+        unique_id: ses01
+        anat: /path/to/site01/sub01/ses01/anatomical.nii.gz
+        creds_path: None
         func:
-          rest_1: '/data/subj_1/session_1/rest_1/rest.nii.gz'
-          rest_2: '/data/subj_1/session_1/rest_2/rest.nii.gz'
-        scan_parameters:
-            tr: '2.5'
-            acquisition: 'seq+z'
-            reference: '24'
-            first_tr: ''
-            last_tr: ''
+          scan_1:
+            scan: /path/to/site01/sub01/ses01/scan_1_func.nii.gz
+            scan_parameters:
+              acquisition: seq+z
+              firsttr (start volume index): ''
+              lasttr (final volume index): ''
+              reference: 27
+              tr: 3.0
+        site: site01
+    -
+        subject_id: sub02
+        unique_id: ses02
+        anat: /path/to/site01/sub02/ses02/anatomical.nii.gz
+        creds_path: None
+        func:
+          scan_1:
+            scan: /path/to/site01/sub02/ses02/scan_1_func.nii.gz
+            scan_parameters: None
+        site: site01
+
+    # example of data stored on an AWS S3 bucket
+    -
+        subject_id: sub200
+        unique_id: ses-1
+        anat: s3://s3_bucket/path/to/site_A/sub200/anatomical.nii.gz
+        creds_path: None (or) /path/to/AWS_credentials.csv
+        func:
+          scan_name_REST:
+            scan: s3://s3_bucket/path/to/site_A/sub200/scan_name_REST_func.nii.gz
+            scan_parameters: s3://s3_bucket/path/to/site_A/scan_name_REST_func.json
+        site: site_A
+
+    # with field map files for distortion correction
+    -
+        subject_id: sub01
+        unique_id: ses01
+        anat: /path/to/site01/sub01/ses01/anatomical.nii.gz
+        creds_path: None
+        func:
+          scan_1:
+            scan: /path/to/site01/sub01/ses01/scan_1_func.nii.gz
+            fmap_phase: /path/to/site01/sub01/ses01/scan_1_phase-diff.nii.gz
+            fmap_mag: /path/to/site01/sub01/ses01/scan_1_magnitude.nii.gz
+        site: site01
 
 Note that more than one functional scan is defined under the `func` key (i.e., multiple series), and that individual scan parameters can be defined to override the settings used in the C-PAC pipeline configuration GUI.

@@ -5,13 +5,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Running C-PAC &#8212; C-PAC 1.1.0 Beta documentation</title>
+    <title>Running C-PAC &#8212; C-PAC 1.2.0 Beta documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.1.0 Beta',
+        VERSION:     '1.2.0 Beta',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -24,8 +24,8 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Benchmark Package" href="benchmark.html" />
-    <link rel="prev" title="Setting Up FSL-FEAT Group Analysis" href="group_analysis.html" /> 
+    <link rel="next" title="Check Your Outputs" href="output_dir.html" />
+    <link rel="prev" title="Voxel-Mirrored Homotopic Connectivity (VMHC)" href="vmhc.html" /> 
   </head>
   <body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -35,12 +35,12 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="benchmark.html" title="Benchmark Package"
+          <a href="output_dir.html" title="Check Your Outputs"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="group_analysis.html" title="Setting Up FSL-FEAT Group Analysis"
+          <a href="vmhc.html" title="Voxel-Mirrored Homotopic Connectivity (VMHC)"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.1.0 Beta documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.2.0 Beta documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -60,10 +60,30 @@
 </ul>
 <p>This page will also discuss how to navigate C-PAC’s output structure once a run is finished.</p>
 </div>
-<div class="section" id="using-the-command-line-interface">
-<h2>Using the Command Line Interface<a class="headerlink" href="#using-the-command-line-interface" title="Permalink to this headline">¶</a></h2>
-<p>To start a C-PAC run from the command line or a shell script you can use the <cite>cpac_run.py</cite> utility (which is added to your path automatically upon installing C-PAC).  An example of this tool’s syntax is as follows:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>cpac_run.py /path/to/pipeline_config.yml /path/to/data_config.yml
+<div class="section" id="from-terminal">
+<h2>From Terminal<a class="headerlink" href="#from-terminal" title="Permalink to this headline">¶</a></h2>
+<p>To start a C-PAC run from the command line you can use C-PAC’s command-line interface (CLI). To start an analysis with a specific pipeline configuration and a specific data configuration (subject list) YAML file, run:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>cpac run --pipe_config /path/to/pipeline_config.yml /path/to/data_config.yml
+</pre></div>
+</div>
+<p>You can also omit the <code class="docutils literal"><span class="pre">--pipe_config</span></code> parameter to run C-PAC with a pre-configured “default” pipeline if you want to get started quickly:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>cpac run /path/to/data_config.yml
+</pre></div>
+</div>
+<p>In addition, with the latest release (v1.2.0), a few data configuration files are bundled with the C-PAC install, and can be invoked at the command line easily. To quickly run the default pipeline (or any pipeline configuration) with the ADHD200, ABIDE, and NKI-Rockland Sample data releases:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>cpac run ADHD200
+cpac run ABIDE
+cpac run NKI-RS
+</pre></div>
+</div>
+<p>Of course, you can also run these pre-configured datasets with any pipeline configuration file you choose like so:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>cpac run --pipe_config /path/to/pipeline_config.yml ADHD200
+</pre></div>
+</div>
+<p>Note, these bundled data configurations pull the data from the FCP-INDI AWS-S3 bucket.</p>
+<p>When you are ready to run any of the group-level analyses (more information in the <a class="reference external" href="group_analysis">group analysis section</a>):</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>cpac group feat /path/to/pipeline_config.yml
+cpac group mdmr /path/to/pipeline_config.yml
 </pre></div>
 </div>
 </div>
@@ -79,53 +99,18 @@
 <div class="figure">
 <img alt="_images/processing_workflow.png" src="_images/processing_workflow.png" />
 </div>
-<div class="section" id="running-group-level-analysis">
-<h3>Running Group-Level Analysis<a class="headerlink" href="#running-group-level-analysis" title="Permalink to this headline">¶</a></h3>
-<p>When you are ready to run group-level analysis, select the subject lists and pipelines you would like to run and click the Run Group Level Analysis button. You will be presented with a dialog and asked to select which strategies you would like to include.</p>
 </div>
-</div>
-<div class="section" id="output-structure">
-<h2>Output Structure<a class="headerlink" href="#output-structure" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="symbolic-links">
-<h3>Symbolic Links<a class="headerlink" href="#symbolic-links" title="Permalink to this headline">¶</a></h3>
-<p>C-PAC gives you the option of creating an output directory containing <a class="reference external" href="http://en.wikipedia.org/wiki/Symbolic_link">symbolic links</a> to processed files. We strongly recommend this setting be enabled, as it makes it much easier to navigate output files. The following schematic shows the structure of the resulting <code class="file docutils literal"><span class="pre">sym_links</span></code> directory:</p>
-<div class="figure">
-<img alt="_images/symlink_structure.png" src="_images/symlink_structure.png" />
-</div>
-<p>Pipeline and strategy folders are named as described above.</p>
-</div>
-<div class="section" id="file-descriptions">
-<h3>File Descriptions<a class="headerlink" href="#file-descriptions" title="Permalink to this headline">¶</a></h3>
-<p>Preprocessed anatomical data from the Anatomical Preprocessing, Registration, and Segmentation workflows can be found in <code class="file docutils literal"><span class="pre">../scan/anat/</span></code> directory for each subject. The following diagram shows processing steps and standard output files for these workflows.</p>
-<div class="figure">
-<img alt="_images/anat_prepro_schematic.png" src="_images/anat_prepro_schematic.png" />
-</div>
-<p>Preprocessed functional data from the Functional Preprocessing workflow can be found in the <code class="file docutils literal"><span class="pre">../scan_&lt;name&gt;/func</span></code> directory for each subject. The following diagram shows processing steps and standard output files for this workflow.</p>
-<div class="figure">
-<img alt="_images/functional_preprocessing.png" src="_images/functional_preprocessing.png" />
-</div>
-</div>
-<div class="section" id="derivative-outputs">
-<h3>Derivative Outputs<a class="headerlink" href="#derivative-outputs" title="Permalink to this headline">¶</a></h3>
-<p>Derivatives for each subject can be found in the <code class="file docutils literal"><span class="pre">../scan_&lt;name&gt;</span></code> directory of each subject. This folder also contains the outputs of the registration and segmentation workflows.</p>
-<div class="figure">
-<img alt="_images/derivs_outputs.png" src="_images/derivs_outputs.png" />
-</div>
-<p>Within each derivative folder will be sub-folders for each set of frequency filters set in <code class="file docutils literal"><span class="pre">config.yml</span></code>, as well as a folder containing smoothed outputs.</p>
-<p>Derivatives are output in both native space (<code class="file docutils literal"><span class="pre">*_img.nii.gz</span></code> and <code class="file docutils literal"><span class="pre">*_map.nii.gz</span></code> files), with values transformed to z-scores (<code class="file docutils literal"><span class="pre">*_Z_*.nii.gz</span></code>) and in standard space (<code class="file docutils literal"><span class="pre">*_to_standard.nii.gz</span></code>).</p>
-</div>
-</div>
-<div class="section" id="running-c-pac-as-a-docker-app">
-<h2>Running C-PAC as a Docker App<a class="headerlink" href="#running-c-pac-as-a-docker-app" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="with-docker">
+<h2>With Docker<a class="headerlink" href="#with-docker" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference external" href="https://github.com/BIDS-Apps">BIDS Apps</a> project is an initiative to create a collection of reproducible neuroimaging workflows that can be executed as self-contained environments using <a class="reference external" href="https://www.docker.com/">Docker</a> containers.  These workflows take as input any dataset that is organized according to the <a class="reference external" href="http://http://bids.neuroimaging.io">Brain Imaging Data Structure (BIDS) standard</a> and generating first-level outputs for this dataset.</p>
 <p>We have created a Docker configuration as part of this initiative that allows you to run the C-PAC pipeline on your data in an environment that is fully provisioned with all of C-PAC’s dependencies.  More information can be found at the official C-PAC BIDS app page <a class="reference external" href="https://github.com/BIDS-Apps/CPAC">here</a>.</p>
 </div>
-<div class="section" id="running-c-pac-on-openneuro">
-<h2>Running C-PAC on OpenNeuro<a class="headerlink" href="#running-c-pac-on-openneuro" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="with-openneuro">
+<h2>With OpenNeuro<a class="headerlink" href="#with-openneuro" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference external" href="https://openneuro.org">OpenNeuro</a> project is an initiative to provide easy access to public neuroimaging datasets and the ability to quickly run analysis pipelines on these datasets directly through a web interface. C-PAC is available as an app on OpenNeuro, and more information on running apps on the platform is available <a class="reference external" href="https://openneuro.org/faq">here</a>.</p>
 </div>
-<div class="section" id="running-c-pac-in-the-aws-cloud">
-<h2>Running C-PAC in the AWS Cloud<a class="headerlink" href="#running-c-pac-in-the-aws-cloud" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="on-the-aws-cloud">
+<h2>On the AWS Cloud<a class="headerlink" href="#on-the-aws-cloud" title="Permalink to this headline">¶</a></h2>
 <p>The C-PAC team has released an Amazon Marketplace AMI, making it easier for researchers to use C-PAC in the cloud.  You can use the AMI to either launch a single machine for basic runs or create a high performance computing (HPC) cluster using Starcluster.  Clusters can be dynamically scaled up as your computational needs increase.  Detailed explanations of cloud computing and HPC are beyond the scope of this documentation, but we will define a few key terms before we start.  If these terms are familiar, you may skip them and proceed to later sections.</p>
 <ul class="simple">
 <li><strong>Amazon Machine Instance (AMI)</strong> - A disk image of an operating system and any additional installed software that can be used to create a virtual machine.</li>
@@ -405,25 +390,24 @@ mv *.py ~/.starcluster/plugins
             </a></p>
 <h3><a href="index.html">Table Of Contents</a></h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="install.html">Installing C-PAC</a></li>
-<li class="toctree-l1"><a class="reference internal" href="subject_list_config.html">Setting Up A Data Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline_config.html">Setting Up A Pipeline Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">Pre-Processing Steps</a></li>
-<li class="toctree-l1"><a class="reference internal" href="derivatives.html">Computable Derivatives</a></li>
-<li class="toctree-l1"><a class="reference internal" href="group_analysis.html">Setting Up Group Analysis</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Running C-PAC</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">1. Install C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="subject_list_config.html">2. Specify Your Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline_config.html">3. Select Your Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">4. Pre-Process Your Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="derivatives.html">5. Compute Derivatives</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">6. Run C-PAC</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#using-the-command-line-interface">Using the Command Line Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#from-terminal">From Terminal</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#using-the-gui">Using the GUI</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#output-structure">Output Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#running-c-pac-as-a-docker-app">Running C-PAC as a Docker App</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#running-c-pac-on-openneuro">Running C-PAC on OpenNeuro</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#running-c-pac-in-the-aws-cloud">Running C-PAC in the AWS Cloud</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#with-docker">With Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#with-openneuro">With OpenNeuro</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#on-the-aws-cloud">On the AWS Cloud</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="benchmark.html">C-PAC Benchmark</a></li>
-<li class="toctree-l1"><a class="reference internal" href="help.html">Troubleshooting and Help</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnotes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output_dir.html">7. Check Your Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group_analysis.html">8. Run Group Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="help.html">9. Troubleshoot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnotes.html">10. Release Notes</a></li>
 </ul>
 
 <div id="searchbox" style="display: none" role="search">
@@ -447,12 +431,12 @@ mv *.py ~/.starcluster/plugins
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="benchmark.html" title="Benchmark Package"
+          <a href="output_dir.html" title="Check Your Outputs"
              >next</a> |</li>
         <li class="right" >
-          <a href="group_analysis.html" title="Setting Up FSL-FEAT Group Analysis"
+          <a href="vmhc.html" title="Voxel-Mirrored Homotopic Connectivity (VMHC)"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.1.0 Beta documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.2.0 Beta documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

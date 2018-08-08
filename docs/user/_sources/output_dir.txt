@@ -1,4 +1,4 @@
-C-PAC Output Directory Layout
+Check Your Outputs
 =============================
 
 A standard C-PAC run output directory for one participant-session is shown below. A directory like this will exist for each participant-session in the run.
@@ -11,8 +11,10 @@ This is with all derivatives enabled, and the output, smoothing, and z-scoring o
 
 .. figure:: /_images/output_dir_default.png
 
-Output Descriptions
+Descriptions
 ^^^^^^^^^^^^^^^^^^^
+
+The output directory folders below are produced during a default run. If you enabled the additional outputs and have the full directory, proceed to the "Full Directory" section further below for descriptions of these extra outputs.
 
 * **alff_to_standard_smooth_zstd**: Warped to standard template, smoothed, z-score standardized output of ALFF.
 * **anatomical_brain**: Skull-stripped brain in anatomical space. This is the direct output of skull-stripping.
@@ -68,7 +70,7 @@ Output Descriptions
 * **voxel_timeseries**: 1-D file (and also CSV and .npz files, if selected) containing the voxel-wise extracted timeseries based on each ROI provided. Sub-directories in this folder for each ROI.
 * **QC-interface_{scan}_{nuisance/preprocessing strategy}.html**: :doc:`QC Interface HTML page </qc_interface>` for each scan and nuisance/preprocessing strategy combination.
 
-Sub-Directory Descriptions
+Sub-Directories
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Each folder in the output directory may have a different amount of sub-directories, depending on how many functional scans specified in the data configuration, or how many pipeline customizations and forked strategies you specified in the pipeline configuration. For example, if there are multiple functional scans, you'll see a folder for each one if you enter any of the functional-derived outputs' folders, as seen below:
@@ -83,8 +85,83 @@ And sub-directories for each ROI provided for a derivative that may take in mult
 
 .. figure:: /_images/output_dir_masks.png
 
-Full Output Directory Layout
+Full Directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The C-PAC output directory is considerably larger when "Extra Functional Outputs", "Debugging Outputs", and both Smoothed/Non-smoothed and both z-score standardized/raw outputs are all enabled.
 
-More detailed information coming soon.
+In addition to the output directories described above under "Descriptions", the following outputs are also written to the output directory when all of the output options mentioned above are enabled:
+
+**Debugging Outputs** - Set 'Write Debugging Outputs' to 'On' to produce these outputs.
+
+* **coordinate_transformation**: Output of the AFNI 3dvolreg -1Dmatrix_save flag, when run during functional pre-processing. This is the matrix transformation of the base to input DICOM coordinates.
+* **dr_tempreg_maps_zstat_files_to_standard**: Warped to standard statistical Z-stat outputs of FSL GLM (run during dual regression), via the --out_z flag.
+* **dr_tempreg_maps_zstat_files_to_standard_smooth**: Same as above, but smoothed.
+* **max_displacement**: Output of the AFNI 3dvolreg -maxdisp1D flag, when run during functional pre-processing. This is a 1D file containing the maximum displacement (in mm) for each volume.
+* **movement_parameters**: 1D file containing six movement/motion parameters (3 Translation, 3 Rotations) in different columns (roll pitch yaw dS dL dP), as output by AFNI 3dVolreg.
+* **power_params**: Text file containing the power parameters resulting from the calculation of Mean Framewise Displacement.
+* **vmhc_fisher_zstd**: The Fisher's r-to-z transformed output of VMHC, before calculation of the Z-statistic.
+* **vmhc_raw_score**: The direct, 'raw' output of VMHC, before performing Fisher's r-to-z, and before calculating the Z-statistic.
+
+**Extra Functional Outputs** - Set 'Write Extra Functional Outputs' to 'On' to produce these outputs.
+
+* **functional_nuisance_residuals**: A NIfTI (.nii) file of the pre-processed functional time series produced directly after nuisance regression is performed.
+* **functional_preprocessed**: The functional time series produced directly after initial functional pre-processing (de-obliquing, re-orienting, motion correction, functional skull-stripping, and image intensity normalization). In native space.
+* **functional_preprocessed_mask**: A binary mask of the functional_preprocessed output. In native space.
+* **mean_functional**: The mean of the functional time-series taken over the time course. Presented as a single-volume NifTI file.
+* **mean_functional_in_anat**: The mean of the functional time-series, registered/warped to anatomical (T1) space.
+* **motion_correct_to_standard**: Motion-corrected functional timeseries in template space, before the rest of functional preprocessing.
+* **motion_correct_to_standard_smooth**: Motion-corrected functional timeseries in template space, before the rest of functional preprocessing, but smoothed.
+* **slice_time_corrected**: The functional time-series after slice-time correction.
+
+**Non-smoothed** - Set 'Run Smoothing' to either 'Off' or 'On/Off' to produce these outputs.
+
+* **alff_to_standard_zstd**: Warped-to-standard, z-scored output of ALFF, without smoothing.
+* **dr_tempreg_maps_files_to_standard**: Warped to standard, non-smoothed Dual Regression outputs. Sub-directories in this folder for each map provided.
+* **falff_to_standard_zstd**: Warped to standard, z-scored outputs of f/ALFF, without smoothing.
+* **reho_to_standard_zstd**: Warped to standard, z-scored outputs of ReHo, without smoothing.
+
+**Raw scores (before z-scoring)** - Set 'z-score Standardize Derivatives' to either 'Off' or 'On/Off' to produce these outputs.
+
+* **alff_to_standard_smooth**: Warped-to-standard, smoothed output of ALFF, without z-scoring.
+* **falff_to_standard_smooth**: Warped to standard, smoothed output of f/ALFF, without z-scoring.
+* **reho_to_standard_smooth**: Warped to standard, smoothed output of ReHo, without z-scoring.
+
+**Both non-smoothed and raw scores** - Both 'Run Smoothing' and 'z-score Standardize Derivatives' set to either 'Off' or 'On/Off'.
+
+* **alff_to_standard**: Warped to standard output of ALFF, without smoothing and without z-scoring.
+* **falff_to_standard**: Warped to standard output of f/ALFF, without smoothing and without z-scoring.
+* **reho_to_standard**: Warped to standard output of ReHo, without smoothing and without z-scoring.
+
+**Native space (not warped to standard)** - Set 'Run Functional to Template Registration' to 'On/Off' to produce these outputs.
+
+* **alff**: The direct output of ALFF, before warping to standard space.
+* **falff**: The direct output of f/ALFF, before warping to standard space.
+* **reho**: The direct output of ReHo, before warping to standard space.
+
+Visual Quality Control
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+C-PAC's data quality control (QC) interface allows you to take a quick glance at the overall quality of your results (registration quality, signal-to-noise ratio, movement plots, computed derivative histograms, etc.). In its current form, the QC interface is a collection of HTML pages - one for each participant-scan-nuisance regression strategy combination, and they can be found in the Output Directory under each participant's directory level.
+
+**Upcoming Additions**
+
+In future releases, more visualizations will be introduced, and the QC pages will be integrated into an easy-to-use dashboard that is updated throughout the process of your C-PAC run, and also provides information on the status of the pipeline. As always, we greatly appreciate any ideas, suggestions, or items on your wishlist and `take them into consideration <https://groups.google.com/forum/#!forum/cpax_forum>`_.
+
+Quick Look
+^^^^^^^^^^
+
+**Skull-stripping and Segmentation Quality**
+
+.. figure:: /_images/qc_interface1.png
+
+**Head Movement Measures**
+
+.. figure:: /_images/qc_interface2.png
+
+**Quick View of Derivatives**
+
+.. figure:: /_images/qc_interface3.png
+
+**With Histograms**
+
+.. figure:: /_images/qc_interface4.png

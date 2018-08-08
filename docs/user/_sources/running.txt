@@ -10,13 +10,42 @@ As with configuring the subject list, pipeline configuration, and group analysis
 
 This page will also discuss how to navigate C-PAC's output structure once a run is finished.
 
-Using the Command Line Interface
+From Terminal
 ---------------------------------
-To start a C-PAC run from the command line or a shell script you can use the `cpac_run.py` utility (which is added to your path automatically upon installing C-PAC).  An example of this tool's syntax is as follows:
+To start a C-PAC run from the command line you can use C-PAC's command-line interface (CLI). To start an analysis with a specific pipeline configuration and a specific data configuration (subject list) YAML file, run:
 
 .. code-block:: bash
 
-    cpac_run.py /path/to/pipeline_config.yml /path/to/data_config.yml
+    cpac run --pipe_config /path/to/pipeline_config.yml /path/to/data_config.yml
+
+You can also omit the ``--pipe_config`` parameter to run C-PAC with a pre-configured "default" pipeline if you want to get started quickly:
+
+.. code-block:: bash
+
+    cpac run /path/to/data_config.yml
+
+In addition, with the latest release (v1.2.0), a few data configuration files are bundled with the C-PAC install, and can be invoked at the command line easily. To quickly run the default pipeline (or any pipeline configuration) with the ADHD200, ABIDE, and NKI-Rockland Sample data releases:
+
+.. code-block:: bash
+
+    cpac run ADHD200
+    cpac run ABIDE
+    cpac run NKI-RS
+
+Of course, you can also run these pre-configured datasets with any pipeline configuration file you choose like so:
+
+.. code-block:: bash
+
+    cpac run --pipe_config /path/to/pipeline_config.yml ADHD200
+
+Note, these bundled data configurations pull the data from the FCP-INDI AWS-S3 bucket. 
+
+When you are ready to run any of the group-level analyses (more information in the `group analysis section <group_analysis>`_):
+
+.. code-block:: bash
+
+    cpac group feat /path/to/pipeline_config.yml
+    cpac group mdmr /path/to/pipeline_config.yml
 
 Using the GUI
 -------------
@@ -32,52 +61,17 @@ The following schematic illustrates the order in which C-PAC executes.
 
 .. figure:: /_images/processing_workflow.png
 
-Running Group-Level Analysis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-When you are ready to run group-level analysis, select the subject lists and pipelines you would like to run and click the Run Group Level Analysis button. You will be presented with a dialog and asked to select which strategies you would like to include.
-
-Output Structure
-----------------
-
-Symbolic Links
-^^^^^^^^^^^^^^
-C-PAC gives you the option of creating an output directory containing `symbolic links <http://en.wikipedia.org/wiki/Symbolic_link>`_ to processed files. We strongly recommend this setting be enabled, as it makes it much easier to navigate output files. The following schematic shows the structure of the resulting :file:`sym_links` directory:
-
-.. figure:: /_images/symlink_structure.png
-
-Pipeline and strategy folders are named as described above. 
-
-File Descriptions
-^^^^^^^^^^^^^^^^^
-Preprocessed anatomical data from the Anatomical Preprocessing, Registration, and Segmentation workflows can be found in :file:`../scan/anat/` directory for each subject. The following diagram shows processing steps and standard output files for these workflows.
-
-.. figure:: /_images/anat_prepro_schematic.png
-
-Preprocessed functional data from the Functional Preprocessing workflow can be found in the :file:`../scan_<name>/func` directory for each subject. The following diagram shows processing steps and standard output files for this workflow.
-
-.. figure:: /_images/functional_preprocessing.png
-
-Derivative Outputs
-^^^^^^^^^^^^^^^^^^
-Derivatives for each subject can be found in the :file:`../scan_<name>` directory of each subject. This folder also contains the outputs of the registration and segmentation workflows.
-
-.. figure:: /_images/derivs_outputs.png
-
-Within each derivative folder will be sub-folders for each set of frequency filters set in :file:`config.yml`, as well as a folder containing smoothed outputs.
-
-Derivatives are output in both native space (:file:`*_img.nii.gz` and :file:`*_map.nii.gz` files), with values transformed to z-scores (:file:`*_Z_*.nii.gz`) and in standard space (:file:`*_to_standard.nii.gz`).
-
-Running C-PAC as a Docker App
+With Docker
 -----------------------------
 The `BIDS Apps <https://github.com/BIDS-Apps>`_ project is an initiative to create a collection of reproducible neuroimaging workflows that can be executed as self-contained environments using `Docker <https://www.docker.com/>`_ containers.  These workflows take as input any dataset that is organized according to the `Brain Imaging Data Structure (BIDS) standard <http://http://bids.neuroimaging.io>`_ and generating first-level outputs for this dataset.
 
 We have created a Docker configuration as part of this initiative that allows you to run the C-PAC pipeline on your data in an environment that is fully provisioned with all of C-PAC's dependencies.  More information can be found at the official C-PAC BIDS app page `here <https://github.com/BIDS-Apps/CPAC>`_.
 
-Running C-PAC on OpenNeuro
+With OpenNeuro
 --------------------------
 The `OpenNeuro <https://openneuro.org>`_ project is an initiative to provide easy access to public neuroimaging datasets and the ability to quickly run analysis pipelines on these datasets directly through a web interface. C-PAC is available as an app on OpenNeuro, and more information on running apps on the platform is available `here <https://openneuro.org/faq>`_.
 
-Running C-PAC in the AWS Cloud
+On the AWS Cloud
 ------------------------------
 
 The C-PAC team has released an Amazon Marketplace AMI, making it easier for researchers to use C-PAC in the cloud.  You can use the AMI to either launch a single machine for basic runs or create a high performance computing (HPC) cluster using Starcluster.  Clusters can be dynamically scaled up as your computational needs increase.  Detailed explanations of cloud computing and HPC are beyond the scope of this documentation, but we will define a few key terms before we start.  If these terms are familiar, you may skip them and proceed to later sections.

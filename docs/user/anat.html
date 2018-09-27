@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Anatomical Preprocessing &#8212; C-PAC 1.1.0 Beta documentation</title>
+    <title>Anatomical Preprocessing &#8212; C-PAC 1.2.0 Beta documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -31,7 +31,7 @@
         <li class="right" >
           <a href="preprocessing.html" title="Pre-Processing Steps"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.1.0 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.2.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="preprocessing.html" accesskey="U">Pre-Processing Steps</a> &#187;</li> 
       </ul>
     </div>  
@@ -43,6 +43,70 @@
             
   <div class="section" id="anatomical-preprocessing">
 <h1>Anatomical Preprocessing<a class="headerlink" href="#anatomical-preprocessing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="skull-stripping">
+<h2>Skull-Stripping<a class="headerlink" href="#skull-stripping" title="Permalink to this headline">¶</a></h2>
+<p>Skull-stripping is the removal of skull and other non-brain tissue like dura and eyes from anatomical images, which could otherwise complicate co-registration and normalization steps.</p>
+<p>C-PAC provides options for configuring skull-stripping - users can select either <a class="reference external" href="https://afni.nimh.nih.gov/pub/dist/doc/program_help/3dSkullStrip.html">AFNI’s 3dSkullStrip</a> or <a class="reference external" href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/BET/UserGuide">FSL’s BET</a>, and can configure further parameters for each of these tools.</p>
+<div class="section" id="configuring-cpac-to-run-skull-stripping">
+<h3>Configuring CPAC to run Skull-Stripping:<a class="headerlink" href="#configuring-cpac-to-run-skull-stripping" title="Permalink to this headline">¶</a></h3>
+<div class="figure">
+<img alt="_images/skullstrip_gui.png" src="_images/skullstrip_gui.png" />
+</div>
+<ol class="arabic simple">
+<li><strong>Inputs already skull stripped? - [On,Off]:</strong> If inputs are already skull stripped then you can toggle this option to off.</li>
+<li><strong>Which tool for skull-stripping? - [FSL, AFNI, FSL/AFNI]:</strong> Chose if you’d like to use FSL BET, AFNI 3dSkullStrip, or run both options in parallel.</li>
+</ol>
+</div>
+<div class="section" id="configuring-afni-3dskullstrip-options">
+<h3>Configuring AFNI 3dSkullStrip options:<a class="headerlink" href="#configuring-afni-3dskullstrip-options" title="Permalink to this headline">¶</a></h3>
+<p><strong>Note:</strong> These options are pre-set for AFNI 3dSkullStrip’s default values. These do not need to be modified unless you are looking to optimize the results of skull-stripping for your particular dataset.</p>
+<div class="figure">
+<img alt="_images/AFNI_gui.png" src="_images/AFNI_gui.png" />
+</div>
+<ol class="arabic simple">
+<li><strong>Shrink factor - [0.6]:</strong> Set the threshold value for controlling the brain vs non-brain voxels</li>
+<li><strong>Vary shrink factor - [On,Off]:</strong> Vary the shrink factor at every iteration of the algorithm. This prevents the likelihood of surface getting stuck in large pools of CSF before reaching the outer surface of the brain. Default is On.</li>
+<li><strong>Shrink factor bottom limit - [0.4]:</strong> The shrink factor bottom limit sets the lower threshold when varying the shrink factor. Default is 0.4, for when edge detection is used (which is On by default),otherwise the default value is 0.4.</li>
+<li><strong>Avoid ventricles - [On,Off]:</strong> Avoid ventricles while skull stripping. Default is On.</li>
+<li><strong>Number of iterations - [250]:</strong> Set the number of iterations. Default is 250. The number of iterations should depend upon the density of your mesh. Default is 250.</li>
+<li><strong>Pushout - [On, Off]:</strong> While expanding, consider the voxels above and not only the voxels below. Default is On</li>
+<li><strong>Touchup - [On,Off]:</strong> Perform touchup operations at the end to include areas not covered by surface expansion.</li>
+<li><strong>Fill hole option - [10]:</strong> Give the maximum number of pixels on either sid of the hole that can be filled. The default is 10 only if ’Touchup’ is On. Otherwise default is 0.</li>
+<li><strong>NN smooth - [72]:</strong> Perform final surface smoothing after all iterations. Default is 20.</li>
+<li><strong>Avoid eyes - [On,Off]:</strong> Avoid eyes while skull stripping. Default is On.</li>
+<li><strong>Use edge - [On,Off]:</strong> Use edge detection to reduce leakage into meninges. Default is On.</li>
+<li><strong>Fractional expansion - [0.1]:</strong> Speed of expansion. Default Value is 0.1</li>
+<li><strong>Push to edge - [Off,On]:</strong> Perform aggressive push to edge, this might cause leakage. Default is Off.</li>
+<li><strong>Use Skull - [Off, On]:</strong> Use the outer skull to limit expansion of surface into the skull in case of very strong shading artifacts. Use this only if you leakage into the skull.</li>
+<li><strong>Perc_init - [0]:</strong> Percentage of segments allowed to intersect surface.It is typically a number between 0 and 0.1, but can include negative values (which implies no testing for intersection). Default is 0.</li>
+<li><strong>Max_inter_iter - [4]:</strong> Number of iterations to remove intersection problems. With each iteration, the program automatically increases the amount of smoothing to get rid of intersections. Default is 4.</li>
+<li><strong>Fac - [1]:</strong> Multiply input dataset by FAC if range of values is too small. Default value is 1.</li>
+<li><strong>blur_fwhm - [2]:</strong> Blur datasets after spatial normalization.Default value is 2.</li>
+</ol>
+</div>
+<div class="section" id="configuring-fsl-bet-options">
+<h3>Configuring FSL BET options:<a class="headerlink" href="#configuring-fsl-bet-options" title="Permalink to this headline">¶</a></h3>
+<p><strong>Note:</strong> These options are pre-set for FSL BET’s default values. These do not need to be modified unless you are looking to optimize the results of skull-stripping for your particular dataset.</p>
+<div class="figure">
+<img alt="_images/bet_gui.png" src="_images/bet_gui.png" />
+</div>
+<ol class="arabic simple">
+<li><strong>Frac - [0.5]:</strong> Set the threshold value controlling the brain vs non-brain voxels. Default is 0.5</li>
+<li><strong>Mask - [Off, On]:</strong> Mask created along with skull stripping. Default option is Off.</li>
+<li><strong>Mesh - [Off, On]:</strong> Mesh created along with skull stripping. Default is Off.</li>
+<li><strong>Outline - [Off, On]:</strong> Create a surface outline image, Default is Off.</li>
+<li><strong>Padding - [Off, On]:</strong> Add padding to the end of the image, improving BET. Mutually exclusive functional,reduce_bias,robust,padding,remove_eyes,surfaces.</li>
+<li><strong>Radius - [0]:</strong> Integer value of head radius. Default is 0.</li>
+<li><strong>Reduce bias - [Off, On]:</strong> Reduce bias and cleanup neck. Mutually exclusive with functional, reduce_bias,robust,padding, remove_eyes,surfaces.</li>
+<li><strong>Remove_bias - [Off,On]:</strong> Eyes and optic nerve cleanup. Mutually exclusive with functional, reduce_bias,robust,padding,remove_eyes, surfaces.</li>
+<li><strong>Robust - [Off, On]:</strong> Robust brain center estimation. Mutually exclusive with functional, reduce_bias, robust,padding,remove_eyes,surfaces.</li>
+<li><strong>Skull - [Off,On]:</strong> Create a Skull Image. Default is Off.</li>
+<li><strong>Surfaces - [Off, On]:</strong> Get additional skull and scalp surfaces by running bet2 and betsurf. This is mutually exclusive with reduce bias, robust,padding, remove_eyes.</li>
+<li><strong>Threshold - [Off,On]:</strong> Apply thresholding to segmented brain image and mask.Default is Off.</li>
+<li><strong>Vertical gradient - [Off,On]:</strong> Vertical gradient un fractional intensity threshold. Within the range of (-1,1).</li>
+</ol>
+</div>
+</div>
 <div class="section" id="anatomical-registration">
 <h2>Anatomical Registration<a class="headerlink" href="#anatomical-registration" title="Permalink to this headline">¶</a></h2>
 <p>In order to compare brain activations between subjects, individual functional and anatomical images must first be transformed to match a common template. The most commonly used template (<a class="reference external" href="http://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009">MNI152</a>) is maintained by the Montreal Neurological Institute, and is created by combining data from the brains of many different individuals to create an “average” brain. The image below shows how an individual brain is warped to match the shape of the template.</p>
@@ -214,88 +278,10 @@ PRIORS_CSF : $priors_path/avg152T1_csf_bin.nii.gz
 </div>
 </div>
 </div>
-<div class="section" id="skullstrip-options">
-<h2>Skullstrip options:<a class="headerlink" href="#skullstrip-options" title="Permalink to this headline">¶</a></h2>
-<p># <strong>Which option would you like to Skull-strip with? - [AFNI, FSL, AFNI/FSL]:</strong> Provide the method you would like to skullstrip with, whether it is AFNI’s 3D-SKullStripping or FSL-BET</p>
-</div>
-<div class="section" id="afni-options">
-<h2>AFNI options:<a class="headerlink" href="#afni-options" title="Permalink to this headline">¶</a></h2>
-<p># <strong>Shrink factor - [0.6]</strong>: Provide the ratio of the brain voxels to be included vs non-included. The default value is 0.6
-# <strong>Vary Shrink factor? -[On, Off]</strong> : Vary the shrink factor at every iteration of the algorithm? this prevents the likehood of surface from getting stuck in large pools of CSF before reaching the outer surface of the brain. This is the default.
-# <strong>Shrink Factor Bottom Limit - [0.65]</strong>:The shrink factor bottom limit sets the lower threshold when varying the shrink factor. Default is 0.65.
-# <strong>Avoid Ventricles - [On, Off]</strong>:Avoids ventricles while skullstripping,Use this option twice for more aggressive stripping.
-# <strong>n-iterations - [250]</strong> :Set the number of iterations, default is 250 and the number of iterations will depend upon the density of your mesh.
-# <strong>Pushout - [On,Off]</strong> : While expanding, consider the voxels above and not only the voxels below
-# <strong>Touchup - [On,Off]</strong> :Perform Touchup operations at the end to include areas not covered by surface expansion.
-## <strong>FIll hole - [On, Off]</strong> : Give the maximum number of pixels on either side of the hole that can be filled.
-## <strong>NN smooth - 72</strong> : Perform Nearest neighbor coordinate interpolation every few iterpolation every few iterations.Default is 72.
-## <strong>Smooth final - [20]</strong> : Perform final surface smoothing after all iterations. Default is 20.
-## <strong>Avoid eyes - [On, Off]</strong>: Avoid eyes while skull stripping,defualt is True.
-## <strong>Use edge - [On, Off]</strong> : Use edge detection to reduce leakage into meninges and eyes, default is True.
-## <strong>Push to edge - [0]</strong> : Perform aggressive push to edge, this might cause leakage.
-## <strong>Percentage init - [0]</strong> : Percentage of segments allowed to intersect surface. It is typically a number between 0 and 0.1, but can include negative values (which implies no testing for intersection.
-## <strong>Mac inter iteration - [4]</strong> :Number of iteration to remove intersection problems. With each iteration, the program automatically increases the amount of smoothing to get rid of intersections. Default is 4.
-## <strong>Fac - [1]</strong> : Multiply input dataset by FAC if range of values is too small.
-## <strong>Blur-fwhm - [2]</strong> : Blur dataset after spatial normalization.</p>
-</div>
-<div class="section" id="id2">
-<h2>Configuration without the GUI:<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
-<p>The box below contains an example of what these parameters might look like when defined in the YAML file</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">skullstrip_option</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;AFNI&#39;</span><span class="p">]</span>
-<span class="n">shrink_factor</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.6</span><span class="p">]</span>
-<span class="n">var_shrink_fac</span> <span class="p">:</span>  <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">shrink_factor_bottom_lim</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.65</span><span class="p">]</span>
-<span class="n">avoid_vent</span> <span class="p">:</span>  <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">n_iterations</span> <span class="p">:</span> <span class="p">[</span><span class="mi">250</span><span class="p">]</span>
-<span class="n">pushout</span> <span class="p">:</span>  <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">touchup</span> <span class="p">:</span>  <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">fill_hole</span> <span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">NN_smooth</span> <span class="p">:</span> <span class="p">[</span><span class="mi">72</span><span class="p">]</span>
-<span class="n">smooth_final</span> <span class="p">:</span> <span class="p">[</span><span class="mi">20</span><span class="p">]</span>
-<span class="n">avoid_eyes</span> <span class="p">:</span>  <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">use_edge</span> <span class="p">:</span>  <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">push_to_edge</span> <span class="p">:</span>  <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">perc_init</span> <span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">max_inter_iter</span> <span class="p">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">]</span>
-<span class="n">fac</span> <span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">blur_fwhm</span> <span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="fsl-options">
-<h2>FSL-options:<a class="headerlink" href="#fsl-options" title="Permalink to this headline">¶</a></h2>
-<p>## <strong>Center of gravity - [0.00,0.00,0.00]</strong> : Identify one or more center of gravity coordinates in the voxels.
-## <strong>Mask - [On, Off]</strong> : Mask created along with skull stripping.
-## <strong>Mesh - [On,Off]</strong> : Mesh created along with skull stripping.
-## <strong>Outline - [On, Off]</strong> : Create a surface outline image.
-## <strong>Padding - [On, Off]</strong> : Add padding to the end of the image, improving BET.Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces.
-## <strong>Radius - 0</strong> : Integer value of head radius.
-## <strong>Reduce bias - [On, Off]</strong> : Reduce bias and cleanup neck. Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces.
-## <strong>Remove eyes - [On, Off]</strong> : Eyes and optic nerve cleanup. Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces.
-## <strong>Robust - [On, Off]</strong> : Robust brain center estimation. Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces.
-## <strong>Skull - [“On, Off]</strong> : Create a skull image.
-## <strong>Surfaces - [On, Off]</strong> : Gets additional skull and scalp surfaces by running bet2 and betsurf. This is mutually exclusive with reduce_bias, robust, padding, remove_eyes.
-## <strong>Threshold - [On, Off]</strong> : Apply thresholding to segmented brain image and mask.
-## <strong>Vertical gradient - [0.000]</strong> : Vetical gradient in fractional intensity threshold (-1, 1).</p>
-</div>
-<div class="section" id="id3">
-<h2>Configuration without the GUI:<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
-<p>The box below contains an example of what these parameters might look like when defined in the YAML file</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">center</span> <span class="p">:</span>  <span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span>
-<span class="n">mask_boolean</span> <span class="p">:</span>  <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">mesh_boolean</span> <span class="p">:</span>  <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">outline</span> <span class="p">:</span>  <span class="n">Off</span>
-<span class="n">padding</span> <span class="p">:</span>  <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">radius</span> <span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">reduce_bias</span> <span class="p">:</span>  <span class="n">Off</span>
-<span class="n">remove_eyes</span> <span class="p">:</span>  <span class="n">Off</span>
-<span class="n">robust</span> <span class="p">:</span>  <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">skull</span> <span class="p">:</span>  <span class="n">Off</span>
-<span class="n">surfaces</span> <span class="p">:</span>  <span class="n">Off</span>
-<span class="n">threshold</span> <span class="p">:</span>  <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">vertical_gradient</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span>
-</pre></div>
-</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://afni.nimh.nih.gov/pub/dist/doc/program_help/3dSkullStrip.html">AFNI 3dSkullStrip</a></p>
+<p>Smith, Stephen M., <a class="reference external" href="http://dx.doi.org/10.1002/hbm.10062">Fast robust automated brain extraction</a>, Human Brain Mapping 2002, Volume 17 Issue 3, page 143-155.</p>
 </div>
 </div>
 
@@ -310,26 +296,24 @@ PRIORS_CSF : $priors_path/avg152T1_csf_bin.nii.gz
             </a></p>
 <h3><a href="index.html">Table Of Contents</a></h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="install.html">1. Installing C-PAC</a></li>
-<li class="toctree-l1"><a class="reference internal" href="subject_list_config.html">2. Data Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline_config.html">3. Pipeline Configuration</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="preprocessing.html">4. Pre-Processing Steps</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Anatomical Preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="func.html">Functional Preprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nuisance.html">Nuisance Corrections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">1. Install C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="subject_list_config.html">2. Specify Your Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline_config.html">3. Select Your Pipeline</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="preprocessing.html">4. Pre-Process Your Data</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Anatomicals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="func.html">Functionals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuisance.html">Nuisance Regression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tse.html">Timeseries Extraction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tse.html#configuring-roi-time-series-extraction">Configuring ROI Time Series Extraction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="after_warp.html">After Warp Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="after_warp.html">Post-processing</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="derivatives.html">5. Computable Derivatives</a></li>
-<li class="toctree-l1"><a class="reference internal" href="output_dir.html">6. Output Directory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="qc_interface.html">7. Visual Data QC Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="group_analysis.html">8. Setting Up Group Analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="running.html">9. Running C-PAC</a></li>
-<li class="toctree-l1"><a class="reference internal" href="benchmark.html">10. C-PAC Benchmark</a></li>
-<li class="toctree-l1"><a class="reference internal" href="help.html">11. Troubleshooting and Help</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnotes.html">12. Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="derivatives.html">5. Compute Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">6. Run C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output_dir.html">7. Check Your Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group_analysis.html">8. Run Group Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="help.html">9. Troubleshoot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnotes.html">10. Release Notes</a></li>
 </ul>
 
 <div id="searchbox" style="display: none" role="search">
@@ -360,7 +344,7 @@ PRIORS_CSF : $priors_path/avg152T1_csf_bin.nii.gz
         <li class="right" >
           <a href="preprocessing.html" title="Pre-Processing Steps"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.1.0 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.2.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="preprocessing.html" >Pre-Processing Steps</a> &#187;</li> 
       </ul>
     </div>

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Running C-PAC &#8212; C-PAC 1.1.0 Beta documentation</title>
+    <title>Running C-PAC &#8212; C-PAC 1.2.0 Beta documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -16,8 +16,8 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Benchmark Package" href="benchmark.html" />
-    <link rel="prev" title="Setting Up FSL-FEAT Group Analysis" href="group_analysis.html" /> 
+    <link rel="next" title="Check Your Outputs" href="output_dir.html" />
+    <link rel="prev" title="Voxel-Mirrored Homotopic Connectivity (VMHC)" href="vmhc.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -26,12 +26,12 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="benchmark.html" title="Benchmark Package"
+          <a href="output_dir.html" title="Check Your Outputs"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="group_analysis.html" title="Setting Up FSL-FEAT Group Analysis"
+          <a href="vmhc.html" title="Voxel-Mirrored Homotopic Connectivity (VMHC)"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.1.0 Beta documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.2.0 Beta documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -49,74 +49,186 @@
 <li>Using C-PAC’s command line interface</li>
 <li>Using the main dialog in the C-PAC GUI</li>
 </ul>
-<p>This page will also discuss how to navigate C-PAC’s output structure once a run is finished.</p>
+<p>In addition to running C-PAC traditionally on your own local computer or on a server, there are three other avenues through which you can run C-PAC without going through the install process:</p>
+<ul class="simple">
+<li>With a Docker container</li>
+<li>On the Amazon AWS Cloud</li>
+<li>Through OpenNeuro</li>
+</ul>
+<p>More details of these options are available below.</p>
 </div>
-<div class="section" id="using-the-command-line-interface">
-<h2>Using the Command Line Interface<a class="headerlink" href="#using-the-command-line-interface" title="Permalink to this headline">¶</a></h2>
-<p>To start a C-PAC run from the command line or a shell script you can use the <cite>cpac_run.py</cite> utility (which is added to your path automatically upon installing C-PAC).  An example of this tool’s syntax is as follows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac_run.py /path/to/pipeline_config.yml /path/to/data_config.yml
+<div class="section" id="from-terminal">
+<h2>From Terminal<a class="headerlink" href="#from-terminal" title="Permalink to this headline">¶</a></h2>
+<p><em>This is for runs on your machine or server after C-PAC installation, or for runs on an AWS instance whether you have SSHed in or are using an X2Go session to view the instance.</em></p>
+<p>To start a C-PAC run from the command line you can use C-PAC’s command-line interface (CLI). To start an analysis with a specific pipeline configuration and a specific data configuration (subject list) YAML file, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac run --pipe_config /path/to/pipeline_config.yml /path/to/data_config.yml
+</pre></div>
+</div>
+<p>You can also omit the <code class="docutils literal notranslate"><span class="pre">--pipe_config</span></code> parameter to run C-PAC with a pre-configured “default” pipeline if you want to get started quickly:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac run /path/to/data_config.yml
+</pre></div>
+</div>
+<p>In addition, with the latest release (v1.2.0), a few data configuration files are bundled with the C-PAC install, and can be invoked at the command line easily. To quickly run the default pipeline (or any pipeline configuration) with the ADHD200, ABIDE, and NKI-Rockland Sample data releases:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac run ADHD200
+cpac run ABIDE
+cpac run NKI-RS
+</pre></div>
+</div>
+<p>Of course, you can also run these pre-configured datasets with any pipeline configuration file you choose like so:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac run --pipe_config /path/to/pipeline_config.yml ADHD200
+</pre></div>
+</div>
+<p>Note, these bundled data configurations pull the data from the FCP-INDI AWS-S3 bucket.</p>
+<p>When you are ready to run any of the group-level analyses (more information in the <a class="reference external" href="group_analysis">group analysis section</a>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac group feat /path/to/pipeline_config.yml
+cpac group mdmr /path/to/pipeline_config.yml
 </pre></div>
 </div>
 </div>
 <div class="section" id="using-the-gui">
 <h2>Using the GUI<a class="headerlink" href="#using-the-gui" title="Permalink to this headline">¶</a></h2>
-<p>You have already interacted with the <em>Subject Lists</em> and <em>Pipelines</em> panes in the main dialog in order to create new subject lists and pipeline configurations.  There is, however, more to the main dialog than making new files!  Both panes have a <em>Load</em> option that will load in any previously created YAML files.  Additionally, there is a <em>View</em> button that allows you to inspect the text of the YAML files for the currently selected subject list or pipeline configuration and a <em>Clear</em> button that removes all loaded pipelines or subject lists.  The <em>Pipelines</em> pane sports an <em>Edit</em> button that allows you to modify already loaded pipeline configurations, as well as options for renaming and deleting pipeline configurations.</p>
+<p><em>This is for configuring data and pipelines or running C-PAC: on your machine or server after C-PAC installation, from a Docker container once the GUI is enabled, or on an X2Go session of an AWS instance.</em></p>
+<p>You can invoke the C-PAC user interface by running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac gui
+</pre></div>
+</div>
+<p>On C-PAC’s main screen, you can open the data configuration generator and the pipeline configuration builder by clicking <em>New</em> next to <em>Subject Lists</em> and <em>Pipelines</em>, respectively. Once you’ve configured your data and pipelines, or if you are using an already existing set of configurations, you can load them into their respective panes.</p>
 <p>If you have loaded multiple subject lists or pipeline configurations, click the checkboxes to the left of the subject list names in the <em>Subject Lists</em> pane to select which sets of subjects you would like to run.  Similarly, select the pipelines you’d like to run in the adjacent <em>Pipelines</em> pane. When you are ready to run C-PAC, click the <em>Run Individual Level Analysis</em> button at the bottom.</p>
-<p><strong>Note: Do not confuse the *Load* button on the main window of the GUI with the *Load Settings* button within the Subject List Setup window shown above.  The latter button is intended to load data configuration files that the subject list setup dialogue can use to create subject lists and will not work with other YAML files.  The former button is for already generated subject list files.</strong></p>
 <div class="figure">
 <img alt="_images/main_gui_checks.png" src="_images/main_gui_checks.png" />
 </div>
-<p>The following schematic illustrates the order in which C-PAC executes.</p>
-<div class="figure">
-<img alt="_images/processing_workflow.png" src="_images/processing_workflow.png" />
 </div>
-<div class="section" id="running-group-level-analysis">
-<h3>Running Group-Level Analysis<a class="headerlink" href="#running-group-level-analysis" title="Permalink to this headline">¶</a></h3>
-<p>When you are ready to run group-level analysis, select the subject lists and pipelines you would like to run and click the Run Group Level Analysis button. You will be presented with a dialog and asked to select which strategies you would like to include.</p>
+<div class="section" id="with-docker">
+<h2>With Docker<a class="headerlink" href="#with-docker" title="Permalink to this headline">¶</a></h2>
+<p>A C-PAC <a class="reference external" href="https://www.docker.com/">Docker image</a> is available so that you can easily get an analysis running without needing to install C-PAC.</p>
+<p>The Docker image is designed following the specification established by the BIDS-Apps project. The <a class="reference external" href="https://github.com/BIDS-Apps">BIDS Apps</a> project is an initiative to create a collection of reproducible neuroimaging workflows that can be executed as these self-contained environments using <a class="reference external" href="https://www.docker.com/">Docker</a> containers.  These workflows take as input any dataset that is organized according to the <a class="reference external" href="http://http://bids.neuroimaging.io">Brain Imaging Data Structure (BIDS) standard</a> and generating first-level outputs for this dataset. However, you can provide the C-PAC Docker image with a custom non-BIDS dataset by entering your own data configuration file. More details below.</p>
+<p>In addition, we have created a Docker default pipeline configuration as part of this initiative that allows you to run the C-PAC pipeline on your data in an environment that is fully provisioned with all of C-PAC’s dependencies. If you wish to run your own pipeline configuration, you can also provide this to the Docker image at run-time.</p>
+<p>To start, first pull the image from Docker Hub:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker pull childmind/c-pac:latest
+</pre></div>
 </div>
+<p>Once this is complete, you can use the <code class="docutils literal notranslate"><span class="pre">childmind/c-pac</span></code> image tag to invoke runs. The full C-PAC Docker image usage options are shown here, with specific use cases further below.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>usage: run.py <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>--pipeline_file PIPELINE_FILE<span class="o">]</span>
+              <span class="o">[</span>--data_config_file DATA_CONFIG_FILE<span class="o">]</span>
+              <span class="o">[</span>--aws_input_creds AWS_INPUT_CREDS<span class="o">]</span>
+              <span class="o">[</span>--aws_output_creds AWS_OUTPUT_CREDS<span class="o">]</span> <span class="o">[</span>--n_cpus N_CPUS<span class="o">]</span>
+              <span class="o">[</span>--mem_mb MEM_MB<span class="o">]</span> <span class="o">[</span>--mem_gb MEM_GB<span class="o">]</span> <span class="o">[</span>--save_working_dir<span class="o">]</span>
+              <span class="o">[</span>--participant_label PARTICIPANT_LABEL <span class="o">[</span>PARTICIPANT_LABEL ...<span class="o">]]</span>
+              <span class="o">[</span>--participant_ndx PARTICIPANT_NDX<span class="o">]</span>
+              bids_dir output_dir <span class="o">{</span>participant,group,test_config,GUI<span class="o">}</span>
+
+C-PAC Pipeline Runner
+
+positional arguments:
+  bids_dir              The directory with the input dataset formatted
+                        according to the BIDS standard. Use the format
+                        s3://bucket/path/to/bidsdir to <span class="nb">read</span> data directly from
+                        an S3 bucket. This may require AWS S3 credentials
+                        specificied via the --aws_input_creds option.
+  output_dir            The directory where the output files should be stored.
+                        If you are running group level analysis this folder
+                        should be prepopulated with the results of the
+                        participant level analysis. Us the format
+                        s3://bucket/path/to/bidsdir to write data directly to
+                        an S3 bucket. This may require AWS S3 credentials
+                        specificied via the --aws_output_creds option.
+  <span class="o">{</span>participant,group,test_config,GUI<span class="o">}</span>
+                        Level of the analysis that will be performed. Multiple
+                        participant level analyses can be run independently
+                        <span class="o">(</span>in parallel<span class="o">)</span> using the same output_dir. GUI will open
+                        the CPAC gui <span class="o">(</span>currently only works with singularity<span class="o">)</span>
+                        and test_config will run through the entire
+                        configuration process but will not execute the
+                        pipeline.
+
+optional arguments:
+  -h, --help            show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --pipeline_file PIPELINE_FILE
+                        Name <span class="k">for</span> the pipeline configuration file to use
+  --data_config_file DATA_CONFIG_FILE
+                        Yaml file containing the location of the data that is
+                        to be processed. Can be generated from the CPAC gui.
+                        This file is not necessary <span class="k">if</span> the data in bids_dir is
+                        organized according to the BIDS format. This enables
+                        support <span class="k">for</span> legacy data organization and cloud based
+                        storage. A bids_dir must still be specified when using
+                        this option, but its value will be ignored.
+  --aws_input_creds AWS_INPUT_CREDS
+                        Credentials <span class="k">for</span> reading from S3. If not provided and
+                        s3 paths are specified in the data config we will try
+                        to access the bucket anonymously
+  --aws_output_creds AWS_OUTPUT_CREDS
+                        Credentials <span class="k">for</span> writing to S3. If not provided and s3
+                        paths are specified in the output directory we will
+                        try to access the bucket anonymously
+  --n_cpus N_CPUS       Number of execution resources available <span class="k">for</span> the
+                        pipeline
+  --mem_mb MEM_MB       Amount of RAM available to the pipeline in megabytes.
+                        Included <span class="k">for</span> compatibility with BIDS-Apps standard,
+                        but mem_gb is preferred
+  --mem_gb MEM_GB       Amount of RAM available to the pipeline in gigabytes.
+                        <span class="k">if</span> this is specified along with mem_mb, this flag will
+                        take precedence.
+  --save_working_dir    Save the contents of the working directory.
+  --participant_label PARTICIPANT_LABEL <span class="o">[</span>PARTICIPANT_LABEL ...<span class="o">]</span>
+                        The label of the participant that should be analyzed.
+                        The label corresponds to sub-&lt;participant_label&gt; from
+                        the BIDS spec <span class="o">(</span>so it does not include <span class="s2">&quot;sub-&quot;</span><span class="o">)</span>. If this
+                        parameter is not provided all subjects should be
+                        analyzed. Multiple participants can be specified with
+                        a space separated list. To work correctly this should
+                        come at the end of the <span class="nb">command</span> line
+  --participant_ndx PARTICIPANT_NDX
+                        The index of the participant that should be analyzed.
+                        This corresponds to the index of the participant in
+                        the subject list file. This was added to make it
+                        easier to accomodate SGE array jobs. Only a single
+                        participant will be analyzed. Can be used with
+                        participant label, in which <span class="k">case</span> it is the index into
+                        the list that follows the particpant_label flag.
+</pre></div>
 </div>
-<div class="section" id="output-structure">
-<h2>Output Structure<a class="headerlink" href="#output-structure" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="symbolic-links">
-<h3>Symbolic Links<a class="headerlink" href="#symbolic-links" title="Permalink to this headline">¶</a></h3>
-<p>C-PAC gives you the option of creating an output directory containing <a class="reference external" href="http://en.wikipedia.org/wiki/Symbolic_link">symbolic links</a> to processed files. We strongly recommend this setting be enabled, as it makes it much easier to navigate output files. The following schematic shows the structure of the resulting <code class="file docutils literal notranslate"><span class="pre">sym_links</span></code> directory:</p>
-<div class="figure">
-<img alt="_images/symlink_structure.png" src="_images/symlink_structure.png" />
+<p>Note that any of the optional arguments above will over-ride any pipeline settings in the default pipeline or in the pipeline configuration file you provide via the <code class="docutils literal notranslate"><span class="pre">--pipeline_file</span></code> parameter.</p>
+<p>As an example, in order to run the C-PAC Docker container in participant mode, for one participant, using a BIDS dataset stored on your machine or server, and using the Docker image’s default pipeline configuration (broken into multiple lines for convenience):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker run -i --rm <span class="se">\</span>
+        -v /Users/You/local_bids_data:/bids_dataset <span class="se">\</span>
+        -v /Users/You/some_folder:/outputs <span class="se">\</span>
+        -v /tmp:/scratch <span class="se">\</span>
+        childmind/c-pac:latest /bids_dataset /outputs participant
+</pre></div>
 </div>
-<p>Pipeline and strategy folders are named as described above.</p>
+<p>Note, the <code class="docutils literal notranslate"><span class="pre">-v</span></code> flags map your local filesystem locations to a “location” within the Docker image. (For example, the <code class="docutils literal notranslate"><span class="pre">/bids_dataset</span></code> and <code class="docutils literal notranslate"><span class="pre">/outputs</span></code> directories in the command above are arbitrary names). If you provided <code class="docutils literal notranslate"><span class="pre">/Users/You/local_bids_data</span></code> to the <code class="docutils literal notranslate"><span class="pre">bids_dir</span></code> input parameter, Docker would not be able to access or see that directory, so it needs to be mapped first. In this example, the local machine’s <code class="docutils literal notranslate"><span class="pre">/tmp</span></code> directory has been mapped to the <code class="docutils literal notranslate"><span class="pre">/scratch</span></code> name because the C-PAC Docker image’s default pipeline sets the working directory to <code class="docutils literal notranslate"><span class="pre">/scratch</span></code>. If you wish to keep your working directory somewhere more permanent, you can simply map this like so: <code class="docutils literal notranslate"><span class="pre">-v</span> <span class="pre">/Users/You/working_dir:/scratch</span></code>.</p>
+<p>To run the C-PAC Docker container with a pipeline configuration file other than the container’s default pipeline, assuming the configuration file is in the <code class="docutils literal notranslate"><span class="pre">/Users/You/Documents</span></code> directory:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker run -i --rm <span class="se">\</span>
+        -v /Users/You/local_bids_data:/bids_dataset <span class="se">\</span>
+        -v /Users/You/some_folder:/outputs <span class="se">\</span>
+        -v /tmp:/scratch <span class="se">\</span>
+        -v /Users/You/Documents:/configs <span class="se">\</span>
+        -v /Users/You/resources:/resources <span class="se">\</span>
+        childmind/c-pac:latest /bids_dataset /outputs participant --pipeline_file /configs/pipeline_config.yml
+</pre></div>
 </div>
-<div class="section" id="file-descriptions">
-<h3>File Descriptions<a class="headerlink" href="#file-descriptions" title="Permalink to this headline">¶</a></h3>
-<p>Preprocessed anatomical data from the Anatomical Preprocessing, Registration, and Segmentation workflows can be found in <code class="file docutils literal notranslate"><span class="pre">../scan/anat/</span></code> directory for each subject. The following diagram shows processing steps and standard output files for these workflows.</p>
-<div class="figure">
-<img alt="_images/anat_prepro_schematic.png" src="_images/anat_prepro_schematic.png" />
+<p>In this case, we need to map the directory containing the pipeline configuration file <code class="docutils literal notranslate"><span class="pre">/Users/You/Documents</span></code> to a Docker image virtual directory <code class="docutils literal notranslate"><span class="pre">/configs</span></code>. Note we are using this <code class="docutils literal notranslate"><span class="pre">/configs</span></code> directory in the <code class="docutils literal notranslate"><span class="pre">--pipeline_file</span></code> input flag. In addition, if there are any ROIs, masks, or input files listed in your pipeline configuration file, the directory these are in must be mapped as well- assuming <code class="docutils literal notranslate"><span class="pre">/Users/You/resources</span></code> is your directory of ROI and/or mask files, we map it with <code class="docutils literal notranslate"><span class="pre">-v</span> <span class="pre">/Users/You/resources:/resources</span></code>. In the pipeline configuration file you are providing, these ROI and mask files must be listed as <code class="docutils literal notranslate"><span class="pre">/resources/ROI.nii.gz</span></code> (etc.) because we have mapped <code class="docutils literal notranslate"><span class="pre">/Users/You/resources</span></code> to <code class="docutils literal notranslate"><span class="pre">/resources</span></code>.</p>
+<p>Finally, to run the Docker container with a specific data configuration file (instead of providing a BIDS data directory):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker run -i --rm <span class="se">\</span>
+        -v /Users/You/any_directory:/bids_dataset <span class="se">\</span>
+        -v /Users/You/some_folder:/outputs <span class="se">\</span>
+        -v /tmp:/scratch <span class="se">\</span>
+        -v /Users/You/Documents:/configs <span class="se">\</span>
+        childmind/c-pac:latest /bids_dataset /outputs participant --data_config_file /configs/data_config.yml
+</pre></div>
 </div>
-<p>Preprocessed functional data from the Functional Preprocessing workflow can be found in the <code class="file docutils literal notranslate"><span class="pre">../scan_&lt;name&gt;/func</span></code> directory for each subject. The following diagram shows processing steps and standard output files for this workflow.</p>
-<div class="figure">
-<img alt="_images/functional_preprocessing.png" src="_images/functional_preprocessing.png" />
+<p>Note: we are still providing <code class="docutils literal notranslate"><span class="pre">/bids_dataset</span></code> to the <code class="docutils literal notranslate"><span class="pre">bids_dir</span></code> input parameter. However, we have mapped this to any directory on your machine, as C-PAC will not look for data in this directory when you provide a data configuration YAML with the <code class="docutils literal notranslate"><span class="pre">--data_config_file</span></code> flag. In addition, if the dataset in your data configuration file is not in BIDS format, just make sure to add the <code class="docutils literal notranslate"><span class="pre">--skip_bids_validator</span></code> flag at the end of your command to bypass the BIDS validation process.</p>
+<p><strong>Further usage notes:</strong></p>
+<ul class="simple">
+<li>A GUI can be invoked to assist in pipeline custimization by specifying the <code class="docutils literal notranslate"><span class="pre">GUI</span></code> command line argument, as opposed to <code class="docutils literal notranslate"><span class="pre">participant</span></code> (this currently only works for Singularity containers).</li>
+<li>As stated, the default behavior is to read in data that is organized in the BIDS format. This includes data that is in Amazon AWS S3 by using the format <code class="docutils literal notranslate"><span class="pre">s3://&lt;bucket_name&gt;/&lt;bids_dir&gt;</span></code> for the <code class="docutils literal notranslate"><span class="pre">bids_dir</span></code> command line argument. Outputs can be written to S3 using the same format for the <code class="docutils literal notranslate"><span class="pre">output_dir</span></code>. Credentials for accessing these buckets can be specified on the command line (using <code class="docutils literal notranslate"><span class="pre">--aws_input_creds</span></code> or <code class="docutils literal notranslate"><span class="pre">--aws_output_creds</span></code>).</li>
+<li>When the app is run, a data configuration file is written to the working directory. This file can be passed into subsequent runs, which avoids the overhead of re-parsing the BIDS input directory on each run (i.e. for cluster or cloud runs). These files can be generated without executing the C-PAC pipeline using the test_run command line argument.</li>
+<li>The <code class="docutils literal notranslate"><span class="pre">participant_label</span></code> and <code class="docutils literal notranslate"><span class="pre">participant_ndx</span></code> arguments allow the user to specify which of the many datasets should be processed, which is useful when parallelizing the run of multiple participants.</li>
+</ul>
 </div>
-</div>
-<div class="section" id="derivative-outputs">
-<h3>Derivative Outputs<a class="headerlink" href="#derivative-outputs" title="Permalink to this headline">¶</a></h3>
-<p>Derivatives for each subject can be found in the <code class="file docutils literal notranslate"><span class="pre">../scan_&lt;name&gt;</span></code> directory of each subject. This folder also contains the outputs of the registration and segmentation workflows.</p>
-<div class="figure">
-<img alt="_images/derivs_outputs.png" src="_images/derivs_outputs.png" />
-</div>
-<p>Within each derivative folder will be sub-folders for each set of frequency filters set in <code class="file docutils literal notranslate"><span class="pre">config.yml</span></code>, as well as a folder containing smoothed outputs.</p>
-<p>Derivatives are output in both native space (<code class="file docutils literal notranslate"><span class="pre">*_img.nii.gz</span></code> and <code class="file docutils literal notranslate"><span class="pre">*_map.nii.gz</span></code> files), with values transformed to z-scores (<code class="file docutils literal notranslate"><span class="pre">*_Z_*.nii.gz</span></code>) and in standard space (<code class="file docutils literal notranslate"><span class="pre">*_to_standard.nii.gz</span></code>).</p>
-</div>
-</div>
-<div class="section" id="running-c-pac-as-a-docker-app">
-<h2>Running C-PAC as a Docker App<a class="headerlink" href="#running-c-pac-as-a-docker-app" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference external" href="https://github.com/BIDS-Apps">BIDS Apps</a> project is an initiative to create a collection of reproducible neuroimaging workflows that can be executed as self-contained environments using <a class="reference external" href="https://www.docker.com/">Docker</a> containers.  These workflows take as input any dataset that is organized according to the <a class="reference external" href="http://http://bids.neuroimaging.io">Brain Imaging Data Structure (BIDS) standard</a> and generating first-level outputs for this dataset.</p>
-<p>We have created a Docker configuration as part of this initiative that allows you to run the C-PAC pipeline on your data in an environment that is fully provisioned with all of C-PAC’s dependencies.  More information can be found at the official C-PAC BIDS app page <a class="reference external" href="https://github.com/BIDS-Apps/CPAC">here</a>.</p>
-</div>
-<div class="section" id="running-c-pac-on-openneuro">
-<h2>Running C-PAC on OpenNeuro<a class="headerlink" href="#running-c-pac-on-openneuro" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference external" href="https://openneuro.org">OpenNeuro</a> project is an initiative to provide easy access to public neuroimaging datasets and the ability to quickly run analysis pipelines on these datasets directly through a web interface. C-PAC is available as an app on OpenNeuro, and more information on running apps on the platform is available <a class="reference external" href="https://openneuro.org/faq">here</a>.</p>
-</div>
-<div class="section" id="running-c-pac-in-the-aws-cloud">
-<h2>Running C-PAC in the AWS Cloud<a class="headerlink" href="#running-c-pac-in-the-aws-cloud" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="on-the-aws-cloud">
+<h2>On the AWS Cloud<a class="headerlink" href="#on-the-aws-cloud" title="Permalink to this headline">¶</a></h2>
 <p>The C-PAC team has released an Amazon Marketplace AMI, making it easier for researchers to use C-PAC in the cloud.  You can use the AMI to either launch a single machine for basic runs or create a high performance computing (HPC) cluster using Starcluster.  Clusters can be dynamically scaled up as your computational needs increase.  Detailed explanations of cloud computing and HPC are beyond the scope of this documentation, but we will define a few key terms before we start.  If these terms are familiar, you may skip them and proceed to later sections.</p>
 <ul class="simple">
 <li><strong>Amazon Machine Instance (AMI)</strong> - A disk image of an operating system and any additional installed software that can be used to create a virtual machine.</li>
@@ -383,6 +495,10 @@ mv *.py ~/.starcluster/plugins
 </ul>
 </div>
 </div>
+<div class="section" id="with-openneuro">
+<h2>With OpenNeuro<a class="headerlink" href="#with-openneuro" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="https://openneuro.org">OpenNeuro</a> project is an initiative to provide easy access to public neuroimaging datasets and the ability to quickly run analysis pipelines on these datasets directly through a web interface. C-PAC is available as an app on OpenNeuro, and more information on running apps on the platform is available <a class="reference external" href="https://openneuro.org/faq">here</a>.</p>
+</div>
 </div>
 
 
@@ -396,27 +512,24 @@ mv *.py ~/.starcluster/plugins
             </a></p>
 <h3><a href="index.html">Table Of Contents</a></h3>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="install.html">1. Installing C-PAC</a></li>
-<li class="toctree-l1"><a class="reference internal" href="subject_list_config.html">2. Data Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline_config.html">3. Pipeline Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">4. Pre-Processing Steps</a></li>
-<li class="toctree-l1"><a class="reference internal" href="derivatives.html">5. Computable Derivatives</a></li>
-<li class="toctree-l1"><a class="reference internal" href="output_dir.html">6. Output Directory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="qc_interface.html">7. Visual Data QC Interface</a></li>
-<li class="toctree-l1"><a class="reference internal" href="group_analysis.html">8. Setting Up Group Analysis</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">9. Running C-PAC</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">1. Install C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="subject_list_config.html">2. Specify Your Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline_config.html">3. Select Your Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">4. Pre-Process Your Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="derivatives.html">5. Compute Derivatives</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">6. Run C-PAC</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#using-the-command-line-interface">Using the Command Line Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#from-terminal">From Terminal</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#using-the-gui">Using the GUI</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#output-structure">Output Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#running-c-pac-as-a-docker-app">Running C-PAC as a Docker App</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#running-c-pac-on-openneuro">Running C-PAC on OpenNeuro</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#running-c-pac-in-the-aws-cloud">Running C-PAC in the AWS Cloud</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#with-docker">With Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#on-the-aws-cloud">On the AWS Cloud</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#with-openneuro">With OpenNeuro</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="benchmark.html">10. C-PAC Benchmark</a></li>
-<li class="toctree-l1"><a class="reference internal" href="help.html">11. Troubleshooting and Help</a></li>
-<li class="toctree-l1"><a class="reference internal" href="rnotes.html">12. Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output_dir.html">7. Check Your Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group_analysis.html">8. Run Group Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="help.html">9. Troubleshoot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnotes.html">10. Release Notes</a></li>
 </ul>
 
 <div id="searchbox" style="display: none" role="search">
@@ -442,12 +555,12 @@ mv *.py ~/.starcluster/plugins
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="benchmark.html" title="Benchmark Package"
+          <a href="output_dir.html" title="Check Your Outputs"
              >next</a> |</li>
         <li class="right" >
-          <a href="group_analysis.html" title="Setting Up FSL-FEAT Group Analysis"
+          <a href="vmhc.html" title="Voxel-Mirrored Homotopic Connectivity (VMHC)"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.1.0 Beta documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.2.0 Beta documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

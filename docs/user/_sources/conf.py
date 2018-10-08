@@ -99,7 +99,7 @@ html_theme = 'classic'
 # documentation.
 html_theme_options = {
     "relbarbgcolor": "#0067a0",
-    "sidebarbgcolor": "#e4e4e4",
+    "sidebarbgcolor": "#f0f0f0",
     "sidebartextcolor": "#000000",
     "sidebarlinkcolor": "#0067a0",
     "headbgcolor": "#919d9d",
@@ -118,7 +118,7 @@ html_theme_path = ["../Themes"]
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "../Themes/nature/_static/cpac_logo_vertical.jpeg"
+html_logo = "../Themes/nature/_static/cpac_logo_vertical.png"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32

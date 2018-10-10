@@ -4,37 +4,27 @@ Inter-subject Correlation (ISC) & Inter-subject Functional Correlation (ISFC)
 Introduction & Background
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To analyse the brain functioning, one of the ways is to explore the functional networks interactions during information processing from a task. The standard functional connectivity method provides a mixture of stimulus-induced correlations, intrinsic neural correlations and non-neuronal artificial correlations within each subject, which convolutes the functioning signals. The Inter-subject Correlation (ISC) and the Inter-subject Functional Correlation (ISFC) provide a isolated stimulus-induced correlations, taking advantage of the fact that intrinsic and non-neuronal artificial signals are uncorrelated across subjects.
+Inter-Subject Correlation (ISC) analyses is an increasingly popular approach to isolating stimulus-induced correlations from spontaneous intrinsic activity and non-neuronal signals. ISC quantifies the consistency of stimulus-driven responses among individuals at each region (i.e., voxel, parcel or network) in the brain. For each subject, the correlation of the timeseries at a given region is correlated with the average timeseries for the group. The methodology is particularly useful for the analysis of naturalistic viewing data (e.g., movie fMRI), but is broadly applicable to a range stimulus designs. Inter-Subject Functional Connectivity (Simony et al. 2016) is a novel extension of ISC that characterizes correlations between (a) response time courses for one seed region in one subject, and (b) the response time courses in all voxels of all other subjects.
 
-ISC is used to quantify the reliability of stimulus-driven responses within each brain area, by correlating a subject's region with the average of the group. The ISFC approach extends ISC by characterizing the correlations between (a) response time courses for one seed region in one subject, and (b) the response time courses in all voxels of all other subjects.
+The implementation provided in C-PAC is adapted from that openly shared by BrainIAK (http://brainiak.org).
 
-Computation and Analysis Considerations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Definition
+^^^^^^^^^^
 
-In order to compute ISC and ISFC, for each region or voxel, it computes the group average on a region or every other regions and correlate it with a subject region. Thus, the computation on voxel level may take from hours to days, depending on the number of participants and the images resolution. We provide a voxel filter, to reduce the number of voxels to compute the significance. It removes the voxels on the tails of the correlation distribution, based on an informed standard deviation.
+The ISC method, for each region, computes the correlation of each subject’s timecourse with the mean of all other subjects’ timecourses. The result is averaged across subjects. A null-distribution is computed using phase randomization, to compute a p-value for each region.
 
-The steps for ISC and ISFC are the following:
-
-Inter-Subject Correlation (ISC)
-"""""""""""""""""""""""""""""""
-
-For each region, computes the correlation of each subject’s timecourse with the mean of all other subjects’ timecourses. The result is averaged across subjects. A null-distribution is computed using phase randomization, to compute a p-value for each region.
-
-Inter-Subject Functional Correlation (ISFC)
-"""""""""""""""""""""""""""""""""""""""""""
-
-Computes the correlation between the timecoure of each region in each subject with the average of all other subjects’ timecourses in all regions. The result is averaged across subjects. A null-distribution is computed using phase randomization, to compute a p-value for each region-to-region correlation.
+The ISFC method computes the correlation between the timecoure of each region in each subject with the average of all other subjects’ timecourses in all regions. The result is averaged across subjects. A null-distribution is computed using phase randomization, to compute a p-value for each region-to-region correlation.
 
 .. figure:: /_images/isc_isfc.jpg
 
 Image from Simony et al. `Dynamic reconfiguration of the default mode network during narrative comprehension`. Nat Commun 7 (2016)
 
-Applications
-^^^^^^^^^^^^
+Computation Considerations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In order to validate the method and its implementation, we performed two analysis:
+In order to compute ISC and ISFC, for each region or voxel, it computes the group average on a region or every other regions and correlate it with a subject region. Thus, the computation on voxel level may take from hours to days, depending on the number of participants and the images resolution. We provide a voxel filter, to reduce the number of voxels to compute the significance. It removes the voxels on the tails of the correlation distribution, based on an informed standard deviation.
 
-Healthy Brain Network and Age
+Example Analysis: Healthy Brain Network and Age
 """""""""""""""""""""""""""""
 
 We computed the ISC for 200 participants from the Healthy Brain Network (HBN), using the functional data of a passive stimuli paradigm in which the participants view a short video clip called The Present (3.47 min). In order to analyse it, we use two parcellations: Yeo's and Craddock's. We model the ISC of each region with the with the participant age using linear regression.
@@ -44,10 +34,10 @@ We computed the ISC for 200 participants from the Healthy Brain Network (HBN), u
 .. figure:: /_images/isc-hbn-cc.png
 
 
-Simony et al. study on narrative comprehension
+Replication of Simony et al. study on narrative comprehension
 """"""""""""""""""""""""""""""""""""""""""""""
 
-To characterize stimulus-induced DMN correlation patterns, Simony et al. collected BOLD responses during narrative-driven and resting state conditions. Subjects listened to a real-life story (intact task), as well as to word scramble and paragraph scramble versions of the story.
+To characterize stimulus-induced Default Mode Network correlation patterns, Simony et al. (2016) collected BOLD responses during narrative-driven and resting state conditions. Subjects listened to a real-life story (intact task), as well as to word scramble and paragraph scramble versions of the story.
 
 By isolating the stimulus-driven responses for each task, Simony et al. demonstrated a robust activation alignment of the Default Mode Network nodes across subjects, corresponding to the processing of a coherent narrative.
 

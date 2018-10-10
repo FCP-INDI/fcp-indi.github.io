@@ -47,10 +47,13 @@
 <h1>Inter-subject Correlation (ISC) &amp; Inter-subject Functional Correlation (ISFC)<a class="headerlink" href="#inter-subject-correlation-isc-inter-subject-functional-correlation-isfc" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="introduction-background">
 <h2>Introduction &amp; Background<a class="headerlink" href="#introduction-background" title="Permalink to this headline">¶</a></h2>
-<p>Group level analysis to compute inter-subject correlation (ISC) and inter-subject functional correlation (ISFC).</p>
+<p>To analyse the Default Mode Network (DMN) functioning, it is recommended to explore the network responses during information processing from a task. The standard functional connectivity method provides a mixture of stimulus-induced correlations, intrinsic neural correlations and non-neuronal artificial correlations within each subject, which convolutes the functioning signals. The Inter-subject Correlation (ISC) and the Inter-subject Functional Correlation (ISFC) provide a isolated stimulus-induced correlations, taking advantage of the fact that intrinsic and non-neuronal artificial signals are uncorrelated across subjects.</p>
+<p>ISC is used to quantify the reliability of stimulus-driven responses within each brain area, by correlating a subject’s region with the average of the group. The ISFC approach extends ISC by characterizing the correlations between (a) response time courses for one seed region in one subject, and (b) the response time courses in all voxels of all other subjects.</p>
 </div>
 <div class="section" id="computation-and-analysis-considerations">
 <h2>Computation and Analysis Considerations<a class="headerlink" href="#computation-and-analysis-considerations" title="Permalink to this headline">¶</a></h2>
+<p>In order to compute ISC and ISFC, for each region or voxel, it computes the group average on a region or every other regions and correlate it with a subject region. Thus, the computation on voxel level may take from hours to days, depending on the number of participants and the images resolution. We provide a voxel filter, to reduce the number of voxels to compute the significance. It removes the voxels on the tails of the correlation distribution, based on an informed standard deviation.</p>
+<p>The steps for ISC and ISFC are the following:</p>
 <div class="section" id="inter-subject-correlation-isc">
 <h3>Inter-Subject Correlation (ISC)<a class="headerlink" href="#inter-subject-correlation-isc" title="Permalink to this headline">¶</a></h3>
 <p>For each region, computes the correlation of each subject’s timecourse with the mean of all other subjects’ timecourses. The result is averaged across subjects. A null-distribution is computed using phase randomization, to compute a p-value for each region.</p>
@@ -58,6 +61,35 @@
 <div class="section" id="inter-subject-functional-correlation-isfc">
 <h3>Inter-Subject Functional Correlation (ISFC)<a class="headerlink" href="#inter-subject-functional-correlation-isfc" title="Permalink to this headline">¶</a></h3>
 <p>Computes the correlation between the timecoure of each region in each subject with the average of all other subjects’ timecourses in all regions. The result is averaged across subjects. A null-distribution is computed using phase randomization, to compute a p-value for each region-to-region correlation.</p>
+<div class="figure">
+<img alt="_images/isc_isfc.jpg" src="_images/isc_isfc.jpg" />
+</div>
+</div>
+</div>
+<div class="section" id="applications">
+<h2>Applications<a class="headerlink" href="#applications" title="Permalink to this headline">¶</a></h2>
+<p>In order to validate the method and its implementation, we performed two analysis:</p>
+<div class="section" id="healthy-brain-network-and-age">
+<h3>Healthy Brain Network and Age<a class="headerlink" href="#healthy-brain-network-and-age" title="Permalink to this headline">¶</a></h3>
+<p>We computed the ISC for 200 participants from the Healthy Brain Network (HBN), using the functional data of a passive stimuli paradigm in which the participants view a short video clip called The Present (3.47 min). In order to analyse it, we performed the analysis in two parcellations: Yeo’s and Craddock’s. We model the ISC of each region with the with the participant age using linear regression.</p>
+<div class="figure">
+<img alt="_images/isc-hbn-yeo.png" src="_images/isc-hbn-yeo.png" />
+</div>
+<div class="figure">
+<img alt="_images/isc-hbn-cc.png" src="_images/isc-hbn-cc.png" />
+</div>
+</div>
+<div class="section" id="simony-et-al-study-on-narrative-comprehension">
+<h3>Simony et al. study on narrative comprehension<a class="headerlink" href="#simony-et-al-study-on-narrative-comprehension" title="Permalink to this headline">¶</a></h3>
+<p>To characterize stimulus-induced DMN correlation patterns, Simony et al. collected BOLD responses during narrative-driven and resting state conditions. Subjects listened to a real-life story (intact task), as well as to word scramble and paragraph scramble versions of the story.</p>
+<p>By isolating the stimulus-driven responses for each task, Simony et al. demonstrated a robust activation alignment of the Default Mode Network nodes across subjects, corresponding to the processing of a coherent narrative.</p>
+<p>The following images correspond to the correlation of the posterior cingulate cortex and the entire brain using the ISFC method. The correlations are stronger according to the coherence of the story.</p>
+<div class="figure">
+<img alt="_images/isfc-simony-1.png" src="_images/isfc-simony-1.png" />
+</div>
+<div class="figure">
+<img alt="_images/isfc-simony-2.png" src="_images/isfc-simony-2.png" />
+</div>
 </div>
 </div>
 <div class="section" id="configuring-isc-isfc">
@@ -79,13 +111,14 @@
 <div class="section" id="configuration-using-a-yaml-file">
 <h3>Configuration Using a YAML File<a class="headerlink" href="#configuration-using-a-yaml-file" title="Permalink to this headline">¶</a></h3>
 <p>To configure ISC/ISFC options within a YAML file, add the following lines to your pipeline config:</p>
-<blockquote>
-<div>runISC: [1]
-runISFC: [1]
-isc_permutations: 1000
-isc_level_roi: [1]
-isc_level_voxel: [1]
-isc_level_voxel_std_filter: 1.5</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">runISC</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">runISFC</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">isc_permutations</span><span class="p">:</span> <span class="mi">1000</span>
+<span class="n">isc_level_roi</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">isc_level_voxel</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">isc_level_voxel_std_filter</span><span class="p">:</span> <span class="mf">1.5</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="references">

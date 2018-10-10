@@ -13,19 +13,19 @@ Definition
 
 The ISC method, for each region, computes the correlation of each subject’s timecourse with the mean of all other subjects’ timecourses. The result is averaged across subjects. A null-distribution is computed using phase randomization, to compute a p-value for each region.
 
-The ISFC method computes the correlation between the timecoure of each region in each subject with the average of all other subjects’ timecourses in all regions. The result is averaged across subjects. A null-distribution is computed using phase randomization, to compute a p-value for each region-to-region correlation.
+The ISFC method computes the correlation between the timeseries of each region in each subject with the average of all other subjects’ timecourses in all regions. The result is averaged across subjects. A null-distribution is computed using phase randomization, to compute a p-value for each region-to-region correlation.
 
 .. figure:: /_images/isc_isfc.jpg
 
 Image from Simony et al. `Dynamic reconfiguration of the default mode network during narrative comprehension`. Nat Commun 7 (2016)
 
 Computation Considerations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In order to compute ISC and ISFC, for each region or voxel, it computes the group average on a region or every other regions and correlate it with a subject region. Thus, the computation on voxel level may take from hours to days, depending on the number of participants and the images resolution. We provide a voxel filter, to reduce the number of voxels to compute the significance. It removes the voxels on the tails of the correlation distribution, based on an informed standard deviation.
+In order to compute ISC and ISFC, for each region or voxel, it computes the group average on a region or every other regions and correlate it with a subject region. Thus, the computation on voxel level may take from hours to days, depending on the number of participants and the resolution of the images. We provide a voxel filter, to reduce the number of voxels to compute the significance. It removes the voxels on the tails of the correlation distribution, based on an informed standard deviation.
 
 Example Analysis: Healthy Brain Network and Age
-"""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""""""""""""""""
 
 We computed the ISC for 200 participants from the Healthy Brain Network (HBN), using the functional data of a passive stimuli paradigm in which the participants view a short video clip called The Present (3.47 min). In order to analyse it, we use two parcellations: Yeo's and Craddock's. We model the ISC of each region with the with the participant age using linear regression.
 
@@ -33,15 +33,17 @@ We computed the ISC for 200 participants from the Healthy Brain Network (HBN), u
 
 .. figure:: /_images/isc-hbn-cc.png
 
-
 Replication of Simony et al. study on narrative comprehension
-""""""""""""""""""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 To characterize stimulus-induced Default Mode Network correlation patterns, Simony et al. (2016) collected BOLD responses during narrative-driven and resting state conditions. Subjects listened to a real-life story (intact task), as well as to word scramble and paragraph scramble versions of the story.
 
 By isolating the stimulus-driven responses for each task, Simony et al. demonstrated a robust activation alignment of the Default Mode Network nodes across subjects, corresponding to the processing of a coherent narrative.
 
 The following images correspond to the correlation of the posterior cingulate cortex and the entire brain using the ISFC method. The correlations are stronger according to the coherence of the story.
+
+The data to replicate this study is  openly available by the Princeton Neuroscience Institute at:
+https://dataspace.princeton.edu/jspui/handle/88435/dsp015d86p269k
 
 .. figure:: /_images/isfc-simony-1.png
 
@@ -78,6 +80,25 @@ To configure ISC/ISFC options within a YAML file, add the following lines to you
     isc_level_roi: [1]
     isc_level_voxel: [1]
     isc_level_voxel_std_filter: 1.5
+
+Outputs
+"""""""
+
+The ISC analysis outputs three files:
+
+* :code:`correlations.csv` or :code:`correlations.nii.gz`: inter-subject correlations for each subject. The CSV file is generated for the ROI analysis. Each row is a subject, and each column is one of the regions. For the voxel analysis, it generates a 4-D Nifti file, in which the fourth dimension is the subject.
+
+* :code:`significance.csv` or :code:`significance.nii.gz`: p-values of the permutation test for each subject.
+
+* :code:`subject_ids.txt`: in order to keep track which index is for each subject, we provide the ordered subject id.
+
+The ISFC analysis outputs three files:
+
+* :code:`correlations.npy`: numpy array with the inter-subject correlations for each subject, with shape :code:`(subject, region, region)`
+
+* :code:`significance.npy`: numpy array with the p-values of the permutation test for each subject, with shape :code:`(subject, region, region)`
+
+* :code:`subject_ids.txt`: in order to keep track which index is for each subject, we provide the ordered subject id.
 
 References
 ^^^^^^^^^^

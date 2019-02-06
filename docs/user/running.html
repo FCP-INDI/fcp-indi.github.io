@@ -72,10 +72,10 @@
 <p>The Docker image is designed following the specification established by the BIDS-Apps project. The <a class="reference external" href="https://github.com/BIDS-Apps">BIDS Apps</a> project is an initiative to create a collection of reproducible neuroimaging workflows that can be executed as these self-contained environments using <a class="reference external" href="https://www.docker.com/">Docker</a> containers.  These workflows take as input any dataset that is organized according to the <a class="reference external" href="http://http://bids.neuroimaging.io">Brain Imaging Data Structure (BIDS) standard</a> and generating first-level outputs for this dataset. However, you can provide the C-PAC Docker image with a custom non-BIDS dataset by entering your own data configuration file. More details below.</p>
 <p>In addition, we have created a Docker default pipeline configuration as part of this initiative that allows you to run the C-PAC pipeline on your data in an environment that is fully provisioned with all of C-PAC’s dependencies. If you wish to run your own pipeline configuration, you can also provide this to the Docker image at run-time.</p>
 <p>To start, first pull the image from Docker Hub:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>docker pull childmind/c-pac:latest
+<div class="highlight-bash"><div class="highlight"><pre><span></span>docker pull fcpindi/c-pac:latest
 </pre></div>
 </div>
-<p>Once this is complete, you can use the <code class="docutils literal"><span class="pre">childmind/c-pac</span></code> image tag to invoke runs. The full C-PAC Docker image usage options are shown here, with specific use cases further below.</p>
+<p>Once this is complete, you can use the <code class="docutils literal"><span class="pre">fcpindi/c-pac</span></code> image tag to invoke runs. The full C-PAC Docker image usage options are shown here, with specific use cases further below.</p>
 <div class="highlight-bash"><div class="highlight"><pre><span></span>usage: run.py <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>--pipeline_file PIPELINE_FILE<span class="o">]</span>
               <span class="o">[</span>--data_config_file DATA_CONFIG_FILE<span class="o">]</span>
               <span class="o">[</span>--aws_input_creds AWS_INPUT_CREDS<span class="o">]</span>
@@ -129,6 +129,7 @@ optional arguments:
                         Credentials <span class="k">for</span> writing to S3. If not provided and s3
                         paths are specified in the output directory we will
                         try to access the bucket anonymously
+  --anat_only           Only run anatomical preprocessing.
   --n_cpus N_CPUS       Number of execution resources available <span class="k">for</span> the
                         pipeline
   --mem_mb MEM_MB       Amount of RAM available to the pipeline in megabytes.
@@ -162,7 +163,7 @@ optional arguments:
         -v /Users/You/local_bids_data:/bids_dataset <span class="se">\</span>
         -v /Users/You/some_folder:/outputs <span class="se">\</span>
         -v /tmp:/scratch <span class="se">\</span>
-        childmind/c-pac:latest /bids_dataset /outputs participant
+        fcpindi/c-pac:latest /bids_dataset /outputs participant
 </pre></div>
 </div>
 <p>Note, the <code class="docutils literal"><span class="pre">-v</span></code> flags map your local filesystem locations to a “location” within the Docker image. (For example, the <code class="docutils literal"><span class="pre">/bids_dataset</span></code> and <code class="docutils literal"><span class="pre">/outputs</span></code> directories in the command above are arbitrary names). If you provided <code class="docutils literal"><span class="pre">/Users/You/local_bids_data</span></code> to the <code class="docutils literal"><span class="pre">bids_dir</span></code> input parameter, Docker would not be able to access or see that directory, so it needs to be mapped first. In this example, the local machine’s <code class="docutils literal"><span class="pre">/tmp</span></code> directory has been mapped to the <code class="docutils literal"><span class="pre">/scratch</span></code> name because the C-PAC Docker image’s default pipeline sets the working directory to <code class="docutils literal"><span class="pre">/scratch</span></code>. If you wish to keep your working directory somewhere more permanent, you can simply map this like so: <code class="docutils literal"><span class="pre">-v</span> <span class="pre">/Users/You/working_dir:/scratch</span></code>.</p>
@@ -173,7 +174,7 @@ optional arguments:
         -v /tmp:/scratch <span class="se">\</span>
         -v /Users/You/Documents:/configs <span class="se">\</span>
         -v /Users/You/resources:/resources <span class="se">\</span>
-        childmind/c-pac:latest /bids_dataset /outputs participant --pipeline_file /configs/pipeline_config.yml
+        fcpindi/c-pac:latest /bids_dataset /outputs participant --pipeline_file /configs/pipeline_config.yml
 </pre></div>
 </div>
 <p>In this case, we need to map the directory containing the pipeline configuration file <code class="docutils literal"><span class="pre">/Users/You/Documents</span></code> to a Docker image virtual directory <code class="docutils literal"><span class="pre">/configs</span></code>. Note we are using this <code class="docutils literal"><span class="pre">/configs</span></code> directory in the <code class="docutils literal"><span class="pre">--pipeline_file</span></code> input flag. In addition, if there are any ROIs, masks, or input files listed in your pipeline configuration file, the directory these are in must be mapped as well- assuming <code class="docutils literal"><span class="pre">/Users/You/resources</span></code> is your directory of ROI and/or mask files, we map it with <code class="docutils literal"><span class="pre">-v</span> <span class="pre">/Users/You/resources:/resources</span></code>. In the pipeline configuration file you are providing, these ROI and mask files must be listed as <code class="docutils literal"><span class="pre">/resources/ROI.nii.gz</span></code> (etc.) because we have mapped <code class="docutils literal"><span class="pre">/Users/You/resources</span></code> to <code class="docutils literal"><span class="pre">/resources</span></code>.</p>
@@ -183,12 +184,13 @@ optional arguments:
         -v /Users/You/some_folder:/outputs <span class="se">\</span>
         -v /tmp:/scratch <span class="se">\</span>
         -v /Users/You/Documents:/configs <span class="se">\</span>
-        childmind/c-pac:latest /bids_dataset /outputs participant --data_config_file /configs/data_config.yml
+        fcpindi/c-pac:latest /bids_dataset /outputs participant --data_config_file /configs/data_config.yml
 </pre></div>
 </div>
 <p>Note: we are still providing <code class="docutils literal"><span class="pre">/bids_dataset</span></code> to the <code class="docutils literal"><span class="pre">bids_dir</span></code> input parameter. However, we have mapped this to any directory on your machine, as C-PAC will not look for data in this directory when you provide a data configuration YAML with the <code class="docutils literal"><span class="pre">--data_config_file</span></code> flag. In addition, if the dataset in your data configuration file is not in BIDS format, just make sure to add the <code class="docutils literal"><span class="pre">--skip_bids_validator</span></code> flag at the end of your command to bypass the BIDS validation process.</p>
 <p><strong>Further usage notes:</strong></p>
 <ul class="simple">
+<li>You can run only anatomical preprocessing easily, without modifying your data or pipeline configuration files, by providing the <code class="docutils literal"><span class="pre">--anat_only</span></code> flag.</li>
 <li>A GUI can be invoked to assist in pipeline custimization by specifying the <code class="docutils literal"><span class="pre">GUI</span></code> command line argument, as opposed to <code class="docutils literal"><span class="pre">participant</span></code> (this currently only works for Singularity containers).</li>
 <li>As stated, the default behavior is to read in data that is organized in the BIDS format. This includes data that is in Amazon AWS S3 by using the format <code class="docutils literal"><span class="pre">s3://&lt;bucket_name&gt;/&lt;bids_dir&gt;</span></code> for the <code class="docutils literal"><span class="pre">bids_dir</span></code> command line argument. Outputs can be written to S3 using the same format for the <code class="docutils literal"><span class="pre">output_dir</span></code>. Credentials for accessing these buckets can be specified on the command line (using <code class="docutils literal"><span class="pre">--aws_input_creds</span></code> or <code class="docutils literal"><span class="pre">--aws_output_creds</span></code>).</li>
 <li>When the app is run, a data configuration file is written to the working directory. This file can be passed into subsequent runs, which avoids the overhead of re-parsing the BIDS input directory on each run (i.e. for cluster or cloud runs). These files can be generated without executing the C-PAC pipeline using the test_run command line argument.</li>
@@ -217,9 +219,8 @@ cpac run NKI-RS
 </pre></div>
 </div>
 <p>Note, these bundled data configurations pull the data from the FCP-INDI AWS-S3 bucket.</p>
-<p>When you are ready to run any of the group-level analyses (more information in the <a class="reference external" href="group_analysis">group analysis section</a>):</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>cpac group feat /path/to/pipeline_config.yml
-cpac group mdmr /path/to/pipeline_config.yml
+<p>You can also quickly modify the amount of cores to dedicate to the run, without supplying or modifying your pipeline configuration file with the –num_cores flag:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>cpac run /path/to/data_config.yml --num_cores 4
 </pre></div>
 </div>
 </div>

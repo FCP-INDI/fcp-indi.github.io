@@ -1,0 +1,294 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Bootstrapped Analysis of Stable Clusters (PyBASC) &#8212; C-PAC 1.3.0 Beta documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.3.0 Beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Multivariate Distance Matrix Regression (MDMR)" href="group_mdmr.html" />
+    <link rel="prev" title="FSL-FEAT/Randomise Group Analysis" href="group_fsl_feat.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="group_mdmr.html" title="Multivariate Distance Matrix Regression (MDMR)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="group_fsl_feat.html" title="FSL-FEAT/Randomise Group Analysis"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.3.0 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="group_analysis.html" accesskey="U">Group-Level Analysis</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="bootstrapped-analysis-of-stable-clusters-pybasc">
+<h1>Bootstrapped Analysis of Stable Clusters (PyBASC)<a class="headerlink" href="#bootstrapped-analysis-of-stable-clusters-pybasc" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Bootstrapped Analysis of Stable Clusters (BASC) is a boot-strapping technique based on the following work:</p>
+<ol class="arabic simple">
+<li>Garcia-Garcia, M., Nikolaidis, A., Bellec, P., Craddock, R. C., Cheung, B., Castellanos, F. X., &amp; Milham, M. P. (2017). Detecting stable individual differences in the functional organization of the human basal ganglia. NeuroImage.</li>
+<li>Bellec, P., Rosa-Neto, P., Lyttelton, O. C., Benali, H., &amp; Evans, A. C. (2010). Multi-level bootstrap analysis of stable clusters in resting-state fMRI. Neuroimage, 51(3), 1126-1139.</li>
+<li>Bellec, P., Marrelec, G., &amp; Benali, H. (2008). A bootstrap test to investigate changes in brain connectivity for functional MRI. Statistica Sinica, 1253-1268.</li>
+</ol>
+<p>When running BASC, C-PAC employs the Python-based PyBASC package implemented and maintained by Aki Nikolaidis: <a class="reference external" href="https://github.com/AkiNikolaidis/PyBASC">https://github.com/AkiNikolaidis/PyBASC</a>.</p>
+<p>PyBASC allows users to create individual and group level clustering solutions and compare the reliability and reproducibility of these clustering solutions across a wide variety of methods. C-PAC makes it easy to directly supply the preprocessed functional timeseries of your participants directly into PyBASC, for each nuisance strategy, session, and scan you have in your pipeline output folder.</p>
+<div class="section" id="using-the-gui">
+<h3>Using the GUI<a class="headerlink" href="#using-the-gui" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="general-group-level-analysis-settings">
+<h3>General Group-Level Analysis Settings<a class="headerlink" href="#general-group-level-analysis-settings" title="Permalink to this headline">¶</a></h3>
+<div class="figure">
+<img alt="_images/ga_general.png" src="_images/ga_general.png" />
+</div>
+<ol class="arabic simple">
+<li><strong>Pipeline Directory - [path]:</strong> The main input of group-level analysis- the output directory of your individual-level analysis pipeline run (pre-processing &amp; derivatives for each participant). This should be a path to your C-PAC individual-level run’s pipeline folder, which includes the sub-directories labeled with the participant IDs.</li>
+<li><strong>Participant List - [path]:</strong> (Optional) Full path to a list of participants to be included in the model. You can use this to easily prune participants from your model. In group-level analyses involving phenotype files, this allows you to prune participants without removing them from the phenotype CSV/TSV file. This should be a text file with one subject per line. An easy way to manually create this file is to copy the participant ID column from your phenotype file.</li>
+<li><strong>Output Directory - [path]:</strong> Full path to the directory where CPAC should write out the results of group analysis, and also place the model files (.mat, .con, .grp, .csv). The CSV file is a human-readable version of the .mat file used by FLAME that you can use to examine the exact model that C-PAC generated.</li>
+<li><strong>Working Directory - [path]:</strong> Much like the working directory for individual-level analysis, this is where the intermediate and working files will be stored during your run. This directory can be deleted later on. However, saving this directory allows the group analysis run to skip steps that have been already completed, in the case of re-runs.</li>
+<li><strong>Log Directory - [path]:</strong> Where to write out log information for your group analysis run.</li>
+<li><strong>FSL Directory - [text/path]:</strong> The path to your FSL installation directory. This can be left as ‘FSLDIR’ to grab your system’s default FSL installation. However, if you prefer to use a specific install of FSL, you can enter the path here.</li>
+</ol>
+</div>
+<div class="section" id="pybasc-specific-settings">
+<h3>PyBASC Specific Settings<a class="headerlink" href="#pybasc-specific-settings" title="Permalink to this headline">¶</a></h3>
+<div class="figure">
+<img alt="_images/pybasc_gui.png" src="_images/pybasc_gui.png" />
+</div>
+<ol class="arabic simple">
+<li><strong>Run BASC - [Off, On]:</strong> Whether to run PyBASC. Only applies to when you run group analysis through the GUI. This allows you to select multiple types of group-level analyses to run in sequence.</li>
+<li><strong>ROI Mask file - [path]:</strong> Full path to a mask file to be used when running BASC. Voxels outside this mask will be excluded from analysis.  This is the region that you’d like to parcellate.</li>
+<li><strong>ROI Mask file for Cross-Clustering - [path]:</strong> If cross clustering is enabled, then clustering of the first region will be calculated based on pairwise similarity between the timeseries of the ROI Mask File, and this second ROI.</li>
+<li><strong>Similarity metric - [‘correlation’, ‘euclidean’, ‘cityblock’, ‘cosine’]:</strong> The metric used to compare similarity between voxel timeseries.</li>
+<li><strong>Number of timeseries bootstraps - [integer]:</strong> How many times individual level circular block bootstrapping of the timeseries will be applied.</li>
+<li><strong>Number of dataset Bootstraps - [integer]:</strong> How many times the group level bootstrapping across individuals will be applied.</li>
+<li><strong>Number of clusters - [integer]:</strong> How many parcels you’d like to use.</li>
+<li><strong>Affinity Threshold - [decimal]:</strong> The similarity threshold at which the similarity matrices will be set to 0.</li>
+<li><strong>Output sizes - [integer]:</strong> This is the amount of feature agglomeration that will be applied. Smaller values mean more feature agglomeration.</li>
+<li><strong>Run Cross Clustering - [True/False]:</strong> If set to true, then the ROI Mask file parcellation will be based on the similarity between ROI Mask file voxels based on their connectivity to each voxel in ROI mask file for cross-clustering.</li>
+<li><strong>Blocklength - [integer]:</strong> This parameter determines the width of the time window used in the circular block bootstrap.</li>
+<li><strong>Group dimension reduce - [True/False]:</strong> If this is set to true, the all individuals will have feature agglomeration applied together, resulting in the same mapping across subjects. Use this only when memory demands limit ability to process ROIs with a high number of voxels.</li>
+</ol>
+</div>
+<div class="section" id="from-terminal">
+<h3>From terminal<a class="headerlink" href="#from-terminal" title="Permalink to this headline">¶</a></h3>
+<p>Similar to the pipeline configuration YAML file, the group configuration YAML file allows you to configure your runs with key-value combinations. From terminal, you can quickly generate a default group configuration YAML file template in the directory you are in:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">cpac</span> <span class="n">utils</span> <span class="n">group_config</span> <span class="n">new_template</span>
+</pre></div>
+</div>
+<p>This will generate a group configuration file that you can then modify to make your selections. See below:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span># General Group-Level Analysis Settings
+##############################################################################
+
+# The main input of group-level analysis- the output directory of your individual-level analysis pipeline run (pre-processing &amp; derivatives for each participant). This should be a path to your C-PAC individual-level run&#39;s pipeline folder, which includes the sub-directories labeled with the participant IDs.
+pipeline_dir: /path/to/output_dir
+
+
+# (Optional) Full path to a list of participants to be included in the model. You can use this to easily prune participants from your model. In group-level analyses involving phenotype files, this allows you to prune participants without removing them from the phenotype CSV/TSV file. This should be a text file with one subject per line. An easy way to manually create this file is to copy the participant ID column from your phenotype file.
+participant_list: None
+
+
+# Full path to the directory where CPAC should place group-level analysis outputs and any applicable statistical model files.
+output_dir: /path/to/output/dir
+
+
+#Much like the working directory for individual-level analysis, this is where the intermediate and working files will be stored during your run. This directory can be deleted later on. However, saving this directory allows the group analysis run to skip steps that have been already completed, in the case of re-runs.
+work_dir: /path/to/work/dir
+
+
+#Where to write out log information for your group analysis run.
+log_dir: /path/to/log/dir
+
+
+# The path to your FSL installation directory. This can be left as &#39;FSLDIR&#39; to grab your system&#39;s default FSL installation. However, if you prefer to use a specific install of FSL, you can enter the path here.
+FSLDIR: FSLDIR
+
+
+# Bootstrap Analysis of Stable Clusters (BASC) - via PyBASC
+##############################################################################
+
+# Run Bootstrap Analysis of Stable Clusters
+run_basc :  [1]
+
+
+# If there are multiple series or scans in any of the pipeline outputs for which PyBASC is being run, and you only want to run for some of them, you can list them here - scan labels separated by commas (ex. &#39;rest_run-1, rest_run-3&#39;).
+# If nothing is listed, all available pipelines will be run.
+basc_scan_inclusion :  None
+
+
+# The resolution to run PyBASC with.
+basc_resolution :  4mm
+
+
+# Maximum amount of processors to use while performing BASC.
+basc_proc :  2
+
+
+# Maximum amount of RAM (in GB) to be used when running BASC.
+basc_memory :  4
+
+
+# Standard FSL Skull Stripped Template.
+template_brain_only_for_func :  $FSLDIR/data/standard/MNI152_T1_${basc_resolution}_brain.nii.gz
+
+
+# Full path to a mask file to be used when running BASC. Voxels outside this mask will be excluded from analysis. This is the region that you’d like to parcellate.
+# If you do not wish to use a mask, set this field to None.
+# Note: BASC is very computationally intensive, we strongly recommend you limit your analysis to specific brain areas of interest.
+basc_roi_mask_file :  None
+
+
+# If cross clustering is enabled, then clustering of the first region will be calculated based on pairwise similarity between the timeseries of the ROI Mask File, and this second ROI.
+basc_cross_cluster_mask_file :  None
+
+
+# The metric used to compare similarity between voxel timeseries.
+# Options: [&#39;correlation&#39;, &#39;euclidean&#39;, &#39;cityblock&#39;, &#39;cosine&#39;]
+basc_similarity_metric_list :  [&#39;correlation&#39;]
+
+
+# How many times individual level circular block bootstrapping of the timeseries will be applied.
+basc_timeseries_bootstrap_list :  100
+
+
+# Number of bootstraps to apply to the original dataset.
+basc_dataset_bootstrap_list :  30
+
+
+# Number of clusters to create during clustering at both the individual and group levels.
+basc_n_clusters_list :  2
+
+
+# The similarity threshold at which the similarity matrices will be set to 0.
+basc_affinity_thresh : [0.0]
+
+
+# This is the amount of feature agglomeration that will be applied. Smaller values mean more feature agglomeration.
+basc_output_sizes :  800
+
+
+# If set to true, then the ROI Mask file parcellation will be based on the similarity between ROI Mask file voxels based on their connectivity to each voxel in ROI mask file for cross-clustering.
+basc_cross_cluster :  True
+
+
+# This parameter determines the width of the time window used in the circular block bootstrap.
+basc_blocklength_list :  1
+
+
+# If this is set to true, the all individuals will have feature agglomeration applied together, resulting in the same mapping across subjects. Use this only when memory demands limit ability to process ROIs with a high number of voxels.
+basc_group_dim_reduce :  False
+</pre></div>
+</div>
+<p>Once you have made your selections, you can run PyBASC from the command-line with this command:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">cpac</span> <span class="n">group</span> <span class="n">basc</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">group_config</span><span class="o">.</span><span class="n">yml</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+<h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quick.html">1. C-PAC Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new_gui.html">2. Try Our New GUI!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">3. Install C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="subject_list_config.html">4. Specify Your Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline_config.html">5. Select Your Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">6. Pre-Process Your Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="derivatives.html">7. Compute Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">8. Run C-PAC</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="group_analysis.html">9. Run Group Analysis</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="group_fsl_feat.html">FSL FEAT &amp; Randomise</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Bootstrapped Analysis of Stable Clusters (PyBASC)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group_mdmr.html">Multivariate Distance Matrix Regression (MDMR)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="group_isc.html">Inter-subject Correlation (ISC) &amp; Inter-subject Functional Correlation (ISFC)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="output_dir.html">10. Check Your Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="help.html">11. Troubleshoot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnotes.html">12. Release Notes</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="group_mdmr.html" title="Multivariate Distance Matrix Regression (MDMR)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="group_fsl_feat.html" title="FSL-FEAT/Randomise Group Analysis"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.3.0 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="group_analysis.html" >Group-Level Analysis</a> &#187;</li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+
+  </body>
+</html>

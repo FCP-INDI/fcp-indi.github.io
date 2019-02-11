@@ -28,9 +28,9 @@ To start, first pull the image from Docker Hub:
 
 .. code-block:: bash
 
-    docker pull childmind/c-pac:latest
+    docker pull fcpindi/c-pac:latest
 
-Once this is complete, you can use the ``childmind/c-pac`` image tag to invoke runs. The full C-PAC Docker image usage options are shown here, with specific use cases further below.
+Once this is complete, you can use the ``fcpindi/c-pac`` image tag to invoke runs. The full C-PAC Docker image usage options are shown here, with specific use cases further below.
 
 .. code-block:: bash
 
@@ -87,6 +87,7 @@ Once this is complete, you can use the ``childmind/c-pac`` image tag to invoke r
                             Credentials for writing to S3. If not provided and s3
                             paths are specified in the output directory we will
                             try to access the bucket anonymously
+      --anat_only           Only run anatomical preprocessing.
       --n_cpus N_CPUS       Number of execution resources available for the
                             pipeline
       --mem_mb MEM_MB       Amount of RAM available to the pipeline in megabytes.
@@ -123,7 +124,7 @@ As an example, in order to run the C-PAC Docker container in participant mode, f
             -v /Users/You/local_bids_data:/bids_dataset \
             -v /Users/You/some_folder:/outputs \
             -v /tmp:/scratch \
-            childmind/c-pac:latest /bids_dataset /outputs participant
+            fcpindi/c-pac:latest /bids_dataset /outputs participant
 
 Note, the ``-v`` flags map your local filesystem locations to a "location" within the Docker image. (For example, the ``/bids_dataset`` and ``/outputs`` directories in the command above are arbitrary names). If you provided ``/Users/You/local_bids_data`` to the ``bids_dir`` input parameter, Docker would not be able to access or see that directory, so it needs to be mapped first. In this example, the local machine's ``/tmp`` directory has been mapped to the ``/scratch`` name because the C-PAC Docker image's default pipeline sets the working directory to ``/scratch``. If you wish to keep your working directory somewhere more permanent, you can simply map this like so: ``-v /Users/You/working_dir:/scratch``.
 
@@ -137,7 +138,7 @@ To run the C-PAC Docker container with a pipeline configuration file other than 
             -v /tmp:/scratch \
             -v /Users/You/Documents:/configs \
             -v /Users/You/resources:/resources \
-            childmind/c-pac:latest /bids_dataset /outputs participant --pipeline_file /configs/pipeline_config.yml
+            fcpindi/c-pac:latest /bids_dataset /outputs participant --pipeline_file /configs/pipeline_config.yml
 
 In this case, we need to map the directory containing the pipeline configuration file ``/Users/You/Documents`` to a Docker image virtual directory ``/configs``. Note we are using this ``/configs`` directory in the ``--pipeline_file`` input flag. In addition, if there are any ROIs, masks, or input files listed in your pipeline configuration file, the directory these are in must be mapped as well- assuming ``/Users/You/resources`` is your directory of ROI and/or mask files, we map it with ``-v /Users/You/resources:/resources``. In the pipeline configuration file you are providing, these ROI and mask files must be listed as ``/resources/ROI.nii.gz`` (etc.) because we have mapped ``/Users/You/resources`` to ``/resources``.
 
@@ -150,11 +151,13 @@ Finally, to run the Docker container with a specific data configuration file (in
             -v /Users/You/some_folder:/outputs \
             -v /tmp:/scratch \
             -v /Users/You/Documents:/configs \
-            childmind/c-pac:latest /bids_dataset /outputs participant --data_config_file /configs/data_config.yml
+            fcpindi/c-pac:latest /bids_dataset /outputs participant --data_config_file /configs/data_config.yml
 
 Note: we are still providing ``/bids_dataset`` to the ``bids_dir`` input parameter. However, we have mapped this to any directory on your machine, as C-PAC will not look for data in this directory when you provide a data configuration YAML with the ``--data_config_file`` flag. In addition, if the dataset in your data configuration file is not in BIDS format, just make sure to add the ``--skip_bids_validator`` flag at the end of your command to bypass the BIDS validation process.
 
 **Further usage notes:**
+
+* You can run only anatomical preprocessing easily, without modifying your data or pipeline configuration files, by providing the ``--anat_only`` flag.
 
 * A GUI can be invoked to assist in pipeline custimization by specifying the ``GUI`` command line argument, as opposed to ``participant`` (this currently only works for Singularity containers).
 
@@ -163,6 +166,23 @@ Note: we are still providing ``/bids_dataset`` to the ``bids_dir`` input paramet
 * When the app is run, a data configuration file is written to the working directory. This file can be passed into subsequent runs, which avoids the overhead of re-parsing the BIDS input directory on each run (i.e. for cluster or cloud runs). These files can be generated without executing the C-PAC pipeline using the test_run command line argument.
 
 * The ``participant_label`` and ``participant_ndx`` arguments allow the user to specify which of the many datasets should be processed, which is useful when parallelizing the run of multiple participants.
+
+Using the GUI
+-------------
+
+*This is for configuring data and pipelines or running C-PAC: on your machine or server after C-PAC installation, from a Docker container once the GUI is enabled, or on an X2Go session of an AWS instance.*
+
+You can invoke the C-PAC user interface by running:
+
+.. code-block:: bash
+
+    cpac gui
+
+On C-PAC's main screen, you can open the data configuration generator and the pipeline configuration builder by clicking *New* next to *Subject Lists* and *Pipelines*, respectively. Once you've configured your data and pipelines, or if you are using an already existing set of configurations, you can load them into their respective panes.
+
+If you have loaded multiple subject lists or pipeline configurations, click the checkboxes to the left of the subject list names in the *Subject Lists* pane to select which sets of subjects you would like to run.  Similarly, select the pipelines you'd like to run in the adjacent *Pipelines* pane. When you are ready to run C-PAC, click the *Run Individual Level Analysis* button at the bottom.
+
+.. figure:: /_images/main_gui_checks.png
 
 From Terminal
 ---------------------------------
@@ -195,31 +215,13 @@ Of course, you can also run these pre-configured datasets with any pipeline conf
 
     cpac run --pipe_config /path/to/pipeline_config.yml ADHD200
 
-Note, these bundled data configurations pull the data from the FCP-INDI AWS-S3 bucket. 
+Note, these bundled data configurations pull the data from the FCP-INDI AWS-S3 bucket.
 
-When you are ready to run any of the group-level analyses (more information in the `group analysis section <group_analysis>`_):
-
-.. code-block:: bash
-
-    cpac group feat /path/to/pipeline_config.yml
-    cpac group mdmr /path/to/pipeline_config.yml
-
-Using the GUI
--------------
-
-*This is for configuring data and pipelines or running C-PAC: on your machine or server after C-PAC installation, from a Docker container once the GUI is enabled, or on an X2Go session of an AWS instance.*
-
-You can invoke the C-PAC user interface by running:
+You can also quickly modify the amount of cores to dedicate to the run, without supplying or modifying your pipeline configuration file with the --num_cores flag:
 
 .. code-block:: bash
 
-    cpac gui
-
-On C-PAC's main screen, you can open the data configuration generator and the pipeline configuration builder by clicking *New* next to *Subject Lists* and *Pipelines*, respectively. Once you've configured your data and pipelines, or if you are using an already existing set of configurations, you can load them into their respective panes.
-
-If you have loaded multiple subject lists or pipeline configurations, click the checkboxes to the left of the subject list names in the *Subject Lists* pane to select which sets of subjects you would like to run.  Similarly, select the pipelines you'd like to run in the adjacent *Pipelines* pane. When you are ready to run C-PAC, click the *Run Individual Level Analysis* button at the bottom.
-
-.. figure:: /_images/main_gui_checks.png
+    cpac run /path/to/data_config.yml --num_cores 4
 
 On the AWS Cloud
 ------------------------------

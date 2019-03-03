@@ -47,7 +47,6 @@
 <span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="k">as</span> <span class="nn">fsl</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces.afni</span> <span class="k">import</span> <span class="n">preprocess</span>
-<span class="kn">from</span> <span class="nn">CPAC.utils</span> <span class="k">import</span> <span class="n">dbg_file_lineno</span>
 
 
 <span class="c1"># workflow to edit the scan to the proscribed TRs</span>
@@ -85,75 +84,35 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># allocate a workflow object</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">preproc</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">wf_name</span><span class="p">)</span>
-    <span class="k">except</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Error allocating workflow </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">+</span> \
-                    <span class="s2">&quot; (</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">,</span> <span class="n">dbg_file_lineno</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">raise</span>
+    <span class="n">preproc</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">wf_name</span><span class="p">)</span>
 
     <span class="c1"># configure the workflow&#39;s input spec</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">inputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;func&#39;</span><span class="p">,</span>
-                                                           <span class="s1">&#39;start_idx&#39;</span><span class="p">,</span>
-                                                           <span class="s1">&#39;stop_idx&#39;</span><span class="p">]),</span>
-                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
-    <span class="k">except</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Error allocating inputspec (wflow </span><span class="si">%s</span><span class="s2">).&quot;</span> <span class="o">+</span> \
-                    <span class="s2">&quot; (</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">,</span> <span class="n">dbg_file_lineno</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">raise</span>
+    <span class="n">inputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;func&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;start_idx&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;stop_idx&#39;</span><span class="p">]),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
 
     <span class="c1"># configure the workflow&#39;s output spec</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">outputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;edited_func&#39;</span><span class="p">]),</span>
-                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
-    <span class="k">except</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Error allocating output spec (wflow </span><span class="si">%s</span><span class="s2">).&quot;</span> <span class="o">+</span> \
-                    <span class="s2">&quot; (</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">,</span> <span class="n">dbg_file_lineno</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">raise</span>
+    <span class="n">outputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;edited_func&#39;</span><span class="p">]),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
 
     <span class="c1"># allocate a node to check that the requested edits are</span>
     <span class="c1"># reasonable given the data</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">func_get_idx</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_files&#39;</span><span class="p">,</span>
-                                                          <span class="s1">&#39;stop_idx&#39;</span><span class="p">,</span>
-                                                          <span class="s1">&#39;start_idx&#39;</span><span class="p">],</span>
-                                             <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;stopidx&#39;</span><span class="p">,</span>
-                                                           <span class="s1">&#39;startidx&#39;</span><span class="p">],</span>
-                                             <span class="n">function</span><span class="o">=</span><span class="n">get_idx</span><span class="p">),</span>
-                               <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_get_idx&#39;</span><span class="p">)</span>
-    <span class="k">except</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Error allocating get_idx function node (wflow </span><span class="si">%s</span><span class="s2">).&quot;</span> <span class="o">+</span> \
-                    <span class="s2">&quot; (</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">,</span> <span class="n">dbg_file_lineno</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">raise</span>
+    <span class="n">func_get_idx</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_files&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;stop_idx&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;start_idx&#39;</span><span class="p">],</span>
+                                         <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;stopidx&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;startidx&#39;</span><span class="p">],</span>
+                                         <span class="n">function</span><span class="o">=</span><span class="n">get_idx</span><span class="p">),</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_get_idx&#39;</span><span class="p">)</span>
 
     <span class="c1"># wire in the func_get_idx node</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">,</span>
-                        <span class="n">func_get_idx</span><span class="p">,</span> <span class="s1">&#39;in_files&#39;</span><span class="p">)</span>
-    <span class="k">except</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;Error connecting &#39;in_files&#39; input to get_idx function node (wflow </span><span class="si">%s</span><span class="s2">).&quot;</span> <span class="o">+</span> \
-            <span class="s2">&quot; (</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">,</span> <span class="n">dbg_file_lineno</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">raise</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;start_idx&#39;</span><span class="p">,</span>
-                        <span class="n">func_get_idx</span><span class="p">,</span> <span class="s1">&#39;start_idx&#39;</span><span class="p">)</span>
-    <span class="k">except</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;Error connecting &#39;start_idx&#39; input to get_idx function node (wflow </span><span class="si">%s</span><span class="s2">).&quot;</span> <span class="o">+</span> \
-            <span class="s2">&quot; (</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">,</span> <span class="n">dbg_file_lineno</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">raise</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;stop_idx&#39;</span><span class="p">,</span>
-                        <span class="n">func_get_idx</span><span class="p">,</span> <span class="s1">&#39;stop_idx&#39;</span><span class="p">)</span>
-    <span class="k">except</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;Error connecting &#39;stop_idx&#39; input to get_idx function node (wflow </span><span class="si">%s</span><span class="s2">).&quot;</span> <span class="o">+</span> \
-            <span class="s2">&quot; (</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">,</span> <span class="n">dbg_file_lineno</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">raise</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">,</span>
+                    <span class="n">func_get_idx</span><span class="p">,</span> <span class="s1">&#39;in_files&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;start_idx&#39;</span><span class="p">,</span>
+                    <span class="n">func_get_idx</span><span class="p">,</span> <span class="s1">&#39;start_idx&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;stop_idx&#39;</span><span class="p">,</span>
+                    <span class="n">func_get_idx</span><span class="p">,</span> <span class="s1">&#39;stop_idx&#39;</span><span class="p">)</span>
 
     <span class="c1"># allocate a node to edit the functional file</span>
     <span class="k">try</span><span class="p">:</span>
@@ -163,50 +122,23 @@
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
         <span class="n">func_drop_trs</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
                                 <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_drop_trs&#39;</span><span class="p">)</span>
-    <span class="k">except</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Error allocating afni Calc node (wflow </span><span class="si">%s</span><span class="s2">).&quot;</span> <span class="o">+</span> \
-                    <span class="s2">&quot; (</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">,</span> <span class="n">dbg_file_lineno</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">raise</span>
 
     <span class="n">func_drop_trs</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="s1">&#39;a&#39;</span>
     <span class="n">func_drop_trs</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
 
     <span class="c1"># wire in the inputs</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">,</span>
-                        <span class="n">func_drop_trs</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
-    <span class="k">except</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;Error connecting &#39;in_file_a&#39; input to afni Calc node (wflow </span><span class="si">%s</span><span class="s2">).&quot;</span> <span class="o">+</span> \
-            <span class="s2">&quot; (</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">,</span> <span class="n">dbg_file_lineno</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">raise</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">,</span>
+                    <span class="n">func_drop_trs</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
 
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_get_idx</span><span class="p">,</span> <span class="s1">&#39;startidx&#39;</span><span class="p">,</span>
-                        <span class="n">func_drop_trs</span><span class="p">,</span> <span class="s1">&#39;start_idx&#39;</span><span class="p">)</span>
-    <span class="k">except</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;Error connecting &#39;start_idx&#39; input to afni Calc node (wflow </span><span class="si">%s</span><span class="s2">).&quot;</span> <span class="o">+</span> \
-            <span class="s2">&quot; (</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">,</span> <span class="n">dbg_file_lineno</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">raise</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_get_idx</span><span class="p">,</span> <span class="s1">&#39;startidx&#39;</span><span class="p">,</span>
+                    <span class="n">func_drop_trs</span><span class="p">,</span> <span class="s1">&#39;start_idx&#39;</span><span class="p">)</span>
 
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_get_idx</span><span class="p">,</span> <span class="s1">&#39;stopidx&#39;</span><span class="p">,</span>
-                        <span class="n">func_drop_trs</span><span class="p">,</span> <span class="s1">&#39;stop_idx&#39;</span><span class="p">)</span>
-    <span class="k">except</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;Error connecting &#39;stop_idx&#39; input to afni Calc node (wflow </span><span class="si">%s</span><span class="s2">).&quot;</span> <span class="o">+</span> \
-            <span class="s2">&quot; (</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">,</span> <span class="n">dbg_file_lineno</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">raise</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_get_idx</span><span class="p">,</span> <span class="s1">&#39;stopidx&#39;</span><span class="p">,</span>
+                    <span class="n">func_drop_trs</span><span class="p">,</span> <span class="s1">&#39;stop_idx&#39;</span><span class="p">)</span>
 
-    <span class="k">try</span><span class="p">:</span>
-        <span class="c1"># wire the output</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_drop_trs</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                        <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;edited_func&#39;</span><span class="p">)</span>
-    <span class="k">except</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Error connecting output (wflow </span><span class="si">%s</span><span class="s2">).&quot;</span> <span class="o">+</span> \
-                    <span class="s2">&quot; (</span><span class="si">%s</span><span class="s2">:</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">,</span> <span class="n">dbg_file_lineno</span><span class="p">()[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">raise</span>
+    <span class="c1"># wire the output</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_drop_trs</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;edited_func&#39;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">preproc</span>
 

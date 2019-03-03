@@ -43,7 +43,12 @@
 <span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="k">as</span> <span class="nn">fsl</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.c3</span> <span class="k">as</span> <span class="nn">c3</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.ants</span> <span class="k">as</span> <span class="nn">ants</span>
 
+<span class="kn">from</span> <span class="nn">CPAC.utils.function</span> <span class="k">import</span> <span class="n">Function</span>
+<span class="kn">from</span> <span class="nn">CPAC.registration.utils</span> <span class="k">import</span> <span class="n">seperate_warps_list</span><span class="p">,</span> \
+                                    <span class="n">combine_inputs_into_list</span><span class="p">,</span> \
+                                    <span class="n">hardcoded_reg</span>
 
 <div class="viewcode-block" id="create_nonlinear_register"><a class="viewcode-back" href="../../../workflows/registration.html#CPAC.registration.create_nonlinear_register">[docs]</a><span class="k">def</span> <span class="nf">create_nonlinear_register</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;nonlinear_register&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -524,7 +529,7 @@
     <span class="k">return</span> <span class="n">register_bbregister_func_to_anat</span></div>
     
 
-<div class="viewcode-block" id="create_wf_calculate_ants_warp"><a class="viewcode-back" href="../../../workflows/registration.html#CPAC.registration.create_wf_calculate_ants_warp">[docs]</a><span class="k">def</span> <span class="nf">create_wf_calculate_ants_warp</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;create_wf_calculate_ants_warp&#39;</span><span class="p">,</span> <span class="n">mult_input</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_threads</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="create_wf_calculate_ants_warp"><a class="viewcode-back" href="../../../workflows/registration.html#CPAC.registration.create_wf_calculate_ants_warp">[docs]</a><span class="k">def</span> <span class="nf">create_wf_calculate_ants_warp</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;create_wf_calculate_ants_warp&#39;</span><span class="p">,</span> <span class="n">num_threads</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Calculates the nonlinear ANTS registration transform. This workflow</span>
@@ -640,23 +645,40 @@
 <span class="sd">        :width: 500      </span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="kn">import</span> <span class="nn">nipype.interfaces.ants</span> <span class="k">as</span> <span class="nn">ants</span>
-    <span class="kn">from</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">import</span> <span class="n">Function</span>
-    <span class="kn">from</span> <span class="nn">CPAC.registration.utils</span> <span class="k">import</span> <span class="n">seperate_warps_list</span><span class="p">,</span> \
-                                        <span class="n">combine_inputs_into_list</span><span class="p">,</span> \
-                                        <span class="n">hardcoded_reg</span>
-
     <span class="n">calc_ants_warp_wf</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
-    <span class="n">inputspec</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;anatomical_brain&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;reference_brain&#39;</span><span class="p">,</span> <span class="s1">&#39;dimension&#39;</span><span class="p">,</span> <span class="s1">&#39;use_histogram_matching&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;winsorize_lower_quantile&#39;</span><span class="p">,</span> <span class="s1">&#39;winsorize_upper_quantile&#39;</span><span class="p">,</span> <span class="s1">&#39;metric&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;metric_weight&#39;</span><span class="p">,</span> <span class="s1">&#39;radius_or_number_of_bins&#39;</span><span class="p">,</span> <span class="s1">&#39;sampling_strategy&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;sampling_percentage&#39;</span><span class="p">,</span> <span class="s1">&#39;number_of_iterations&#39;</span><span class="p">,</span> 
-            <span class="s1">&#39;convergence_threshold&#39;</span><span class="p">,</span> <span class="s1">&#39;convergence_window_size&#39;</span><span class="p">,</span> <span class="s1">&#39;transforms&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;transform_parameters&#39;</span><span class="p">,</span> <span class="s1">&#39;shrink_factors&#39;</span><span class="p">,</span> <span class="s1">&#39;smoothing_sigmas&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;write_composite_transform&#39;</span><span class="p">,</span> <span class="s1">&#39;anatomical_skull&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;reference_skull&#39;</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
+    <span class="n">inputspec</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span>
+        <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;anatomical_brain&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;reference_brain&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;dimension&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;use_histogram_matching&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;winsorize_lower_quantile&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;winsorize_upper_quantile&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;metric&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;metric_weight&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;radius_or_number_of_bins&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;sampling_strategy&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;sampling_percentage&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;number_of_iterations&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;convergence_threshold&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;convergence_window_size&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;transforms&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;transform_parameters&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;shrink_factors&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;smoothing_sigmas&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;write_composite_transform&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;anatomical_skull&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;reference_skull&#39;</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
+
+    <span class="n">outputspec</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span>
+        <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;ants_initial_xfm&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;ants_rigid_xfm&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;ants_affine_xfm&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;warp_field&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;inverse_warp_field&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;composite_transform&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;wait&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;normalized_output_brain&#39;</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
 
     <span class="c1"># use ANTS to warp the masked anatomical image to a template image</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -709,81 +731,25 @@
 
     <span class="n">select_inverse_warp</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">selection</span> <span class="o">=</span> <span class="s2">&quot;Inverse&quot;</span>
 
-    <span class="n">outputspec</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;ants_initial_xfm&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;ants_rigid_xfm&#39;</span><span class="p">,</span> <span class="s1">&#39;ants_affine_xfm&#39;</span><span class="p">,</span> <span class="s1">&#39;warp_field&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;inverse_warp_field&#39;</span><span class="p">,</span> <span class="s1">&#39;composite_transform&#39;</span><span class="p">,</span> <span class="s1">&#39;wait&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;normalized_output_brain&#39;</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    calc_ants_warp_wf.connect(inputspec, &#39;anatomical_brain&#39;,</span>
+<span class="sd">            calculate_ants_warp, &#39;moving_image&#39;)</span>
 
-    <span class="c1"># connections from inputspec</span>
-    <span class="k">if</span> <span class="n">mult_input</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        combine_inputs = pe.Node(util.Function(input_names=[&#39;input1&#39;, &#39;input2&#39;, &#39;input3&#39;],</span>
-<span class="sd">                output_names=[&#39;inputs_list&#39;], function=combine_inputs_into_list),</span>
-<span class="sd">                name=&#39;ants_reg_combine_inputs&#39;)</span>
+<span class="sd">    calc_ants_warp_wf.connect(inputspec, &#39;reference_brain&#39;,</span>
+<span class="sd">            calculate_ants_warp, &#39;fixed_image&#39;)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
 
-<span class="sd">        combine_refs = pe.Node(util.Function(input_names=[&#39;input1&#39;, &#39;input2&#39;, &#39;input3&#39;],</span>
-<span class="sd">                output_names=[&#39;inputs_list&#39;], function=combine_inputs_into_list),</span>
-<span class="sd">                name=&#39;ants_reg_combine_refs&#39;)</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+    <span class="n">calc_ants_warp_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;anatomical_brain&#39;</span><span class="p">,</span>
+            <span class="n">calculate_ants_warp</span><span class="p">,</span> <span class="s1">&#39;anatomical_brain&#39;</span><span class="p">)</span>
 
-        <span class="n">calc_ants_warp_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;anatomical_brain&#39;</span><span class="p">,</span>
-                <span class="n">calculate_ants_warp</span><span class="p">,</span> <span class="s1">&#39;anatomical_brain&#39;</span><span class="p">)</span>
+    <span class="n">calc_ants_warp_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;anatomical_brain&#39;</span><span class="p">,</span>
+            <span class="n">calculate_ants_warp</span><span class="p">,</span> <span class="s1">&#39;anatomical_skull&#39;</span><span class="p">)</span>
 
-        <span class="n">calc_ants_warp_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;anatomical_skull&#39;</span><span class="p">,</span>
-                <span class="n">calculate_ants_warp</span><span class="p">,</span> <span class="s1">&#39;anatomical_skull&#39;</span><span class="p">)</span>
+    <span class="n">calc_ants_warp_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;reference_brain&#39;</span><span class="p">,</span>
+            <span class="n">calculate_ants_warp</span><span class="p">,</span> <span class="s1">&#39;reference_brain&#39;</span><span class="p">)</span>
 
-        <span class="n">calc_ants_warp_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;reference_brain&#39;</span><span class="p">,</span>
-                <span class="n">calculate_ants_warp</span><span class="p">,</span> <span class="s1">&#39;reference_brain&#39;</span><span class="p">)</span>
-
-        <span class="n">calc_ants_warp_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;reference_skull&#39;</span><span class="p">,</span>
-                <span class="n">calculate_ants_warp</span><span class="p">,</span> <span class="s1">&#39;reference_skull&#39;</span><span class="p">)</span>
-
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        calc_ants_warp_wf.connect(inputspec, &#39;anatomical_brain&#39;,</span>
-<span class="sd">                combine_inputs, &#39;input1&#39;)</span>
-
-<span class="sd">        calc_ants_warp_wf.connect(inputspec, &#39;anatomical_brain&#39;,</span>
-<span class="sd">                combine_inputs, &#39;input2&#39;)</span>
-
-<span class="sd">        calc_ants_warp_wf.connect(inputspec, &#39;anatomical_skull&#39;,</span>
-<span class="sd">                combine_inputs, &#39;input3&#39;)</span>
-
-<span class="sd">        calc_ants_warp_wf.connect(combine_inputs, &#39;inputs_list&#39;,</span>
-<span class="sd">                calculate_ants_warp, &#39;moving_image&#39;)</span>
-
-<span class="sd">        calc_ants_warp_wf.connect(inputspec, &#39;reference_brain&#39;,</span>
-<span class="sd">                combine_refs, &#39;input1&#39;)</span>
-
-<span class="sd">        calc_ants_warp_wf.connect(inputspec, &#39;reference_brain&#39;,</span>
-<span class="sd">                combine_refs, &#39;input2&#39;)</span>
-
-<span class="sd">        calc_ants_warp_wf.connect(inputspec, &#39;reference_skull&#39;,</span>
-<span class="sd">                combine_refs, &#39;input3&#39;)</span>
-
-<span class="sd">        calc_ants_warp_wf.connect(combine_refs, &#39;inputs_list&#39;,</span>
-<span class="sd">                calculate_ants_warp, &#39;fixed_image&#39;) </span>
-<span class="sd">        &#39;&#39;&#39;</span>
-
-    <span class="k">else</span><span class="p">:</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        calc_ants_warp_wf.connect(inputspec, &#39;anatomical_brain&#39;,</span>
-<span class="sd">                calculate_ants_warp, &#39;moving_image&#39;)</span>
-
-<span class="sd">        calc_ants_warp_wf.connect(inputspec, &#39;reference_brain&#39;,</span>
-<span class="sd">                calculate_ants_warp, &#39;fixed_image&#39;)</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-
-        <span class="n">calc_ants_warp_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;anatomical_brain&#39;</span><span class="p">,</span>
-                <span class="n">calculate_ants_warp</span><span class="p">,</span> <span class="s1">&#39;anatomical_brain&#39;</span><span class="p">)</span>
-
-        <span class="n">calc_ants_warp_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;anatomical_brain&#39;</span><span class="p">,</span>
-                <span class="n">calculate_ants_warp</span><span class="p">,</span> <span class="s1">&#39;anatomical_skull&#39;</span><span class="p">)</span>
-
-        <span class="n">calc_ants_warp_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;reference_brain&#39;</span><span class="p">,</span>
-                <span class="n">calculate_ants_warp</span><span class="p">,</span> <span class="s1">&#39;reference_brain&#39;</span><span class="p">)</span>
-
-        <span class="n">calc_ants_warp_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;reference_brain&#39;</span><span class="p">,</span>
-                <span class="n">calculate_ants_warp</span><span class="p">,</span> <span class="s1">&#39;reference_skull&#39;</span><span class="p">)</span>
+    <span class="n">calc_ants_warp_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;reference_brain&#39;</span><span class="p">,</span>
+            <span class="n">calculate_ants_warp</span><span class="p">,</span> <span class="s1">&#39;reference_skull&#39;</span><span class="p">)</span>
 
     <span class="n">calc_ants_warp_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;dimension&#39;</span><span class="p">,</span> <span class="n">calculate_ants_warp</span><span class="p">,</span>
             <span class="s1">&#39;dimension&#39;</span><span class="p">)</span>
@@ -946,14 +912,15 @@
     <span class="k">if</span> <span class="n">map_node</span><span class="p">:</span>
         <span class="n">apply_ants_warp</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">ants</span><span class="o">.</span><span class="n">ApplyTransforms</span><span class="p">(),</span>
                                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;apply_ants_warp_mapnode&#39;</span><span class="p">,</span>
-                                     <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;input_image&#39;</span><span class="p">,</span> <span class="s1">&#39;transforms&#39;</span><span class="p">])</span>
+                                     <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;input_image&#39;</span><span class="p">,</span> <span class="s1">&#39;transforms&#39;</span><span class="p">],</span>
+                                     <span class="n">mem_gb</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">apply_ants_warp</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">ants</span><span class="o">.</span><span class="n">ApplyTransforms</span><span class="p">(),</span>
-                                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;apply_ants_warp&#39;</span><span class="p">)</span>
+                                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;apply_ants_warp&#39;</span><span class="p">,</span>
+                                  <span class="n">mem_gb</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
 
     <span class="n">apply_ants_warp</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_postfix</span> <span class="o">=</span> <span class="s1">&#39;_antswarp&#39;</span>
     <span class="n">apply_ants_warp</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">num_threads</span> <span class="o">=</span> <span class="n">ants_threads</span>
-    <span class="n">apply_ants_warp</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">estimated_memory_gb</span> <span class="o">=</span> <span class="mf">1.5</span>
 
     <span class="k">if</span> <span class="n">inverse</span><span class="p">:</span>
         <span class="n">apply_ants_warp</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">invert_transform_flags</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span>

@@ -1,0 +1,823 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>CPAC.nuisance.utils &#8212; C-PAC 1.3.0 Beta documentation</title>
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.3.0 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for CPAC.nuisance.utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nb</span>
+
+<span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="nn">pe</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="k">as</span> <span class="nn">fsl</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.ants</span> <span class="k">as</span> <span class="nn">ants</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="k">import</span> <span class="n">afni</span>
+
+<span class="kn">from</span> <span class="nn">CPAC.utils.function</span> <span class="k">import</span> <span class="n">Function</span>
+
+<span class="kn">import</span> <span class="nn">scipy.signal</span> <span class="k">as</span> <span class="nn">signal</span>
+
+
+<div class="viewcode-block" id="find_offending_time_points"><a class="viewcode-back" href="../../../workflows/nuisance.html#CPAC.nuisance.find_offending_time_points">[docs]</a><span class="k">def</span> <span class="nf">find_offending_time_points</span><span class="p">(</span><span class="n">fd_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dvars_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                               <span class="n">fd_threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dvars_threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                               <span class="n">number_of_previous_trs_to_censor</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                               <span class="n">number_of_subsequent_trs_to_censor</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Applies criterion in method to find time points whose FD or DVARS (or both)</span>
+<span class="sd">    are above threshold. </span>
+
+<span class="sd">    :param fd_file_path: path to TSV containing framewise displacement as a</span>
+<span class="sd">        single column. If not specified, it will not be used.</span>
+<span class="sd">    :param dvars_file_path: path to TSV containing DVARS as a single column.</span>
+<span class="sd">        If not specified, it will not be used.</span>
+<span class="sd">    :param fd_threshold: threshold to apply to framewise displacement,</span>
+<span class="sd">        it can be a value such as 0.2 or a floating point multiple of the</span>
+<span class="sd">        standard deviation specified as, e.g. &#39;1.5SD&#39;.</span>
+<span class="sd">    :param dvars_threshold: threshold to apply to DVARS, can be a value such</span>
+<span class="sd">        as 0.5 or a floating point multiple of the standard deviation specified</span>
+<span class="sd">        as, e.g. &#39;1.5SD&#39;.</span>
+<span class="sd">    :param number_of_previous_trs_to_censor: extent of censorship window before</span>
+<span class="sd">        the censor.</span>
+<span class="sd">    :param number_of_subsequent_trs_to_censor: extent of censorship window after</span>
+<span class="sd">        the censor.</span>
+
+<span class="sd">    :return: File path to TSV file containing the volumes to be censored.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="kn">import</span> <span class="nn">re</span>
+
+    <span class="n">offending_time_points</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">time_course_len</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">fd_file_path</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fd_file_path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Framewise displacement file </span><span class="si">{0}</span><span class="s2"> could not be found.&quot;</span>
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fd_file_path</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">fd_threshold</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Method FD requires the specification of a &quot;</span>
+                             <span class="s2">&quot;framewise displacement threshold, none received&quot;</span><span class="p">)</span>
+
+        <span class="n">framewise_displacement</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">fd_file_path</span><span class="p">)</span>
+
+        <span class="n">time_course_len</span> <span class="o">=</span> <span class="n">framewise_displacement</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">fd_threshold_sd</span> <span class="o">=</span> \
+                <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;([0-9]*\.*[0-9]*)\s*SD&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">fd_threshold</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">fd_threshold_sd</span><span class="p">:</span>
+                <span class="n">fd_threshold_sd</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">fd_threshold_sd</span><span class="o">.</span><span class="n">groups</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">fd_threshold</span> <span class="o">=</span> <span class="n">framewise_displacement</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> \
+                    <span class="n">fd_threshold_sd</span> <span class="o">*</span> <span class="n">framewise_displacement</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fd_threshold</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">fd_threshold</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could not translate fd_threshold </span><span class="si">{0}</span><span class="s2"> into a &quot;</span>
+                             <span class="s2">&quot;meaningful value&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fd_threshold</span><span class="p">))</span>
+
+        <span class="n">offending_time_points</span> <span class="o">=</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">framewise_displacement</span> <span class="o">&gt;</span> <span class="n">fd_threshold</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">dvars_file_path</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">dvars_file_path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;DVARS file </span><span class="si">{0}</span><span class="s2"> could not be found.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dvars_file_path</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">dvars_threshold</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Method DVARS requires the specification of a &quot;</span>
+                             <span class="s2">&quot;DVARS threshold, none received&quot;</span><span class="p">)</span>
+
+        <span class="n">dvars</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">dvars_file_path</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+        <span class="n">time_course_len</span> <span class="o">=</span> <span class="n">dvars</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">dvars_threshold_sd</span> <span class="o">=</span> \
+                <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;([0-9]*\.*[0-9]*)\s*SD&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">dvars_threshold</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">dvars_threshold_sd</span><span class="p">:</span>
+                <span class="n">dvars_threshold_sd</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dvars_threshold_sd</span><span class="o">.</span><span class="n">groups</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">dvars_threshold</span> <span class="o">=</span> <span class="n">dvars</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> \
+                    <span class="n">dvars_threshold_sd</span> <span class="o">*</span> <span class="n">dvars</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dvars_threshold</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dvars_threshold</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could not translate dvars_threshold </span><span class="si">{0}</span><span class="s2"> into a &quot;</span>
+                             <span class="s2">&quot;meaningful value&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dvars_threshold</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">offending_time_points</span><span class="p">:</span>
+            <span class="n">offending_time_points</span> <span class="o">=</span> \
+                <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">dvars</span> <span class="o">&gt;</span> <span class="n">dvars_threshold</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">offending_time_points</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">offending_time_points</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">dvars</span> <span class="o">&gt;</span> <span class="n">dvars_threshold</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+
+    <span class="n">extended_censors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">censor</span> <span class="ow">in</span> <span class="n">offending_time_points</span><span class="p">:</span>
+        <span class="n">extended_censors</span> <span class="o">+=</span> <span class="nb">range</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">censor</span> <span class="o">-</span> <span class="n">number_of_previous_trs_to_censor</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">censor</span> <span class="o">+</span> <span class="n">number_of_subsequent_trs_to_censor</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">extended_censors</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">censor</span>
+        <span class="k">for</span> <span class="n">censor</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">extended_censors</span><span class="p">)</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">censor</span> <span class="o">&lt;</span> <span class="n">time_course_len</span>
+    <span class="p">]</span>
+
+    <span class="n">censor_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">time_course_len</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">censor_vector</span><span class="p">[</span><span class="n">extended_censors</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">out_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s2">&quot;censors.tsv&quot;</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">out_file_path</span><span class="p">,</span> <span class="n">censor_vector</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out_file_path</span></div>
+
+
+<div class="viewcode-block" id="create_temporal_variance_mask"><a class="viewcode-back" href="../../../workflows/nuisance.html#CPAC.nuisance.create_temporal_variance_mask">[docs]</a><span class="k">def</span> <span class="nf">create_temporal_variance_mask</span><span class="p">(</span><span class="n">functional_file_path</span><span class="p">,</span> <span class="n">mask_file_path</span><span class="p">,</span>
+                                  <span class="n">threshold</span><span class="p">,</span> <span class="n">by_slice</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a mask by applying threshold to the temporal variance of 4D nifti</span>
+<span class="sd">    file in functional_file_path. Only non-zero voxels in mask will be</span>
+<span class="sd">    considered for inclusion.</span>
+
+<span class="sd">    :param functional_file_path: 4D nifti file containing functional data.</span>
+<span class="sd">    :param mask_file_path: name of 3D nifti file containing mask to use to</span>
+<span class="sd">        restrict the voxels considered by the masking operation.</span>
+<span class="sd">    :param threshold: only voxels whose temporal variance meet the threshold</span>
+<span class="sd">        criterion will be included in the created mask. Appropriate values are:</span>
+
+<span class="sd">        - a floating point value, values whose temporal variance is greater than</span>
+<span class="sd">          this value will be included in mask</span>
+<span class="sd">        - a floating point value followed by SD, (1.5SD), values whose temporal</span>
+<span class="sd">          variance is greater that 1.5 standard deviations of voxels will be</span>
+<span class="sd">          included in the mask</span>
+<span class="sd">        - a floating point value followed by PCT, (2PCT), values whose temporal</span>
+<span class="sd">          variance is in the specified percentile from the top will be included</span>
+<span class="sd">          in the mask. E.g.: 2PCT results in the top 2% voxels being included.</span>
+
+<span class="sd">    :param by_slice: indicates whether threshold criterion should be applied by</span>
+<span class="sd">        slice, or to all data, only changes result for thresholds expressed in</span>
+<span class="sd">        terms of SD or PCT.</span>
+
+<span class="sd">    :return: the full path of the 3D nifti file containing the mask created by</span>
+<span class="sd">        this operation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># begin by verifying the input parameters</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">functional_file_path</span> <span class="ow">and</span> <span class="p">(</span>
+        <span class="n">functional_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.nii&quot;</span><span class="p">)</span> <span class="ow">or</span>
+        <span class="n">functional_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.nii.gz&quot;</span><span class="p">)</span>
+    <span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Improper functional file specified (</span><span class="si">{0}</span><span class="s2">), &quot;</span>
+                         <span class="s2">&quot;should be a 4D nifti file.&quot;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">functional_file_path</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">mask_file_path</span> <span class="ow">and</span> <span class="p">(</span>
+        <span class="n">mask_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.nii&quot;</span><span class="p">)</span> <span class="ow">or</span>
+        <span class="n">mask_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.nii.gz&quot;</span><span class="p">)</span>
+    <span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Improper mask file specified (</span><span class="si">{0}</span><span class="s2">), &quot;</span>
+                         <span class="s2">&quot;should be a 3D nifti file.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mask_file_path</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">threshold</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Threshold must be specified. Received None&quot;</span><span class="p">)</span>
+
+    <span class="n">threshold_method</span> <span class="o">=</span> <span class="s2">&quot;VAR&quot;</span>
+    <span class="n">threshold_value</span> <span class="o">=</span> <span class="n">threshold</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">regex_match</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;SD&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;([0-9]+(\.[0-9]+)?)\s*SD&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;PCT&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;([0-9]+(\.[0-9]+)?)\s*PCT&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">method</span><span class="p">,</span> <span class="n">regex</span> <span class="ow">in</span> <span class="n">regex_match</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">matched</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">matched</span><span class="p">:</span>
+                <span class="n">threshold_method</span> <span class="o">=</span> <span class="n">method</span>
+                <span class="n">threshold_value</span> <span class="o">=</span> <span class="n">matched</span><span class="o">.</span><span class="n">groups</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">threshold_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">threshold_value</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Error converting threshold value </span><span class="si">{0}</span><span class="s2"> from </span><span class="si">{1}</span><span class="s2"> to a &quot;</span>
+                         <span class="s2">&quot;floating point number. The threshold value can &quot;</span>
+                         <span class="s2">&quot;contain SD or PCT for selecting a threshold based on &quot;</span>
+                         <span class="s2">&quot;the variance distribution, otherwise it should be a &quot;</span>
+                         <span class="s2">&quot;floating point number.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">threshold_value</span><span class="p">,</span>
+                                                         <span class="n">threshold</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">threshold_value</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Threshold value should be positive, instead of </span><span class="si">{0}</span><span class="s2">.&quot;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">threshold_value</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">threshold_method</span> <span class="ow">is</span> <span class="s2">&quot;PCT&quot;</span> <span class="ow">and</span> <span class="n">threshold_value</span> <span class="o">&gt;=</span> <span class="mf">100.0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Percentile should be less than 100, received </span><span class="si">{0}</span><span class="s2">.&quot;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">threshold_value</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">by_slice</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Parameter by_slice should be a boolean.&quot;</span><span class="p">)</span>
+
+    <span class="n">functional_data_img</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">functional_file_path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">functional_data_img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span> <span class="ow">or</span> <span class="n">functional_data_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Functional data used to create mask (</span><span class="si">{0}</span><span class="s2">) should be &quot;</span>
+                         <span class="s2">&quot;4D and should contain 3 or more time points.&quot;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">functional_file_path</span><span class="p">))</span>
+
+    <span class="n">functional_data_variance</span> <span class="o">=</span> <span class="n">functional_data_img</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">mask_file_path</span><span class="p">:</span>
+        <span class="n">mask_image</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">mask_file_path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">mask_image</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">functional_data_img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">])</span> <span class="ow">and</span>
+               <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">mask_image</span><span class="o">.</span><span class="n">affine</span> <span class="o">==</span> <span class="n">functional_data_img</span><span class="o">.</span><span class="n">affine</span><span class="p">)):</span>
+
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Shape and affine of mask image </span><span class="si">{0}</span><span class="s2"> (</span><span class="si">{1}</span><span class="s2"> </span><span class="si">{2}</span><span class="s2">) &quot;</span>
+                             <span class="s2">&quot;should match those of the functional data &quot;</span>
+                             <span class="s2">&quot;</span><span class="si">{3}</span><span class="s2"> (</span><span class="si">{4}</span><span class="s2"> </span><span class="si">{5}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mask_file_path</span><span class="p">,</span>
+                                                    <span class="n">mask_image</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                                    <span class="n">mask_image</span><span class="o">.</span><span class="n">affine</span><span class="p">,</span>
+                                                    <span class="n">functional_file_path</span><span class="p">,</span>
+                                                    <span class="n">functional_data_img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                                    <span class="n">functional_data_img</span><span class="o">.</span><span class="n">affine</span><span class="p">))</span>
+
+        <span class="n">mask_data</span> <span class="o">=</span> <span class="n">mask_image</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mask_data</span> <span class="o">=</span> <span class="n">functional_data_variance</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">by_slice</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">functional_data_variance_shape</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">functional_data_variance</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]),</span>
+            <span class="n">functional_data_variance</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">functional_data_variance_shape</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">functional_data_variance</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]),</span>
+            <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">functional_data_variance</span> <span class="o">=</span> \
+        <span class="n">functional_data_variance</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">functional_data_variance_shape</span><span class="p">)</span>
+
+    <span class="c1"># Conform output file and mask to functional data shape</span>
+    <span class="n">output_variance_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">functional_data_variance</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">mask_data</span> <span class="o">=</span> <span class="n">mask_data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">functional_data_variance</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">slice_number</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">functional_data_variance</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+
+        <span class="c1"># Make sure that there are some voxels at this slice</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">mask_data</span><span class="p">[:,</span> <span class="n">slice_number</span><span class="p">]):</span>
+            <span class="k">continue</span>
+
+        <span class="n">functional_data_variance_slice</span> <span class="o">=</span> \
+            <span class="n">functional_data_variance</span><span class="p">[</span>
+                <span class="n">mask_data</span><span class="p">[:,</span> <span class="n">slice_number</span><span class="p">],</span>
+                <span class="n">slice_number</span>
+            <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">threshold_method</span> <span class="ow">is</span> <span class="s2">&quot;PCT&quot;</span><span class="p">:</span>
+            <span class="n">slice_threshold_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
+                <span class="n">functional_data_variance_slice</span><span class="p">,</span>
+                <span class="mf">100.0</span> <span class="o">-</span> <span class="n">threshold_value</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">threshold_method</span> <span class="ow">is</span> <span class="s2">&quot;SD&quot;</span><span class="p">:</span>
+            <span class="n">slice_threshold_value</span> <span class="o">=</span> \
+                <span class="n">functional_data_variance_slice</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> \
+                <span class="n">threshold_value</span> <span class="o">*</span> <span class="n">functional_data_variance_slice</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">slice_threshold_value</span> <span class="o">=</span> <span class="n">threshold_value</span>
+
+        <span class="n">output_variance_mask</span><span class="p">[:,</span> <span class="n">slice_number</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">mask_data</span><span class="p">[:,</span> <span class="n">slice_number</span><span class="p">]</span> <span class="o">&amp;</span> \
+            <span class="p">(</span><span class="n">functional_data_variance</span><span class="p">[:,</span> <span class="n">slice_number</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">slice_threshold_value</span><span class="p">)</span>
+
+    <span class="c1"># Make sure that the output mask is the correct shape and format</span>
+    <span class="n">output_variance_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="n">output_variance_mask</span><span class="p">)</span> \
+                             <span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">mask_image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="n">output_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;variance_mask.nii.gz&#39;</span><span class="p">)</span>
+    <span class="n">output_img</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">Nifti1Image</span><span class="p">(</span><span class="n">output_variance_mask</span><span class="p">,</span> <span class="n">mask_image</span><span class="o">.</span><span class="n">affine</span><span class="p">)</span>
+    <span class="n">output_img</span><span class="o">.</span><span class="n">to_filename</span><span class="p">(</span><span class="n">output_file_path</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">output_file_path</span></div>
+
+
+<div class="viewcode-block" id="generate_summarize_tissue_mask"><a class="viewcode-back" href="../../../workflows/nuisance.html#CPAC.nuisance.generate_summarize_tissue_mask">[docs]</a><span class="k">def</span> <span class="nf">generate_summarize_tissue_mask</span><span class="p">(</span><span class="n">nuisance_wf</span><span class="p">,</span>
+                                   <span class="n">pipeline_resource_pool</span><span class="p">,</span>
+                                   <span class="n">regressor_descriptor</span><span class="p">,</span>
+                                   <span class="n">regressor_selector</span><span class="p">,</span>
+                                   <span class="n">use_ants</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add tissue mask generation into pipeline according to the selector.</span>
+
+<span class="sd">    :param nuisance_wf: Nuisance regressor workflow.</span>
+<span class="sd">    :param pipeline_resource_pool: dictionary of available resources.</span>
+<span class="sd">    :param regressor_descriptor: dictionary of steps to build, including keys:</span>
+<span class="sd">        &#39;tissue&#39;, &#39;resolution&#39;, &#39;erosion&#39;</span>
+<span class="sd">    :param regressor_selector: dictionary with the original selector</span>
+
+<span class="sd">    :return: the full path of the 3D nifti file containing the mask created by</span>
+<span class="sd">        this operation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">steps</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">key</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;tissue&#39;</span><span class="p">,</span> <span class="s1">&#39;resolution&#39;</span><span class="p">,</span> <span class="s1">&#39;erosion&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">regressor_descriptor</span>
+    <span class="p">]</span>
+
+    <span class="n">full_mask_key</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">regressor_descriptor</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">steps</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">step_i</span><span class="p">,</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+
+        <span class="n">mask_key</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">regressor_descriptor</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">[:</span><span class="n">step_i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">mask_key</span> <span class="ow">in</span> <span class="n">pipeline_resource_pool</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+
+        <span class="n">node_mask_key</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[^\w]&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">mask_key</span><span class="p">)</span>
+
+        <span class="n">prev_mask_key</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">regressor_descriptor</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">[:</span><span class="n">step_i</span><span class="p">]</span>
+        <span class="p">)</span>
+
+
+        <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="s1">&#39;tissue&#39;</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="n">mask_key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;FunctionalVariance&#39;</span><span class="p">):</span>
+
+                <span class="n">create_variance_mask_node</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
+                    <span class="n">Function</span><span class="p">(</span>
+                        <span class="n">input_names</span><span class="o">=</span><span class="p">[</span>
+                            <span class="s1">&#39;functional_file_path&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;mask_file_path&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;threshold&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;by_slice&#39;</span>
+                        <span class="p">],</span>
+                        <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mask_file_path&#39;</span><span class="p">],</span>
+                        <span class="n">function</span><span class="o">=</span><span class="n">create_temporal_variance_mask</span><span class="p">,</span>
+                        <span class="n">as_module</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;create_temporal_variance_mask_</span><span class="si">{}</span><span class="s1">&#39;</span>
+                         <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node_mask_key</span><span class="p">)</span>
+                <span class="p">)</span>
+
+                <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span>
+                    <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;Functional&#39;</span><span class="p">]</span> <span class="o">+</span>
+                    <span class="p">(</span><span class="n">create_variance_mask_node</span><span class="p">,</span> <span class="s1">&#39;functional_file_path&#39;</span><span class="p">)</span>
+                <span class="p">))</span>
+
+                <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span>
+                    <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;GlobalSignal&#39;</span><span class="p">]</span> <span class="o">+</span>
+                    <span class="p">(</span><span class="n">create_variance_mask_node</span><span class="p">,</span> <span class="s1">&#39;mask_file_path&#39;</span><span class="p">)</span>
+                <span class="p">))</span>
+
+                <span class="n">create_variance_mask_node</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> \
+                    <span class="n">regressor_selector</span><span class="p">[</span><span class="s1">&#39;threshold&#39;</span><span class="p">]</span>
+
+                <span class="n">create_variance_mask_node</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">by_slice</span> <span class="o">=</span> \
+                    <span class="n">regressor_selector</span><span class="p">[</span><span class="s1">&#39;by_slice&#39;</span><span class="p">]</span>
+
+                <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span> <span class="o">=</span> \
+                    <span class="p">(</span><span class="n">create_variance_mask_node</span><span class="p">,</span> <span class="s1">&#39;mask_file_path&#39;</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">mask_key</span> <span class="o">==</span> <span class="s1">&#39;CerebrospinalFluid&#39;</span><span class="p">:</span>
+
+                <span class="n">transforms</span> <span class="o">=</span> <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;Transformations&#39;</span><span class="p">]</span>
+
+                <span class="c1"># reduce CSF mask to the lateral ventricles</span>
+                <span class="n">mask_cfs_with_lat_ven</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;mask_cfs_with_lat_ven&#39;</span><span class="p">)</span>
+                <span class="n">mask_cfs_with_lat_ven</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="s1">&#39;a*b&#39;</span>
+                <span class="n">mask_cfs_with_lat_ven</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+                <span class="n">mask_cfs_with_lat_ven</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_file</span> <span class="o">=</span> <span class="s1">&#39;cfs_lat_ven_mask.nii.gz&#39;</span>
+
+                <span class="k">if</span> <span class="n">use_ants</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+
+                    <span class="c1"># perform the transform using ANTS</span>
+                    <span class="n">collect_linear_transforms</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Merge</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ho_mni_to_2mm_ants_collect_linear_transforms&#39;</span><span class="p">)</span>
+
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">transforms</span><span class="p">[</span><span class="s1">&#39;anat_to_mni_initial_xfm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">collect_linear_transforms</span><span class="p">,</span> <span class="s1">&#39;in1&#39;</span><span class="p">)))</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">transforms</span><span class="p">[</span><span class="s1">&#39;anat_to_mni_rigid_xfm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">collect_linear_transforms</span><span class="p">,</span> <span class="s1">&#39;in2&#39;</span><span class="p">)))</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">transforms</span><span class="p">[</span><span class="s1">&#39;anat_to_mni_affine_xfm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">collect_linear_transforms</span><span class="p">,</span> <span class="s1">&#39;in3&#39;</span><span class="p">)))</span>
+
+                    <span class="n">lat_ven_mni_to_anat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">ants</span><span class="o">.</span><span class="n">ApplyTransforms</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;lat_ven_mni_to_anat_ants&#39;</span><span class="p">)</span>
+                    <span class="n">lat_ven_mni_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">invert_transform_flags</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">]</span>
+                    <span class="n">lat_ven_mni_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="s1">&#39;NearestNeighbor&#39;</span>
+                    <span class="n">lat_ven_mni_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="mi">3</span>
+
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">collect_linear_transforms</span><span class="p">,</span> <span class="s1">&#39;out&#39;</span><span class="p">,</span> <span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;transforms&#39;</span><span class="p">)</span>
+
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;Ventricles&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;input_image&#39;</span><span class="p">)))</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;Anatomical&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;reference_image&#39;</span><span class="p">)))</span>
+
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;output_image&#39;</span><span class="p">,</span> <span class="n">mask_cfs_with_lat_ven</span><span class="p">,</span> <span class="s1">&#39;in_file_b&#39;</span><span class="p">)</span>
+
+                <span class="k">else</span><span class="p">:</span>
+
+                    <span class="c1"># perform the transform using FLIRT</span>
+                    <span class="n">lat_ven_mni_to_anat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;lat_ven_mni_to_anat_flirt&#39;</span><span class="p">)</span>
+                    <span class="n">lat_ven_mni_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;nearestneighbour&#39;</span>
+
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">transforms</span><span class="p">[</span><span class="s1">&#39;mni_to_anat_linear_xfm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;in_matrix_file&#39;</span><span class="p">)))</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;Ventricles&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)))</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;CerebrospinalFluidUnmasked&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)))</span>
+
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">mask_cfs_with_lat_ven</span><span class="p">,</span> <span class="s1">&#39;in_file_b&#39;</span><span class="p">)</span>
+
+                <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;CerebrospinalFluidUnmasked&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">mask_cfs_with_lat_ven</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)))</span>
+
+                <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span> <span class="o">=</span> \
+                    <span class="p">(</span><span class="n">mask_cfs_with_lat_ven</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="s1">&#39;resolution&#39;</span><span class="p">:</span>
+
+            <span class="n">mask_to_epi</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span>
+                                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;mask_to_epi_flirt_applyxfm_</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                       <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node_mask_key</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">regressor_selector</span><span class="p">[</span><span class="s1">&#39;extraction_resolution&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Functional&quot;</span><span class="p">:</span>
+                <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span>
+                    <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;Functional&#39;</span><span class="p">]</span> <span class="o">+</span>
+                    <span class="p">(</span><span class="n">mask_to_epi</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
+                <span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="n">resolution</span> <span class="o">=</span> <span class="n">regressor_selector</span><span class="p">[</span><span class="s1">&#39;extraction_resolution&#39;</span><span class="p">]</span>
+                <span class="n">mask_to_epi</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">apply_isoxfm</span> <span class="o">=</span> \
+                    <span class="n">resolution</span>
+
+                <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span>
+                    <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;Anatomical_</span><span class="si">{}</span><span class="s1">mm&#39;</span>
+                                           <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">resolution</span><span class="p">)]</span> <span class="o">+</span>
+                    <span class="p">(</span><span class="n">mask_to_epi</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
+                <span class="p">))</span>
+
+            <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span>
+                <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">prev_mask_key</span><span class="p">]</span> <span class="o">+</span>
+                <span class="p">(</span><span class="n">mask_to_epi</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+            <span class="p">))</span>
+
+            <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="p">(</span><span class="n">mask_to_epi</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+
+
+        <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="s1">&#39;erosion&#39;</span><span class="p">:</span>
+
+            <span class="n">erode_mask_node</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
+                                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;erode_mask_node_</span><span class="si">{}</span><span class="s1">&#39;</span>
+                                           <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node_mask_key</span><span class="p">))</span>
+            <span class="n">erode_mask_node</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="s2">&quot;-b a+i -c a-i -d a+j &quot;</span> <span class="o">+</span> \
+                                          <span class="s2">&quot;-e a-j -f a+k -g a-k&quot;</span>
+            <span class="n">erode_mask_node</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="s1">&#39;a*(1-amongst(0,b,c,d,e,f,g))&#39;</span>
+            <span class="n">erode_mask_node</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+            <span class="n">erode_mask_node</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_file</span> <span class="o">=</span> <span class="s1">&#39;erode_mask_node.nii.gz&#39;</span>
+
+            <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span>
+                <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">prev_mask_key</span><span class="p">]</span> <span class="o">+</span>
+                <span class="p">(</span><span class="n">erode_mask_node</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
+            <span class="p">))</span>
+
+            <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="p">(</span><span class="n">erode_mask_node</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+
+
+    <span class="k">return</span> <span class="n">pipeline_resource_pool</span><span class="p">,</span> <span class="n">full_mask_key</span></div>
+
+
+<span class="k">def</span> <span class="nf">summarize_timeseries</span><span class="p">(</span><span class="n">functional_path</span><span class="p">,</span> <span class="n">masks_path</span><span class="p">,</span> <span class="n">summary</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="n">summary</span><span class="p">}</span>
+
+    <span class="n">masks_img</span> <span class="o">=</span> <span class="p">[</span><span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">mask_path</span><span class="p">)</span> <span class="k">for</span> <span class="n">mask_path</span> <span class="ow">in</span> <span class="n">masks_path</span><span class="p">]</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+        <span class="n">mask_img</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span> <span class="k">for</span> <span class="n">mask_img</span> <span class="ow">in</span> <span class="n">masks_img</span>
+    <span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.0</span>
+
+    <span class="n">functional_img</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">functional_path</span><span class="p">)</span>
+    <span class="n">masked_functional</span> <span class="o">=</span> <span class="n">functional_img</span><span class="o">.</span><span class="n">get_data</span><span class="p">()[</span><span class="n">mask</span><span class="p">]</span>
+
+    <span class="n">regressors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">masked_functional</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">summary</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Mean&#39;</span><span class="p">:</span>
+        <span class="n">regressors</span> <span class="o">=</span> <span class="n">masked_functional</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">summary</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;NormMean&#39;</span><span class="p">:</span>
+        <span class="n">masked_functional</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">masked_functional</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">regressors</span> <span class="o">=</span> <span class="n">masked_functional</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">summary</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;DetrendNormMean&#39;</span><span class="p">:</span>
+        <span class="n">masked_functional</span> <span class="o">=</span> \
+            <span class="n">signal</span><span class="o">.</span><span class="n">detrend</span><span class="p">(</span><span class="n">masked_functional</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="n">masked_functional</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">masked_functional</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">regressors</span> <span class="o">=</span> <span class="n">masked_functional</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">summary</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;PC&#39;</span><span class="p">:</span>
+        <span class="n">mean_signal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
+            <span class="n">masked_functional</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+            <span class="p">(</span><span class="n">masked_functional</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">U</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span>
+            <span class="n">masked_functional</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">mean_signal</span><span class="p">,</span>
+            <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="n">regressors</span> <span class="o">=</span> <span class="n">U</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;components&#39;</span><span class="p">]]</span>
+
+    <span class="n">output_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;summary_regressors.1D&#39;</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">output_file_path</span><span class="p">,</span> <span class="n">regressors</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%.18f</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">output_file_path</span>
+
+
+<span class="k">class</span> <span class="nc">NuisanceRegressor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">selectors</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selector</span> <span class="o">=</span> <span class="n">selector</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selectors</span> <span class="o">=</span> <span class="n">selectors</span>
+
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">selector</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selector</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">selector</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_derivative_params</span><span class="p">(</span><span class="n">selector</span><span class="p">):</span>
+        <span class="n">nr_repr</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">selector</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">nr_repr</span>
+        <span class="k">if</span> <span class="n">selector</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;include_squared&#39;</span><span class="p">):</span>
+            <span class="n">nr_repr</span> <span class="o">+=</span> <span class="s1">&#39;S&#39;</span>
+        <span class="k">if</span> <span class="n">selector</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;include_delayed&#39;</span><span class="p">):</span>
+            <span class="n">nr_repr</span> <span class="o">+=</span> <span class="s1">&#39;D&#39;</span>
+        <span class="k">if</span> <span class="n">selector</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;include_delayed_squared&#39;</span><span class="p">):</span>
+            <span class="n">nr_repr</span> <span class="o">+=</span> <span class="s1">&#39;B&#39;</span>
+        <span class="k">return</span> <span class="n">nr_repr</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_summary_params</span><span class="p">(</span><span class="n">selector</span><span class="p">):</span>
+        <span class="n">summ</span> <span class="o">=</span> <span class="n">selector</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">]</span>
+
+        <span class="n">methods</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;PC&#39;</span><span class="p">:</span> <span class="s1">&#39;PC&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Mean&#39;</span><span class="p">:</span> <span class="s1">&#39;M&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NormMean&#39;</span><span class="p">:</span> <span class="s1">&#39;NM&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;DetrendMean&#39;</span><span class="p">:</span> <span class="s1">&#39;DM&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;DetrendNormMean&#39;</span><span class="p">:</span> <span class="s1">&#39;DNM&#39;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">summ</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="n">summ</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span>
+            <span class="n">rep</span> <span class="o">=</span> <span class="n">methods</span><span class="p">[</span><span class="n">method</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;PC&#39;</span><span class="p">:</span>
+                <span class="n">rep</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">summ</span><span class="p">[</span><span class="s1">&#39;components&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rep</span> <span class="o">=</span> <span class="n">methods</span><span class="p">[</span><span class="n">summ</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">rep</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">selectors</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">regs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;GreyMatter&#39;</span><span class="p">:</span> <span class="s1">&#39;GM&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;WhiteMatter&#39;</span><span class="p">:</span> <span class="s1">&#39;WM&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;CerebrospinalFluid&#39;</span><span class="p">:</span> <span class="s1">&#39;CSF&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;tCompCor&#39;</span><span class="p">:</span> <span class="s1">&#39;tC&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;aCompCor&#39;</span><span class="p">:</span> <span class="s1">&#39;aC&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;GlobalSignal&#39;</span><span class="p">:</span> <span class="s1">&#39;G&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Motion&#39;</span><span class="p">:</span> <span class="s1">&#39;M&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;PolyOrt&#39;</span><span class="p">:</span> <span class="s1">&#39;P&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Bandpass&#39;</span><span class="p">:</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Censor&#39;</span><span class="p">:</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">tissues</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;GreyMatter&#39;</span><span class="p">,</span> <span class="s1">&#39;WhiteMatter&#39;</span><span class="p">,</span> <span class="s1">&#39;CerebrospinalFluid&#39;</span><span class="p">]</span>
+
+        <span class="n">selectors_representations</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># tC-1.5PT-PC5S-SDB</span>
+        <span class="c1"># aC-WC-2mmE-PC5-SDB</span>
+
+        <span class="c1"># WM-2mmE-PC5-SDB</span>
+        <span class="c1"># CSF-2mmE-M-SDB</span>
+        <span class="c1"># GM-2mmE-DNM-SDB</span>
+
+        <span class="c1"># G-PC5-SDB</span>
+        <span class="c1"># M-SDB</span>
+        <span class="c1"># C-S-FD1.5SD-D1.5SD</span>
+        <span class="c1"># PR-2</span>
+        <span class="c1"># BP-T0.01-B0.1</span>
+
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">regs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">r</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">selector</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">s</span> <span class="o">=</span> <span class="n">selector</span><span class="p">[</span><span class="n">r</span><span class="p">]</span>
+
+            <span class="n">pieces</span> <span class="o">=</span> <span class="p">[</span><span class="n">regs</span><span class="p">[</span><span class="n">r</span><span class="p">]]</span>
+
+            <span class="k">if</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">tissues</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;extraction_resolution&#39;</span><span class="p">):</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%.2g</span><span class="s2">mm&quot;</span> <span class="o">%</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;extraction_resolution&#39;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;erode_mask&#39;</span><span class="p">):</span>
+                        <span class="n">res</span> <span class="o">+=</span> <span class="s1">&#39;E&#39;</span>
+                    <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="n">res</span><span class="p">]</span>
+
+                <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="n">NuisanceRegressor</span><span class="o">.</span><span class="n">_summary_params</span><span class="p">(</span><span class="n">s</span><span class="p">)]</span>
+                <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="n">NuisanceRegressor</span><span class="o">.</span><span class="n">_derivative_params</span><span class="p">(</span><span class="n">s</span><span class="p">)]</span>
+
+            <span class="k">elif</span> <span class="n">r</span> <span class="o">==</span> <span class="s1">&#39;tCompCor&#39;</span><span class="p">:</span>
+
+                <span class="n">threshold</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+                <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;by_slice&#39;</span><span class="p">):</span>
+                    <span class="n">threshold</span> <span class="o">+=</span> <span class="s1">&#39;S&#39;</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;threshold&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">t</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">:</span>
+                        <span class="n">t</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">t</span>
+                    <span class="n">threshold</span> <span class="o">+=</span> <span class="n">t</span>
+
+                <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="n">threshold</span><span class="p">]</span>
+                <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="n">NuisanceRegressor</span><span class="o">.</span><span class="n">_summary_params</span><span class="p">(</span><span class="n">s</span><span class="p">)]</span>
+                <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="n">NuisanceRegressor</span><span class="o">.</span><span class="n">_derivative_params</span><span class="p">(</span><span class="n">s</span><span class="p">)]</span>
+
+            <span class="k">elif</span> <span class="n">r</span> <span class="o">==</span> <span class="s1">&#39;aCompCor&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tissues&#39;</span><span class="p">):</span>
+                    <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;+&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">regs</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;tissues&#39;</span><span class="p">]])]</span>
+                <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;extraction_resolution&#39;</span><span class="p">):</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;extraction_resolution&#39;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;erode_mask&#39;</span><span class="p">):</span>
+                        <span class="n">res</span> <span class="o">+=</span> <span class="s1">&#39;E&#39;</span>
+
+                <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="n">NuisanceRegressor</span><span class="o">.</span><span class="n">_summary_params</span><span class="p">(</span><span class="n">s</span><span class="p">)]</span>
+                <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="n">NuisanceRegressor</span><span class="o">.</span><span class="n">_derivative_params</span><span class="p">(</span><span class="n">s</span><span class="p">)]</span>
+
+            <span class="k">elif</span> <span class="n">r</span> <span class="o">==</span> <span class="s1">&#39;Global&#39;</span><span class="p">:</span>
+                <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="n">NuisanceRegressor</span><span class="o">.</span><span class="n">_summary_params</span><span class="p">(</span><span class="n">s</span><span class="p">)]</span>
+                <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="n">NuisanceRegressor</span><span class="o">.</span><span class="n">_derivative_params</span><span class="p">(</span><span class="n">s</span><span class="p">)]</span>
+
+            <span class="k">elif</span> <span class="n">r</span> <span class="o">==</span> <span class="s1">&#39;Motion&#39;</span><span class="p">:</span>
+                <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="n">NuisanceRegressor</span><span class="o">.</span><span class="n">_derivative_params</span><span class="p">(</span><span class="n">s</span><span class="p">)]</span>
+
+            <span class="k">elif</span> <span class="n">r</span> <span class="o">==</span> <span class="s1">&#39;PolyOrt&#39;</span><span class="p">:</span>
+                <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;degree&#39;</span><span class="p">]]</span>
+
+            <span class="k">elif</span> <span class="n">r</span> <span class="o">==</span> <span class="s1">&#39;BandPass&#39;</span><span class="p">:</span>
+                <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;T</span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;top_frequency&#39;</span><span class="p">]]</span>
+                <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;B</span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;bottom_frequency&#39;</span><span class="p">]]</span>
+
+            <span class="k">elif</span> <span class="n">r</span> <span class="o">==</span> <span class="s1">&#39;Censor&#39;</span><span class="p">:</span>
+                <span class="n">censoring</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;Kill&#39;</span><span class="p">:</span> <span class="s1">&#39;K&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;Zero&#39;</span><span class="p">:</span> <span class="s1">&#39;Z&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;Interpolate&#39;</span><span class="p">:</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;SpikeRegression&#39;</span><span class="p">:</span> <span class="s1">&#39;S&#39;</span><span class="p">,</span>
+                <span class="p">}</span>
+
+                <span class="n">thresholds</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;FD&#39;</span><span class="p">:</span> <span class="s1">&#39;FD&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;DVARS&#39;</span><span class="p">:</span> <span class="s1">&#39;DV&#39;</span><span class="p">,</span>
+                <span class="p">}</span>
+
+                <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="n">censoring</span><span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]]]</span>
+
+                <span class="n">trs_range</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;number_of_previous_trs_to_censor&#39;</span><span class="p">):</span>
+                    <span class="n">trs_range</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;number_of_previous_trs_to_censor&#39;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;number_of_subsequent_trs_to_censor&#39;</span><span class="p">):</span>
+                    <span class="n">trs_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">s</span><span class="p">[</span><span class="s1">&#39;number_of_subsequent_trs_to_censor&#39;</span><span class="p">]</span>
+
+                <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;+&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">trs_range</span><span class="p">)]</span>
+
+                <span class="n">threshs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s1">&#39;thresholds&#39;</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">threshs</span><span class="p">:</span>
+                    <span class="n">thresh</span> <span class="o">=</span> <span class="n">thresholds</span><span class="p">[</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]]</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+                        <span class="n">thresh</span> <span class="o">+=</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">thresh</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%.2g</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
+
+                    <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="n">thresh</span><span class="p">]</span>
+
+            <span class="n">selectors_representations</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">pieces</span><span class="p">))]</span>
+
+        <span class="k">return</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">selectors_representations</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">NuisanceRegressor</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selector</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selectors</span><span class="p">,</span>
+        <span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.3.0 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+
+  </body>
+</html>

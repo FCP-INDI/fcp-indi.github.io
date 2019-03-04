@@ -17,7 +17,7 @@ from CPAC import __version__
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('.'))
 
 # -- General configuration -----------------------------------------------------
 
@@ -27,7 +27,8 @@ from CPAC import __version__
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.mathjax',
-              'sphinx.ext.ifconfig', 'sphinx.ext.viewcode']
+              'sphinx.ext.ifconfig', 'sphinx.ext.viewcode',
+              'exec']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

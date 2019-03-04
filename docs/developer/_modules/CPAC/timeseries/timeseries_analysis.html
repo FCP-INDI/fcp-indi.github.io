@@ -329,28 +329,10 @@
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">edited_roi_csv</span><span class="p">,</span> <span class="s1">&#39;wt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">edited_lines</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-        <span class="n">edited_roi_csv</span> <span class="o">=</span> <span class="p">[</span><span class="n">edited_roi_csv</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">edited_roi_csv</span> <span class="o">=</span> <span class="p">[</span><span class="n">roi_csv</span><span class="p">]</span>
+        <span class="n">edited_roi_csv</span> <span class="o">=</span> <span class="n">roi_csv</span>
 
     <span class="k">return</span> <span class="n">edited_roi_csv</span>
-
-
-<span class="k">def</span> <span class="nf">write_roi_npz</span><span class="p">(</span><span class="n">roi_csv</span><span class="p">,</span> <span class="n">out_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-
-    <span class="n">roi_npz</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">roi_outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">roi_csv</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">out_type</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">roi_outputs</span>
-    <span class="k">elif</span> <span class="n">out_type</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-        <span class="n">np_roi_data</span> <span class="o">=</span> <span class="n">genfromtxt</span><span class="p">(</span><span class="n">roi_csv</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
-        <span class="n">roi_npz</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;roi_stats.npz&#39;</span><span class="p">)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">roi_npz</span><span class="p">,</span> <span class="s1">&#39;wt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">np_roi_data</span><span class="p">)</span>
-        <span class="n">roi_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">roi_npz</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">roi_outputs</span>
 
 
 <div class="viewcode-block" id="get_roi_timeseries"><a class="viewcode-back" href="../../../workflows/timeseries.html#CPAC.timeseries.get_roi_timeseries">[docs]</a><span class="k">def</span> <span class="nf">get_roi_timeseries</span><span class="p">(</span><span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;roi_timeseries&#39;</span><span class="p">):</span>
@@ -434,16 +416,7 @@
 
     <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">timeseries_roi</span><span class="p">,</span> <span class="s1">&#39;stats&#39;</span><span class="p">,</span> <span class="n">clean_csv</span><span class="p">,</span> <span class="s1">&#39;roi_csv&#39;</span><span class="p">)</span>
 
-    <span class="n">write_npz_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;import numpy as np&#39;</span><span class="p">,</span>
-                         <span class="s1">&#39;from numpy import genfromtxt&#39;</span><span class="p">]</span>
-    <span class="n">write_npz</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;roi_csv&#39;</span><span class="p">,</span> <span class="s1">&#39;out_type&#39;</span><span class="p">],</span>
-                                      <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;roi_outputs&#39;</span><span class="p">],</span>
-                                      <span class="n">function</span><span class="o">=</span><span class="n">write_roi_npz</span><span class="p">,</span>
-                                      <span class="n">imports</span><span class="o">=</span><span class="n">write_npz_imports</span><span class="p">),</span>
-                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;write_roi_npz&#39;</span><span class="p">)</span>
-    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">clean_csv</span><span class="p">,</span> <span class="s1">&#39;edited_roi_csv&#39;</span><span class="p">,</span> <span class="n">write_npz</span><span class="p">,</span> <span class="s1">&#39;roi_csv&#39;</span><span class="p">)</span>
-    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;output_type&#39;</span><span class="p">,</span> <span class="n">write_npz</span><span class="p">,</span> <span class="s1">&#39;out_type&#39;</span><span class="p">)</span>
-    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">write_npz</span><span class="p">,</span> <span class="s1">&#39;roi_outputs&#39;</span><span class="p">,</span> <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;roi_outputs&#39;</span><span class="p">)</span>
+    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">clean_csv</span><span class="p">,</span> <span class="s1">&#39;edited_roi_csv&#39;</span><span class="p">,</span> <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;roi_outputs&#39;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">wflow</span></div>
 

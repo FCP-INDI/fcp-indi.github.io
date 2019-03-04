@@ -49,189 +49,47 @@
   <div class="section" id="module-CPAC.nuisance">
 <span id="nuisance-signal-removal"></span><h1>Nuisance Signal Removal<a class="headerlink" href="#module-CPAC.nuisance" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
-<dt id="CPAC.nuisance.create_nuisance_workflow">
-<code class="descclassname">CPAC.nuisance.</code><code class="descname">create_nuisance_workflow</code><span class="sig-paren">(</span><em>nuisance_selectors</em>, <em>use_ants</em>, <em>name='nuisance'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/CPAC/nuisance/nuisance.html#create_nuisance_workflow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CPAC.nuisance.create_nuisance_workflow" title="Permalink to this definition">¶</a></dt>
-<dd><p>Workflow for the removal of various signals considered to be noise from resting state
+<dt id="CPAC.nuisance.create_nuisance">
+<code class="descclassname">CPAC.nuisance.</code><code class="descname">create_nuisance</code><span class="sig-paren">(</span><em>use_ants</em>, <em>name='nuisance'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/CPAC/nuisance/nuisance.html#create_nuisance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CPAC.nuisance.create_nuisance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Workflow for the removal of various signals considered to be noise in resting state
 fMRI data.  The residual signals for linear regression denoising is performed in a single
 model.  Therefore the residual time-series will be orthogonal to all signals.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>nuisance_selectors</strong> – dictionary describing nuisance regression to be performed</li>
-<li><strong>use_ants</strong> – flag indicating whether FNIRT or ANTS is used</li>
-<li><strong>name</strong> – Name of the workflow, defaults to ‘nuisance’</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">nuisance : nipype.pipeline.engine.Workflow
-Nuisance workflow.</p>
-</td>
-</tr>
-</tbody>
-</table>
+<dl class="docutils">
+<dt>name <span class="classifier-delimiter">:</span> <span class="classifier">string, optional</span></dt>
+<dd>Name of the workflow.</dd>
+</dl>
+<dl class="docutils">
+<dt>nuisance <span class="classifier-delimiter">:</span> <span class="classifier">nipype.pipeline.engine.Workflow</span></dt>
+<dd>Nuisance workflow.</dd>
+</dl>
 <p>Workflow Inputs:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>inputspec.functional_file_path : string (nifti file)
-    Path to realigned and motion corrected functional image (nifti) file.
-
-inputspec.functional_brain_mask_file_path : string (nifti file)
-    Whole brain mask corresponding to the functional data.
-
-inputspec.wm_mask_file_path : string (nifti file)
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>inputspec.subject : string (nifti file)
+    Path of the subject&#39;s realigned nifti file.
+inputspec.wm_mask : string (nifti file)
     Corresponding white matter mask.
-inputspec.csf_mask_file_path : string (nifti file)
+inputspec.csf_mask : string (nifti file)
     Corresponding cerebral spinal fluid mask.
-inputspec.gm_mask_file_path : string (nifti file)
+inputspec.gm_mask : string (nifti file)
     Corresponding grey matter mask.
-inputspec.lat_ventricles_mask_file_path : string (nifti file)
-    Mask of lateral ventricles calculated from the Harvard Oxford Atlas.
-
-inputspec.mni_to_anat_linear_xfm_file_path: string (nifti file)
-    FLIRT Linear MNI to Anat transform
-inputspec.anat_to_mni_initial_xfm_file_path: string (nifti file)
-    ANTS initial transform from anat to MNI
-inputspec.anat_to_mni_rigid_xfm_file_path: string (nifti file)
-    ANTS rigid (6 parameter, no scaling) transform from anat to MNI
-inputspec.anat_to_mni_affine_xfm_file_path: string (nifti file)
-    ANTS affine (13 parameter, scales and shears) transform from anat to MNI
-
-inputspec.func_to_anat_linear_xfm_file_path: string (nifti file)
-    FLIRT Linear Transform between functional and anatomical spaces 
-
-inputspec.motion_parameter_file_path : string (text file)
-    Corresponding rigid-body motion parameters. Matrix in the file should be of shape 
-    (`T`, `R`), `T` time points and `R` motion parameters.
-inputspec.fd_file_path : string (text file)
-    Framewise displacement calculated from the motion parameters.
-inputspec.dvars_file_path : string (text file)
-    DVARS calculated from the functional data.
-
-inputspec.selector : Dictionary containing configuration parameters for nuisance regression.
-    To not run a type of nuisance regression, it may be ommited from the dictionary.
-    selector = {
-        aCompCor: {
-            symmary: {
-                method: &#39;PC&#39;, aCompCor will always extract the principal components from
-                    tissues signal,
-                components: number of components to retain,
-            },
-            tissues: list of tissues to extract regressors.
-                Valid values are: &#39;WhiteMatter&#39;, &#39;CerebrospinalFluid&#39;,
-            extraction_resolution: None | floating point value indicating isotropic
-                resolution (ex. 2 for 2mm x 2mm x 2mm that data should be extracted at,
-                the corresponding tissue mask will be resampled to this resolution. The
-                functional data will also be resampled to this resolution, and the
-                extraction will occur at this new resolution. The goal is to avoid
-                contamination from undesired tissue components when extracting nuisance
-                regressors,
-            erode_mask: True | False, whether or not the mask should be eroded to
-                further avoid a mask overlapping with a different tissue class,
-            include_delayed: True | False, whether or not to include a one-frame delay regressor,
-                default to False,
-            include_squared: True | False, whether or not to include a squared regressor,
-                default to False,
-            include_delayed_squared: True | False, whether or not to include a squared one-frame
-                delay regressor, default to False,
-        },
-        tCompCor: {
-            symmary: {
-                method: &#39;PC&#39;, tCompCor will always extract the principal components from
-                    BOLD signal,
-                components: number of components to retain,
-            },
-            threshold:
-                floating point number = cutoff as raw variance value,
-                floating point number followed by SD (ex. 1.5SD) = mean + a multiple of the SD,
-                floating point number followed by PCT (ex. 2PCT) = percentile from the top (ex is top 2%),
-            by_slice: True | False, whether or not the threshold criterion should be applied
-                by slice or across the entire volume, makes most sense for thresholds
-                using SD or PCT,
-            include_delayed: True | False,
-            include_squared: True | False,
-            include_delayed_squared: True | False,
-        },
-        WhiteMatter: {
-            symmary: {
-                method: &#39;PC&#39;, &#39;Mean&#39;, &#39;NormMean&#39; or &#39;DetrendNormMean&#39;,
-                components: number of components to retain, if PC,
-            },
-            extraction_resolution: None | floating point value (same as for aCompCor),
-            erode_mask: True | False (same as for aCompCor),
-            include_delayed: True | False (same as for aCompCor),
-            include_squared: True | False (same as for aCompCor),
-            include_delayed_squared: True | False (same as for aCompCor),
-        },
-        CerebrospinalFluid: {
-            symmary: {
-                method: &#39;PC&#39;, &#39;Mean&#39;, &#39;NormMean&#39; or &#39;DetrendNormMean&#39;,
-                components: number of components to retain, if PC,
-            },
-            extraction_resolution: None | floating point value (same as for aCompCor),
-            erode_mask: True | False (same as for aCompCor),
-            include_delayed: True | False (same as for aCompCor),
-            include_squared: True | False (same as for aCompCor),
-            include_delayed_squared: True | False (same as for aCompCor),
-        },
-        GreyMatter: {
-            symmary: {
-                method: &#39;PC&#39;, &#39;Mean&#39;, &#39;NormMean&#39; or &#39;DetrendNormMean&#39;,
-                components: number of components to retain, if PC,
-            },
-            extraction_resolution: None | floating point value (same as for aCompCor),
-            erode_mask: True | False (same as for aCompCor),
-            include_delayed: True | False (same as for aCompCor),
-            include_squared: True | False (same as for aCompCor),
-            include_delayed_squared: True | False (same as for aCompCor),
-        },
-        GlobalSignal: {
-            symmary: {
-                method: &#39;PC&#39;, &#39;Mean&#39;, &#39;NormMean&#39; or &#39;DetrendNormMean&#39;,
-                components: number of components to retain, if PC,
-            },
-            include_delayed: True | False (same as for aCompCor),
-            include_squared: True | False (same as for aCompCor),
-            include_delayed_squared: True | False (same as for aCompCor),
-        },
-        Motion: None | { 
-            include_delayed: True | False (same as for aCompCor),
-            include_squared: True | False (same as for aCompCor),
-            include_delayed_squared: True | False (same as for aCompCor),
-        },
-        Censor: {
-            method: &#39;Kill&#39;, &#39;Zero&#39;, &#39;Interpolate&#39;, &#39;SpikeRegression&#39;,
-            thresholds: list of dictionary, {
-                type: &#39;FD&#39;, &#39;DVARS&#39;,
-                value: threshold value to be applied to metric
-            },
-            number_of_previous_trs_to_censor: integer, number of previous
-                TRs to censor (remove or regress, if spike regression)
-            number_of_subsequent_trs_to_censor: integer, number of
-                subsequent TRs to censor (remove or regress, if spike
-                regression)
-        },
-        PolyOrt: {
-            degree: integer, polynomial degree up to which will be removed,
-                e.g. 2 means constant + linear + quadratic, practically
-                that is probably, the most that will be need especially
-                if band pass filtering
-        },
-        Bandpass: {
-            bottom_frequency: floating point value, frequency in hertz of
-                the highpass part of the pass band, frequencies below this
-                will be removed,
-            top_frequency: floating point value, frequency in hertz of the
-                lowpass part of the pass band, frequencies above this
-                will be removed
-        }
-    }
+inputspec.mni_to_anat_linear_xfm : string (nifti file)
+    Corresponding MNI to anatomical linear transformation 
+inputspec.func_to_anat_linear_xfm : string (nifti file)
+    Corresponding EPI to anatomical linear transformation
+inputspec.harvard_oxford_mask : string (nifti file)
+    Harvard Oxford parcellation for ventrical locations
+inputspec.motion_components : string (text file)
+    Corresponding rigid-body motion parameters.  Matrix in the file should be of shape 
+    (`T`, `R`), `T` timepoints and `R` motion parameters.
+inputspec.selector : dictionary
+inputspec.compcor_ncomponents : integer
 </pre></div>
 </div>
 <p>Workflow Outputs:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">outputspec</span><span class="o">.</span><span class="n">residual_file_path</span> <span class="p">:</span> <span class="n">string</span> <span class="p">(</span><span class="n">nifti</span> <span class="n">file</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">outputspec</span><span class="o">.</span><span class="n">subject</span> <span class="p">:</span> <span class="n">string</span> <span class="p">(</span><span class="n">nifti</span> <span class="n">file</span><span class="p">)</span>
     <span class="n">Path</span> <span class="n">of</span> <span class="n">residual</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">nifti</span> <span class="nb">format</span>
-<span class="n">outputspec</span><span class="o">.</span><span class="n">regressors_file_path</span> <span class="p">:</span> <span class="n">string</span> <span class="p">(</span><span class="n">TSV</span> <span class="n">file</span><span class="p">)</span>
-    <span class="n">Path</span> <span class="n">of</span> <span class="n">TSV</span> <span class="n">file</span> <span class="n">of</span> <span class="n">regressors</span> <span class="n">used</span><span class="o">.</span> <span class="n">Column</span> <span class="n">name</span> <span class="n">indicates</span> <span class="n">the</span> <span class="n">regressors</span> <span class="n">included</span> <span class="o">.</span>
+<span class="n">outputspec</span><span class="o">.</span><span class="n">regressors</span> <span class="p">:</span> <span class="n">string</span> <span class="p">(</span><span class="n">mat</span> <span class="n">file</span><span class="p">)</span>
+    <span class="n">Path</span> <span class="n">of</span> <span class="n">csv</span> <span class="n">file</span> <span class="n">of</span> <span class="n">regressors</span> <span class="n">used</span><span class="o">.</span>  <span class="n">Filename</span> <span class="n">corresponds</span> <span class="n">to</span> <span class="n">the</span> <span class="n">name</span> <span class="n">of</span> <span class="n">each</span>
+    <span class="n">regressor</span> <span class="ow">in</span> <span class="n">each</span> <span class="n">column</span><span class="o">.</span>
 </pre></div>
 </div>
 <p>Nuisance Procedure:</p>
@@ -247,103 +105,65 @@ single model for every voxel.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="CPAC.nuisance.find_offending_time_points">
-<code class="descclassname">CPAC.nuisance.</code><code class="descname">find_offending_time_points</code><span class="sig-paren">(</span><em>fd_file_path=None</em>, <em>dvars_file_path=None</em>, <em>fd_threshold=None</em>, <em>dvars_threshold=None</em>, <em>number_of_previous_trs_to_censor=0</em>, <em>number_of_subsequent_trs_to_censor=0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/CPAC/nuisance/utils.html#find_offending_time_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CPAC.nuisance.find_offending_time_points" title="Permalink to this definition">¶</a></dt>
-<dd><p>Applies criterion in method to find time points whose FD or DVARS (or both)
-are above threshold.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>fd_file_path</strong> – path to TSV containing framewise displacement as a
-single column. If not specified, it will not be used.</li>
-<li><strong>dvars_file_path</strong> – path to TSV containing DVARS as a single column.
-If not specified, it will not be used.</li>
-<li><strong>fd_threshold</strong> – threshold to apply to framewise displacement,
-it can be a value such as 0.2 or a floating point multiple of the
-standard deviation specified as, e.g. ‘1.5SD’.</li>
-<li><strong>dvars_threshold</strong> – threshold to apply to DVARS, can be a value such
-as 0.5 or a floating point multiple of the standard deviation specified
-as, e.g. ‘1.5SD’.</li>
-<li><strong>number_of_previous_trs_to_censor</strong> – extent of censorship window before
-the censor.</li>
-<li><strong>number_of_subsequent_trs_to_censor</strong> – extent of censorship window after
-the censor.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">File path to TSV file containing the volumes to be censored.</p>
-</td>
-</tr>
-</tbody>
-</table>
+<dt id="CPAC.nuisance.calc_residuals">
+<code class="descclassname">CPAC.nuisance.</code><code class="descname">calc_residuals</code><span class="sig-paren">(</span><em>subject</em>, <em>selector</em>, <em>despiking=False</em>, <em>wm_sig_file=None</em>, <em>csf_sig_file=None</em>, <em>gm_sig_file=None</em>, <em>motion_file=None</em>, <em>compcor_ncomponents=0</em>, <em>frames_ex=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/CPAC/nuisance/nuisance.html#calc_residuals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CPAC.nuisance.calc_residuals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates residuals of nuisance regressors for every voxel for a subject.</p>
+<dl class="docutils">
+<dt>subject <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd>Path of a subject’s realigned nifti file.</dd>
+<dt>selector <span class="classifier-delimiter">:</span> <span class="classifier">dictionary</span></dt>
+<dd>Dictionary of selected regressors.  Keys are  represented as a string of the regressor name and keys 
+are True/False.  See notes for an example.</dd>
+<dt>wm_sig_file <span class="classifier-delimiter">:</span> <span class="classifier">string, optional</span></dt>
+<dd>Path to subject’s white matter mask (in the same space as the subject’s functional file)</dd>
+<dt>csf_sig_file <span class="classifier-delimiter">:</span> <span class="classifier">string, optional</span></dt>
+<dd>Path to subject’s cerebral spinal fluid mask (in the same space as the subject’s functional file)</dd>
+<dt>gm_sig_file <span class="classifier-delimiter">:</span> <span class="classifier">string, optional</span></dt>
+<dd>Path to subject’s grey matter mask (in the same space as the subject’s functional file)</dd>
+<dt>compcor_ncomponents <span class="classifier-delimiter">:</span> <span class="classifier">integer, optional</span></dt>
+<dd>The first <cite>n</cite> principal of CompCor components to use as regressors.  Default is 0.</dd>
+<dt>frames_ex <span class="classifier-delimiter">:</span> <span class="classifier">string, optional</span></dt>
+<dd>Filepath to the 1D file describing the volumes to be excluded (for
+de-spiking), selected via the threshold set for excessive motion.</dd>
+</dl>
+<dl class="docutils">
+<dt>residual_file <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd>Path of residual file in nifti format</dd>
+<dt>regressors_file <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd>Path of csv file of regressors used.  Filename corresponds to the name of each
+regressor in each column.</dd>
+</dl>
+<p>Example of selector parameter:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">selector</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;compcor&#39;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;wm&#39;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;csf&#39;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;gm&#39;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;global&#39;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;pc1&#39;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;motion&#39;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;linear&#39;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;quadratic&#39;</span> <span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
-<dt id="CPAC.nuisance.create_temporal_variance_mask">
-<code class="descclassname">CPAC.nuisance.</code><code class="descname">create_temporal_variance_mask</code><span class="sig-paren">(</span><em>functional_file_path</em>, <em>mask_file_path</em>, <em>threshold</em>, <em>by_slice=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/CPAC/nuisance/utils.html#create_temporal_variance_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CPAC.nuisance.create_temporal_variance_mask" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a mask by applying threshold to the temporal variance of 4D nifti
-file in functional_file_path. Only non-zero voxels in mask will be
-considered for inclusion.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>functional_file_path</strong> – 4D nifti file containing functional data.</li>
-<li><strong>mask_file_path</strong> – name of 3D nifti file containing mask to use to
-restrict the voxels considered by the masking operation.</li>
-<li><strong>threshold</strong> – <p>only voxels whose temporal variance meet the threshold
-criterion will be included in the created mask. Appropriate values are:</p>
-<ul>
-<li>a floating point value, values whose temporal variance is greater than
-this value will be included in mask</li>
-<li>a floating point value followed by SD, (1.5SD), values whose temporal
-variance is greater that 1.5 standard deviations of voxels will be
-included in the mask</li>
-<li>a floating point value followed by PCT, (2PCT), values whose temporal
-variance is in the specified percentile from the top will be included
-in the mask. E.g.: 2PCT results in the top 2% voxels being included.</li>
-</ul>
-</li>
-<li><strong>by_slice</strong> – indicates whether threshold criterion should be applied by
-slice, or to all data, only changes result for thresholds expressed in
-terms of SD or PCT.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the full path of the 3D nifti file containing the mask created by
-this operation.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="CPAC.nuisance.generate_summarize_tissue_mask">
-<code class="descclassname">CPAC.nuisance.</code><code class="descname">generate_summarize_tissue_mask</code><span class="sig-paren">(</span><em>nuisance_wf</em>, <em>pipeline_resource_pool</em>, <em>regressor_descriptor</em>, <em>regressor_selector</em>, <em>use_ants=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/CPAC/nuisance/utils.html#generate_summarize_tissue_mask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CPAC.nuisance.generate_summarize_tissue_mask" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add tissue mask generation into pipeline according to the selector.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>nuisance_wf</strong> – Nuisance regressor workflow.</li>
-<li><strong>pipeline_resource_pool</strong> – dictionary of available resources.</li>
-<li><strong>regressor_descriptor</strong> – dictionary of steps to build, including keys:
-‘tissue’, ‘resolution’, ‘erosion’</li>
-<li><strong>regressor_selector</strong> – dictionary with the original selector</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the full path of the 3D nifti file containing the mask created by
-this operation.</p>
-</td>
-</tr>
-</tbody>
-</table>
+<dt id="CPAC.nuisance.bandpass_voxels">
+<code class="descclassname">CPAC.nuisance.</code><code class="descname">bandpass_voxels</code><span class="sig-paren">(</span><em>realigned_file</em>, <em>bandpass_freqs</em>, <em>sample_period=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/CPAC/nuisance/nuisance.html#bandpass_voxels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#CPAC.nuisance.bandpass_voxels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs ideal bandpass filtering on each voxel time-series.</p>
+<dl class="docutils">
+<dt>realigned_file <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd>Path of a realigned nifti file.</dd>
+<dt>bandpass_freqs <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span></dt>
+<dd>Tuple containing the bandpass frequencies. (LowCutoff_HighPass HighCutoff_LowPass)</dd>
+<dt>sample_period <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd>Length of sampling period in seconds.  If not specified,
+this value is read from the nifti file provided.</dd>
+</dl>
+<dl class="docutils">
+<dt>bandpassed_file <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd>Path of filtered output (nifti file).</dd>
+</dl>
 </dd></dl>
 
 </div>

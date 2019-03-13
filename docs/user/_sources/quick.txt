@@ -114,6 +114,15 @@ As an example, in order to run the C-PAC Docker container in participant mode, f
 
 Note, the ``-v`` flags map your local filesystem locations to a "location" within the Docker image. (For example, the ``/bids_dataset`` and ``/outputs`` directories in the command above are arbitrary names). If you provided ``/Users/You/local_bids_data`` to the ``bids_dir`` input parameter, Docker would not be able to access or see that directory, so it needs to be mapped first. In this example, the local machine's ``/tmp`` directory has been mapped to the ``/scratch`` name because the C-PAC Docker image's default pipeline sets the working directory to ``/scratch``. If you wish to keep your working directory somewhere more permanent, you can simply map this like so: ``-v /Users/You/working_dir:/scratch``.
 
+You can also provide a link to an AWS S3 bucket containing a BIDS directory as the data source:
+
+.. code-block:: bash
+
+    docker run -i --rm \
+            -v /Users/You/some_folder:/outputs \
+            -v /tmp:/scratch \
+            fcpindi/c-pac:latest s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant
+
 To run the C-PAC Docker container with a pipeline configuration file other than the container's default pipeline, assuming the configuration file is in the ``/Users/You/Documents`` directory:
 
 .. code-block:: bash
@@ -152,6 +161,39 @@ Note: we are still providing ``/bids_dataset`` to the ``bids_dir`` input paramet
 * When the app is run, a data configuration file is written to the working directory. This file can be passed into subsequent runs, which avoids the overhead of re-parsing the BIDS input directory on each run (i.e. for cluster or cloud runs). These files can be generated without executing the C-PAC pipeline using the test_run command line argument.
 
 * The ``participant_label`` and ``participant_ndx`` arguments allow the user to specify which of the many datasets should be processed, which is useful when parallelizing the run of multiple participants.
+
+Running On Singularity
+----------------------
+
+You can convert a Docker container into a Singularity container :
+
+.. code-block:: bash
+
+    docker run --privileged -ti --rm  \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v /Users/You/singularity_images:/output \
+        filo/docker2singularity fcpindi/c-pac:latest
+
+This will create a Singularity container image named something like ``fcpindi_c-pac_latest-{date}-{hash value}.img``.
+
+Running a Singularity image is similar to running a Docker image, except you use ``-B`` for mappings instead of ``-v``:
+
+.. code-block:: bash
+
+    singularity run \
+            -B /Users/You/local_bids_data:/bids_dataset \
+            -B /Users/You/some_folder:/outputs \
+            -B /tmp:/scratch \
+            fcpindi_c-pac_latest-{date}-{hash value}.img /bids_dataset /outputs participant
+
+Again, you can also provide an AWS S3 link for the data:
+
+.. code-block:: bash
+
+    singularity run \
+            -B /Users/You/some_folder:/outputs \
+            -B /tmp:/scratch \
+            fcpindi_c-pac_latest-{date}-{hash value}.img s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant
 
 Running Turnkey Mode
 --------------------

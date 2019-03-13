@@ -152,6 +152,13 @@ optional arguments:
 </pre></div>
 </div>
 <p>Note, the <code class="docutils literal"><span class="pre">-v</span></code> flags map your local filesystem locations to a “location” within the Docker image. (For example, the <code class="docutils literal"><span class="pre">/bids_dataset</span></code> and <code class="docutils literal"><span class="pre">/outputs</span></code> directories in the command above are arbitrary names). If you provided <code class="docutils literal"><span class="pre">/Users/You/local_bids_data</span></code> to the <code class="docutils literal"><span class="pre">bids_dir</span></code> input parameter, Docker would not be able to access or see that directory, so it needs to be mapped first. In this example, the local machine’s <code class="docutils literal"><span class="pre">/tmp</span></code> directory has been mapped to the <code class="docutils literal"><span class="pre">/scratch</span></code> name because the C-PAC Docker image’s default pipeline sets the working directory to <code class="docutils literal"><span class="pre">/scratch</span></code>. If you wish to keep your working directory somewhere more permanent, you can simply map this like so: <code class="docutils literal"><span class="pre">-v</span> <span class="pre">/Users/You/working_dir:/scratch</span></code>.</p>
+<p>You can also provide a link to an AWS S3 bucket containing a BIDS directory as the data source:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>docker run -i --rm <span class="se">\</span>
+        -v /Users/You/some_folder:/outputs <span class="se">\</span>
+        -v /tmp:/scratch <span class="se">\</span>
+        fcpindi/c-pac:latest s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant
+</pre></div>
+</div>
 <p>To run the C-PAC Docker container with a pipeline configuration file other than the container’s default pipeline, assuming the configuration file is in the <code class="docutils literal"><span class="pre">/Users/You/Documents</span></code> directory:</p>
 <div class="highlight-bash"><div class="highlight"><pre><span></span>docker run -i --rm <span class="se">\</span>
         -v /Users/You/local_bids_data:/bids_dataset <span class="se">\</span>
@@ -181,6 +188,32 @@ optional arguments:
 <li>When the app is run, a data configuration file is written to the working directory. This file can be passed into subsequent runs, which avoids the overhead of re-parsing the BIDS input directory on each run (i.e. for cluster or cloud runs). These files can be generated without executing the C-PAC pipeline using the test_run command line argument.</li>
 <li>The <code class="docutils literal"><span class="pre">participant_label</span></code> and <code class="docutils literal"><span class="pre">participant_ndx</span></code> arguments allow the user to specify which of the many datasets should be processed, which is useful when parallelizing the run of multiple participants.</li>
 </ul>
+</div>
+<div class="section" id="running-on-singularity">
+<h2>Running On Singularity<a class="headerlink" href="#running-on-singularity" title="Permalink to this headline">¶</a></h2>
+<p>You can convert a Docker container into a Singularity container :</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>docker run --privileged -ti --rm  <span class="se">\</span>
+    -v /var/run/docker.sock:/var/run/docker.sock <span class="se">\</span>
+    -v /Users/You/singularity_images:/output <span class="se">\</span>
+    filo/docker2singularity fcpindi/c-pac:latest
+</pre></div>
+</div>
+<p>This will create a Singularity container image named something like <code class="docutils literal"><span class="pre">fcpindi_c-pac_latest-{date}-{hash</span> <span class="pre">value}.img</span></code>.</p>
+<p>Running a Singularity image is similar to running a Docker image, except you use <code class="docutils literal"><span class="pre">-B</span></code> for mappings instead of <code class="docutils literal"><span class="pre">-v</span></code>:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>singularity run <span class="se">\</span>
+        -B /Users/You/local_bids_data:/bids_dataset <span class="se">\</span>
+        -B /Users/You/some_folder:/outputs <span class="se">\</span>
+        -B /tmp:/scratch <span class="se">\</span>
+        fcpindi_c-pac_latest-<span class="o">{</span>date<span class="o">}</span>-<span class="o">{</span><span class="nb">hash</span> value<span class="o">}</span>.img /bids_dataset /outputs participant
+</pre></div>
+</div>
+<p>Again, you can also provide an AWS S3 link for the data:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>singularity run <span class="se">\</span>
+        -B /Users/You/some_folder:/outputs <span class="se">\</span>
+        -B /tmp:/scratch <span class="se">\</span>
+        fcpindi_c-pac_latest-<span class="o">{</span>date<span class="o">}</span>-<span class="o">{</span><span class="nb">hash</span> value<span class="o">}</span>.img s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant
+</pre></div>
+</div>
 </div>
 <div class="section" id="running-turnkey-mode">
 <h2>Running Turnkey Mode<a class="headerlink" href="#running-turnkey-mode" title="Permalink to this headline">¶</a></h2>
@@ -391,6 +424,7 @@ Neuroinformatics 2013. doi:10.3389/conf.fninf.2013.09.00042
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">1. C-PAC Quickstart</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#running-on-docker">Running on Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-on-singularity">Running On Singularity</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#running-turnkey-mode">Running Turnkey Mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#making-a-user-configured-pipeline">Making a User-Configured Pipeline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#acknowledgments">Acknowledgments</a></li>

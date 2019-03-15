@@ -14,6 +14,14 @@ class ExecDirective(Directive):
         oldStdout, sys.stdout = sys.stdout, StringIO()
         oldCwd = os.getcwd()
 
+        try:
+            os.makedirs(os.path.join(
+               os.path.dirname(self.state.document.settings.env.doctreedir),
+                os.path.dirname(self.state.document.settings.env.docname)
+            ))
+        except:
+            pass
+
         os.chdir(os.path.join(
             os.path.dirname(self.state.document.settings.env.doctreedir),
             os.path.dirname(self.state.document.settings.env.docname)

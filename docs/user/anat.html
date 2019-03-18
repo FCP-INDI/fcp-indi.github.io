@@ -1,0 +1,376 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Anatomical Preprocessing &#8212; C-PAC 1.4.1 Beta documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Functional Preprocessing" href="func.html" />
+    <link rel="prev" title="Pre-Processing Steps" href="preprocessing.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="func.html" title="Functional Preprocessing"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="preprocessing.html" title="Pre-Processing Steps"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.4.1 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="preprocessing.html" accesskey="U">Pre-Processing Steps</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="anatomical-preprocessing">
+<h1>Anatomical Preprocessing<a class="headerlink" href="#anatomical-preprocessing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="skull-stripping">
+<h2>Skull-Stripping<a class="headerlink" href="#skull-stripping" title="Permalink to this headline">¶</a></h2>
+<p>Skull-stripping is the removal of skull and other non-brain tissue like dura and eyes from anatomical images, which could otherwise complicate co-registration and normalization steps.</p>
+<p>C-PAC provides options for configuring skull-stripping - users can select:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://afni.nimh.nih.gov/pub/dist/doc/program_help/3dSkullStrip.html">AFNI’s 3dSkullStrip</a></li>
+<li><a class="reference external" href="https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/BET/UserGuide">FSL’s BET</a>, and can configure further parameters for each of these tools.</li>
+<li>Providing their own brain mask for extraction</li>
+</ul>
+<div class="section" id="configuring-cpac-to-run-skull-stripping">
+<h3>Configuring CPAC to run Skull-Stripping:<a class="headerlink" href="#configuring-cpac-to-run-skull-stripping" title="Permalink to this headline">¶</a></h3>
+<p><strong>NOTE:</strong> If providing your own brain mask for extraction, you can leave the following options at default. The skull-stripping tools will not run if a brain mask is found in the data configuration file.</p>
+<div class="figure">
+<img alt="_images/skullstrip_gui.png" src="_images/skullstrip_gui.png" />
+</div>
+<ol class="arabic simple">
+<li><strong>Inputs already skull stripped? - [On,Off]:</strong> If inputs are already skull stripped (i.e. the structural input data is brain-only) then you can toggle this option to off.</li>
+<li><strong>Which tool for skull-stripping? - [FSL, AFNI, FSL/AFNI]:</strong> Chose if you’d like to use FSL BET, AFNI 3dSkullStrip, or run both options in parallel.</li>
+</ol>
+</div>
+<div class="section" id="configuring-afni-3dskullstrip-options">
+<h3>Configuring AFNI 3dSkullStrip options:<a class="headerlink" href="#configuring-afni-3dskullstrip-options" title="Permalink to this headline">¶</a></h3>
+<p><strong>Note:</strong> These options are pre-set for AFNI 3dSkullStrip’s default values. These do not need to be modified unless you are looking to optimize the results of skull-stripping for your particular dataset.</p>
+<div class="figure">
+<img alt="_images/afni_gui.png" src="_images/afni_gui.png" />
+</div>
+<ol class="arabic simple">
+<li><strong>Shrink factor - [0.6]:</strong> Set the threshold value for controlling the brain vs non-brain voxels</li>
+<li><strong>Vary shrink factor - [On,Off]:</strong> Vary the shrink factor at every iteration of the algorithm. This prevents the likelihood of surface getting stuck in large pools of CSF before reaching the outer surface of the brain. Default is On.</li>
+<li><strong>Shrink factor bottom limit - [0.4]:</strong> The shrink factor bottom limit sets the lower threshold when varying the shrink factor. Default is 0.4, for when edge detection is used (which is On by default),otherwise the default value is 0.4.</li>
+<li><strong>Avoid ventricles - [On,Off]:</strong> Avoid ventricles while skull stripping. Default is On.</li>
+<li><strong>Number of iterations - [250]:</strong> Set the number of iterations. Default is 250. The number of iterations should depend upon the density of your mesh. Default is 250.</li>
+<li><strong>Pushout - [On, Off]:</strong> While expanding, consider the voxels above and not only the voxels below. Default is On</li>
+<li><strong>Touchup - [On,Off]:</strong> Perform touchup operations at the end to include areas not covered by surface expansion.</li>
+<li><strong>Fill hole option - [10]:</strong> Give the maximum number of pixels on either sid of the hole that can be filled. The default is 10 only if ’Touchup’ is On. Otherwise default is 0.</li>
+<li><strong>NN smooth - [72]:</strong> Perform final surface smoothing after all iterations. Default is 20.</li>
+<li><strong>Avoid eyes - [On,Off]:</strong> Avoid eyes while skull stripping. Default is On.</li>
+<li><strong>Use edge - [On,Off]:</strong> Use edge detection to reduce leakage into meninges. Default is On.</li>
+<li><strong>Fractional expansion - [0.1]:</strong> Speed of expansion. Default Value is 0.1</li>
+<li><strong>Push to edge - [Off,On]:</strong> Perform aggressive push to edge, this might cause leakage. Default is Off.</li>
+<li><strong>Use Skull - [Off, On]:</strong> Use the outer skull to limit expansion of surface into the skull in case of very strong shading artifacts. Use this only if you leakage into the skull.</li>
+<li><strong>Perc_init - [0]:</strong> Percentage of segments allowed to intersect surface.It is typically a number between 0 and 0.1, but can include negative values (which implies no testing for intersection). Default is 0.</li>
+<li><strong>Max_inter_iter - [4]:</strong> Number of iterations to remove intersection problems. With each iteration, the program automatically increases the amount of smoothing to get rid of intersections. Default is 4.</li>
+<li><strong>Fac - [1]:</strong> Multiply input dataset by FAC if range of values is too small. Default value is 1.</li>
+<li><strong>blur_fwhm - [2]:</strong> Blur datasets after spatial normalization.Default value is 2.</li>
+</ol>
+</div>
+<div class="section" id="configuring-fsl-bet-options">
+<h3>Configuring FSL BET options:<a class="headerlink" href="#configuring-fsl-bet-options" title="Permalink to this headline">¶</a></h3>
+<p><strong>Note:</strong> These options are pre-set for FSL BET’s default values. These do not need to be modified unless you are looking to optimize the results of skull-stripping for your particular dataset.</p>
+<div class="figure">
+<img alt="_images/bet_gui.png" src="_images/bet_gui.png" />
+</div>
+<ol class="arabic simple">
+<li><strong>Frac - [0.5]:</strong> Set the threshold value controlling the brain vs non-brain voxels. Default is 0.5</li>
+<li><strong>Mask - [Off, On]:</strong> Mask created along with skull stripping. Default option is Off.</li>
+<li><strong>Mesh - [Off, On]:</strong> Mesh created along with skull stripping. Default is Off.</li>
+<li><strong>Outline - [Off, On]:</strong> Create a surface outline image, Default is Off.</li>
+<li><strong>Padding - [Off, On]:</strong> Add padding to the end of the image, improving BET. Mutually exclusive functional,reduce_bias,robust,padding,remove_eyes,surfaces.</li>
+<li><strong>Radius - [0]:</strong> Integer value of head radius. Default is 0.</li>
+<li><strong>Reduce bias - [Off, On]:</strong> Reduce bias and cleanup neck. Mutually exclusive with functional, reduce_bias,robust,padding, remove_eyes,surfaces.</li>
+<li><strong>Remove_bias - [Off,On]:</strong> Eyes and optic nerve cleanup. Mutually exclusive with functional, reduce_bias,robust,padding,remove_eyes, surfaces.</li>
+<li><strong>Robust - [Off, On]:</strong> Robust brain center estimation. Mutually exclusive with functional, reduce_bias, robust,padding,remove_eyes,surfaces.</li>
+<li><strong>Skull - [Off,On]:</strong> Create a Skull Image. Default is Off.</li>
+<li><strong>Surfaces - [Off, On]:</strong> Get additional skull and scalp surfaces by running bet2 and betsurf. This is mutually exclusive with reduce bias, robust,padding, remove_eyes.</li>
+<li><strong>Threshold - [Off,On]:</strong> Apply thresholding to segmented brain image and mask.Default is Off.</li>
+<li><strong>Vertical gradient - [Off,On]:</strong> Vertical gradient un fractional intensity threshold. Within the range of (-1,1).</li>
+</ol>
+</div>
+</div>
+<div class="section" id="anatomical-registration">
+<h2>Anatomical Registration<a class="headerlink" href="#anatomical-registration" title="Permalink to this headline">¶</a></h2>
+<p>In order to compare brain activations between subjects, individual functional and anatomical images must first be transformed to match a common template. The most commonly used template (<a class="reference external" href="http://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009">MNI152</a>) is maintained by the Montreal Neurological Institute, and is created by combining data from the brains of many different individuals to create an “average” brain. The image below shows how an individual brain is warped to match the shape of the template.</p>
+<div class="figure">
+<img alt="_images/registration.png" src="_images/registration.png" />
+</div>
+<p>C-PAC provides the option of either using FSL (<a class="reference external" href="http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT">FLIRT</a> and <a class="reference external" href="http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FNIRT">FNIRT</a>) or <a class="reference external" href="http://stnava.github.io/ANTs/">Advanced Normalization Tools (ANTS)</a> to register images. Although the use of ANTS requires an extra step during the C-PAC install process, we have found its results to be significantly better than those produced by FSL (a conclusion supported by a <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/20123029">recent systematic analysis by Klein et al.</a>).</p>
+<p>During registration, individual anatomical images are first transformed to match the common template. Then, the functional data for each subject is registered to their own transformed anatomical image. Finally, functional derivative files are transformed to the common template. For more detail on how C-PAC computes these steps, please see the <a class="reference external" href="http://fcp-indi.github.io/docs/developer/workflows/registration.html">Registration Page of the developer documentation</a>.</p>
+<p>By default, C-PAC will register subject brains to the MNI152 template included with FSL. Users wishing to register their data to a different template (such as a group specific template) can specify alternative template files.</p>
+</div>
+<div class="section" id="configuring-cpac-to-run-anatomical-registration">
+<h2>Configuring CPAC to Run Anatomical Registration<a class="headerlink" href="#configuring-cpac-to-run-anatomical-registration" title="Permalink to this headline">¶</a></h2>
+<div class="figure">
+<img alt="_images/anat_reg_gui.png" src="_images/anat_reg_gui.png" />
+</div>
+<ol class="arabic simple">
+<li><strong>Anatomical Template Resolution - [1mm, 2mm, 3mm, 4mm]:</strong> The resolution to which anatomical images should be transformed during registration. This is the resolution at which processed anatomical files will be output.</li>
+<li><strong>Anatomical Template (Brain Only) - [path]:</strong> Template to be used during registration. It is not necessary to change this path unless you intend to use a non-standard template.</li>
+<li><strong>Anatomical Template (With Skull) - [path]:</strong> Template to be used during registration. It is not necessary to change this path unless you intend to use a non-standard template.</li>
+<li><strong>Anatomical to Template Registration Method - [ANTS, FSL, ANTS &amp; FSL]:</strong> Registration method(s) to be used. Options are <a class="reference external" href="http://stnava.github.io/ANTs/">ANTS</a>, <a class="reference external" href="http://fsl.fmrib.ox.ac.uk/fslcourse/lectures/practicals/reg/">FSL</a>, or both.</li>
+<li><strong>FSL FNIRT Configuration File - [path]:</strong> Configuration file specifying settings used during registration. Required if FSL is selected as the registration method. This file can be found in the <code class="file docutils literal notranslate"><span class="pre">/etc/flirtsch</span></code> directory of your FSL install.</li>
+<li><strong>FSL FNIRT Reference Mask - [path]:</strong> A reference mask to be used by FNIRT.</li>
+<li><strong>Use skull-on image to calculate transform? (ANTS only) - [Off, On]:</strong> Register skull-on anatomical image to template. Calculating the transform with skull-stripped images is reported to be better, but it requires very high-quality skull-stripping. If skull-stripping is imprecise, registration with skull is preferred. Note: This option only affects ANTS due to the fact that FNIRT already uses skull-on images for calculating warps.</li>
+<li><strong>Inputs Already Skull-stripped? - [On, Off]</strong>: Disables skull-stripping on the anatomical inputs if they are already skull-stripped.</li>
+</ol>
+<div class="section" id="configuration-without-the-gui">
+<h3>Configuration Without the GUI<a class="headerlink" href="#configuration-without-the-gui" title="Permalink to this headline">¶</a></h3>
+<p>The following key/value pairs must be defined in your <a class="reference internal" href="pipeline_config.html"><span class="doc">pipeline configuration YAML</span></a> for C-PAC to run anatomical preprocessing:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="10%" />
+<col width="60%" />
+<col width="30%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Key</th>
+<th class="head">Description</th>
+<th class="head">Potential Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>resolution_for_anat</td>
+<td>The resolution to which anatomical images should be transformed during registration.</td>
+<td>1mm,2mm,3mm,4mm</td>
+</tr>
+<tr class="row-odd"><td>template_brain_only_for_anat</td>
+<td>Template to be used during registration. Normally the default value (seen in the example YAML) is fine.</td>
+<td>A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz).</td>
+</tr>
+<tr class="row-even"><td>template_skull_for_anat</td>
+<td>Template to be used during registration. Normally the default value (seen in the example YAML) is fine.</td>
+<td>A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz).</td>
+</tr>
+<tr class="row-odd"><td>regOption</td>
+<td>Use either ANTS or FSL (FLIRT and FNIRT) as your anatomical registration method.</td>
+<td>A list containing ‘ANTS’, ‘FSL’, or both (e.g., [‘FSL’]).</td>
+</tr>
+<tr class="row-even"><td>fnirtConfig</td>
+<td>Configuration file to be used by FSL to set FNIRT parameters.</td>
+<td>A template name (e.g., ‘T1_2_MNI152_2mm’).</td>
+</tr>
+<tr class="row-odd"><td>ref_mask</td>
+<td>Configuration file to be used by FSL to set FNIRT parameters.</td>
+<td>A path (e.g., $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain_mask_dil.nii.gz).</td>
+</tr>
+<tr class="row-even"><td>regWithSkull</td>
+<td>Register skull-on anatomical image to a template.</td>
+<td>A list where ‘1’ represents ‘yes’ and ‘0’ represents ‘no’ (e.g., ‘[1]’).</td>
+</tr>
+<tr class="row-odd"><td>already_skullstripped</td>
+<td>Disables skull-stripping on the anatomical inputs if they are already skull-stripped.</td>
+<td>A list where ‘1’ represents ‘yes’ and ‘0’ represents ‘no’ (e.g., ‘[1]’).</td>
+</tr>
+</tbody>
+</table>
+<p>The box below contains an example of what these parameters might look like when defined in the YAML:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>resolution_for_anat : 2mm
+template_brain_only_for_anat : /usr/share/fsl/5.0/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz
+template_skull_for_anat : /usr/share/fsl/5.0/data/standard/MNI152_T1_${resolution_for_anat}.nii.gz
+regOption : [&#39;ANTS&#39;]
+fnirtConfig : T1_2_MNI152_2mm
+ref_mask : $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain_mask_symmetric_dil.nii.gz
+regWithSkull : [0]
+already_skullstripped : [0]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="anatomical-tissue-segmentation">
+<h2>Anatomical Tissue Segmentation<a class="headerlink" href="#anatomical-tissue-segmentation" title="Permalink to this headline">¶</a></h2>
+<p>C-PAC uses <a class="reference external" href="http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FAST">FSL/FAST</a> to automatically segment brain images into white matter, gray matter, and CSF. This is done using probability maps that contain information about the likelihood that a given voxel will be of a particular tissue type. Users specify a probability threshold such that voxels meeting a minimum probability of being a particular tissue will be classified as such. This results in masks containing voxels of only a single tissue type.</p>
+<div class="figure">
+<img alt="_images/segmentation.png" src="_images/segmentation.png" />
+</div>
+<p>The default tissue probability maps (referred to as Prior Probability Maps) used during segmentation are based on information from a large number of brains, and are based on the priors distributed with FSL and are included in the “Image Resource Files” package downloaded during installation. For more detail on how CPAC computes these steps, please see the <a class="reference external" href="http://fcp-indi.github.io/docs/developer/workflows/seg_preproc.html">Segmentation Page of the developer documentation</a>.</p>
+<p>If you would like to use different priors, they must first be binarized such that for each voxel the probability for each tissue type is set to either 0% or 100%.</p>
+<p>The following bash script will binarize existing priors:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Define what kind of priors to generate (gray, white, or csf)
+tissue=gray
+
+# Define threshold to use when binarizing data
+threshold=0.5
+
+# Copy existing priors (in this example, from FSL)
+3dcopy $FSL_DIR/data/standard/tissuepriors/avg152T1_${tissue}.hdr avg152T1_${tissue}.nii.gz
+
+# Binarize image using threshold set above
+fslmaths avg152T1_${tissue}.nii.gz -thr $threshold -bin avg152T1_${tissue}_2mm_bin
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuring-cpac-to-run-anatomical-tissue-segmentation">
+<h2>Configuring CPAC to Run Anatomical Tissue Segmentation<a class="headerlink" href="#configuring-cpac-to-run-anatomical-tissue-segmentation" title="Permalink to this headline">¶</a></h2>
+<div class="figure">
+<img alt="_images/seg_gui.png" src="_images/seg_gui.png" />
+</div>
+<ol class="arabic simple">
+<li><strong>Run Tissue Segmentation - [On, Off, On/Off]:</strong> Automatically segment anatomical images into white matter, gray matter, and CSF based on prior probability maps.</li>
+<li><strong>Priors Directory - [path]:</strong> Full path to a directory containing binarized prior probability maps. These maps are included as part of the ‘Image Resource Files’ package available on the Install page of the User Guide. It is not necessary to change this path unless you intend to use non-standard priors.</li>
+<li><strong>White Matter Prior Probability Map - [path]:</strong> Full path to a binarized White Matter prior probability map. It is not necessary to change this path unless you intend to use non-standard priors.</li>
+<li><strong>Gray Matter Prior Probability Map - [path]:</strong> Full path to a binarized Gray Matter prior probability map. It is not necessary to change this path unless you intend to use non-standard priors.</li>
+<li><strong>CSF Prior Probability Map - [path]:</strong> Full path to a binarized CSF prior probability map. It is not necessary to change this path unless you intend to use non-standard priors.</li>
+</ol>
+<div class="section" id="id1">
+<h3>Configuration Without the GUI<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>The following key/value pairs must be defined in your <a class="reference internal" href="pipeline_config.html"><span class="doc">pipeline configuration YAML</span></a> for C-PAC to run anatomical tissue segmentation:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="10%" />
+<col width="60%" />
+<col width="30%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Key</th>
+<th class="head">Description</th>
+<th class="head">Potential Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>runSegmentationPreprocessing</td>
+<td>Automatically segment anatomical images into white matter, gray matter, and CSF based on prior probability maps.</td>
+<td>A list where ‘1’ represents ‘yes’ and ‘0’ represents ‘no’ (e.g., ‘[1]’).</td>
+</tr>
+<tr class="row-odd"><td>priors_path</td>
+<td>Full path to a directory containing binarized prior probability maps. These maps are included as part of the ‘CPAC Image Resource Files’ package from installation. It is not necessary to change this path unless you intend to use non-standard priors.</td>
+<td>A path (e.g., $FSLDIR/data/standard/tissuepriors/${resolution_for_anat}).</td>
+</tr>
+<tr class="row-even"><td>PRIORS_WHITE</td>
+<td>Full path to a binarized White Matter prior probability map. It is not necessary to change this path unless you intend to use non-standard priors.</td>
+<td>A path (e.g., $priors_path/avg152T1_white_bin.nii.gz).</td>
+</tr>
+<tr class="row-odd"><td>PRIORS_GRAY</td>
+<td>Full path to a binarized Gray Matter prior probability map. It is not necessary to change this path unless you intend to use non-standard priors.</td>
+<td>A path (e.g., $priors_path/avg152T1_gray_bin.nii.gz).</td>
+</tr>
+<tr class="row-even"><td>PRIORS_CSF</td>
+<td>Full path to a binarized CSF prior probability map. It is not necessary to change this path unless you intend to use non-standard priors.</td>
+<td>A path (e.g., $priors_path/avg152T1_csf_bin.nii.gz).</td>
+</tr>
+</tbody>
+</table>
+<p>The box below contains an example of what these parameters might look like when defined in the YAML:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>runSegmentationPreprocessing : [1]
+priors_path : /usr/share/fsl/5.0/data/standard/tissuepriors/${resolution_for_anat}
+PRIORS_WHITE : $priors_path/avg152T1_white_bin.nii.gz
+PRIORS_GRAY : $priors_path/avg152T1_gray_bin.nii.gz
+PRIORS_CSF : $priors_path/avg152T1_csf_bin.nii.gz
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://afni.nimh.nih.gov/pub/dist/doc/program_help/3dSkullStrip.html">AFNI 3dSkullStrip</a></p>
+<p>Smith, Stephen M., <a class="reference external" href="http://dx.doi.org/10.1002/hbm.10062">Fast robust automated brain extraction</a>, Human Brain Mapping 2002, Volume 17 Issue 3, page 143-155.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quick.html">1. C-PAC Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new_gui.html">2. Try Our New GUI!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">3. Install C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="subject_list_config.html">4. Specify Your Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline_config.html">5. Select Your Pipeline</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="preprocessing.html">6. Pre-Process Your Data</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Anatomical Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="func.html">Functional Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuisance.html">Nuisance Corrections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aroma_ica.html">ICA Denoising</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tse.html">Timeseries Extraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tse.html#configuring-roi-time-series-extraction">Configuring ROI Time Series Extraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="after_warp.html">After Warp Settings</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="derivatives.html">7. Compute Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">8. Run C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group_analysis.html">9. Run Group Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output_dir.html">10. Check Your Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="help.html">11. Troubleshoot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnotes.html">12. Release Notes</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="func.html" title="Functional Preprocessing"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="preprocessing.html" title="Pre-Processing Steps"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.4.1 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="preprocessing.html" >Pre-Processing Steps</a> &#187;</li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+
+  </body>
+</html>

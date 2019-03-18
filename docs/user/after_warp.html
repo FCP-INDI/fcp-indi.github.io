@@ -1,0 +1,210 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>After Warping Options &#8212; C-PAC 1.4.1 Beta documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Computable Derivatives" href="derivatives.html" />
+    <link rel="prev" title="Timeseries Extraction" href="tse.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="derivatives.html" title="Computable Derivatives"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tse.html" title="Timeseries Extraction"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.4.1 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="preprocessing.html" accesskey="U">Pre-Processing Steps</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="after-warping-options">
+<h1>After Warping Options<a class="headerlink" href="#after-warping-options" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="spatial-smoothing">
+<h2>Spatial Smoothing<a class="headerlink" href="#spatial-smoothing" title="Permalink to this headline">¶</a></h2>
+<p>The main goal of smoothing is to increase the signal-to-noise ratio of an image. This is done by removing high-frequency information (assumed to consist mostly of noise) while preserving signals on larger spatial scales (those which stretch across multiple voxels and are most likely to reflect neuronal activity). Smoothing can also help reduce the effect of anatomical variability when comparing activations between subjects (Poldrack et al., 2011). Additionally, smoothing with a Gaussian kernel (described below) will cause the distribution of signals found in an image to more closely match the assumptions of many statistical tests often used on fMRI data.</p>
+<div class="section" id="computation-and-analysis-considerations">
+<h3>Computation and Analysis Considerations<a class="headerlink" href="#computation-and-analysis-considerations" title="Permalink to this headline">¶</a></h3>
+<p>Smoothing is accomplished by applying a Gaussian filter (also known as a kernel) to the original image. This results in the signal of each voxel being replaced by the weighted average of its neighbors (Ashby, 2011). It is the shape of the kernel that defines the weights applied during smoothing. As a Gaussian kernel is essentially a normal distribution, weight is always strongest at the voxel being smoothed and decreases with distance at a rate that depends on the width of the distribution. Wider distributions result in greater smoothing, as more distant voxels recieve higher weights than they would with a thinner kernel. Unlike in statistics, where the width of a distribution is described by the standard deviation, the shape of a smoothing kernel is usually described by the width of the distribution at half of its maximum value. This is known as the Full Width Half Maximum (FWHM). The figure below shows the smoothing effect of different FWHM values.</p>
+<div class="figure">
+<img alt="_images/smoothing.png" src="_images/smoothing.png" />
+</div>
+<p><strong>Note:</strong> In C-PAC, smoothing is applied after calculating individual-level analyses (except for VMHC, for which smoothing is applied prior to calculation). This preserves the structure of the data as much as possible prior to statistical analysis.</p>
+</div>
+<div class="section" id="applications-and-guidelines">
+<h3>Applications and Guidelines<a class="headerlink" href="#applications-and-guidelines" title="Permalink to this headline">¶</a></h3>
+<p>The amount of smoothing applied should be the minimum necessary to achive the desired result. As a general rule, a FWHM of twice the voxel dimension is a good starting point (Poldrack et al., 2011). That being said, different situations will require adjustment of this value. In particular, the FWHM should never be larger than the smallest activation pattern you are interested in detecting; any larger value may result in signal loss, either by smoothing away very small signals, or smoothing two independent signals into one (Ashby, 2011).</p>
+<p>Care must be taken when utilizing methods such as Regional Homogeneity (ReHo) and Multi-voxel Pattern Analysis (MVPA) which are sensitive to the activation of individual voxels, as smoothing prior to analysis may bias results by introducing artificial spatial correlation. In these cases, if smoothing is desired, such as in order to correct for multiple comparisons using Gaussian Random Field Theory, it must be applied after the fact.</p>
+</div>
+</div>
+<div class="section" id="z-scored-derivatives">
+<h2>Z-Scored Derivatives<a class="headerlink" href="#z-scored-derivatives" title="Permalink to this headline">¶</a></h2>
+<p>C-PAC can take all of the outputs it produces and standardize their values as z-scores.</p>
+<div class="section" id="configuring-c-pac-to-run-after-warping-steps">
+<h3>Configuring C-PAC to Run After-Warping Steps<a class="headerlink" href="#configuring-c-pac-to-run-after-warping-steps" title="Permalink to this headline">¶</a></h3>
+<div class="figure">
+<img alt="_images/after_warp_gui.png" src="_images/after_warp_gui.png" />
+</div>
+<ol class="arabic simple">
+<li><strong>Run Smoothing:</strong> Smooth the derivative outputs. On - Run smoothing and output only the smoothed outputs. On/Off - Run smoothing and output both the smoothed and non-smoothed outputs. Off - Don’t run smoothing.</li>
+<li><strong>Smoothing Kernel FWHM (in mm) [integer/decimal]:</strong> Full Width at Half Maximum of the Gaussian kernel used during spatial smoothing. Can be a single value or multiple values separated by commas. Note that spatial smoothing is run as the last step in the individual-level analysis pipeline, such that all derivatives are output both smoothed and unsmoothed.</li>
+<li><strong>Smooth Before/After z-Scoring:</strong> Choose whether to smooth before or after z-scoring.</li>
+<li><strong>Z-score Standardize Derivatives [On/Off]:</strong> z-score standardize the derivatives. This is required for group-level analysis. On - Run z-scoring and output only the z-scored outputs. On/Off - Run z-scoring and output both the z-scored and raw score versions of the outputs. Off - Don’t run z-scoring.</li>
+</ol>
+</div>
+<div class="section" id="configuration-using-a-yaml-file">
+<h3>Configuration Using a YAML File<a class="headerlink" href="#configuration-using-a-yaml-file" title="Permalink to this headline">¶</a></h3>
+<p>The following key/value pairs must be defined in your <a class="reference internal" href="pipeline_config.html"><span class="doc">pipeline configuration YAML</span></a> for C-PAC to run the after warping options:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="10%" />
+<col width="60%" />
+<col width="30%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Key</th>
+<th class="head">Description</th>
+<th class="head">Potential Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>run_smoothing</td>
+<td>On: [1], Off: [0], On/Off: [1,0]</td>
+<td>A list where ‘1’ represents ‘yes’ and ‘0’ represents ‘no’ (e.g., ‘[1]’ or <cite>[1,0]</cite> for On/Off).</td>
+</tr>
+<tr class="row-odd"><td>fwhm</td>
+<td>Full Width at Half Maximum of the Gaussian kernel used during spatial smoothing.</td>
+<td>A list of numerical values (e.g.,[2.5,6]).</td>
+</tr>
+<tr class="row-even"><td>smoothing_order</td>
+<td>Run smoothing before or after z-scoring.</td>
+<td>A list with either ‘Before’ or ‘After’.</td>
+</tr>
+<tr class="row-odd"><td>runZScoring</td>
+<td>Determines format of outputs. 0 will produce non-z-scored outputs, 1 will produce z-scores of outputs.</td>
+<td>A list where ‘1’ represents ‘yes’ and ‘0’ represents ‘no’ (e.g., ‘[1]’ or <cite>[1,0]</cite> for On/Off).</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="external-resources">
+<h2>External Resources<a class="headerlink" href="#external-resources" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="http://mindhive.mit.edu/node/112">Smoothing FAQ - MIT Mindhive</a></li>
+<li><a class="reference external" href="http://imaging.mrc-cbu.cam.ac.uk/imaging/ProcessingSmoothing">Smoothing - CBU Imaging Wiki</a></li>
+</ul>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>Ashby, F.G., (2011). Preprocessing. Statistical Analysis of MRI Data. Cambridge, MA: MIT Press.</p>
+<p>Poldrack, R. A., Mumford, J., &amp; Nichols, T. (2011). Preprocessing fMRI data. In Handbook of Functional MRI Data Analysis. Cambridge: Cambridge University Press.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quick.html">1. C-PAC Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new_gui.html">2. Try Our New GUI!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">3. Install C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="subject_list_config.html">4. Specify Your Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline_config.html">5. Select Your Pipeline</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="preprocessing.html">6. Pre-Process Your Data</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="anat.html">Anatomical Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="func.html">Functional Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuisance.html">Nuisance Corrections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aroma_ica.html">ICA Denoising</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tse.html">Timeseries Extraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tse.html#configuring-roi-time-series-extraction">Configuring ROI Time Series Extraction</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">After Warp Settings</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="derivatives.html">7. Compute Derivatives</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">8. Run C-PAC</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group_analysis.html">9. Run Group Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output_dir.html">10. Check Your Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="help.html">11. Troubleshoot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnotes.html">12. Release Notes</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="derivatives.html" title="Computable Derivatives"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tse.html" title="Timeseries Extraction"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.4.1 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="preprocessing.html" >Pre-Processing Steps</a> &#187;</li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+
+  </body>
+</html>

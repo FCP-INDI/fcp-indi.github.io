@@ -1,0 +1,646 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>CPAC.func_preproc.func_preproc &#8212; C-PAC 1.4.1 Beta documentation</title>
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.4.1 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for CPAC.func_preproc.func_preproc</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">nipype</span> <span class="k">import</span> <span class="n">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;workflow&#39;</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="nn">pe</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="k">as</span> <span class="nn">fsl</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.afni</span> <span class="k">import</span> <span class="n">preprocess</span>
+
+
+<span class="c1"># workflow to edit the scan to the proscribed TRs</span>
+<span class="k">def</span> <span class="nf">create_wf_edit_func</span><span class="p">(</span><span class="n">wf_name</span><span class="o">=</span><span class="s2">&quot;edit_func&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Workflow Inputs::</span>
+
+<span class="sd">        inputspec.func : func file or a list of func/rest nifti file</span>
+<span class="sd">            User input functional(T2*) Image</span>
+
+<span class="sd">        inputspec.start_idx : string</span>
+<span class="sd">            Starting volume/slice of the functional image (optional)</span>
+
+<span class="sd">        inputspec.stop_idx : string</span>
+<span class="sd">            Last volume/slice of the functional image (optional)</span>
+
+<span class="sd">    Workflow Outputs::</span>
+
+<span class="sd">        outputspec.edited_func : string (nifti file)</span>
+<span class="sd">            Path to Output image with the initial few slices dropped</span>
+
+
+<span class="sd">    Order of commands:</span>
+
+<span class="sd">    - Get the start and the end volume index of the functional run. If not defined by the user, return the first and last volume.</span>
+
+<span class="sd">        get_idx(in_files, stop_idx, start_idx)</span>
+
+<span class="sd">    - Dropping the initial TRs. For details see `3dcalc &lt;http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dcalc.html&gt;`_::</span>
+
+<span class="sd">        3dcalc -a rest.nii.gz[4..299]</span>
+<span class="sd">               -expr &#39;a&#39;</span>
+<span class="sd">               -prefix rest_3dc.nii.gz</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># allocate a workflow object</span>
+    <span class="n">preproc</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">wf_name</span><span class="p">)</span>
+
+    <span class="c1"># configure the workflow&#39;s input spec</span>
+    <span class="n">inputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;func&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;start_idx&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;stop_idx&#39;</span><span class="p">]),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
+
+    <span class="c1"># configure the workflow&#39;s output spec</span>
+    <span class="n">outputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;edited_func&#39;</span><span class="p">]),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
+
+    <span class="c1"># allocate a node to check that the requested edits are</span>
+    <span class="c1"># reasonable given the data</span>
+    <span class="n">func_get_idx</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_files&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;stop_idx&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;start_idx&#39;</span><span class="p">],</span>
+                                         <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;stopidx&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;startidx&#39;</span><span class="p">],</span>
+                                         <span class="n">function</span><span class="o">=</span><span class="n">get_idx</span><span class="p">),</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_get_idx&#39;</span><span class="p">)</span>
+
+    <span class="c1"># wire in the func_get_idx node</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">,</span>
+                    <span class="n">func_get_idx</span><span class="p">,</span> <span class="s1">&#39;in_files&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;start_idx&#39;</span><span class="p">,</span>
+                    <span class="n">func_get_idx</span><span class="p">,</span> <span class="s1">&#39;start_idx&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;stop_idx&#39;</span><span class="p">,</span>
+                    <span class="n">func_get_idx</span><span class="p">,</span> <span class="s1">&#39;stop_idx&#39;</span><span class="p">)</span>
+
+    <span class="c1"># allocate a node to edit the functional file</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">nipype.interfaces.afni</span> <span class="k">import</span> <span class="n">utils</span> <span class="k">as</span> <span class="n">afni_utils</span>
+        <span class="n">func_drop_trs</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
+                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_drop_trs&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="n">func_drop_trs</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
+                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_drop_trs&#39;</span><span class="p">)</span>
+
+    <span class="n">func_drop_trs</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="s1">&#39;a&#39;</span>
+    <span class="n">func_drop_trs</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+
+    <span class="c1"># wire in the inputs</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">,</span>
+                    <span class="n">func_drop_trs</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_get_idx</span><span class="p">,</span> <span class="s1">&#39;startidx&#39;</span><span class="p">,</span>
+                    <span class="n">func_drop_trs</span><span class="p">,</span> <span class="s1">&#39;start_idx&#39;</span><span class="p">)</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_get_idx</span><span class="p">,</span> <span class="s1">&#39;stopidx&#39;</span><span class="p">,</span>
+                    <span class="n">func_drop_trs</span><span class="p">,</span> <span class="s1">&#39;stop_idx&#39;</span><span class="p">)</span>
+
+    <span class="c1"># wire the output</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_drop_trs</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;edited_func&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">preproc</span>
+
+
+<span class="c1"># functional preprocessing</span>
+<div class="viewcode-block" id="create_func_preproc"><a class="viewcode-back" href="../../../workflows/func_preproc.html#CPAC.func_preproc.create_func_preproc">[docs]</a><span class="k">def</span> <span class="nf">create_func_preproc</span><span class="p">(</span><span class="n">use_bet</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;func_preproc&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    The main purpose of this workflow is to process functional data. Raw rest file is deobliqued and reoriented</span>
+<span class="sd">    into RPI. Then take the mean intensity values over all time points for each voxel and use this image</span>
+<span class="sd">    to calculate motion parameters. The image is then skullstripped, normalized and a processed mask is</span>
+<span class="sd">    obtained to use it further in Image analysis.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    wf_name : string</span>
+<span class="sd">        Workflow name</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    func_preproc : workflow object</span>
+<span class="sd">        Functional Preprocessing workflow object</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    `Source &lt;https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/func_preproc/func_preproc.py&gt;`_</span>
+
+<span class="sd">    Workflow Inputs::</span>
+
+<span class="sd">        inputspec.rest : func/rest file or a list of func/rest nifti file</span>
+<span class="sd">            User input functional(T2) Image, in any of the 8 orientations</span>
+
+<span class="sd">        scan_params.tr : string</span>
+<span class="sd">            Subject TR</span>
+
+<span class="sd">        scan_params.acquistion : string</span>
+<span class="sd">            Acquisition pattern (interleaved/sequential, ascending/descending)</span>
+
+<span class="sd">        scan_params.ref_slice : integer</span>
+<span class="sd">            Reference slice for slice timing correction</span>
+
+<span class="sd">    Workflow Outputs::</span>
+
+<span class="sd">        outputspec.refit : string (nifti file)</span>
+<span class="sd">            Path to deobliqued anatomical data</span>
+
+<span class="sd">        outputspec.reorient : string (nifti file)</span>
+<span class="sd">            Path to RPI oriented anatomical data</span>
+
+<span class="sd">        outputspec.motion_correct_ref : string (nifti file)</span>
+<span class="sd">             Path to Mean intensity Motion corrected image</span>
+<span class="sd">             (base reference image for the second motion correction run)</span>
+
+<span class="sd">        outputspec.motion_correct : string (nifti file)</span>
+<span class="sd">            Path to motion corrected output file</span>
+
+<span class="sd">        outputspec.max_displacement : string (Mat file)</span>
+<span class="sd">            Path to maximum displacement (in mm) for brain voxels in each volume</span>
+
+<span class="sd">        outputspec.movement_parameters : string (Mat file)</span>
+<span class="sd">            Path to 1D file containing six movement/motion parameters(3 Translation, 3 Rotations)</span>
+<span class="sd">            in different columns (roll pitch yaw dS  dL  dP)</span>
+
+<span class="sd">        outputspec.skullstrip : string (nifti file)</span>
+<span class="sd">            Path to skull stripped Motion Corrected Image</span>
+
+<span class="sd">        outputspec.mask : string (nifti file)</span>
+<span class="sd">            Path to brain-only mask</span>
+
+<span class="sd">        outputspec.example_func : string (nifti file)</span>
+<span class="sd">            Mean, Skull Stripped, Motion Corrected output T2 Image path</span>
+<span class="sd">            (Image with mean intensity values across voxels)</span>
+
+<span class="sd">        outputpsec.preprocessed : string (nifti file)</span>
+<span class="sd">            output skull stripped, motion corrected T2 image</span>
+<span class="sd">            with normalized intensity values</span>
+
+<span class="sd">        outputspec.preprocessed_mask : string (nifti file)</span>
+<span class="sd">           Mask obtained from normalized preprocessed image</span>
+
+<span class="sd">    Order of commands:</span>
+
+<span class="sd">    - Deobliqing the scans.  For details see `3drefit &lt;http://afni.nimh.nih.gov/pub/dist/doc/program_help/3drefit.html&gt;`_::</span>
+
+<span class="sd">        3drefit -deoblique rest_3dc.nii.gz</span>
+
+<span class="sd">    - Re-orienting the Image into Right-to-Left Posterior-to-Anterior Inferior-to-Superior (RPI) orientation. For details see `3dresample &lt;http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dresample.html&gt;`_::</span>
+
+<span class="sd">        3dresample -orient RPI</span>
+<span class="sd">                   -prefix rest_3dc_RPI.nii.gz</span>
+<span class="sd">                   -inset rest_3dc.nii.gz</span>
+
+<span class="sd">    - Calculate voxel wise statistics. Get the RPI Image with mean intensity values over all timepoints for each voxel. For details see `3dTstat &lt;http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dTstat.html&gt;`_::</span>
+
+<span class="sd">        3dTstat -mean</span>
+<span class="sd">                -prefix rest_3dc_RPI_3dT.nii.gz</span>
+<span class="sd">                rest_3dc_RPI.nii.gz</span>
+
+<span class="sd">    - Motion Correction. For details see `3dvolreg &lt;http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dvolreg.html&gt;`_::</span>
+
+<span class="sd">        3dvolreg -Fourier</span>
+<span class="sd">                 -twopass</span>
+<span class="sd">                 -base rest_3dc_RPI_3dT.nii.gz/</span>
+<span class="sd">                 -zpad 4</span>
+<span class="sd">                 -maxdisp1D rest_3dc_RPI_3dvmd1D.1D</span>
+<span class="sd">                 -1Dfile rest_3dc_RPI_3dv1D.1D</span>
+<span class="sd">                 -prefix rest_3dc_RPI_3dv.nii.gz</span>
+<span class="sd">                 rest_3dc_RPI.nii.gz</span>
+
+<span class="sd">      The base image or the reference image is the mean intensity RPI image obtained in the above the step.For each volume</span>
+<span class="sd">      in RPI-oriented T2 image, the command, aligns the image with the base mean image and calculates the motion, displacement</span>
+<span class="sd">      and movement parameters. It also outputs the aligned 4D volume and movement and displacement parameters for each volume.</span>
+
+<span class="sd">    - Calculate voxel wise statistics. Get the motion corrected output Image from the above step, with mean intensity values over all timepoints for each voxel.</span>
+<span class="sd">      For details see `3dTstat &lt;http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dTstat.html&gt;`_::</span>
+
+<span class="sd">        3dTstat -mean</span>
+<span class="sd">                -prefix rest_3dc_RPI_3dv_3dT.nii.gz</span>
+<span class="sd">                rest_3dc_RPI_3dv.nii.gz</span>
+
+<span class="sd">    - Motion Correction and get motion, movement and displacement parameters. For details see `3dvolreg &lt;http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dvolreg.html&gt;`_::</span>
+
+<span class="sd">        3dvolreg -Fourier</span>
+<span class="sd">                 -twopass</span>
+<span class="sd">                 -base rest_3dc_RPI_3dv_3dT.nii.gz</span>
+<span class="sd">                 -zpad 4</span>
+<span class="sd">                 -maxdisp1D rest_3dc_RPI_3dvmd1D.1D</span>
+<span class="sd">                 -1Dfile rest_3dc_RPI_3dv1D.1D</span>
+<span class="sd">                 -prefix rest_3dc_RPI_3dv.nii.gz</span>
+<span class="sd">                 rest_3dc_RPI.nii.gz</span>
+
+<span class="sd">      The base image or the reference image is the mean intensity motion corrected image obtained from the above the step (first 3dvolreg run).</span>
+<span class="sd">      For each volume in RPI-oriented T2 image, the command, aligns the image with the base mean image and calculates the motion, displacement</span>
+<span class="sd">      and movement parameters. It also outputs the aligned 4D volume and movement and displacement parameters for each volume.</span>
+
+<span class="sd">    - Create a brain-only mask. For details see `3dautomask &lt;http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dAutomask.html&gt;`_::</span>
+
+<span class="sd">        3dAutomask</span>
+<span class="sd">                   -prefix rest_3dc_RPI_3dv_automask.nii.gz</span>
+<span class="sd">                   rest_3dc_RPI_3dv.nii.gz</span>
+
+<span class="sd">    - Edge Detect(remove skull) and get the brain only. For details see `3dcalc &lt;http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dcalc.html&gt;`_::</span>
+
+<span class="sd">        3dcalc -a rest_3dc_RPI_3dv.nii.gz</span>
+<span class="sd">               -b rest_3dc_RPI_3dv_automask.nii.gz</span>
+<span class="sd">               -expr &#39;a*b&#39;</span>
+<span class="sd">               -prefix rest_3dc_RPI_3dv_3dc.nii.gz</span>
+
+<span class="sd">    - Normalizing the image intensity values. For details see `fslmaths &lt;http://www.fmrib.ox.ac.uk/fsl/avwutils/index.html&gt;`_::</span>
+
+<span class="sd">        fslmaths rest_3dc_RPI_3dv_3dc.nii.gz</span>
+<span class="sd">                 -ing 10000 rest_3dc_RPI_3dv_3dc_maths.nii.gz</span>
+<span class="sd">                 -odt float</span>
+
+<span class="sd">      Normalized intensity = (TrueValue*10000)/global4Dmean</span>
+
+<span class="sd">    - Calculate mean of skull stripped image. For details see `3dTstat &lt;http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dTstat.html&gt;`_::</span>
+
+<span class="sd">        3dTstat -mean -prefix rest_3dc_RPI_3dv_3dc_3dT.nii.gz rest_3dc_RPI_3dv_3dc.nii.gz</span>
+
+<span class="sd">    - Create Mask (Generate mask from Normalized data). For details see `fslmaths &lt;http://www.fmrib.ox.ac.uk/fsl/avwutils/index.html&gt;`_::</span>
+
+<span class="sd">        fslmaths rest_3dc_RPI_3dv_3dc_maths.nii.gz</span>
+<span class="sd">               -Tmin -bin rest_3dc_RPI_3dv_3dc_maths_maths.nii.gz</span>
+<span class="sd">               -odt char</span>
+
+<span class="sd">    High Level Workflow Graph:</span>
+
+<span class="sd">    .. image:: ../images/func_preproc.dot.png</span>
+<span class="sd">       :width: 1000</span>
+
+
+<span class="sd">    Detailed Workflow Graph:</span>
+
+<span class="sd">    .. image:: ../images/func_preproc_detailed.dot.png</span>
+<span class="sd">       :width: 1000</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; import func_preproc</span>
+<span class="sd">    &gt;&gt;&gt; preproc = create_func_preproc(bet=True)</span>
+<span class="sd">    &gt;&gt;&gt; preproc.inputs.inputspec.func=&#39;sub1/func/rest.nii.gz&#39;</span>
+<span class="sd">    &gt;&gt;&gt; preproc.run() #doctest: +SKIP</span>
+
+
+<span class="sd">    &gt;&gt;&gt; import func_preproc</span>
+<span class="sd">    &gt;&gt;&gt; preproc = create_func_preproc(bet=False)</span>
+<span class="sd">    &gt;&gt;&gt; preproc.inputs.inputspec.func=&#39;sub1/func/rest.nii.gz&#39;</span>
+<span class="sd">    &gt;&gt;&gt; preproc.run() #doctest: +SKIP</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">preproc</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">wf_name</span><span class="p">)</span>
+    <span class="n">inputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;func&#39;</span><span class="p">]),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
+
+    <span class="n">outputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;refit&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;reorient&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;reorient_mean&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;motion_correct&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;motion_correct_ref&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;movement_parameters&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;max_displacement&#39;</span><span class="p">,</span>
+                                                        <span class="c1"># &#39;xform_matrix&#39;,</span>
+                                                        <span class="s1">&#39;mask&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;skullstrip&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;example_func&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;preprocessed&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;preprocessed_mask&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;slice_time_corrected&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;oned_matrix_save&#39;</span><span class="p">]),</span>
+
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">nipype.interfaces.afni</span> <span class="k">import</span> <span class="n">utils</span> <span class="k">as</span> <span class="n">afni_utils</span>
+        <span class="n">func_deoblique</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">Refit</span><span class="p">(),</span>
+                                 <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_deoblique&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="n">func_deoblique</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">Refit</span><span class="p">(),</span>
+                                 <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_deoblique&#39;</span><span class="p">)</span>
+    <span class="n">func_deoblique</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">deoblique</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">,</span>
+                    <span class="n">func_deoblique</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">func_reorient</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">Resample</span><span class="p">(),</span>
+                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_reorient&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnboundLocalError</span><span class="p">:</span>
+        <span class="n">func_reorient</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">Resample</span><span class="p">(),</span>
+                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_reorient&#39;</span><span class="p">)</span>
+
+    <span class="n">func_reorient</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">orientation</span> <span class="o">=</span> <span class="s1">&#39;RPI&#39;</span>
+    <span class="n">func_reorient</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_deoblique</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">func_reorient</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;reorient&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">func_get_mean_RPI</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">TStat</span><span class="p">(),</span>
+                                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_get_mean_RPI&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnboundLocalError</span><span class="p">:</span>
+        <span class="n">func_get_mean_RPI</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">TStat</span><span class="p">(),</span>
+                                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_get_mean_RPI&#39;</span><span class="p">)</span>
+
+    <span class="n">func_get_mean_RPI</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="s1">&#39;-mean&#39;</span>
+    <span class="n">func_get_mean_RPI</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">func_get_mean_RPI</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="c1"># calculate motion parameters</span>
+    <span class="n">func_motion_correct</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">Volreg</span><span class="p">(),</span>
+                                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_motion_correct&#39;</span><span class="p">)</span>
+    <span class="n">func_motion_correct</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;-Fourier -twopass&#39;</span>
+    <span class="n">func_motion_correct</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">zpad</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">func_motion_correct</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">func_motion_correct</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_get_mean_RPI</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">func_motion_correct</span><span class="p">,</span> <span class="s1">&#39;basefile&#39;</span><span class="p">)</span>
+
+    <span class="n">func_get_mean_motion</span> <span class="o">=</span> <span class="n">func_get_mean_RPI</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="s1">&#39;func_get_mean_motion&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">func_get_mean_motion</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_get_mean_motion</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;motion_correct_ref&#39;</span><span class="p">)</span>
+
+    <span class="n">func_motion_correct_A</span> <span class="o">=</span> <span class="n">func_motion_correct</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="s1">&#39;func_motion_correct_A&#39;</span><span class="p">)</span>
+    <span class="n">func_motion_correct_A</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">md1d_file</span> <span class="o">=</span> <span class="s1">&#39;max_displacement.1D&#39;</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_get_mean_motion</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;basefile&#39;</span><span class="p">)</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;motion_correct&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;md1d_file&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;max_displacement&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;oned_file&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;movement_parameters&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;oned_matrix_save&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;oned_matrix_save&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">use_bet</span><span class="p">:</span>
+
+        <span class="n">func_get_brain_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">Automask</span><span class="p">(),</span>
+                                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_get_brain_mask&#39;</span><span class="p">)</span>
+
+        <span class="n">func_get_brain_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">func_get_brain_mask</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_get_brain_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;mask&#39;</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="n">func_get_brain_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">BET</span><span class="p">(),</span>
+                                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_get_brain_mask_BET&#39;</span><span class="p">)</span>
+
+        <span class="n">func_get_brain_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">func_get_brain_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">functional</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">erode_one_voxel</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ErodeImage</span><span class="p">(),</span>
+                                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;erode_one_voxel&#39;</span><span class="p">)</span>
+
+        <span class="n">erode_one_voxel</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">kernel_shape</span> <span class="o">=</span> <span class="s1">&#39;box&#39;</span>
+        <span class="n">erode_one_voxel</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">func_get_brain_mask</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_get_brain_mask</span><span class="p">,</span> <span class="s1">&#39;mask_file&#39;</span><span class="p">,</span>
+                        <span class="n">erode_one_voxel</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">erode_one_voxel</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;mask&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">func_edge_detect</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
+                                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_edge_detect&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnboundLocalError</span><span class="p">:</span>
+        <span class="n">func_edge_detect</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
+                                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_edge_detect&#39;</span><span class="p">)</span>
+
+    <span class="n">func_edge_detect</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="s1">&#39;a*b&#39;</span>
+    <span class="n">func_edge_detect</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">func_edge_detect</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">use_bet</span><span class="p">:</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_get_brain_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">func_edge_detect</span><span class="p">,</span> <span class="s1">&#39;in_file_b&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">erode_one_voxel</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">func_edge_detect</span><span class="p">,</span> <span class="s1">&#39;in_file_b&#39;</span><span class="p">)</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_edge_detect</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;skullstrip&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">func_mean_skullstrip</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">TStat</span><span class="p">(),</span>
+                                       <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_mean_skullstrip&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnboundLocalError</span><span class="p">:</span>
+        <span class="n">func_mean_skullstrip</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">TStat</span><span class="p">(),</span>
+                                       <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_mean_skullstrip&#39;</span><span class="p">)</span>
+
+    <span class="n">func_mean_skullstrip</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="s1">&#39;-mean&#39;</span>
+    <span class="n">func_mean_skullstrip</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_edge_detect</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">func_mean_skullstrip</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_mean_skullstrip</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;example_func&#39;</span><span class="p">)</span>
+
+    <span class="n">func_normalize</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(),</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_normalize&#39;</span><span class="p">)</span>
+    <span class="n">func_normalize</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s1">&#39;-ing 10000&#39;</span>
+    <span class="n">func_normalize</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_data_type</span> <span class="o">=</span> <span class="s1">&#39;float&#39;</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_edge_detect</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">func_normalize</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_normalize</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;preprocessed&#39;</span><span class="p">)</span>
+
+    <span class="n">func_mask_normalize</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(),</span>
+                                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_mask_normalize&#39;</span><span class="p">)</span>
+    <span class="n">func_mask_normalize</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s1">&#39;-Tmin -bin&#39;</span>
+    <span class="n">func_mask_normalize</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_data_type</span> <span class="o">=</span> <span class="s1">&#39;char&#39;</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_normalize</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">func_mask_normalize</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_mask_normalize</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;preprocessed_mask&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">preproc</span></div>
+
+
+<div class="viewcode-block" id="get_idx"><a class="viewcode-back" href="../../../workflows/func_preproc.html#CPAC.func_preproc.get_idx">[docs]</a><span class="k">def</span> <span class="nf">get_idx</span><span class="p">(</span><span class="n">in_files</span><span class="p">,</span> <span class="n">stop_idx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">start_idx</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Method to get the first and the last slice for</span>
+<span class="sd">    the functional run. It verifies the user specified</span>
+<span class="sd">    first and last slice. If the values are not valid, it</span>
+<span class="sd">    calculates and returns the very first and the last slice</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    in_file : string (nifti file)</span>
+<span class="sd">       Path to input functional run</span>
+
+<span class="sd">    stop_idx : int</span>
+<span class="sd">        Last volume to be considered, specified by user</span>
+<span class="sd">        in the configuration file</span>
+
+<span class="sd">    stop_idx : int</span>
+<span class="sd">        First volume to be considered, specified by user</span>
+<span class="sd">        in the configuration file</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    stop_idx :  int</span>
+<span class="sd">        Value of first slice to consider for the functional run</span>
+
+<span class="sd">    start_idx : int</span>
+<span class="sd">        Value of last slice to consider for the functional run</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># stopidx = None</span>
+    <span class="c1"># startidx = None</span>
+    <span class="c1"># Import packages</span>
+    <span class="kn">from</span> <span class="nn">nibabel</span> <span class="k">import</span> <span class="n">load</span>
+
+    <span class="c1"># Init variables</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">in_files</span><span class="p">)</span>
+    <span class="n">hdr</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">get_header</span><span class="p">()</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">hdr</span><span class="o">.</span><span class="n">get_data_shape</span><span class="p">()</span>
+
+    <span class="c1"># Check to make sure the input file is 4-dimensional</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Input nifti file: </span><span class="si">%s</span><span class="s1"> is not a 4D file&#39;</span> <span class="o">%</span> <span class="n">in_files</span><span class="p">)</span>
+    <span class="c1"># Grab the number of volumes</span>
+    <span class="n">nvols</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">hdr</span><span class="o">.</span><span class="n">get_data_shape</span><span class="p">()[</span><span class="mi">3</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">start_idx</span> <span class="o">==</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">start_idx</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">start_idx</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">nvols</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)):</span>
+        <span class="n">startidx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">startidx</span> <span class="o">=</span> <span class="n">start_idx</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">stop_idx</span> <span class="o">==</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">stop_idx</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">nvols</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)):</span>
+        <span class="n">stopidx</span> <span class="o">=</span> <span class="n">nvols</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">stopidx</span> <span class="o">=</span> <span class="n">stop_idx</span>
+
+    <span class="k">return</span> <span class="n">stopidx</span><span class="p">,</span> <span class="n">startidx</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.4.1 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+
+  </body>
+</html>

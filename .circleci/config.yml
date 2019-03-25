@@ -1,6 +1,7 @@
 version: 2
 jobs:
   build:
+    working_directory: ~/build
     branches:
       only:
         - source
@@ -8,7 +9,20 @@ jobs:
       - image: circleci/python:2.7
     steps:
       - checkout
+
       - run: git clone https://github.com/FCP-INDI/C-PAC /home/circleci/code
-      - run: pip install --user -r /home/circleci/code/requirements.txt
-      - run: pip install --user sphinx /home/circleci/code
-      - run: bin/build
+
+      - restore_cache:
+          keys:
+          - cpac-requirements-{{ checksum "/home/circleci/code/requirements.txt" }}
+
+      - run: pipenv install -r /home/circleci/code/requirements.txt
+      - run: pipenv install sphinx
+
+      - save_cache:
+          paths:
+            - ".venv"
+          key: cpac-requirements-{{ checksum "/home/circleci/code/requirements.txt" }}
+          
+      - run: pipenv install sphinx /home/circleci/code
+      - run: pipenv run bin/build

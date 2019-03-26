@@ -9,16 +9,22 @@ jobs:
       - image: fcpindi/c-pac:latest
     steps:
       - checkout
-      - run: pip install sphinx
-      - run: ./bin/build
+      - run:
+          name: Install dependencies
+          command: |
+            pip install sphinx
+      - run:
+          name: Build docs
+          command: |
+            ./bin/build
 
       - run:
-          name: Configure Github
+          name: Configure git user
           command: |
-            git config user.email "ci-build@fcp-indi.github.com"
-            git config user.name "ci-build"
+            git config --global user.email "ci-build@fcp-indi.github.com"
+            git config --global user.name "ci-build"
       - run:
-          name: Deploy docs to gh-pages branch
+          name: Deploy docs
           command: |
             git clone --single-branch --branch gh-pages git@github.com:FCP-INDI/fcp-indi.github.com.git /tmp/repo
             rsync -rtv ./ /tmp/repo/ --exclude '.git'

@@ -14,7 +14,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
     
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -295,6 +295,8 @@
             <span class="n">subsequent_trs_to_censor</span> <span class="o">=</span> \
                 <span class="n">selector</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;number_of_subsequent_trs_to_censor&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
+            <span class="n">spike_regressors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">regressor_length</span><span class="p">)</span>
+
             <span class="k">for</span> <span class="n">censor_index</span> <span class="ow">in</span> <span class="n">censor_indices</span><span class="p">:</span>
 
                 <span class="n">censor_begin_index</span> <span class="o">=</span> <span class="n">censor_index</span> <span class="o">-</span> <span class="n">previous_trs_to_censor</span>
@@ -305,11 +307,14 @@
                 <span class="k">if</span> <span class="n">censor_end_index</span> <span class="o">&gt;=</span> <span class="n">regressor_length</span><span class="p">:</span>
                     <span class="n">censor_end_index</span> <span class="o">=</span> <span class="n">regressor_length</span> <span class="o">-</span> <span class="mi">1</span>
 
-                <span class="n">spike_regressor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">regressor_length</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-                <span class="n">spike_regressor</span><span class="p">[</span><span class="n">censor_begin_index</span><span class="p">:</span><span class="n">censor_end_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">spike_regressors</span><span class="p">[</span><span class="n">censor_begin_index</span><span class="p">:</span><span class="n">censor_end_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="k">for</span> <span class="n">censor_index</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">spike_regressors</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
 
                 <span class="n">column_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;SpikeRegression</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">censor_index</span><span class="p">))</span>
-                <span class="n">nuisance_regressors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spike_regressor</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+                <span class="n">spike_regressor_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">regressor_length</span><span class="p">)</span>
+                <span class="n">spike_regressor_index</span><span class="p">[</span><span class="n">censor_index</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">nuisance_regressors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spike_regressor_index</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
 
     <span class="c1"># Compile columns into regressor file</span>
     <span class="n">output_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s2">&quot;nuisance_regressors.1D&quot;</span><span class="p">)</span>
@@ -531,9 +536,10 @@
 <span class="sd">            &#39;aCompCor&#39;: {&#39;summary&#39;: {&#39;method&#39;: &#39;PC&#39;, &#39;components&#39;: 5}, &#39;tissues&#39;: [&#39;WhiteMatter&#39;, &#39;CerebrospinalFluid&#39;], &#39;extraction_resolution&#39;: 2},</span>
 <span class="sd">            &#39;WhiteMatter&#39;: {&#39;summary&#39;: {&#39;method&#39;: &#39;PC&#39;, &#39;components&#39;: 5}, &#39;extraction_resolution&#39;: 2},</span>
 <span class="sd">            &#39;CerebrospinalFluid&#39;: {&#39;summary&#39;: {&#39;method&#39;: &#39;PC&#39;, &#39;components&#39;: 5}, &#39;extraction_resolution&#39;: 2, &#39;erode_mask&#39;: True},</span>
+<span class="sd">            &#39;GreyMatter&#39;: {&#39;summary&#39;: {&#39;method&#39;: &#39;PC&#39;, &#39;components&#39;: 5}, &#39;extraction_resolution&#39;: 2, &#39;erode_mask&#39;: True},</span>
 <span class="sd">            &#39;GlobalSignal&#39;: {&#39;summary&#39;: &#39;Mean&#39;, &#39;include_delayed&#39;: True, &#39;include_squared&#39;: True, &#39;include_delayed_squared&#39;: True},</span>
 <span class="sd">            &#39;Motion&#39;: {&#39;include_delayed&#39;: True, &#39;include_squared&#39;: True, &#39;include_delayed_squared&#39;: True},</span>
-<span class="sd">        &#39;Censor&#39;: {&#39;method&#39;: &#39;Interpolate&#39;, &#39;thresholds&#39;: [{&#39;type&#39;: &#39;FD_J&#39;, &#39;value&#39;: 0.5}, {&#39;type&#39;: &#39;DVARS&#39;, &#39;value&#39;: 0.7}]}</span>
+<span class="sd">            &#39;Censor&#39;: {&#39;method&#39;: &#39;Interpolate&#39;, &#39;thresholds&#39;: [{&#39;type&#39;: &#39;FD_J&#39;, &#39;value&#39;: 0.5}, {&#39;type&#39;: &#39;DVARS&#39;, &#39;value&#39;: 0.7}]}</span>
 <span class="sd">        }, use_ants=False)</span>
 
 <span class="sd">        wf.write_graph(</span>
@@ -1086,7 +1092,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, C-PAC Team.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

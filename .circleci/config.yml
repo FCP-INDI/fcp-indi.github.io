@@ -1,0 +1,36 @@
+version: 2
+jobs:
+  build:
+    working_directory: /build
+    branches:
+      only:
+        - source
+    docker:
+      - image: fcpindi/c-pac:latest
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            pip install sphinx
+      - run:
+          name: Build docs
+          command: |
+            ./bin/build
+
+      - run:
+          name: Configure git user
+          command: |
+            git config --global user.email "ci-build@fcp-indi.github.com"
+            git config --global user.name "ci-build"
+      - run:
+          name: Deploy docs
+          command: |
+            git clone --single-branch --branch master git@github.com:FCP-INDI/fcp-indi.github.com.git /tmp/repo
+            rsync -rtv ./ /tmp/repo/ --exclude '.git'
+            cd /tmp/repo
+            git add .
+            git rm -f .gitignore
+            git commit -m "updates"
+            git push -f origin master
+            cd -

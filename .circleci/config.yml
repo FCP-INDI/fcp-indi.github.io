@@ -13,11 +13,16 @@ jobs:
       - run: ./bin/build
 
       - run:
-          name: Install and configure dependencies
+          name: Configure Github
           command: |
-            npm install -g --silent gh-pages
-            git config user.email "ci-build@klukas.net"
+            git config user.email "ci-build@fcp-indi.github.com"
             git config user.name "ci-build"
       - run:
           name: Deploy docs to gh-pages branch
-          command: gh-pages -b gh-pages -d . -t -v .gitignore
+          command: |
+            git clone --single-branch --branch gh-pages git@github.com:FCP-INDI/fcp-indi.github.com.git /tmp/repo
+            rsync -rtv ./ /tmp/repo/ --exclude '.git'
+            git rm .gitignore
+            git add .
+            git commit -m "updates"
+            git push -f origin gh-pages

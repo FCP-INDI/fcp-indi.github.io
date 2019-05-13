@@ -28,8 +28,8 @@ class ExecDirective(Directive):
         ))
 
         try:
-            exec '\n'.join(self.content)
-            return [nodes.paragraph(text=sys.stdout.getvalue())]
+            exec('\n'.join(self.content))
+            return [nodes.literal_block(sys.stdout.getvalue())]
         except Exception as e:
             _, _, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]

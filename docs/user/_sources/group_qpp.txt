@@ -1,28 +1,25 @@
-﻿C-PAC QPP USER DOCUMENTATION
+﻿Quasi-Periodic Patterns (QPP)
 ----------------------------
 
-
-Introduction and Background:
+Introduction and Background
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Quasi-Periodic Patterns are described as dominant spatio-temporal patterns that might recur throughout imaged time-series [1]. The algorithm designed to detect these patterns by Majeed et al.[2] has been implemented in Python as part of the C-PAC package.
-
+Quasi-Periodic Patterns are described as dominant spatio-temporal patterns that might recur throughout imaged time-series [1]. The algorithm designed to detect these patterns by Majeed et al. [2] has been implemented in Python as part of the C-PAC package.
 
 The QPP algorithm produces both a "template", a characteristic single instance of the QPP, and a time course corresponding to the QPP, in the functional data. Additionally, a regressor can be produced from either a newly generated template, or from a template that has been provided to C-PAC. The templates generated are useful to compare the QPP’s timings and spatial extent across different subjects, while the time course of the QPP strength is useful to compare to other physiological signals [2,3].The “best” template is chosen from the given templates by summation of the values of its sliding correlation at local maxima, which are above a certain threshold (provided by the user) at the final iteration. The template with the highest sum is designated as the most representative QPP. Selected in this way, the most representative QPP is guaranteed to have high correlation and large numbers of occurrences relative to other templates.[3]
 
-
-Computation and Analysis Consideration:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Computation and Analysis Consideration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 While QPP can be performed at an  individual level, group QPP can provide far more significant results to compare and regress with other physiological signals. Computation of QPP involves extracting the time courses of multiple participants and concatenating them, producing one large 4-dimensional dataset. This data is scanned with a fixed Window Length (WL) starting at a random time point (Initial Time Point, ITP) and stopping at a Final Time point (FTP) to find repeating patterns within the functional data. This is then repeated n number of times, based on the user's input to produce a "template" and the correlating time course. The template is therefore an average of the segments of each scan, with length WL and starting at an FTP.
 
 
 It is important to note that QPP is computationally intensive, efficiency is important to keep in mind when using a large amount of subjects (>500). It might take around 15 minutes to run such a large extent of subjects. 
 
-.. figure:: /_images/QPP_1
+.. figure:: /_images/QPP_1.png
 
-.. figure:: /_images/template
+.. figure:: /_images/template.png
 
-Configuring CPAC to run QPP:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Configuring QPP
+^^^^^^^^^^^^^^^
 Currently, group level C-PAC-QPP provides three main functions: 
 1. Generating a template
 2. Choosing the best template 
@@ -30,12 +27,11 @@ Currently, group level C-PAC-QPP provides three main functions:
 While CPAC-QPP can generate its own template for a given group analysis, it can also use a previously generated template to simply perform regression. 
 You can run CPAC-QPP from the GUI or the terminal.
 
-1. Configuring C-PAC to run QPP via the GUI:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#. **Run QPP: [Off,On]: **Run Quasi Periodic Pattern analysis
+Using the GUI
+^^^^^^^^^^^^^
+#. **Run QPP: [Off, On]:** Run Quasi-Periodic Pattern analysis.
 
 #. **Scan Inclusion(optional): ['rest_run-1','rest_run-2'], None: **Include specific scans in your analysis. If you choose this option, only these scans will be included in performing concatenation of the time courses.
-
 
 #. **Session Inclusion(optional): ['1','2'], None: **Include specific sessions in your analysiS. If you choose this option, only these sessions will be included in performing concatenation of the time courses.
 
@@ -69,7 +65,7 @@ Navigate to the CPAC group analysis configuration tab. The following parameters 
 
 #. **Output Directory: **The directory in which C-PAC should write out group level QPP outputs
 
-Data Configuration:
+Data Configuration
 ^^^^^^^^^^^^^^^^^^
 
 QPP takes in native-space functional scans and concatenates them into one time course. C-PAC will gather the raw functional scans from the data configuration file and will combine them into the input time course.
@@ -77,47 +73,34 @@ If you provided a participant list or scan inclusion in the group-level configur
 You can set up a C-PAC data configuration file here: {link to the data config instructions}
 
 
-2. Configuring QPP without the GUI:  
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  
-         
-C-PAC QPP can be easily run within the terminal. First, make your configuration selections in the group-level analysis configuration YAML file. A template of the group configuration file can be generated by running:
-#. $cpac utils group-config new-template
+Configuration Using a YAML File
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To configure QPP options within a YAML file, add the following lines to your file (with appropriate substitutions for paths):
 
-Once you have configured your QPP settings, run it by entering:
-#. $cpac group qpp {group config file} 
+.. code-block:: yaml
 
-.. figure:: /_images/qpp_gui
+   runQPP :  [1]
 
-Viewing Your Results:
-^^^^^^^^^^^^^^^^^^^^
+   qpp_scan_inclusion :  
+   qpp_session_inclusion :  
+   qpp_stratification :
 
-... Sub-directory layout::
+   qpp_permutations:  100
+   qpp_window:  30
 
-   :Output directory path as specified by the user in the group config template
-      :cpac_group_analysis
-      :CPAC_QPP_pipeline_ID
-      :Nuisance strategy
-      :CPAC model files
-         :merged file and merged mask 
-* These are then used as an input for the QPP algorithm 
-* The results are stored in the output directory provided in the group config.
+   qpp_initial_threshold: 0.2
+   qpp_final_threshold: 0.3
+   qpp_initial_threshold_iterations :  20
 
-
-The outputs of the QPP run include:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#. **Best version of the template - which is the template with maximum sum of it’s correlation at supra threshold local maxima. 
-#. **Time course that represents the template. 
-
-The outputs of the QPP, along with the concatenated input and the parameter “nd”, which represents the number of subjects and number of runs is used in the individual analysis as a functional nuisance regressor, and can be regressed out of the time course of the functional data. When the individual pipeline is run again, the updated nuisance regression will include QPP regressors. 
-
+   qpp_iterations :  15
 
 
 References:
 ^^^^^^^^^^^
 
-1. Quasi-periodic patterns (QPP): large-scale dynamics in resting state fMRI that correlate with local infraslow electrical activity,Shella D Keilholz et al., Neuroimage,2014 Jan,84:10.1026/j.neuroimage.2013.09.029
+Shella D Keilholz et al. `Quasi-periodic patterns (QPP): large-scale dynamics in resting state fMRI that correlate with local infraslow electrical activity <http://doi.org/10.1016/j.neuroimage.2013.09.029>`_. Neuroimage (2014).
 
-2.Spatiotemporal dynamics of low frequency fluctuations in BOLD fMRI of the rat, Majeed W, Keilholz SD, J Magn Reson Imaging, 2009 Aug;30(2):384-93. doi: 10.1002/jmri.21848.
+Majeed W et al. `Spatiotemporal dynamics of low frequency fluctuations in BOLD fMRI of the rat <http://doi.org/10.1002/jmri.21848>`_. J Magn Reson Imaging (2009).
 
-3. Quasi Periodic Patterns of Intrinsic Brain activity in Individuals and their relationship with global signals. Yousefi et al, Shin J., Schumacher EH., Keilholz SD., Neuroimage. 2018 Feb 15;167:297-308. doi: 10.1016/j.neuroimage.2017.11.043. Epub 2017 Nov 22.
+Yousefi et al. `Quasi Periodic Patterns of Intrinsic Brain activity in Individuals and their relationship with global signals <http://doi.org/10.1016/j.neuroimage.2017.11.043>`_. Neuroimage (2018).
 

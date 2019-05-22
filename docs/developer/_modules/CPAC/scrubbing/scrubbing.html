@@ -1,0 +1,328 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>CPAC.scrubbing.scrubbing &#8212; C-PAC 1.4.3 Beta documentation</title>
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.4.3 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for CPAC.scrubbing.scrubbing</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">nipype.interfaces.afni.preprocess</span> <span class="k">as</span> <span class="nn">e_afni</span>
+<span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="nn">pe</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
+
+
+<div class="viewcode-block" id="create_scrubbing_preproc"><a class="viewcode-back" href="../../../workflows/scrubbing.html#CPAC.scrubbing.create_scrubbing_preproc">[docs]</a><span class="k">def</span> <span class="nf">create_scrubbing_preproc</span><span class="p">(</span><span class="n">wf_name</span> <span class="o">=</span> <span class="s1">&#39;scrubbing&#39;</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This workflow essentially takes the list of offending timepoints that are to be removed</span>
+<span class="sd">    and removes it from the motion corrected input image. Also, it removes the information</span>
+<span class="sd">    of discarded time points from the movement parameters file obtained during motion correction.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    wf_name : string</span>
+<span class="sd">        Name of the workflow</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    scrub : object</span>
+<span class="sd">        Scrubbing workfow object</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    `Source &lt;https://github.com/openconnectome/C-PAC/blob/master/CPAC/scrubbing/scrubbing.py&gt;`_</span>
+<span class="sd">    </span>
+<span class="sd">    Workflow Inputs::</span>
+<span class="sd">        </span>
+<span class="sd">        inputspec.frames_in_ID : string (mat file)</span>
+<span class="sd">            path to file containing list of time points for which FD &gt; threshold</span>
+<span class="sd">        inputspec.movement_parameters : string (mat file)</span>
+<span class="sd">            path to file containing 1D file containing six movement/motion parameters</span>
+<span class="sd">            (3 Translation, 3 Rotations) in different columns </span>
+<span class="sd">        inputspec.preprocessed : string (nifti file)</span>
+<span class="sd">            preprocessed input image path</span>
+<span class="sd">            </span>
+<span class="sd">    Workflow Outputs::</span>
+<span class="sd">        </span>
+<span class="sd">        outputspec.preprocessed : string (nifti file)</span>
+<span class="sd">            preprocessed scrubbed output image </span>
+<span class="sd">        outputspec.scrubbed_movement_parameters : string (mat file)</span>
+<span class="sd">            path to 1D file containing six movement/motion parameters</span>
+<span class="sd">            for the timepoints which are not discarded by scrubbing</span>
+<span class="sd">        </span>
+<span class="sd">    Order of Commands:</span>
+<span class="sd">    </span>
+<span class="sd">    - Remove all movement parameters for all the time frames other than those that are present</span>
+<span class="sd">      in the frames_in_1D file</span>
+<span class="sd">      </span>
+<span class="sd">    - Remove the discarded timepoints from the input image. For details see `3dcalc &lt;http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dcalc.html&gt;`_::</span>
+<span class="sd">        </span>
+<span class="sd">        3dcalc -a bandpassed_demeaned_filtered.nii.gz[0,1,5,6,7,8,9,10,15,16,17,18,19,20,24,25,287,288,289,290,291,292,293,294,295] </span>
+<span class="sd">               -expr &#39;a&#39; -prefix bandpassed_demeaned_filtered_3dc.nii.gz</span>
+<span class="sd">               </span>
+<span class="sd">    High Level Workflow Graph:</span>
+<span class="sd">    </span>
+<span class="sd">    .. image:: ../images/scrubbing.dot.png</span>
+<span class="sd">       :width: 500</span>
+<span class="sd">    </span>
+<span class="sd">    Detailed Workflow Graph:</span>
+<span class="sd">    </span>
+<span class="sd">    .. image:: ../images/scrubbing_detailed.dot.png</span>
+<span class="sd">       :width: 500</span>
+<span class="sd">       </span>
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    &gt;&gt;&gt; import scrubbing</span>
+<span class="sd">    &gt;&gt;&gt; sc = scrubbing.create_scrubbing_preproc()</span>
+<span class="sd">    &gt;&gt;&gt; sc.inputs.inputspec.frames_in_ID = &#39;frames_in.1D&#39;</span>
+<span class="sd">    &gt;&gt;&gt; sc.inputs.inputpsec.movement_parameters = &#39;rest_mc.1D&#39;</span>
+<span class="sd">    &gt;&gt;&gt; sc.inputs.inputpsec.preprocessed = &#39;rest_pp.nii.gz&#39;</span>
+<span class="sd">    &gt;&gt;&gt; sc.run()  -- SKIP doctest</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">scrub</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">wf_name</span><span class="p">)</span>
+
+    <span class="n">inputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;frames_in_1D&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;movement_parameters&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;preprocessed&#39;</span>
+                                                    <span class="p">]),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
+
+    <span class="n">outputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;preprocessed&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;scrubbed_movement_parameters&#39;</span><span class="p">]),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
+
+    <span class="n">craft_scrub_input</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;scrub_input&#39;</span><span class="p">,</span> <span class="s1">&#39;frames_in_1D_file&#39;</span><span class="p">],</span>
+                                              <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;scrub_input_string&#39;</span><span class="p">],</span>
+                                              <span class="n">function</span><span class="o">=</span><span class="n">get_indx</span><span class="p">),</span>
+                                <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;scrubbing_craft_input_string&#39;</span><span class="p">)</span>
+
+    <span class="n">scrubbed_movement_parameters</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;infile_a&#39;</span><span class="p">,</span> <span class="s1">&#39;infile_b&#39;</span><span class="p">],</span> 
+                                                 <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
+                                                 <span class="n">function</span><span class="o">=</span><span class="n">get_mov_parameters</span><span class="p">),</span> 
+                                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;scrubbed_movement_parameters&#39;</span><span class="p">)</span>
+
+    <span class="c1"># THIS commented out until Nipype has an input for this interface that</span>
+    <span class="c1"># allows for the selection of specific volumes to include</span>
+    
+    <span class="c1">#scrubbed_preprocessed = pe.Node(interface=e_afni.Calc(), </span>
+    <span class="c1">#                           name=&#39;scrubbed_preprocessed&#39;)</span>
+    <span class="c1">#scrubbed_preprocessed.inputs.expr = &#39;a&#39;</span>
+    <span class="c1">#scrubbed_preprocessed.inputs.outputtype = &#39;NIFTI_GZ&#39;   </span>
+    
+    <span class="n">scrubbed_preprocessed</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;scrub_input&#39;</span><span class="p">],</span>
+                                                  <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;scrubbed_image&#39;</span><span class="p">],</span>
+                                                  <span class="n">function</span><span class="o">=</span><span class="n">scrub_image</span><span class="p">),</span>
+                                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;scrubbed_preprocessed&#39;</span><span class="p">)</span>
+
+    <span class="n">scrub</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;preprocessed&#39;</span><span class="p">,</span> <span class="n">craft_scrub_input</span><span class="p">,</span> <span class="s1">&#39;scrub_input&#39;</span><span class="p">)</span>
+    <span class="n">scrub</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;frames_in_1D&#39;</span><span class="p">,</span> <span class="n">craft_scrub_input</span><span class="p">,</span> <span class="s1">&#39;frames_in_1D_file&#39;</span><span class="p">)</span>
+    
+    <span class="n">scrub</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">craft_scrub_input</span><span class="p">,</span> <span class="s1">&#39;scrub_input_string&#39;</span><span class="p">,</span> <span class="n">scrubbed_preprocessed</span><span class="p">,</span> <span class="s1">&#39;scrub_input&#39;</span><span class="p">)</span>    
+
+    <span class="n">scrub</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;movement_parameters&#39;</span><span class="p">,</span> <span class="n">scrubbed_movement_parameters</span><span class="p">,</span> <span class="s1">&#39;infile_b&#39;</span><span class="p">)</span>
+    <span class="n">scrub</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;frames_in_1D&#39;</span><span class="p">,</span> <span class="n">scrubbed_movement_parameters</span><span class="p">,</span> <span class="s1">&#39;infile_a&#39;</span> <span class="p">)</span>
+
+    <span class="n">scrub</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">scrubbed_preprocessed</span><span class="p">,</span> <span class="s1">&#39;scrubbed_image&#39;</span><span class="p">,</span> <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;preprocessed&#39;</span><span class="p">)</span>
+    <span class="n">scrub</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">scrubbed_movement_parameters</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;scrubbed_movement_parameters&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">scrub</span></div>
+
+
+<div class="viewcode-block" id="get_mov_parameters"><a class="viewcode-back" href="../../../workflows/scrubbing.html#CPAC.scrubbing.get_mov_parameters">[docs]</a><span class="k">def</span> <span class="nf">get_mov_parameters</span><span class="p">(</span><span class="n">infile_a</span><span class="p">,</span> <span class="n">infile_b</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Method to get the new movement parameters</span>
+<span class="sd">    file after removing the offending time frames </span>
+<span class="sd">    (i.e., those exceeding FD 0.5mm/0.2mm threshold)</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    infile_a : string</span>
+<span class="sd">        path to file containing the valid time frames</span>
+<span class="sd">    </span>
+<span class="sd">    infile_b : string</span>
+<span class="sd">        path to the file containing  motion parameters </span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    out_file : string</span>
+<span class="sd">        path to the file containing motion parameters</span>
+<span class="sd">        for the valid time frames </span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="kn">import</span> <span class="nn">warnings</span>
+    
+    <span class="n">out_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;rest_mc_scrubbed.1D&#39;</span><span class="p">)</span>
+
+    <span class="n">f1</span><span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">infile_a</span><span class="p">)</span>
+    <span class="n">f2</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">infile_b</span><span class="p">)</span>
+    <span class="n">l1</span><span class="o">=</span><span class="n">f1</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+    <span class="n">l2</span><span class="o">=</span><span class="n">f2</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="n">f1</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">f2</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="n">l1</span><span class="p">:</span>
+        <span class="n">l1</span><span class="o">=</span><span class="n">l1</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;number of timepoints remaining after scrubbing -&gt; </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">l1</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;No time points remaining after scrubbing.&quot;</span><span class="p">)</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">out_file</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">l1</span><span class="p">:</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">l2</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">())]</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">out_file</span></div>
+
+
+<div class="viewcode-block" id="get_indx"><a class="viewcode-back" href="../../../workflows/scrubbing.html#CPAC.scrubbing.get_indx">[docs]</a><span class="k">def</span> <span class="nf">get_indx</span><span class="p">(</span><span class="n">scrub_input</span><span class="p">,</span> <span class="n">frames_in_1D_file</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Method to get the list of time </span>
+<span class="sd">    frames that are to be included</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    in_file : string</span>
+<span class="sd">        path to file containing the valid time frames</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    scrub_input_string : string</span>
+<span class="sd">        input string for 3dCalc in scrubbing workflow,</span>
+<span class="sd">        looks something like &quot; 4dfile.nii.gz[0,1,2,..100] &quot;</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">frames_in_1D_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+
+    <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">line</span><span class="p">:</span>
+        <span class="n">indx</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;No time points remaining after scrubbing.&quot;</span><span class="p">)</span>
+    
+    <span class="n">scrub_input_string</span> <span class="o">=</span> <span class="n">scrub_input</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">indx</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">scrub_input_string</span></div>
+    
+    
+<span class="k">def</span> <span class="nf">scrub_image</span><span class="p">(</span><span class="n">scrub_input</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Method to run 3dcalc in order to scrub the image. This is used instead of</span>
+<span class="sd">    the Nipype interface for 3dcalc because functionality is needed for</span>
+<span class="sd">    specifying an input file with specifically-selected volumes. For example:</span>
+<span class="sd">        input.nii.gz[2,3,4,..98], etc.</span>
+<span class="sd">        </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    scrub_input : string</span>
+<span class="sd">        path to 4D file to be scrubbed, plus with selected volumes to be</span>
+<span class="sd">        included</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    scrubbed_image : string</span>
+<span class="sd">        path to the scrubbed 4D file</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">os</span>
+
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;3dcalc -a </span><span class="si">%s</span><span class="s2"> -expr &#39;a&#39; -prefix scrubbed_preprocessed.nii.gz&quot;</span> <span class="o">%</span> <span class="n">scrub_input</span><span class="p">)</span>
+
+    <span class="n">scrubbed_image</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s2">&quot;scrubbed_preprocessed.nii.gz&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">scrubbed_image</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.4.3 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+
+  </body>
+</html>

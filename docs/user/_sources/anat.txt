@@ -9,6 +9,7 @@ C-PAC provides options for configuring skull-stripping - users can select:
 
 * `AFNI's 3dSkullStrip <https://afni.nimh.nih.gov/pub/dist/doc/program_help/3dSkullStrip.html>`_
 * `FSL's BET <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/BET/UserGuide>`_, and can configure further parameters for each of these tools.
+* niworkflows-ants: `niworkflows's antsBrainExtraction <https://github.com/poldracklab/niworkflows/blob/master/niworkflows/anat/ants.py>`_
 * Providing their own brain mask for extraction
 
 
@@ -97,6 +98,18 @@ Configuring FSL BET options:
 
 #. **Vertical gradient - [Off,On]:** Vertical gradient un fractional intensity threshold. Within the range of (-1,1).
 
+Configuring niworkflows-ants options:
+""""""""""""""""""""""""""""""""""""""""
+**Note:** These templates are used during niworkflows-ants skull stripping. e.g. OASIS template can be downloaded `here <https://s3-eu-west-1.amazonaws.com/pfigshare-u-files/3133832/Oasis.zip>`_
+
+
+#. **niworkflows_ants_template_path:** Set the brain extraction template . e.g. OASIStemplate/T_template0_BrainCerebellumProbabilityMask.nii.gz
+
+#. **niworkflows_ants_mask_path:** Set the brain extraction probability mask. e.g. OASIStemplate/T_template0_BrainCerebellumProbabilityMask.nii.gz
+
+#. **niworkflows_ants_regmask_path:** Set the brain extraction registration mask, used for registration to limit the metric computation to a specific region. e.g. OASIStemplate/T_template0_BrainCerebellumRegistrationMask.nii.gz
+
+
 Anatomical Registration
 ^^^^^^^^^^^^^^^^^^^^^^^
 In order to compare brain activations between subjects, individual functional and anatomical images must first be transformed to match a common template. The most commonly used template (`MNI152 <http://www.bic.mni.mcgill.ca/ServicesAtlases/ICBM152NLin2009>`_) is maintained by the Montreal Neurological Institute, and is created by combining data from the brains of many different individuals to create an "average" brain. The image below shows how an individual brain is warped to match the shape of the template.
@@ -113,7 +126,7 @@ Configuring CPAC to Run Anatomical Registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. figure:: /_images/anat_reg_gui.png
 
-#. **Anatomical Template Resolution - [1mm, 2mm, 3mm, 4mm]:** The resolution to which anatomical images should be transformed during registration. This is the resolution at which processed anatomical files will be output.
+#. **Anatomical Template Resolution - [1 An interger indicating three same dimensions (e.g., 1, 2, 3, 4); 2 A float number indicating three same dimensions (e.g., 3.5 etc.); 3 Three numbers connected by 'x' indicating three different dimensions (e.g., 2.67x2.67x3 etc.)]:** The resolution to which anatomical images should be transformed during registration. This is the resolution at which processed anatomical files will be output.
 
 #. **Anatomical Template (Brain Only) - [path]:** Template to be used during registration. It is not necessary to change this path unless you intend to use a non-standard template.
 
@@ -206,7 +219,7 @@ The following key/value pairs must be defined in your :doc:`pipeline configurati
 The box below contains an example of what these parameters might look like when defined in the YAML::
 
     runSegmentationPreprocessing : [1]
-    priors_path : /usr/share/fsl/5.0/data/standard/tissuepriors/${resolution_for_anat}
+    priors_path : /usr/share/fsl/5.0/data/standard/tissuepriors/2mm
     PRIORS_WHITE : $priors_path/avg152T1_white_bin.nii.gz
     PRIORS_GRAY : $priors_path/avg152T1_gray_bin.nii.gz
     PRIORS_CSF : $priors_path/avg152T1_csf_bin.nii.gz

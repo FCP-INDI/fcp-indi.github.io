@@ -16,7 +16,55 @@ To start, first pull the image from Docker Hub:
 
     docker pull fcpindi/c-pac:latest
 
-Once this is complete, you can use the ``fcpindi/c-pac`` image tag to invoke runs. The full C-PAC Docker image usage options are shown here, with specific use cases further below.
+Once this is complete, you can use the ``fcpindi/c-pac:latest`` image tag to invoke runs. The full C-PAC Docker image usage options are shown here, with some specific use cases.
+
+As a quick example, in order to run the C-PAC Docker container in participant mode, for one participant, using a BIDS dataset stored on your machine or server, and using the Docker image's default pipeline configuration (broken into multiple lines for visual clarity):
+
+.. code-block:: console
+
+    docker run -i --rm \
+            -v /Users/You/local_bids_data:/bids_dataset \
+            -v /Users/You/some_folder:/outputs \
+            -v /tmp:/scratch \
+            fcpindi/c-pac:latest /bids_dataset /outputs participant
+
+Note, the ``-v`` flags map your local filesystem locations to a "location" within the Docker image. (For example, the ``/bids_dataset`` and ``/outputs`` directories in the command above are arbitrary names). If you provided ``/Users/You/local_bids_data`` to the ``bids_dir`` input parameter, Docker would not be able to access or see that directory, so it needs to be mapped first. In this example, the local machine's ``/tmp`` directory has been mapped to the ``/scratch`` name because the C-PAC Docker image's default pipeline sets the working directory to ``/scratch``. If you wish to keep your working directory somewhere more permanent, you can simply map this like so: ``-v /Users/You/working_dir:/scratch``.
+
+You can also provide a link to an AWS S3 bucket containing a BIDS directory as the data source:
+
+.. code-block:: console
+
+    docker run -i --rm \
+            -v /Users/You/some_folder:/outputs \
+            -v /tmp:/scratch \
+            fcpindi/c-pac:latest s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant
+
+To run the C-PAC Docker container with a pipeline configuration file other than the container's default pipeline, assuming the configuration file is in the ``/Users/You/Documents`` directory:
+
+.. code-block:: console
+
+    docker run -i --rm \
+            -v /Users/You/local_bids_data:/bids_dataset \
+            -v /Users/You/some_folder:/outputs \
+            -v /tmp:/scratch \
+            -v /Users/You/Documents:/configs \
+            -v /Users/You/resources:/resources \
+            fcpindi/c-pac:latest /bids_dataset /outputs participant --pipeline_file /configs/pipeline_config.yml
+
+In this case, we need to map the directory containing the pipeline configuration file ``/Users/You/Documents`` to a Docker image virtual directory ``/configs``. Note we are using this ``/configs`` directory in the ``--pipeline_file`` input flag. In addition, if there are any ROIs, masks, or input files listed in your pipeline configuration file, the directory these are in must be mapped as well- assuming ``/Users/You/resources`` is your directory of ROI and/or mask files, we map it with ``-v /Users/You/resources:/resources``. In the pipeline configuration file you are providing, these ROI and mask files must be listed as ``/resources/ROI.nii.gz`` (etc.) because we have mapped ``/Users/You/resources`` to ``/resources``.
+
+Finally, to run the Docker container with a specific data configuration file (instead of providing a BIDS data directory):
+
+.. code-block:: console
+
+    docker run -i --rm \
+            -v /Users/You/any_directory:/bids_dataset \
+            -v /Users/You/some_folder:/outputs \
+            -v /tmp:/scratch \
+            -v /Users/You/Documents:/configs \
+            fcpindi/c-pac:latest /bids_dataset /outputs participant --data_config_file /configs/data_config.yml
+
+Note: we are still providing ``/bids_dataset`` to the ``bids_dir`` input parameter. However, we have mapped this to any directory on your machine, as C-PAC will not look for data in this directory when you provide a data configuration YAML with the ``--data_config_file`` flag. In addition, if the dataset in your data configuration file is not in BIDS format, just make sure to add the ``--skip_bids_validator`` flag at the end of your command to bypass the BIDS validation process.
 
 .. code-block:: console
 
@@ -102,54 +150,6 @@ Once this is complete, you can use the ``fcpindi/c-pac`` image tag to invoke run
 
 Note that any of the optional arguments above will over-ride any pipeline settings in the default pipeline or in the pipeline configuration file you provide via the ``--pipeline_file`` parameter.
 
-As an example, in order to run the C-PAC Docker container in participant mode, for one participant, using a BIDS dataset stored on your machine or server, and using the Docker image's default pipeline configuration (broken into multiple lines for convenience):
-
-.. code-block:: console
-
-    docker run -i --rm \
-            -v /Users/You/local_bids_data:/bids_dataset \
-            -v /Users/You/some_folder:/outputs \
-            -v /tmp:/scratch \
-            fcpindi/c-pac:latest /bids_dataset /outputs participant
-
-Note, the ``-v`` flags map your local filesystem locations to a "location" within the Docker image. (For example, the ``/bids_dataset`` and ``/outputs`` directories in the command above are arbitrary names). If you provided ``/Users/You/local_bids_data`` to the ``bids_dir`` input parameter, Docker would not be able to access or see that directory, so it needs to be mapped first. In this example, the local machine's ``/tmp`` directory has been mapped to the ``/scratch`` name because the C-PAC Docker image's default pipeline sets the working directory to ``/scratch``. If you wish to keep your working directory somewhere more permanent, you can simply map this like so: ``-v /Users/You/working_dir:/scratch``.
-
-You can also provide a link to an AWS S3 bucket containing a BIDS directory as the data source:
-
-.. code-block:: console
-
-    docker run -i --rm \
-            -v /Users/You/some_folder:/outputs \
-            -v /tmp:/scratch \
-            fcpindi/c-pac:latest s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant
-
-To run the C-PAC Docker container with a pipeline configuration file other than the container's default pipeline, assuming the configuration file is in the ``/Users/You/Documents`` directory:
-
-.. code-block:: console
-
-    docker run -i --rm \
-            -v /Users/You/local_bids_data:/bids_dataset \
-            -v /Users/You/some_folder:/outputs \
-            -v /tmp:/scratch \
-            -v /Users/You/Documents:/configs \
-            -v /Users/You/resources:/resources \
-            fcpindi/c-pac:latest /bids_dataset /outputs participant --pipeline_file /configs/pipeline_config.yml
-
-In this case, we need to map the directory containing the pipeline configuration file ``/Users/You/Documents`` to a Docker image virtual directory ``/configs``. Note we are using this ``/configs`` directory in the ``--pipeline_file`` input flag. In addition, if there are any ROIs, masks, or input files listed in your pipeline configuration file, the directory these are in must be mapped as well- assuming ``/Users/You/resources`` is your directory of ROI and/or mask files, we map it with ``-v /Users/You/resources:/resources``. In the pipeline configuration file you are providing, these ROI and mask files must be listed as ``/resources/ROI.nii.gz`` (etc.) because we have mapped ``/Users/You/resources`` to ``/resources``.
-
-Finally, to run the Docker container with a specific data configuration file (instead of providing a BIDS data directory):
-
-.. code-block:: console
-
-    docker run -i --rm \
-            -v /Users/You/any_directory:/bids_dataset \
-            -v /Users/You/some_folder:/outputs \
-            -v /tmp:/scratch \
-            -v /Users/You/Documents:/configs \
-            fcpindi/c-pac:latest /bids_dataset /outputs participant --data_config_file /configs/data_config.yml
-
-Note: we are still providing ``/bids_dataset`` to the ``bids_dir`` input parameter. However, we have mapped this to any directory on your machine, as C-PAC will not look for data in this directory when you provide a data configuration YAML with the ``--data_config_file`` flag. In addition, if the dataset in your data configuration file is not in BIDS format, just make sure to add the ``--skip_bids_validator`` flag at the end of your command to bypass the BIDS validation process.
-
 **Further usage notes:**
 
 * You can run only anatomical preprocessing easily, without modifying your data or pipeline configuration files, by providing the ``--anat_only`` flag.
@@ -222,136 +222,33 @@ Several different individual level analysis are performed on the fMRI data inclu
 Making a User-Configured Pipeline
 ---------------------------------
 
-C-PAC offers a graphical interface to make the process of editing your pipeline and data configuration easier.
+C-PAC offers a graphical interface you can use to quickly and easily modify the default pipeline or create your own from scratch:
 
-**Running the GUI via docker container on Linux**
+`https://fcp-indi.github.io/C-PAC_GUI/versions/latest/browser/#/ <https://fcp-indi.github.io/C-PAC_GUI/versions/latest/browser/#/>`_
 
-Start the docker container, mapping the X socket (change /home to a local directory on your computer)
+.. figure:: /_images/gui_home1.png
 
-.. code-block:: console
-
-    docker run -i --rm \
-        --privileged \
-        -e DISPLAY=$DISPLAY \
-        -v /tmp/.X11-unix:/tmp/.X11-unix \
-        -v /tmp:/scratch \
-        -v /home/data/ds005:/bids_dataset \
-        -v /home/outputs:/outputs \
-        fcpindi/c-pac \
-        /bids_dataset /outputs GUI
-
-**Running docker container on Mac OSX**
-
-1. `Install XQuartz <https://www.xquartz.org>`_
-
-2. Start XQuartz (from terminal)
-
-.. code-block:: console
-
-    open -a XQuartz
-
-3. Enable XQuartz connections from network clients
-
-.. code-block:: console
-
-    XQuartz -> preferences -> security -> "Allow connections from network clients"
-
-4. Get your ip address (e.g., might have to change eth0 to match the name of your network interface.)
-
-.. code-block:: console
-
-    ip=$(ifconfig en0 | grep inet | awk '$1=="inet" {print $2}')
-
-5. Tell xhost to accept connections from the localhost
-
-.. code-block:: console
-
-    xhost + ${ip}
-
-6. Start the docker container, mapping the X socket (change /home to a local directory on your computer)
+Once you save the pipeline configuration YAML file, you can provide it to the C-PAC Docker container like so:
 
 .. code-block:: console
 
     docker run -i --rm \
-        --privileged \
-        -e DISPLAY=$ip:0 \
-        -v /tmp/.X11-unix:/tmp/.X11-unix \
-        -v /tmp:/scratch \
-        -v /home/data/ds005:/bids_dataset \
-        -v /home/outputs:/outputs \
-        fcpindi/c-pac \
-        /bids_dataset /outputs GUI
+            -v /Users/You/local_bids_data:/bids_dataset \
+            -v /Users/You/some_folder:/outputs \
+            -v /tmp:/scratch \
+            -v /Users/You/Documents:/configs \
+            -v /Users/You/resources:/resources \
+            fcpindi/c-pac:latest /bids_dataset /outputs participant --pipeline_file /configs/pipeline_config.yml
 
-**Running singularity container GUI on Linux**
-
-Start the docker container (it just works!, provided you change /home to a local directory on your computer)
+Or you can provide it to the C-PAC Singularity container like so:
 
 .. code-block:: console
 
     singularity run \
-        -B /home/ubuntu:/mnt \
-        -B /mnt:/scratch \
-        -B /home/data/ds005:/bids_dataset \
-        -B /home/outputs:/outputs \
-        /home/ubuntu/workspace/container_build/singularity_images/cpac_latest.img \
-        /bids_dataset \
-        /outputs\
-        GUI
-
-To convert the Docker container to a Singularity container :
-
-.. code-block:: console
-
-    docker run --privileged -ti --rm  \
-        -v /var/run/docker.sock:/var/run/docker.sock \
-        -v /home/srycajal/singularity_images:/output \
-        filo/docker2singularity \
-        bids/cpac
-
-Example submit script for running as a Singularity container on sun grid engine:
-
-.. code-block:: console
-
-    #! /bin/bash
-    ## SGE batch file - bgsp
-    #$ -S /bin/bash
-    ## bgsp is the jobname and can be changed
-    #$ -N bgsp
-    ## execute the job using the mpi_smp parallel enviroment and 8 cores per job
-    #$ -pe mpi_smp 8
-    ## create an array of 1112 jobs
-    #$ -t 1-1112
-    #$ -V
-    ## change the following working directory to a persistent directory that is
-    ## available on all nodes, this is were messages printed by the app (stdout
-    ## and stderr) will be stored
-    #$ -wd /home/ubuntu/workspace/cluster_files
-
-    sudo chmod 777 /mnt
-    mkdir -p /mnt/log/reports
-
-    sge_ndx=$(( SGE_TASK_ID - 1 ))
-
-    # random sleep so that jobs dont start at _exactly_ the same time
-    sleep $(( $SGE_TASK_ID % 10 ))
-
-    singularity run -B /home/ubuntu:/mnt -B /mnt:/scratch \
-      /home/ubuntu/workspace/container_build/singularity_images/cpac_latest.img \
-      --n_cpus 8 --mem 12 \
-      --aws_input_creds /mnt/workspace/cluster_files/s3-keys.csv \
-      --aws_output_creds /mnt/workspace/cluster_files/s3-keys.csv \
-      --data_config_file /mnt/workspace/cluster_files/bgsp_data_config.yml \
-      s3://fcp-indi/data/Projects/BrainGenomicsSuperstructProject/orig_bids/ \
-      s3://fcp-indi/data/Projects/BrainGenomicsSuperstructProject/cpac_out/ \
-      participant --participant_ndx ${sge_ndx}
-
-**Notes:**
-
-* With the exception of your home directory, which is mounted from the local filesystem, the filesystem in Singularity containers is read-only. Files can be easily transferred in and out of the container by mapping local directories to directories inside the container using the -B from:to command line argument, where the from dir is mapped to to. When using mapped directories, remember that the paths specified on the command line are in relation to the directory inside the container (e.g. the to directory).
-
-* Unless the ``--save_working_dir`` flag is set, the C-PAC app will use the ``/scratch`` directory for intermediary files. Since this directory is write protected, a directory from the local filesystem must be mapped to ``/scratch`` for the pipeline to run successfully. This directory should be large enough to hold all of the intermediary files for the datasets that are processed in parallel, as a rule of thumb we suggest 3 GB per dataset. Unless the ``--save_working_dir`` flag is set, the working directory will be deleted when the pipeline has completed.
-
-* Use the ``--save_working_dir`` flag to retain all intermediary files, which can be useful for debugging. In this case, the intermediary files will be saved in the working_dir subdirectory of the user specified output directory. This will require about 3GB per dataset, but may require more for multiple or very long fMRI scans.
+            -B /Users/You/some_folder:/outputs \
+            -B /tmp:/scratch \
+            -B /Users/You/Documents:/configs \
+            fcpindi_c-pac_latest-{date}-{hash value}.img s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant --pipeline_file /configs/pipeline_config.yml
 
 **Reporting errors and getting help**
 

@@ -53,7 +53,44 @@
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker pull fcpindi/c-pac:latest</span>
 </pre></div>
 </div>
-<p>Once this is complete, you can use the <code class="docutils literal notranslate"><span class="pre">fcpindi/c-pac</span></code> image tag to invoke runs. The full C-PAC Docker image usage options are shown here, with specific use cases further below.</p>
+<p>Once this is complete, you can use the <code class="docutils literal notranslate"><span class="pre">fcpindi/c-pac:latest</span></code> image tag to invoke runs. The full C-PAC Docker image usage options are shown here, with some specific use cases.</p>
+<p>As a quick example, in order to run the C-PAC Docker container in participant mode, for one participant, using a BIDS dataset stored on your machine or server, and using the Docker image’s default pipeline configuration (broken into multiple lines for visual clarity):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker run -i --rm \</span>
+<span class="go">        -v /Users/You/local_bids_data:/bids_dataset \</span>
+<span class="go">        -v /Users/You/some_folder:/outputs \</span>
+<span class="go">        -v /tmp:/scratch \</span>
+<span class="go">        fcpindi/c-pac:latest /bids_dataset /outputs participant</span>
+</pre></div>
+</div>
+<p>Note, the <code class="docutils literal notranslate"><span class="pre">-v</span></code> flags map your local filesystem locations to a “location” within the Docker image. (For example, the <code class="docutils literal notranslate"><span class="pre">/bids_dataset</span></code> and <code class="docutils literal notranslate"><span class="pre">/outputs</span></code> directories in the command above are arbitrary names). If you provided <code class="docutils literal notranslate"><span class="pre">/Users/You/local_bids_data</span></code> to the <code class="docutils literal notranslate"><span class="pre">bids_dir</span></code> input parameter, Docker would not be able to access or see that directory, so it needs to be mapped first. In this example, the local machine’s <code class="docutils literal notranslate"><span class="pre">/tmp</span></code> directory has been mapped to the <code class="docutils literal notranslate"><span class="pre">/scratch</span></code> name because the C-PAC Docker image’s default pipeline sets the working directory to <code class="docutils literal notranslate"><span class="pre">/scratch</span></code>. If you wish to keep your working directory somewhere more permanent, you can simply map this like so: <code class="docutils literal notranslate"><span class="pre">-v</span> <span class="pre">/Users/You/working_dir:/scratch</span></code>.</p>
+<p>You can also provide a link to an AWS S3 bucket containing a BIDS directory as the data source:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker run -i --rm \</span>
+<span class="go">        -v /Users/You/some_folder:/outputs \</span>
+<span class="go">        -v /tmp:/scratch \</span>
+<span class="go">        fcpindi/c-pac:latest s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant</span>
+</pre></div>
+</div>
+<p>To run the C-PAC Docker container with a pipeline configuration file other than the container’s default pipeline, assuming the configuration file is in the <code class="docutils literal notranslate"><span class="pre">/Users/You/Documents</span></code> directory:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker run -i --rm \</span>
+<span class="go">        -v /Users/You/local_bids_data:/bids_dataset \</span>
+<span class="go">        -v /Users/You/some_folder:/outputs \</span>
+<span class="go">        -v /tmp:/scratch \</span>
+<span class="go">        -v /Users/You/Documents:/configs \</span>
+<span class="go">        -v /Users/You/resources:/resources \</span>
+<span class="go">        fcpindi/c-pac:latest /bids_dataset /outputs participant --pipeline_file /configs/pipeline_config.yml</span>
+</pre></div>
+</div>
+<p>In this case, we need to map the directory containing the pipeline configuration file <code class="docutils literal notranslate"><span class="pre">/Users/You/Documents</span></code> to a Docker image virtual directory <code class="docutils literal notranslate"><span class="pre">/configs</span></code>. Note we are using this <code class="docutils literal notranslate"><span class="pre">/configs</span></code> directory in the <code class="docutils literal notranslate"><span class="pre">--pipeline_file</span></code> input flag. In addition, if there are any ROIs, masks, or input files listed in your pipeline configuration file, the directory these are in must be mapped as well- assuming <code class="docutils literal notranslate"><span class="pre">/Users/You/resources</span></code> is your directory of ROI and/or mask files, we map it with <code class="docutils literal notranslate"><span class="pre">-v</span> <span class="pre">/Users/You/resources:/resources</span></code>. In the pipeline configuration file you are providing, these ROI and mask files must be listed as <code class="docutils literal notranslate"><span class="pre">/resources/ROI.nii.gz</span></code> (etc.) because we have mapped <code class="docutils literal notranslate"><span class="pre">/Users/You/resources</span></code> to <code class="docutils literal notranslate"><span class="pre">/resources</span></code>.</p>
+<p>Finally, to run the Docker container with a specific data configuration file (instead of providing a BIDS data directory):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker run -i --rm \</span>
+<span class="go">        -v /Users/You/any_directory:/bids_dataset \</span>
+<span class="go">        -v /Users/You/some_folder:/outputs \</span>
+<span class="go">        -v /tmp:/scratch \</span>
+<span class="go">        -v /Users/You/Documents:/configs \</span>
+<span class="go">        fcpindi/c-pac:latest /bids_dataset /outputs participant --data_config_file /configs/data_config.yml</span>
+</pre></div>
+</div>
+<p>Note: we are still providing <code class="docutils literal notranslate"><span class="pre">/bids_dataset</span></code> to the <code class="docutils literal notranslate"><span class="pre">bids_dir</span></code> input parameter. However, we have mapped this to any directory on your machine, as C-PAC will not look for data in this directory when you provide a data configuration YAML with the <code class="docutils literal notranslate"><span class="pre">--data_config_file</span></code> flag. In addition, if the dataset in your data configuration file is not in BIDS format, just make sure to add the <code class="docutils literal notranslate"><span class="pre">--skip_bids_validator</span></code> flag at the end of your command to bypass the BIDS validation process.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">usage: run.py [-h] [--pipeline_file PIPELINE_FILE]</span>
 <span class="go">              [--data_config_file DATA_CONFIG_FILE]</span>
 <span class="go">              [--aws_input_creds AWS_INPUT_CREDS]</span>
@@ -136,43 +173,6 @@
 </pre></div>
 </div>
 <p>Note that any of the optional arguments above will over-ride any pipeline settings in the default pipeline or in the pipeline configuration file you provide via the <code class="docutils literal notranslate"><span class="pre">--pipeline_file</span></code> parameter.</p>
-<p>As an example, in order to run the C-PAC Docker container in participant mode, for one participant, using a BIDS dataset stored on your machine or server, and using the Docker image’s default pipeline configuration (broken into multiple lines for convenience):</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker run -i --rm \</span>
-<span class="go">        -v /Users/You/local_bids_data:/bids_dataset \</span>
-<span class="go">        -v /Users/You/some_folder:/outputs \</span>
-<span class="go">        -v /tmp:/scratch \</span>
-<span class="go">        fcpindi/c-pac:latest /bids_dataset /outputs participant</span>
-</pre></div>
-</div>
-<p>Note, the <code class="docutils literal notranslate"><span class="pre">-v</span></code> flags map your local filesystem locations to a “location” within the Docker image. (For example, the <code class="docutils literal notranslate"><span class="pre">/bids_dataset</span></code> and <code class="docutils literal notranslate"><span class="pre">/outputs</span></code> directories in the command above are arbitrary names). If you provided <code class="docutils literal notranslate"><span class="pre">/Users/You/local_bids_data</span></code> to the <code class="docutils literal notranslate"><span class="pre">bids_dir</span></code> input parameter, Docker would not be able to access or see that directory, so it needs to be mapped first. In this example, the local machine’s <code class="docutils literal notranslate"><span class="pre">/tmp</span></code> directory has been mapped to the <code class="docutils literal notranslate"><span class="pre">/scratch</span></code> name because the C-PAC Docker image’s default pipeline sets the working directory to <code class="docutils literal notranslate"><span class="pre">/scratch</span></code>. If you wish to keep your working directory somewhere more permanent, you can simply map this like so: <code class="docutils literal notranslate"><span class="pre">-v</span> <span class="pre">/Users/You/working_dir:/scratch</span></code>.</p>
-<p>You can also provide a link to an AWS S3 bucket containing a BIDS directory as the data source:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker run -i --rm \</span>
-<span class="go">        -v /Users/You/some_folder:/outputs \</span>
-<span class="go">        -v /tmp:/scratch \</span>
-<span class="go">        fcpindi/c-pac:latest s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant</span>
-</pre></div>
-</div>
-<p>To run the C-PAC Docker container with a pipeline configuration file other than the container’s default pipeline, assuming the configuration file is in the <code class="docutils literal notranslate"><span class="pre">/Users/You/Documents</span></code> directory:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker run -i --rm \</span>
-<span class="go">        -v /Users/You/local_bids_data:/bids_dataset \</span>
-<span class="go">        -v /Users/You/some_folder:/outputs \</span>
-<span class="go">        -v /tmp:/scratch \</span>
-<span class="go">        -v /Users/You/Documents:/configs \</span>
-<span class="go">        -v /Users/You/resources:/resources \</span>
-<span class="go">        fcpindi/c-pac:latest /bids_dataset /outputs participant --pipeline_file /configs/pipeline_config.yml</span>
-</pre></div>
-</div>
-<p>In this case, we need to map the directory containing the pipeline configuration file <code class="docutils literal notranslate"><span class="pre">/Users/You/Documents</span></code> to a Docker image virtual directory <code class="docutils literal notranslate"><span class="pre">/configs</span></code>. Note we are using this <code class="docutils literal notranslate"><span class="pre">/configs</span></code> directory in the <code class="docutils literal notranslate"><span class="pre">--pipeline_file</span></code> input flag. In addition, if there are any ROIs, masks, or input files listed in your pipeline configuration file, the directory these are in must be mapped as well- assuming <code class="docutils literal notranslate"><span class="pre">/Users/You/resources</span></code> is your directory of ROI and/or mask files, we map it with <code class="docutils literal notranslate"><span class="pre">-v</span> <span class="pre">/Users/You/resources:/resources</span></code>. In the pipeline configuration file you are providing, these ROI and mask files must be listed as <code class="docutils literal notranslate"><span class="pre">/resources/ROI.nii.gz</span></code> (etc.) because we have mapped <code class="docutils literal notranslate"><span class="pre">/Users/You/resources</span></code> to <code class="docutils literal notranslate"><span class="pre">/resources</span></code>.</p>
-<p>Finally, to run the Docker container with a specific data configuration file (instead of providing a BIDS data directory):</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker run -i --rm \</span>
-<span class="go">        -v /Users/You/any_directory:/bids_dataset \</span>
-<span class="go">        -v /Users/You/some_folder:/outputs \</span>
-<span class="go">        -v /tmp:/scratch \</span>
-<span class="go">        -v /Users/You/Documents:/configs \</span>
-<span class="go">        fcpindi/c-pac:latest /bids_dataset /outputs participant --data_config_file /configs/data_config.yml</span>
-</pre></div>
-</div>
-<p>Note: we are still providing <code class="docutils literal notranslate"><span class="pre">/bids_dataset</span></code> to the <code class="docutils literal notranslate"><span class="pre">bids_dir</span></code> input parameter. However, we have mapped this to any directory on your machine, as C-PAC will not look for data in this directory when you provide a data configuration YAML with the <code class="docutils literal notranslate"><span class="pre">--data_config_file</span></code> flag. In addition, if the dataset in your data configuration file is not in BIDS format, just make sure to add the <code class="docutils literal notranslate"><span class="pre">--skip_bids_validator</span></code> flag at the end of your command to bypass the BIDS validation process.</p>
 <p><strong>Further usage notes:</strong></p>
 <ul class="simple">
 <li>You can run only anatomical preprocessing easily, without modifying your data or pipeline configuration files, by providing the <code class="docutils literal notranslate"><span class="pre">--anat_only</span></code> flag.</li>
@@ -230,122 +230,29 @@
 </div>
 <div class="section" id="making-a-user-configured-pipeline">
 <h2>Making a User-Configured Pipeline<a class="headerlink" href="#making-a-user-configured-pipeline" title="Permalink to this headline">¶</a></h2>
-<p>C-PAC offers a graphical interface to make the process of editing your pipeline and data configuration easier.</p>
-<p><strong>Running the GUI via docker container on Linux</strong></p>
-<p>Start the docker container, mapping the X socket (change /home to a local directory on your computer)</p>
+<p>C-PAC offers a graphical interface you can use to quickly and easily modify the default pipeline or create your own from scratch:</p>
+<p><a class="reference external" href="https://fcp-indi.github.io/C-PAC_GUI/versions/latest/browser/#/">https://fcp-indi.github.io/C-PAC_GUI/versions/latest/browser/#/</a></p>
+<div class="figure">
+<img alt="_images/gui_home1.png" src="_images/gui_home1.png" />
+</div>
+<p>Once you save the pipeline configuration YAML file, you can provide it to the C-PAC Docker container like so:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker run -i --rm \</span>
-<span class="go">    --privileged \</span>
-<span class="go">    -e DISPLAY=$DISPLAY \</span>
-<span class="go">    -v /tmp/.X11-unix:/tmp/.X11-unix \</span>
-<span class="go">    -v /tmp:/scratch \</span>
-<span class="go">    -v /home/data/ds005:/bids_dataset \</span>
-<span class="go">    -v /home/outputs:/outputs \</span>
-<span class="go">    fcpindi/c-pac \</span>
-<span class="go">    /bids_dataset /outputs GUI</span>
+<span class="go">        -v /Users/You/local_bids_data:/bids_dataset \</span>
+<span class="go">        -v /Users/You/some_folder:/outputs \</span>
+<span class="go">        -v /tmp:/scratch \</span>
+<span class="go">        -v /Users/You/Documents:/configs \</span>
+<span class="go">        -v /Users/You/resources:/resources \</span>
+<span class="go">        fcpindi/c-pac:latest /bids_dataset /outputs participant --pipeline_file /configs/pipeline_config.yml</span>
 </pre></div>
 </div>
-<p><strong>Running docker container on Mac OSX</strong></p>
-<ol class="arabic simple">
-<li><a class="reference external" href="https://www.xquartz.org">Install XQuartz</a></li>
-<li>Start XQuartz (from terminal)</li>
-</ol>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">open -a XQuartz</span>
-</pre></div>
-</div>
-<ol class="arabic simple" start="3">
-<li>Enable XQuartz connections from network clients</li>
-</ol>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">XQuartz -&gt; preferences -&gt; security -&gt; &quot;Allow connections from network clients&quot;</span>
-</pre></div>
-</div>
-<ol class="arabic simple" start="4">
-<li>Get your ip address (e.g., might have to change eth0 to match the name of your network interface.)</li>
-</ol>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ip=$(ifconfig en0 | grep inet | awk &#39;$1==&quot;inet&quot; {print $2}&#39;)</span>
-</pre></div>
-</div>
-<ol class="arabic simple" start="5">
-<li>Tell xhost to accept connections from the localhost</li>
-</ol>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">xhost + ${ip}</span>
-</pre></div>
-</div>
-<ol class="arabic simple" start="6">
-<li>Start the docker container, mapping the X socket (change /home to a local directory on your computer)</li>
-</ol>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker run -i --rm \</span>
-<span class="go">    --privileged \</span>
-<span class="go">    -e DISPLAY=$ip:0 \</span>
-<span class="go">    -v /tmp/.X11-unix:/tmp/.X11-unix \</span>
-<span class="go">    -v /tmp:/scratch \</span>
-<span class="go">    -v /home/data/ds005:/bids_dataset \</span>
-<span class="go">    -v /home/outputs:/outputs \</span>
-<span class="go">    fcpindi/c-pac \</span>
-<span class="go">    /bids_dataset /outputs GUI</span>
-</pre></div>
-</div>
-<p><strong>Running singularity container GUI on Linux</strong></p>
-<p>Start the docker container (it just works!, provided you change /home to a local directory on your computer)</p>
+<p>Or you can provide it to the C-PAC Singularity container like so:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">singularity run \</span>
-<span class="go">    -B /home/ubuntu:/mnt \</span>
-<span class="go">    -B /mnt:/scratch \</span>
-<span class="go">    -B /home/data/ds005:/bids_dataset \</span>
-<span class="go">    -B /home/outputs:/outputs \</span>
-<span class="go">    /home/ubuntu/workspace/container_build/singularity_images/cpac_latest.img \</span>
-<span class="go">    /bids_dataset \</span>
-<span class="go">    /outputs\</span>
-<span class="go">    GUI</span>
+<span class="go">        -B /Users/You/some_folder:/outputs \</span>
+<span class="go">        -B /tmp:/scratch \</span>
+<span class="go">        -B /Users/You/Documents:/configs \</span>
+<span class="go">        fcpindi_c-pac_latest-{date}-{hash value}.img s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant --pipeline_file /configs/pipeline_config.yml</span>
 </pre></div>
 </div>
-<p>To convert the Docker container to a Singularity container :</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker run --privileged -ti --rm  \</span>
-<span class="go">    -v /var/run/docker.sock:/var/run/docker.sock \</span>
-<span class="go">    -v /home/srycajal/singularity_images:/output \</span>
-<span class="go">    filo/docker2singularity \</span>
-<span class="go">    bids/cpac</span>
-</pre></div>
-</div>
-<p>Example submit script for running as a Singularity container on sun grid engine:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span>! /bin/bash
-<span class="gp">#</span><span class="c1"># SGE batch file - bgsp</span>
-<span class="gp">#</span>$ -S /bin/bash
-<span class="gp">#</span><span class="c1"># bgsp is the jobname and can be changed</span>
-<span class="gp">#</span>$ -N bgsp
-<span class="gp">#</span><span class="c1"># execute the job using the mpi_smp parallel enviroment and 8 cores per job</span>
-<span class="gp">#</span>$ -pe mpi_smp <span class="m">8</span>
-<span class="gp">#</span><span class="c1"># create an array of 1112 jobs</span>
-<span class="gp">#</span>$ -t <span class="m">1</span>-1112
-<span class="gp">#</span>$ -V
-<span class="gp">#</span><span class="c1"># change the following working directory to a persistent directory that is</span>
-<span class="gp">#</span><span class="c1"># available on all nodes, this is were messages printed by the app (stdout</span>
-<span class="gp">#</span><span class="c1"># and stderr) will be stored</span>
-<span class="gp">#</span>$ -wd /home/ubuntu/workspace/cluster_files
-
-<span class="go">sudo chmod 777 /mnt</span>
-<span class="go">mkdir -p /mnt/log/reports</span>
-
-<span class="go">sge_ndx=$(( SGE_TASK_ID - 1 ))</span>
-
-<span class="gp">#</span> random sleep so that <span class="nb">jobs</span> dont start at _exactly_ the same <span class="nb">time</span>
-<span class="go">sleep $(( $SGE_TASK_ID % 10 ))</span>
-
-<span class="go">singularity run -B /home/ubuntu:/mnt -B /mnt:/scratch \</span>
-<span class="go">  /home/ubuntu/workspace/container_build/singularity_images/cpac_latest.img \</span>
-<span class="go">  --n_cpus 8 --mem 12 \</span>
-<span class="go">  --aws_input_creds /mnt/workspace/cluster_files/s3-keys.csv \</span>
-<span class="go">  --aws_output_creds /mnt/workspace/cluster_files/s3-keys.csv \</span>
-<span class="go">  --data_config_file /mnt/workspace/cluster_files/bgsp_data_config.yml \</span>
-<span class="go">  s3://fcp-indi/data/Projects/BrainGenomicsSuperstructProject/orig_bids/ \</span>
-<span class="go">  s3://fcp-indi/data/Projects/BrainGenomicsSuperstructProject/cpac_out/ \</span>
-<span class="go">  participant --participant_ndx ${sge_ndx}</span>
-</pre></div>
-</div>
-<p><strong>Notes:</strong></p>
-<ul class="simple">
-<li>With the exception of your home directory, which is mounted from the local filesystem, the filesystem in Singularity containers is read-only. Files can be easily transferred in and out of the container by mapping local directories to directories inside the container using the -B from:to command line argument, where the from dir is mapped to to. When using mapped directories, remember that the paths specified on the command line are in relation to the directory inside the container (e.g. the to directory).</li>
-<li>Unless the <code class="docutils literal notranslate"><span class="pre">--save_working_dir</span></code> flag is set, the C-PAC app will use the <code class="docutils literal notranslate"><span class="pre">/scratch</span></code> directory for intermediary files. Since this directory is write protected, a directory from the local filesystem must be mapped to <code class="docutils literal notranslate"><span class="pre">/scratch</span></code> for the pipeline to run successfully. This directory should be large enough to hold all of the intermediary files for the datasets that are processed in parallel, as a rule of thumb we suggest 3 GB per dataset. Unless the <code class="docutils literal notranslate"><span class="pre">--save_working_dir</span></code> flag is set, the working directory will be deleted when the pipeline has completed.</li>
-<li>Use the <code class="docutils literal notranslate"><span class="pre">--save_working_dir</span></code> flag to retain all intermediary files, which can be useful for debugging. In this case, the intermediary files will be saved in the working_dir subdirectory of the user specified output directory. This will require about 3GB per dataset, but may require more for multiple or very long fMRI scans.</li>
-</ul>
 <p><strong>Reporting errors and getting help</strong></p>
 <p>Please report errors on the <a class="reference external" href="https://github.com/FCP-INDI/C-PAC/issues">C-PAC github page issue tracker</a>. Please use the <a class="reference external" href="https://groups.google.com/forum/#!forum/cpax_forum">C-PAC google group</a> for help using C-PAC and this application.</p>
 </div>

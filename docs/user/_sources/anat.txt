@@ -20,9 +20,9 @@ Configuring CPAC to run Skull-Stripping:
 
 .. figure:: /_images/skullstrip_gui.png
 
-#. **Inputs already skull stripped? - [On,Off]:** If inputs are already skull stripped (i.e. the structural input data is brain-only) then you can toggle this option to off. 
+#. **Already skull-stripped? - [On,Off]:** If inputs are already skull stripped (i.e. the structural input data is brain-only) then you can toggle this option to off. 
 
-#. **Which tool for skull-stripping? - [FSL, AFNI, FSL/AFNI]:** Chose if you’d like to use FSL BET, AFNI 3dSkullStrip, or run both options in parallel.
+#. **Which tool for skull-stripping? - [FSL, AFNI, niworkflows-ants]:** Chose if you’d like to use FSL BET, AFNI 3dSkullStrip, or run all options in parallel.
 
 Configuring AFNI 3dSkullStrip options:
 """"""""""""""""""""""""""""""""""""""""
@@ -102,6 +102,7 @@ Configuring niworkflows-ants options:
 """"""""""""""""""""""""""""""""""""""""
 **Note:** These templates are used during niworkflows-ants skull stripping. e.g. OASIS template can be downloaded `here <https://s3-eu-west-1.amazonaws.com/pfigshare-u-files/3133832/Oasis.zip>`_
 
+.. figure:: /_images/niworkflows-ants_gui.png
 
 #. **niworkflows_ants_template_path:** Set the brain extraction template . e.g. OASIStemplate/T_template0_BrainCerebellumProbabilityMask.nii.gz
 
@@ -134,17 +135,17 @@ Configuring CPAC to Run Anatomical Registration
 
 #. **Anatomical to Template Registration Method - [ANTS, FSL, ANTS & FSL]:** Registration method(s) to be used. Options are `ANTS <http://stnava.github.io/ANTs/>`_, `FSL <http://fsl.fmrib.ox.ac.uk/fslcourse/lectures/practicals/reg/>`_, or both.
 
+#. **ANTS skull-on transform - [Off, On]:** Register skull-on anatomical image to template. Calculating the transform with skull-stripped images is reported to be better, but it requires very high-quality skull-stripping. If skull-stripping is imprecise, registration with skull is preferred. Note: This option only affects ANTS due to the fact that FNIRT already uses skull-on images for calculating warps. 
+
 #. **Interpolation Method - [Linear, BSpline, LanczosWindowedSinc]:** Interpolation method for writing out transformed anatomical images. ANTS registration tools only. Options are Linear, BSpline, or LanczosWindowedSinc.
 
+#. **FNIRT Configuration - [path]:** Configuration file specifying settings used during registration. Required if FSL is selected as the registration method. This file can be found in the :file:`/etc/flirtsch` directory of your FSL install.
+
+#. **FNIRT Reference Mask - [path]:** A reference mask to be used by FNIRT.
+
+#. **Perform linear registration only - [Off, On]:** Whether or not perform only FLIRT.
+
 #. **Interpolation Method - [trilinear, sinc, spline]:** Interpolation method for writing out transformed anatomical images. FSL registration tools only. Options are trilinear, sinc, or spline.
-
-#. **FSL FNIRT Configuration File - [path]:** Configuration file specifying settings used during registration. Required if FSL is selected as the registration method. This file can be found in the :file:`/etc/flirtsch` directory of your FSL install.
-
-#. **FSL FNIRT Reference Mask - [path]:** A reference mask to be used by FNIRT.
-
-#. **Use skull-on image to calculate transform? (ANTS only) - [Off, On]:** Register skull-on anatomical image to template. Calculating the transform with skull-stripped images is reported to be better, but it requires very high-quality skull-stripping. If skull-stripping is imprecise, registration with skull is preferred. Note: This option only affects ANTS due to the fact that FNIRT already uses skull-on images for calculating warps. 
-
-#. **Inputs Already Skull-stripped? - [On, Off]**: Disables skull-stripping on the anatomical inputs if they are already skull-stripped.
 
 Configuration Without the GUI
 """"""""""""""""""""""""""""""
@@ -209,13 +210,15 @@ Configuring CPAC to Run Anatomical Tissue Segmentation
 
 #. **CSF Prior Probability Map - [path]:** Full path to a binarized CSF prior probability map. It is not necessary to change this path unless you intend to use non-standard priors.
 
-#. **Threshold - [On, Off]:** Whether or not to use threshold to further refine the resulting segmentation tissue masks.
+#. **FSL-FAST Thresholding - [On, Off]]:** Use FSL-FAST generated binary masks to generate the resulting segmentation tissue masks.
 
-#. **White Matter Threshold Value - [float]:** Set the threshold value for refining the resulting White Matter segmentation tissue mask. The default value is 0.95
+#. **Customized Threholding - [On,Off]]:** Set the threshold value for tissue probability maps to generate the resulting segmentation tissue masks..
 
-#. **Gray Matter Threshold Value - [float]:** Set the threshold value for refining the resulting Gray Matter segmentation tissue mask. The default value is 0.95
+#. **White Matter Threshold Value - [float]:** Set the threshold value for refining the resulting White Matter segmentation tissue mask, if choose Customized Threholding. The default value is 0.95
 
-#. **CSF Threshold Value - [float]:** Set the threshold value for refining the resulting CSF segmentation tissue mask. The default value is 0.95
+#. **Gray Matter Threshold Value - [float]:** Set the threshold value for refining the resulting Gray Matter segmentation tissue mask, if choose Customized Threholding. The default value is 0.95
+
+#. **CSF Threshold Value - [float]:** Set the threshold value for refining the resulting CSF segmentation tissue mask, if choose Customized Threholding. The default value is 0.95
 
 #. **Erosion - [On, Off]:** Whether or not to use erosion to erode binarized tissue masks.
 
@@ -240,7 +243,7 @@ The box below contains an example of what these parameters might look like when 
     PRIORS_WHITE : $priors_path/avg152T1_white_bin.nii.gz
     PRIORS_GRAY : $priors_path/avg152T1_gray_bin.nii.gz
     PRIORS_CSF : $priors_path/avg152T1_csf_bin.nii.gz
-    seg_use_threshold : True
+    seg_use_threshold : ['FSL-FAST Thresholding']
     seg_CSF_threshold_value : 0.95
     seg_WM_threshold_value : 0.95
     seg_GM_threshold_value : 0.95

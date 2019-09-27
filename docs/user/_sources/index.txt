@@ -6,34 +6,86 @@
 Welcome to C-PAC's Documentation!
 =================================
 
-Latest Release: C-PAC v1.4.3 (May 20, 2019)
+Latest Release: C-PAC v1.5.0 (Sep 30, 2019)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**NEW FEATURES**
+**NEW FEATURES - GENERAL**
 
-* **Quasi-Periodic Pattern (QPP) template generation.** QPPs are spatial patterns of dynamic connectivity that may be useful in illustrating differences present in neurological or psychiatric disorders. C-PAC can now easily calculate a QPP template derived from a set of functional data.
+* **Phase-Encoding Polarity Distortion Correction (Blip-Up / Blip-Down).** A new option for distortion correction is available! Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-encoding direction-specific EPI field maps to correct for distortion in the direction of the phase-encoding.
 
-Spatiotemporal dynamics of low frequency BOLD fluctuations in rats and humans. Majeed W, Magnuson M, Hasenkamp W, Schwarb H, Schumacher EH, Barsalou L, Keilholz SD. Neuroimage. 2011 Jan 15;54(2):1140-50.
+* **N4 Bias Field Correction.** The ability to run N4 Bias Field Correction in the anatomical preprocessing pipeline has been added, via ANTs' N4BiasFieldCorrection.
 
-Quasi-periodic patterns (QPP): large-scale dynamics in resting state fMRI that correlate with local infraslow electrical activity. Thompson GJ, Pan WJ, Magnuson ME, Jaeger D, Keilholz SD. Neuroimage. 2014 Jan 1;84:1018-31.
+[http://stnava.github.io/ANTs/]
 
-Quasi-periodic patterns of intrinsic brain activity in individuals and their relationship to global signal. Yousefi B, Shin J, Schumacher EH, Keilholz SD. Neuroimage. 2018 Feb 15;167:297-308.
+[http://manpages.ubuntu.com/manpages/trusty/man1/N4BiasFieldCorrection.1.html]
 
-* **Custom regressors for nuisance regression.** Users can now provide custom regressors to C-PAC's nuisance regression suite. This could allow a user to regress out any time series from the data, such as physiological noise regressors, task regressors, or QPP time series prior to individual-level analysis. Refer to the updated User Guide for more information.
+* **Non-Local Means (NLM) filtering.** NLM has been integrated into the anatomical preprocessing pipeline, via ANTs DenoiseImage.
 
-* **Lesion masking for anatomical registration.** For ANTs registration pipelines, users can now provide a lesion mask to improve anatomical registration quality in participant data containing lesions. Refer to the updated User Guide for more information. [http://stnava.github.io/ANTs/]
+[http://stnava.github.io/ANTs/]
 
-**ERROR FIXES**
+[https://manpages.debian.org/experimental/ants/DenoiseImage.1.en.html]
 
-* Fixed a bug where the working directory would not be deleted (when configured to do so) if the pipeline did not complete successfully.
-* Fixed a bug where, in some cases, working directory settings in a custom pipeline would be over-ridden by defaults.
+* **Increased Configurability of Output Resolution.** Users can now select write-out resolutions with a finer granularity of values, also allowing for native voxel dimension write-outs.
 
-**COMING SOON (v1.4.4/v1.5.0 - Summer 2019)**
+* **Increased Interpolation Configurability.** Introduced the ability to select a full range of interpolation options for transform application and resampling. LanczosWindowedSinc has been set as the new default for ANTs operations and Sinc for FSL operations.
 
-* New Group-Level Model Builder GUI
-* Predictive Eye Estimation Regression (PEER)
-* Non-human primate pipeline optimization
-* Easy integration & analysis of other preprocessing pipeline results
+* **PyPEER Integration.** C-PAC can now prepare your pipeline results directly for Predictive Eye Estimation. PEER is a previously developed support vector regression-based method for retrospectively estimating eye gaze from the fMRI signal in the eye’s orbit.
+
+[https://github.com/ChildMindInstitute/PyPEER]
+
+Evaluating fMRI-Based Estimation of Eye Gaze during Naturalistic Viewing. Jake Son, Lei Ai, Ryan Lim, Ting Xu, Stanley Colcombe, Alexandre Rosa Franco, Jessica Cloud, Stephen LaConte, Jonathan Lisinski, Arno Klein, R. Cameron Craddock, Michael Milham. https://doi.org/10.1101/347765
+
+[https://www.biorxiv.org/content/10.1101/347765v5]
+
+**NEW FEATURES - CROSS-PIPELINE REPRODUCIBILITY**
+
+Several new preprocessing features have been added to C-PAC's pipeline choices, in an ongoing effort to incrementally expand C-PAC's configurability. These methods have been adapted from the niworkflows and fmriprep packages (see appropriate links below).
+
+* **New BOLD Masking option.** A BOLD masking strategy designed by the fmriprep team is now available. The method employs both BET and 3dAutomask for refined BOLD masks. See the User Guide for more information.
+
+[https://fmriprep.readthedocs.io/en/stable/]
+
+[https://fmriprep.readthedocs.io/en/stable/workflows.html#bold-preprocessing]
+
+* **ANTs Brain Extraction.** ANTs Brain extraction has now been integrated as an option for brain extraction. Implementation by the fmriprep team. See the User Guide for more information.
+
+[http://stnava.github.io/ANTs/]
+
+[https://github.com/ANTsX/ANTs/blob/master/Scripts/antsBrainExtraction.sh]
+
+[https://fmriprep.readthedocs.io/en/stable/]
+
+[https://fmriprep.readthedocs.io/en/stable/workflows.html#bold-preprocessing]
+
+* **Increased Segmentation Configurability.** Thresholding options have returned, and new erosion options for anatomical segmentation have been introduced. The erosion implementation was adapted from fmriprep.
+
+[https://fmriprep.readthedocs.io/en/stable/]
+
+[https://fmriprep.readthedocs.io/en/stable/workflows.html#brain-extraction-brain-tissue-segmentation-and-spatial-normalization]
+
+**IMPROVEMENTS**
+
+* Added a selection of Neurodata's Neuroparc atlases to the C-PAC container, and C-PAC now also performs time-series extraction on these atlases by default (in addition to the original defaults).
+
+[https://github.com/neurodata/neuroparc]
+
+[https://neurodata.io/]
+
+* Improved parallelization for ISC and ISFC runs.
+
+* Users can now employ the -monkey option for AFNI 3dSkullStrip for brain extraction, for non-human primate data.
+
+**BUG FIXES**
+
+* Fixed an issue where BIDS-format slice timing information was not being read into 3dTshift properly in some cases.
+
+* Fixed an error preventing Seed-Based Correlation Analysis from running to completion.
+
+* Fixed an error that would cause the pipeline to crash at the smoothing stage if the write-out resolution for functional preprocessed data and the resolution for functional-derived data were different.
+
+* Fixed an issue that would prevent output files from being written to the output directory if nuisance regression was disabled.
+
+* Fixed an issue where ISC and ISFC would not write out the results to the output directory.
 
 **In addition,** the :doc:`C-PAC Docker image and AWS AMI</running>` have both been updated. These provide a quick way to get started without needing to go through the install process.
 
@@ -83,11 +135,11 @@ The C-PAC Team
    Michael Milham (Founder, Co-Principal Investigator)
    Cameron Craddock (Co-Principal Investigator)
    Steven Giavasis (Lead Developer)
-   Anibal Solon Heinsfeld (Developer)
-   Xinhui Li (Developer)
    Hecheng Jin (Developer)
+   Xinhui Li (Developer)
 
    **Project Alumni:**
+   Anibal Solon Heinsfeld
    Nanditha Rajamani
    Alison Walensky
    David O'Connor
@@ -127,14 +179,13 @@ User Guide Index
    :maxdepth: 2
 
    1. C-PAC Quickstart <quick>
-   2. Try Our New GUI! <new_gui>
-   3. Install C-PAC <install>
-   4. Specify Your Data <subject_list_config>
-   5. Select Your Pipeline <pipeline_config>
-   6. Pre-Process Your Data <preprocessing>
-   7. Compute Derivatives <derivatives>
-   8. Run C-PAC <running>
-   9. Run Group Analysis <group_analysis>
-   10. Check Your Outputs <output_dir>
-   11. Troubleshoot <help>
-   12. Release Notes <rnotes>
+   2. Specify Your Data <subject_list_config>
+   3. Select Your Pipeline <pipeline_config>
+   4. Pre-Process Your Data <preprocessing>
+   5. Compute Derivatives <derivatives>
+   6. All Run Options <running>
+   7. Run Group Analysis <group_analysis>
+   8. Check Your Outputs <output_dir>
+   9. Troubleshoot <help>
+   10. Release Notes <rnotes>
+   11. Appendix <appendix>

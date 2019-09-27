@@ -1,5 +1,26 @@
-Anatomical Preprocessing
+﻿Anatomical Preprocessing
 ------------------------
+
+Initial Preprocessing
+^^^^^^^^^^^^^^^
+
+Initial preprocessing offers methods like `non-local means filtering <https://www.iro.umontreal.ca/~mignotte/IFT6150/Articles/Buades-NonLocal.pdf>`_ and `N4 bias field correction <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3071855/>`_ to preprocess anatomical images.
+
+C-PAC provides options for configuring initial prepro - users can select:
+
+* `ANT's DenoiseImage <https://manpages.debian.org/experimental/ants/DenoiseImage.1.en.html>`_
+* `ANT's N4BiasFieldCorrection <http://manpages.ubuntu.com/manpages/trusty/man1/N4BiasFieldCorrection.1.html>`_
+
+
+Configuring CPAC to run initial preprocessing:
+""""""""""""""""""""""""""""""""""""""""
+
+.. figure:: /_images/init_options.png
+
+#. **Non-Local Means Filtering - [On,Off]:** ANTs DenoiseImage. Default is Off. 
+
+#. **N4 Bias Field Correction - [On,Off]:** ANTs N4BiasFieldCorrection - a variant  of  the  popular  N3  (nonparameteric nonuniform normalization) retrospective  bias  correction  algorithm. Default is Off. 
+
 
 Skull-Stripping
 ^^^^^^^^^^^^^^^
@@ -20,9 +41,9 @@ Configuring CPAC to run Skull-Stripping:
 
 .. figure:: /_images/skullstrip_gui.png
 
-#. **Inputs already skull stripped? - [On,Off]:** If inputs are already skull stripped (i.e. the structural input data is brain-only) then you can toggle this option to off. 
+#. **Already skull-stripped - [On,Off]:** If inputs are already skull stripped (i.e. the structural input data is brain-only) then you can toggle this option to off. 
 
-#. **Which tool for skull-stripping? - [FSL, AFNI, FSL/AFNI]:** Chose if you’d like to use FSL BET, AFNI 3dSkullStrip, or run both options in parallel.
+#. **Which tool for skull-stripping - [FSL, AFNI, niworkflows-ants]:** Chose if you’d like to use FSL BET, AFNI 3dSkullStrip, or run all options in parallel.
 
 Configuring AFNI 3dSkullStrip options:
 """"""""""""""""""""""""""""""""""""""""
@@ -102,6 +123,7 @@ Configuring niworkflows-ants options:
 """"""""""""""""""""""""""""""""""""""""
 **Note:** These templates are used during niworkflows-ants skull stripping. e.g. OASIS template can be downloaded `here <https://s3-eu-west-1.amazonaws.com/pfigshare-u-files/3133832/Oasis.zip>`_
 
+.. figure:: /_images/niworkflows-ants_gui.png
 
 #. **niworkflows_ants_template_path:** Set the brain extraction template . e.g. OASIStemplate/T_template0_BrainCerebellumProbabilityMask.nii.gz
 
@@ -123,10 +145,10 @@ During registration, individual anatomical images are first transformed to match
 By default, C-PAC will register subject brains to the MNI152 template included with FSL. Users wishing to register their data to a different template (such as a group specific template) can specify alternative template files.
 
 Configuring CPAC to Run Anatomical Registration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""""""""""""""""
 .. figure:: /_images/anat_reg_gui.png
 
-#. **Anatomical Template Resolution - [1 An interger indicating three same dimensions (e.g., 1, 2, 3, 4); 2 A float number indicating three same dimensions (e.g., 3.5 etc.); 3 Three numbers connected by 'x' indicating three different dimensions (e.g., 2.67x2.67x3 etc.)]:** The resolution to which anatomical images should be transformed during registration. This is the resolution at which processed anatomical files will be output.
+#. **Anatomical Template Resolution - [1 An interger indicating three same dimensions (e.g., 1mm, 2mm, 3mm, 4mm); 2 A float number indicating three same dimensions (e.g., 3.5mm etc.); 3 Three numbers connected by 'x' indicating three different dimensions (e.g., 2.67mmx2.67mmx3mm etc.)]:** The resolution to which anatomical images should be transformed during registration. This is the resolution at which processed anatomical files will be output.
 
 #. **Anatomical Template (Brain Only) - [path]:** Template to be used during registration. It is not necessary to change this path unless you intend to use a non-standard template.
 
@@ -134,17 +156,17 @@ Configuring CPAC to Run Anatomical Registration
 
 #. **Anatomical to Template Registration Method - [ANTS, FSL, ANTS & FSL]:** Registration method(s) to be used. Options are `ANTS <http://stnava.github.io/ANTs/>`_, `FSL <http://fsl.fmrib.ox.ac.uk/fslcourse/lectures/practicals/reg/>`_, or both.
 
+#. **ANTS skull-on transform - [Off, On]:** Register skull-on anatomical image to template. Calculating the transform with skull-stripped images is reported to be better, but it requires very high-quality skull-stripping. If skull-stripping is imprecise, registration with skull is preferred. Note: This option only affects ANTS due to the fact that FNIRT already uses skull-on images for calculating warps. 
+
 #. **Interpolation Method - [Linear, BSpline, LanczosWindowedSinc]:** Interpolation method for writing out transformed anatomical images. ANTS registration tools only. Options are Linear, BSpline, or LanczosWindowedSinc.
 
+#. **FNIRT Configuration - [path]:** Configuration file specifying settings used during registration. Required if FSL is selected as the registration method. This file can be found in the :file:`/etc/flirtsch` directory of your FSL install.
+
+#. **FNIRT Reference Mask - [path]:** A reference mask to be used by FNIRT.
+
+#. **Perform linear registration only - [Off, On]:** Whether or not perform only FLIRT.
+
 #. **Interpolation Method - [trilinear, sinc, spline]:** Interpolation method for writing out transformed anatomical images. FSL registration tools only. Options are trilinear, sinc, or spline.
-
-#. **FSL FNIRT Configuration File - [path]:** Configuration file specifying settings used during registration. Required if FSL is selected as the registration method. This file can be found in the :file:`/etc/flirtsch` directory of your FSL install.
-
-#. **FSL FNIRT Reference Mask - [path]:** A reference mask to be used by FNIRT.
-
-#. **Use skull-on image to calculate transform? (ANTS only) - [Off, On]:** Register skull-on anatomical image to template. Calculating the transform with skull-stripped images is reported to be better, but it requires very high-quality skull-stripping. If skull-stripping is imprecise, registration with skull is preferred. Note: This option only affects ANTS due to the fact that FNIRT already uses skull-on images for calculating warps. 
-
-#. **Inputs Already Skull-stripped? - [On, Off]**: Disables skull-stripping on the anatomical inputs if they are already skull-stripped.
 
 Configuration Without the GUI
 """"""""""""""""""""""""""""""
@@ -173,7 +195,11 @@ C-PAC uses `FSL/FAST <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FAST>`_ to automatic
 
 .. figure:: /_images/segmentation.png
 
-The default tissue probability maps (referred to as Prior Probability Maps) used during segmentation are based on information from a large number of brains, and are based on the priors distributed with FSL and are included in the "Image Resource Files" package downloaded during installation. For more detail on how CPAC computes these steps, please see the `Segmentation Page of the developer documentation <http://fcp-indi.github.io/docs/developer/workflows/seg_preproc.html>`_.
+The default tissue probability maps (referred to as Prior Probability Maps) used during segmentation are based on information from a large number of brains, and are based on the priors distributed with FSL and are included in the "Image Resource Files" package downloaded during installation. Also, CPAC has thresholding and erosion options for anatomical segmentation to futher refine the resulting segmentation tissue masks. Threshold value and erosion proportion can be changeable by user. The erosion implementation is adapted from `fmriprep <https://fmriprep.readthedocs.io/en/stable/>`_. 
+
+For more detail on how CPAC computes these steps, please see the `Segmentation Page of the developer documentation <http://fcp-indi.github.io/docs/developer/workflows/seg_preproc.html>`_.
+
+Thresholding options have returned, and new erosion options for anatomical segmentation have been introduced. The erosion implementation was adapted from fmriprep. 
 
 If you would like to use different priors, they must first be binarized such that for each voxel the probability for each tissue type is set to either 0% or 100%.
 
@@ -192,18 +218,33 @@ The following bash script will binarize existing priors::
     fslmaths avg152T1_${tissue}.nii.gz -thr $threshold -bin avg152T1_${tissue}_2mm_bin
 
 Configuring CPAC to Run Anatomical Tissue Segmentation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
 .. figure:: /_images/seg_gui.png
 
-#. **Run Tissue Segmentation - [On, Off, On/Off]:** Automatically segment anatomical images into white matter, gray matter, and CSF based on prior probability maps.
+#. **Tissue Segmentation - [On, Off]:** Automatically segment anatomical images into white matter, gray matter, and CSF based on prior probability maps.
 
-#. **Priors Directory - [path]:** Full path to a directory containing binarized prior probability maps. These maps are included as part of the 'Image Resource Files' package available on the Install page of the User Guide. It is not necessary to change this path unless you intend to use non-standard priors.
+#. **Use Priors - [On, Off]:** Whether or not to use template-space tissue priors to refine the binary tissue masks generated by segmentation.
 
 #. **White Matter Prior Probability Map - [path]:** Full path to a binarized White Matter prior probability map. It is not necessary to change this path unless you intend to use non-standard priors.
 
 #. **Gray Matter Prior Probability Map - [path]:** Full path to a binarized Gray Matter prior probability map. It is not necessary to change this path unless you intend to use non-standard priors.
 
 #. **CSF Prior Probability Map - [path]:** Full path to a binarized CSF prior probability map. It is not necessary to change this path unless you intend to use non-standard priors.
+
+#. **FSL-FAST Thresholding - [On, Off]]:** Use FSL-FAST generated binary masks to generate the resulting segmentation tissue masks.
+
+#. **Customized Threholding - [On,Off]]:** Set the threshold value for tissue probability maps to generate the resulting segmentation tissue masks..
+
+#. **White Matter Threshold Value - [float]:** Set the threshold value for refining the resulting White Matter segmentation tissue mask, if choose Customized Threholding. The default value is 0.95
+
+#. **Gray Matter Threshold Value - [float]:** Set the threshold value for refining the resulting Gray Matter segmentation tissue mask, if choose Customized Threholding. The default value is 0.95
+
+#. **CSF Threshold Value - [float]:** Set the threshold value for refining the resulting CSF segmentation tissue mask, if choose Customized Threholding. The default value is 0.95
+
+#. **Erosion - [On, Off]:** Whether or not to use erosion to erode binarized tissue masks.
+
+#. **Erosion Proportion - [float]:** Set the erosion proportion, if use erosion to erode binarized tissue masks. The default is 0.6.
 
 Configuration Without the GUI
 """"""""""""""""""""""""""""""
@@ -219,13 +260,22 @@ The following key/value pairs must be defined in your :doc:`pipeline configurati
 The box below contains an example of what these parameters might look like when defined in the YAML::
 
     runSegmentationPreprocessing : [1]
+    seg_use_priors: True
     priors_path : /usr/share/fsl/5.0/data/standard/tissuepriors/2mm
     PRIORS_WHITE : $priors_path/avg152T1_white_bin.nii.gz
     PRIORS_GRAY : $priors_path/avg152T1_gray_bin.nii.gz
     PRIORS_CSF : $priors_path/avg152T1_csf_bin.nii.gz
+    seg_use_threshold : ['FSL-FAST Thresholding']
+    seg_CSF_threshold_value : 0.95
+    seg_WM_threshold_value : 0.95
+    seg_GM_threshold_value : 0.95
+    seg_use_erosion : False
+    seg_erosion_prop : 0.6
 
 References
 ^^^^^^^^^^
 `AFNI 3dSkullStrip <https://afni.nimh.nih.gov/pub/dist/doc/program_help/3dSkullStrip.html>`_
 
-Smith, Stephen M., `Fast robust automated brain extraction <http://dx.doi.org/10.1002/hbm.10062>`_, Human Brain Mapping 2002, Volume 17 Issue 3, page 143-155.
+Smith, Stephen M., `Fast robust automated brain extraction <http://dx.doi.org/10.1002/hbm.10062>`_, Human Brain Mapping 2002, Volume 17 Issue 3, page 143-155. 
+
+N. Tustison et al., `N4ITK: Improved N3 Bias Correction <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3071855/pdf/nihms279873.pdf>`_, IEEE Transactions on Medical Imaging, 29(6):1310-1320, June 2010.

@@ -88,7 +88,10 @@ The path to the acquisition order file for each scan should be specified in the 
 
 Field Map-Based Distortion Correction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Distortion correction is a method that aims to reduce distortion in EPI (fMRI) images caused by inhomogeneities in the magnetic field (which often stem from differences in tissue across tissue boundaries in the head). C-PAC has the option of including field map-based distortion correction into your pre-processing pipeline, through a collection of tools produced by FMRIB's FSL- primarily, a script which prepares field maps, and the FUGUE tool. Performing field map distortion correction requires the acquisition of a phase difference image and two magnitude images. The "best of the two" magnitude images is chosen, and a final input of one phase difference file and one magnitude file are then used by the pre-processing pipeline.
+Distortion correction is a method that aims to reduce distortion in EPI (fMRI) images caused by inhomogeneities in the magnetic field (which often stem from differences in tissue across tissue boundaries in the head). C-PAC has the option of including field map-based distortion correction into your pre-processing pipeline, and two methods, **Phase Difference (PhaseDiff)** or **Phase-Encoding Polarity (Blip-up/Blip-down)** to perform distortion correction. 
+
+Performing PhaseDiff distortion correction requires the acquisition of a phase difference image and two magnitude images. The "best of the two" magnitude images is chosen, and a final input of one phase difference file and one magnitude file are then used by the pre-processing pipeline.
+Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-encoding direction-specific EPI field maps to correct for distortion in the direction of the phase-encoding. It uses AFNI 3dQWarp to calculate the distortion unwarp for EPI field maps of opposite/same phase encoding direction.
 
 These files are used to generate the field map during pre-processing, and they can be provided to the C-PAC pipeline through the data configuration (participant list) file. More information on how to set this data configuration file is `available here <http://fcp-indi.github.io/docs/user/subject_list_config.html>`__.
 
@@ -96,7 +99,11 @@ The C-PAC pipeline configuration builder provides options for configuring the Di
 
 .. figure:: /_images/fmap_dist_corr.png
 
-#. **Perform Field Map Distortion correction - [On, Off]:** Perform field map-based distortion correction.
+#. **Distortion correction - [On, Off]:** Perform field map-based distortion correction.
+
+#. **PhaseDiff - [On, Off]:** Perform field map correction using a single phase difference image, a subtraction of the two phase images from each echo. Default scanner for this method is SIEMENS.
+
+#. **Blip - [On, Off]:** Uses AFNI 3dQWarp to calculate the distortion unwarp for EPI field maps of opposite/same phase encoding direction.
 
 #. **Skull-strip the magnitude file with - [BET, 3dSkullStrip]:** Since the results of the distortion correction can be strongly affected by the strength of the skull-stripping of the magnitude file, the choice between using FSL's BET or AFNI's 3dSkullStrip is left open, as these tools can have varying results depending on the data itself. The choice of tool is only for skull-stripping the magnitude file, and not for the skull-stripping step of the main anatomical pre-processing part of the pipeline.
 
@@ -122,7 +129,7 @@ The following key/value pairs must be defined in your :doc:`pipeline configurati
 
 The box below contains an example of what these parameters might look like when defined in the pipeline configuration YAML::
 
-    runEPI_DistCorr: [1]
+    distortion_correction :  ["PhaseDiff"]
     fmap_distcorr_skullstrip: ["BET"]
     fmap_distcorr_frac: [0.5]
     fmap_distcorr_deltaTE : 2.46
@@ -144,6 +151,8 @@ Functional to Anatomical Registration
 
 #. **Functional Volume to Use as Input (Selected Functional Volume only) - [integer]:** Only for when 'Use as Functional-to-Anatomical Registration Input' is set to 'Selected Functional Volume'. Input the index of which volume from the functional 4D timeseries input file you wish to use as the input for functional-to-anatomical registration.
 
+#. **Functional Masking - [AFNI, FSL, FSL_AFNI]:** Choose which tool to be used in functional masking - AFNI (3dAutoMask), FSL (BET) or FSL_AFNI (BET+3dAutoMask). Default is AFNI.
+
 Configuration Without the GUI
 """"""""""""""""""""""""""""""
 
@@ -161,6 +170,7 @@ The box below contains an example of what these parameters might look like when 
     boundaryBasedRegistrationSchedule : /usr/share/fsl/5.0/etc/flirtsch/bbr.sch
     func_reg_input :  ['Mean Functional']
     func_reg_input_volume :  0
+    functionalMasking: ['AFNI']
 
 Functional to MNI Registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -168,7 +178,11 @@ Functional to MNI Registration
 
 #. **Run Functional to MNI Registration - [On, Off]:** Register functional images to a standard MNI152 template. This option must be enabled if you wish to calculate any derivatives.
 
-#. **Functional Standard Resolution - [1mm, 2mm, 3mm, 4mm]:** The resolution (in mm) to which the preprocessed, registered functional timeseries outputs are written into. **Note that selecting a 1 mm or 2 mm resolution might substantially increase your RAM needs- these resolutions should be selected with caution. For most cases, 3 mm or 4 mm resolutions are suggested.**
+#. **ANTs Interpolation Method - [Linear, BSpline, LanczosWindowedSinc]:** Interpolation method for writing out transformed anatomical images. ANTS registration tools only. Options are Linear, BSpline, or LanczosWindowedSinc.
+
+#. **FSL Interpolation Method - [trilinear, sinc, spline]:** Interpolation method for writing out transformed anatomical images. FSL registration tools only. Options are trilinear, sinc, or spline. 
+
+#. **Functional Standard Resolution - [1 An integer indicating three same dimensions (e.g., 1mm, 2mm, 3mm, 4mm); 2 A float number indicating three same dimensions (e.g., 3.5mm etc.); 3 Three numbers connected by 'x' indicating three different dimensions (e.g., 2.67mmx2.67mmx3mm etc.)]:** The resolution (in mm) to which the preprocessed, registered functional timeseries outputs are written into. **Note that selecting a 1 mm or 2 mm resolution might substantially increase your RAM needs- these resolutions should be selected with caution. For most cases, 3 mm or 4 mm resolutions are suggested. Float numbers and three different dimensions are supported.**
 
 #. **Standard Brain only Template (functional resolution) - [path]:** Standard FSL Skull Stripped Template. Used as a reference image for functional registration.
 
@@ -176,7 +190,7 @@ Functional to MNI Registration
 
 #. **Standard Identity Matrix - [path]:** Matrix containing all 1's. Used as an identity matrix during registration. It is not necessary to change this path unless you intend to use non-standard MNI registration.
 
-#. **Resolutions to Resample to - [1mm, 2mm, 3mm, 4mm]:** The resolution (in mm) to which functional images are transformed during registration.  Note that selecting a 1 mm or 2 mm resolution will substantially increase your RAM needs.  For most cases, 3 mm or 4 mm resolutions are suggested.
+#. **Resolutions to Resample to - [1 An integer indicating three same dimensions (e.g., 1mm, 2mm, 3mm, 4mm); 2 A float number indicating three same dimensions (e.g., 3.5mm etc.); 3 Three numbers connected by 'x' indicating three different dimensions (e.g., 2.67mmx2.67mmx3mm etc.)]:** The resolution (in mm) to which functional images are transformed during registration.  Note that selecting a 1 mm or 2 mm resolution will substantially increase your RAM needs.  For most cases, 3 mm or 4 mm resolutions are suggested.
 
 Configuration Without the GUI
 """"""""""""""""""""""""""""""

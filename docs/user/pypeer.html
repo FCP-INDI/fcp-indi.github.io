@@ -1,0 +1,203 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>PyPEER Integration &#8212; C-PAC 1.5.0 Beta documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Running C-PAC" href="running.html" />
+    <link rel="prev" title="Voxel-Mirrored Homotopic Connectivity (VMHC)" href="vmhc.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="running.html" title="Running C-PAC"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="vmhc.html" title="Voxel-Mirrored Homotopic Connectivity (VMHC)"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.5.0 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="derivatives.html" accesskey="U">Computable Derivatives</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="pypeer-integration">
+<h1>PyPEER Integration<a class="headerlink" href="#pypeer-integration" title="Permalink to this headline">¶</a></h1>
+<p>PEER is a previously developed support vector regression-based method for retrospectively estimating eye gaze from the fMRI signal in the eye’s orbit. PyPEER is the Python package created by Jake Son [<a class="reference external" href="https://github.com/ChildMindInstitute/PyPEER">https://github.com/ChildMindInstitute/PyPEER</a>] which implements the PEER method in Python.</p>
+<p>C-PAC can prepare your pipeline results directly for Predictive Eye Estimation, given the appropriate input files. The PyPEER package comes pre-installed in the C-PAC Docker and Singularity containers, so no setup is necessary.</p>
+<div class="section" id="configuring-cpac-to-run-pypeer">
+<h2>Configuring CPAC to Run PyPEER<a class="headerlink" href="#configuring-cpac-to-run-pypeer" title="Permalink to this headline">¶</a></h2>
+<div class="figure">
+<img alt="_images/pypeer_gui.png" src="_images/pypeer_gui.png" />
+</div>
+<ol class="arabic simple">
+<li><strong>PEER Eye Scan Names:</strong> Scan/series names of the PEER calibration scans to be used for training the model.</li>
+<li><strong>PEER Data Scan Names:</strong> Scan/series names of the naturalistic viewing data to be used for estimation.</li>
+<li><strong>Eye Mask Path:</strong> Path of the file of a template-space eye mask. The default selection is bundled with the C-PAC container from the FSL installation.</li>
+<li><strong>PyPEER Stimulus File Path:</strong> This is a file describing the stimulus locations from the calibration sequence.</li>
+<li><strong>Perform Global Signal Regression:</strong> PyPEER employs a minimal preprocessing strategy. If global signal regression is desired, this can be selected here. C-PAC will not employ its standard nuisance regression selections on scans selected for PEER calibration and estimation.</li>
+<li><strong>Perform Motion Scrubbing:</strong> PyPEER employs a minimal preprocessing strategy. If motion scrubbing is desired, this can be selected here. C-PAC will not employ its standard nuisance regression selections on scans selected for PEER calibration and estimation.</li>
+<li><strong>Motion Scrubbing Threshold:</strong> The threshold for motion (in mm) to use for motion scrubbing, if it is selected. PyPEER employs the Power (2012) measurement for framewise displacement.</li>
+</ol>
+<div class="section" id="configuration-without-the-gui">
+<h3>Configuration Without the GUI<a class="headerlink" href="#configuration-without-the-gui" title="Permalink to this headline">¶</a></h3>
+<p>The following key/value pairs must be defined in your <a class="reference internal" href="pipeline_config.html"><span class="doc">pipeline configuration YAML</span></a> for C-PAC to run PyPEER:</p>
+<table border="1" class="colwidths-given docutils">
+<colgroup>
+<col width="10%" />
+<col width="60%" />
+<col width="30%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Key</th>
+<th class="head">Description</th>
+<th class="head">Potential Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>run_pypeer</td>
+<td>Training of eye-estimation models. Commonly used for movies data/naturalistic viewing.</td>
+<td>A list where ‘1’ represents ‘yes’ and ‘0’ represents ‘no’ (e.g., ‘[1]’).</td>
+</tr>
+<tr class="row-odd"><td>peer_eye_scan_names</td>
+<td>PEER scan names to use for training</td>
+<td>A list of scan/series names.</td>
+</tr>
+<tr class="row-even"><td>peer_data_scan_names</td>
+<td>Naturalistic viewing data scan names to use for eye estimation.</td>
+<td>A list of scan/series names.</td>
+</tr>
+<tr class="row-odd"><td>eye_mask_path</td>
+<td>Template-space eye mask.</td>
+<td>A filepath.</td>
+</tr>
+<tr class="row-even"><td>peer_stimulus_path</td>
+<td>This is a file describing the stimulus locations from the calibration sequence.</td>
+<td>A filepath.</td>
+</tr>
+<tr class="row-odd"><td>peer_gsr</td>
+<td>Global signal regression (PyPEER only)</td>
+<td>Boolean</td>
+</tr>
+<tr class="row-even"><td>peer_scrub</td>
+<td>Motion scrubbing (PyPEER only)</td>
+<td>Boolean</td>
+</tr>
+<tr class="row-odd"><td>peer_scrub_thresh</td>
+<td>Motion scrubbing threshold in millimeters (PyPEER only)</td>
+<td>Float value</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>Jake Son, Lei Ai, Ryan Lim, Ting Xu, Stanley Colcombe, Alexandre Rosa Franco, Jessica Cloud, Stephen LaConte, Jonathan Lisinski, Arno Klein, R. Cameron Craddock, Michael Milham. <a class="reference external" href="https://www.biorxiv.org/content/10.1101/347765v5">Evaluating fMRI-Based Estimation of Eye Gaze during Naturalistic Viewing.</a> <a class="reference external" href="https://doi.org/10.1101/347765">https://doi.org/10.1101/347765</a></p>
+<p>Fox, M.D., Zhang, D., Snyder, A.Z., Raichle, M.E., 2009. <a class="reference external" href="http://jn.physiology.org/content/101/6/3270.full.pdf">The global signal and observed anticorrelated resting state brain networks</a>. J Neurophysiol 101, 3270-3283.</p>
+<p>Power, J.D., Barnes, K.A., Snyder, A.Z., Schlaggar, B.L., Petersen, S.E., 2011. <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pubmed/22019881">Spurious but systematic correlations in functional connectivity MRI networks arise from subject motion</a>. Neuroimage 59, 2142-2154.</p>
+<p>Power, J.D., Barnes, K.A., Snyder, A.Z., Schlaggar, B.L., Petersen, S.E., 2012. <a class="reference external" href="http://www.ncbi.nlm.nih.gov/pubmed/22440651">Steps toward optimizing motion artifact removal in functional connectivity MRI; a reply to Carp</a>. Neuroimage.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quick.html">1. C-PAC Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="subject_list_config.html">2. Specify Your Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline_config.html">3. Select Your Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="preprocessing.html">4. Pre-Process Your Data</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="derivatives.html">5. Compute Derivatives</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="alff.html">ALFF and f/ALFF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reho.html">ReHo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="centrality.html">Network Centrality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sca.html">SCA/Dual Regression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vmhc.html">VMHC</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">PyPEER Integration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">6. All Run Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="group_analysis.html">7. Run Group Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="output_dir.html">8. Check Your Outputs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="help.html">9. Troubleshoot</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rnotes.html">10. Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="appendix.html">11. Appendix</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="running.html" title="Running C-PAC"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="vmhc.html" title="Voxel-Mirrored Homotopic Connectivity (VMHC)"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">C-PAC 1.5.0 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="derivatives.html" >Computable Derivatives</a> &#187;</li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+
+  </body>
+</html>

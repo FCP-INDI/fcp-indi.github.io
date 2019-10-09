@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>CPAC.seg_preproc.seg_preproc &#8212; C-PAC 1.4.3 Beta documentation</title>
+    <title>CPAC.seg_preproc.seg_preproc &#8212; C-PAC 1.5.0 Beta documentation</title>
     <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     
@@ -28,7 +28,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.4.3 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.5.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>  
@@ -52,37 +52,59 @@
 <span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.ants</span> <span class="k">as</span> <span class="nn">ants</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces.ants</span> <span class="k">import</span> <span class="n">WarpImageMultiTransform</span>
-<span class="kn">from</span> <span class="nn">CPAC.seg_preproc.utils</span> <span class="k">import</span> <span class="o">*</span> 
+<span class="kn">from</span> <span class="nn">CPAC.seg_preproc.utils</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">check_if_file_is_empty</span><span class="p">,</span>
+    <span class="n">pick_wm_prob_0</span><span class="p">,</span>
+    <span class="n">pick_wm_prob_1</span><span class="p">,</span>
+    <span class="n">pick_wm_prob_2</span><span class="p">,</span>
+    <span class="n">pick_wm_class_0</span><span class="p">,</span>
+    <span class="n">pick_wm_class_1</span><span class="p">,</span>
+    <span class="n">pick_wm_class_2</span><span class="p">,</span>
+    <span class="n">erosion</span><span class="p">,</span>
+    <span class="n">mask_erosion</span><span class="p">)</span>
+    
 <span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="nn">pe</span>
+<span class="kn">import</span> <span class="nn">scipy.ndimage</span> <span class="k">as</span> <span class="nn">nd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-
-<div class="viewcode-block" id="create_seg_preproc"><a class="viewcode-back" href="../../../workflows/seg_preproc.html#CPAC.seg_preproc.create_seg_preproc">[docs]</a><span class="k">def</span> <span class="nf">create_seg_preproc</span><span class="p">(</span><span class="n">use_ants</span><span class="p">,</span> <span class="n">wf_name</span> <span class="o">=</span><span class="s1">&#39;seg_preproc&#39;</span><span class="p">):</span>
-
-
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Segment the subject&#39;s anatomical brain into cerebral spinal fluids, white matter and gray matter</span>
-<span class="sd">    and binarize them.</span>
+<div class="viewcode-block" id="create_seg_preproc"><a class="viewcode-back" href="../../../workflows/seg_preproc.html#CPAC.seg_preproc.create_seg_preproc">[docs]</a><span class="k">def</span> <span class="nf">create_seg_preproc</span><span class="p">(</span><span class="n">use_ants</span><span class="p">,</span>           
+                        <span class="n">use_priors</span><span class="p">,</span>
+                        <span class="n">use_threshold</span><span class="p">,</span>
+                        <span class="n">use_erosion</span><span class="p">,</span>
+                        <span class="n">erosion_prop</span><span class="p">,</span>
+                        <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;seg_preproc&#39;</span><span class="p">):</span>
+    
+    <span class="sd">&quot;&quot;&quot;Segment the subject&#39;s anatomical brain into cerebral spinal fluids,</span>
+<span class="sd">    white matter and gray matter and refine them using template-space tissue</span>
+<span class="sd">    priors, if selected to do so.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-
+<span class="sd">    use_ants: boolean</span>
+<span class="sd">        Whether we are using ANTs or FSL-FNIRT for registration purposes.</span>
 <span class="sd">    wf_name : string</span>
 <span class="sd">        name of the workflow</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-
 <span class="sd">    seg_preproc : workflow</span>
-
 <span class="sd">        Workflow Object for Segmentation Workflow</span>
-<span class="sd">    </span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
-
 <span class="sd">    `Source &lt;https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/seg_preproc/seg_preproc.py&gt;`_ </span>
 
 <span class="sd">    Workflow Inputs: ::</span>
+
+<span class="sd">        csf_threshold.csf_threshold : list (float)</span>
+<span class="sd">            Threshold of Cerebral Spinal Fluid probabilities </span>
+<span class="sd">    </span>
+<span class="sd">        wm_threshold.wm_threshold : list (float) </span>
+<span class="sd">            Threshold of White Matter probabilities</span>
+<span class="sd">    </span>
+<span class="sd">        gm_threshold.gm_threshold : list (float) </span>
+<span class="sd">            Threshold of Gray Matter probabilities</span>
+
 <span class="sd">        inputspec.brain : string (existing nifti file)</span>
 <span class="sd">            Anatomical image(without skull)</span>
 <span class="sd">    </span>
@@ -139,7 +161,7 @@
 <span class="sd">        -o segment</span>
 <span class="sd">        mprage_brain.nii.gz</span>
 <span class="sd">    </span>
-<span class="sd">    - Register CSF template in MNI space to t1 space. For details see `flirt &lt;http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT&gt;`_::</span>
+<span class="sd">    - Register CSF template in template space to t1 space. For details see `flirt &lt;http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT&gt;`_::</span>
 <span class="sd">    </span>
 <span class="sd">        flirt</span>
 <span class="sd">        -in PRIOR_CSF</span>
@@ -148,22 +170,28 @@
 <span class="sd">        -init standard2highres_inv.mat</span>
 <span class="sd">        -out csf_mni2t1</span>
 
-<span class="sd">    - Threshold and binarize CSF probability map ::</span>
+<span class="sd">    - Find overlap between csf probability map and csf_mni2t1. For details see  `fslmaths &lt;http://www.fmrib.ox.ac.uk/fslcourse/lectures/practicals/intro/index.htm&gt;`_::</span>
+<span class="sd">        </span>
+<span class="sd">        fslmaths</span>
+<span class="sd">        segment_prob_0.nii.gz</span>
+<span class="sd">        -mas csf_mni2t1.nii.gz</span>
+<span class="sd">        csf_combo.nii.gz</span>
 
+<span class="sd">    - Threshold and binarize CSF probability map ::</span>
+<span class="sd">        </span>
 <span class="sd">        fslmaths</span>
 <span class="sd">        csf_combo.nii.gz</span>
-<span class="sd">        -thr 0.4</span>
+<span class="sd">        -thr 0.4 (threshold value can be changeable by user)</span>
 <span class="sd">        -bin csf_bin.nii.gz</span>
 
-<span class="sd">    - Generate CSF csf_mask, by applying csf prior in t1 space to thresholded binarized csf probability map ::</span>
+<span class="sd">    - Generate CSF csf_mask, by applying csf prior in t1 space to binarized csf probability map ::</span>
 
 <span class="sd">        fslmaths</span>
 <span class="sd">        csf_bin.nii.gz</span>
 <span class="sd">        -mas csf_mni2t1</span>
 <span class="sd">        csf_mask</span>
 
-
-<span class="sd">    - Register WM template in MNI space to t1 space ::</span>
+<span class="sd">    - Register WM template in template space to t1 space ::</span>
 <span class="sd">        </span>
 <span class="sd">        flirt</span>
 <span class="sd">        -in PRIOR_WM</span>
@@ -172,21 +200,28 @@
 <span class="sd">        -init standard2highres.mat</span>
 <span class="sd">        -out wm_mni2t1</span>
 
+<span class="sd">    - Find overlap between wm probability mask and wm_mni2t1 ::</span>
+
+<span class="sd">        fslmaths</span>
+<span class="sd">        segment_prob_2.nii.gz</span>
+<span class="sd">        -mas wm_mni2t1.nii.gz</span>
+<span class="sd">        wm_combo.nii.gz</span>
+
 <span class="sd">    - Threshold and binarize WM probability map ::</span>
 
 <span class="sd">        fslmaths</span>
 <span class="sd">        wm_combo.nii.gz</span>
-<span class="sd">        -thr 0.4</span>
+<span class="sd">        -thr 0.4 (threshold value can be changeable by user)</span>
 <span class="sd">        -bin wm_bin.nii.gz</span>
 
-<span class="sd">    - Generate WM csf_mask, by applying wm_prior in t1 space to thresholded binarized wm probability map ::</span>
+<span class="sd">    - Generate WM csf_mask, by applying wm_prior in t1 space to binarized wm map ::</span>
 
 <span class="sd">        fslmaths</span>
 <span class="sd">        wm_bin.nii.gz</span>
 <span class="sd">        -mas wm_mni2t1</span>
 <span class="sd">        wm_mask</span>
 <span class="sd"> </span>
-<span class="sd">    - Register GM template in MNI space to t1 space ::</span>
+<span class="sd">    - Register GM template in template space to t1 space ::</span>
 <span class="sd">    </span>
 <span class="sd">        flirt</span>
 <span class="sd">        -in PRIOR_GM</span>
@@ -195,11 +230,18 @@
 <span class="sd">        -init standard2highres.mat</span>
 <span class="sd">        -out gm_mni2t1</span>
 
+<span class="sd">    - Find overlap between gm probability map and gm_mni2t1 ::</span>
+
+<span class="sd">        fslmaths</span>
+<span class="sd">        segment_prob_1.nii.gz</span>
+<span class="sd">        -mas gm_mni2t1.nii.gz</span>
+<span class="sd">        gm_combo.nii.gz</span>
+
 <span class="sd">    - Threshold and binarize GM probability map ::</span>
 
 <span class="sd">        fslmaths</span>
 <span class="sd">        gm_combo.nii.gz</span>
-<span class="sd">        -thr 0.4</span>
+<span class="sd">        -thr 0.4 (threshold value can be changeable by user)</span>
 <span class="sd">        -bin gm_bin.nii.gz</span>
 
 <span class="sd">    - Generate GM csf_mask, by applying gm prior in t1 space to thresholded binarized gm probability map ::</span>
@@ -237,6 +279,7 @@
 
     <span class="n">preproc</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="n">wf_name</span><span class="p">)</span>
     <span class="n">inputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;brain&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span>
                                                        <span class="s1">&#39;standard2highres_init&#39;</span><span class="p">,</span>
                                                        <span class="s1">&#39;standard2highres_mat&#39;</span><span class="p">,</span>
                                                        <span class="s1">&#39;standard2highres_rig&#39;</span><span class="p">,</span>
@@ -245,16 +288,39 @@
                                                        <span class="s1">&#39;PRIOR_WHITE&#39;</span><span class="p">]),</span>
                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
 
-    <span class="n">outputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;csf_mni2t1&#39;</span><span class="p">,</span>
+    <span class="n">inputnode_csf_threshold</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span>
+                                    <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;csf_threshold&#39;</span><span class="p">]),</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;csf_threshold&#39;</span><span class="p">)</span>
+
+    <span class="n">inputnode_wm_threshold</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span>
+                                    <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;wm_threshold&#39;</span><span class="p">]),</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;wm_threshold&#39;</span><span class="p">)</span>
+
+    <span class="n">inputnode_gm_threshold</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span>
+                                    <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;gm_threshold&#39;</span><span class="p">]),</span>
+                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;gm_threshold&#39;</span><span class="p">)</span>
+
+    <span class="n">outputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span>
+                                                        <span class="c1"># &#39;csf_mni2t1&#39;,</span>
+                                                        <span class="c1"># &#39;csf_combo&#39;,</span>
+                                                        <span class="c1"># &#39;csf_thresh&#39;,</span>
+                                                        <span class="c1"># &#39;csf_bin&#39;,</span>
                                                         <span class="s1">&#39;csf_mask&#39;</span><span class="p">,</span>
-                                                        <span class="s1">&#39;gm_mni2t1&#39;</span><span class="p">,</span>
+                                                        <span class="c1"># &#39;gm_mni2t1&#39;,</span>
+                                                        <span class="c1"># &#39;gm_combo&#39;,</span>
+                                                        <span class="c1"># &#39;gm_thresh&#39;,</span>
+                                                        <span class="c1"># &#39;gm_bin&#39;,</span>
                                                         <span class="s1">&#39;gm_mask&#39;</span><span class="p">,</span>
-                                                        <span class="s1">&#39;wm_mni2t1&#39;</span><span class="p">,</span>
+                                                        <span class="c1"># &#39;wm_mni2t1&#39;,</span>
+                                                        <span class="c1"># &#39;wm_combo&#39;,</span>
+                                                        <span class="c1"># &#39;wm_thresh&#39;,</span>
+                                                        <span class="c1"># &#39;wm_bin&#39;,</span>
+                                                        <span class="s1">&#39;wm_mask&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;probability_maps&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;tissue_class_files&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;mixeltype&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;partial_volume_map&#39;</span><span class="p">,</span>
-                                                        <span class="s1">&#39;partial_volume_files&#39;</span><span class="p">,</span>
-                                                        <span class="s1">&#39;wm_mask&#39;</span><span class="p">]),</span>
+                                                        <span class="s1">&#39;partial_volume_files&#39;</span><span class="p">]),</span>
                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
 
     <span class="n">segment</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FAST</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;segment&#39;</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
@@ -267,108 +333,148 @@
     <span class="n">check_gm</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;check_gm&#39;</span><span class="p">,</span> <span class="n">interface</span><span class="o">=</span><span class="n">Function</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">check_if_file_is_empty</span><span class="p">,</span> <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">],</span> <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]))</span>
     <span class="n">check_csf</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;check_csf&#39;</span><span class="p">,</span> <span class="n">interface</span><span class="o">=</span><span class="n">Function</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">check_if_file_is_empty</span><span class="p">,</span> <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">],</span> <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]))</span>
 
-    <span class="c1">#connections</span>
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">,</span>
-                    <span class="n">segment</span><span class="p">,</span> <span class="s1">&#39;in_files&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">,</span> <span class="n">segment</span><span class="p">,</span> <span class="s1">&#39;in_files&#39;</span><span class="p">)</span>
 
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="s1">&#39;probability_maps&#39;</span><span class="p">,</span>
-                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;probability_maps&#39;</span><span class="p">)</span>
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="s1">&#39;mixeltype&#39;</span><span class="p">,</span>
                     <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;mixeltype&#39;</span><span class="p">)</span>
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="s1">&#39;partial_volume_files&#39;</span><span class="p">,</span>
                     <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;partial_volume_files&#39;</span><span class="p">)</span>
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="s1">&#39;partial_volume_map&#39;</span><span class="p">,</span>
                     <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;partial_volume_map&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="s1">&#39;tissue_class_files&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;tissue_class_files&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="s1">&#39;probability_maps&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;probability_maps&#39;</span><span class="p">)</span>
 
-    <span class="c1">##get binarize thresholded csf mask</span>
-    <span class="n">process_csf</span> <span class="o">=</span> <span class="n">process_segment_map</span><span class="p">(</span><span class="s1">&#39;CSF&#39;</span><span class="p">,</span> <span class="n">use_ants</span><span class="p">)</span>
+    <span class="n">process_csf</span> <span class="o">=</span> <span class="n">process_segment_map</span><span class="p">(</span><span class="s1">&#39;CSF&#39;</span><span class="p">,</span> <span class="n">use_ants</span><span class="p">,</span> <span class="n">use_priors</span><span class="p">,</span> <span class="n">use_threshold</span><span class="p">,</span> <span class="n">use_erosion</span><span class="p">,</span> <span class="n">erosion_prop</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">use_ants</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+
+    <span class="k">if</span> <span class="n">use_ants</span><span class="p">:</span>
         <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;standard2highres_init&#39;</span><span class="p">,</span>
                         <span class="n">process_csf</span><span class="p">,</span> <span class="s1">&#39;inputspec.standard2highres_init&#39;</span><span class="p">)</span>
         <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;standard2highres_rig&#39;</span><span class="p">,</span>
                         <span class="n">process_csf</span><span class="p">,</span> <span class="s1">&#39;inputspec.standard2highres_rig&#39;</span><span class="p">)</span>
 
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">,</span>
-                    <span class="n">process_csf</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain&#39;</span><span class="p">,)</span>
+                    <span class="n">process_csf</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span>
+                    <span class="n">process_csf</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain_mask&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode_csf_threshold</span><span class="p">,</span> <span class="s1">&#39;csf_threshold&#39;</span><span class="p">,</span>
+                    <span class="n">process_csf</span><span class="p">,</span> <span class="s1">&#39;inputspec.threshold&#39;</span><span class="p">)</span>
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;PRIOR_CSF&#39;</span><span class="p">,</span>
                     <span class="n">process_csf</span><span class="p">,</span> <span class="s1">&#39;inputspec.tissue_prior&#39;</span><span class="p">)</span>
-
-    <span class="c1">#tissue_class_files = binary segmented volume file one val for each class</span>
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;tissue_class_files&#39;</span><span class="p">,</span> <span class="n">pick_wm_0</span><span class="p">),</span>
-                    <span class="n">process_csf</span><span class="p">,</span> <span class="s1">&#39;inputspec.probability_map&#39;</span><span class="p">)</span>
-    
-
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;tissue_class_files&#39;</span><span class="p">,</span> <span class="n">pick_wm_class_0</span><span class="p">),</span>
+                    <span class="n">process_csf</span><span class="p">,</span> <span class="s1">&#39;inputspec.tissue_class_file&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;probability_maps&#39;</span><span class="p">,</span> <span class="n">pick_wm_prob_0</span><span class="p">),</span>
+                    <span class="n">process_csf</span><span class="p">,</span> <span class="s1">&#39;inputspec.probability_tissue_map&#39;</span><span class="p">)</span>
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;standard2highres_mat&#39;</span><span class="p">,</span>
                     <span class="n">process_csf</span><span class="p">,</span> <span class="s1">&#39;inputspec.standard2highres_mat&#39;</span><span class="p">)</span>
-
-
+    <span class="c1"># preproc.connect(process_csf, &#39;outputspec.tissueprior_mni2t1&#39;,</span>
+    <span class="c1">#                 outputNode, &#39;csf_mni2t1&#39;)</span>
+    <span class="c1"># preproc.connect(process_csf, &#39;outputspec.segment_combo&#39;,</span>
+    <span class="c1">#                 outputNode, &#39;csf_combo&#39;)</span>
+    <span class="c1"># preproc.connect(process_csf, &#39;outputspec.segment_thresh&#39;,</span>
+    <span class="c1">#                 outputNode, &#39;csf_thresh&#39;)</span>
+    <span class="c1"># preproc.connect(process_csf, &#39;outputspec.segment_bin&#39;,</span>
+    <span class="c1">#                 outputNode, &#39;csf_bin&#39;)</span>
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">process_csf</span><span class="p">,</span> <span class="s1">&#39;outputspec.segment_mask&#39;</span><span class="p">,</span>
                     <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;csf_mask&#39;</span><span class="p">)</span>
 
-    <span class="c1">#get binarize thresholded wm mask</span>
-    <span class="n">process_wm</span> <span class="o">=</span> <span class="n">process_segment_map</span><span class="p">(</span><span class="s1">&#39;WM&#39;</span><span class="p">,</span> <span class="n">use_ants</span><span class="p">)</span>
+    <span class="n">process_wm</span> <span class="o">=</span> <span class="n">process_segment_map</span><span class="p">(</span><span class="s1">&#39;WM&#39;</span><span class="p">,</span> <span class="n">use_ants</span><span class="p">,</span> <span class="n">use_priors</span><span class="p">,</span> <span class="n">use_threshold</span><span class="p">,</span> <span class="n">use_erosion</span><span class="p">,</span> <span class="n">erosion_prop</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">use_ants</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+
+    <span class="k">if</span> <span class="n">use_ants</span><span class="p">:</span>
         <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;standard2highres_init&#39;</span><span class="p">,</span>
                         <span class="n">process_wm</span><span class="p">,</span> <span class="s1">&#39;inputspec.standard2highres_init&#39;</span><span class="p">)</span>
         <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;standard2highres_rig&#39;</span><span class="p">,</span>
                         <span class="n">process_wm</span><span class="p">,</span> <span class="s1">&#39;inputspec.standard2highres_rig&#39;</span><span class="p">)</span>
 
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">,</span>
-                    <span class="n">process_wm</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain&#39;</span><span class="p">,)</span>
+                    <span class="n">process_wm</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span>
+                    <span class="n">process_wm</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain_mask&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode_wm_threshold</span><span class="p">,</span> <span class="s1">&#39;wm_threshold&#39;</span><span class="p">,</span>
+                    <span class="n">process_wm</span><span class="p">,</span> <span class="s1">&#39;inputspec.threshold&#39;</span><span class="p">)</span>
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;PRIOR_WHITE&#39;</span><span class="p">,</span>
                     <span class="n">process_wm</span><span class="p">,</span> <span class="s1">&#39;inputspec.tissue_prior&#39;</span><span class="p">)</span>
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;tissue_class_files&#39;</span><span class="p">,</span> <span class="n">pick_wm_2</span><span class="p">),</span>
-                    <span class="n">process_wm</span><span class="p">,</span> <span class="s1">&#39;inputspec.probability_map&#39;</span><span class="p">)</span>
-
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;tissue_class_files&#39;</span><span class="p">,</span> <span class="n">pick_wm_class_2</span><span class="p">),</span>
+                    <span class="n">process_wm</span><span class="p">,</span> <span class="s1">&#39;inputspec.tissue_class_file&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;probability_maps&#39;</span><span class="p">,</span> <span class="n">pick_wm_prob_2</span><span class="p">),</span>
+                    <span class="n">process_wm</span><span class="p">,</span> <span class="s1">&#39;inputspec.probability_tissue_map&#39;</span><span class="p">)</span>                 
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;standard2highres_mat&#39;</span><span class="p">,</span>
                     <span class="n">process_wm</span><span class="p">,</span> <span class="s1">&#39;inputspec.standard2highres_mat&#39;</span><span class="p">)</span>
-
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">process_wm</span><span class="p">,</span> <span class="s1">&#39;outputspec.tissueprior_mni2t1&#39;</span><span class="p">,</span>
-                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;wm_mni2t1&#39;</span><span class="p">)</span>
+    <span class="c1"># preproc.connect(process_wm, &#39;outputspec.tissueprior_mni2t1&#39;,</span>
+    <span class="c1">#                 outputNode, &#39;wm_mni2t1&#39;)</span>
+    <span class="c1"># preproc.connect(process_wm, &#39;outputspec.segment_combo&#39;,</span>
+    <span class="c1">#                 outputNode, &#39;wm_combo&#39;)</span>
+    <span class="c1"># preproc.connect(process_wm, &#39;outputspec.segment_thresh&#39;,</span>
+    <span class="c1">#                 outputNode, &#39;wm_thresh&#39;)</span>
+    <span class="c1"># preproc.connect(process_wm, &#39;outputspec.segment_bin&#39;,</span>
+    <span class="c1">#                 outputNode, &#39;wm_bin&#39;)</span>
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">process_wm</span><span class="p">,</span> <span class="s1">&#39;outputspec.segment_mask&#39;</span><span class="p">,</span>
                     <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;wm_mask&#39;</span><span class="p">)</span>
 
-    <span class="c1"># get binarize thresholded gm mask</span>
-    <span class="n">process_gm</span> <span class="o">=</span> <span class="n">process_segment_map</span><span class="p">(</span><span class="s1">&#39;GM&#39;</span><span class="p">,</span> <span class="n">use_ants</span><span class="p">)</span>
+    <span class="n">process_gm</span> <span class="o">=</span> <span class="n">process_segment_map</span><span class="p">(</span><span class="s1">&#39;GM&#39;</span><span class="p">,</span> <span class="n">use_ants</span><span class="p">,</span> <span class="n">use_priors</span><span class="p">,</span> <span class="n">use_threshold</span><span class="p">,</span> <span class="n">use_erosion</span><span class="p">,</span> <span class="n">erosion_prop</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">use_ants</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">use_ants</span><span class="p">:</span>
         <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;standard2highres_init&#39;</span><span class="p">,</span>
                         <span class="n">process_gm</span><span class="p">,</span> <span class="s1">&#39;inputspec.standard2highres_init&#39;</span><span class="p">)</span>
         <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;standard2highres_rig&#39;</span><span class="p">,</span>
                         <span class="n">process_gm</span><span class="p">,</span> <span class="s1">&#39;inputspec.standard2highres_rig&#39;</span><span class="p">)</span>
 
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">,</span>
-                    <span class="n">process_gm</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain&#39;</span><span class="p">,)</span>
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;PRIOR_GRAY&#39;</span><span class="p">,</span> 
+                    <span class="n">process_gm</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span>
+                    <span class="n">process_gm</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain_mask&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode_gm_threshold</span><span class="p">,</span> <span class="s1">&#39;gm_threshold&#39;</span><span class="p">,</span>
+                    <span class="n">process_gm</span><span class="p">,</span> <span class="s1">&#39;inputspec.threshold&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;PRIOR_GRAY&#39;</span><span class="p">,</span>
                     <span class="n">process_gm</span><span class="p">,</span> <span class="s1">&#39;inputspec.tissue_prior&#39;</span><span class="p">)</span>
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;tissue_class_files&#39;</span><span class="p">,</span> <span class="n">pick_wm_1</span><span class="p">),</span>
-                    <span class="n">process_gm</span><span class="p">,</span> <span class="s1">&#39;inputspec.probability_map&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;tissue_class_files&#39;</span><span class="p">,</span> <span class="n">pick_wm_class_1</span><span class="p">),</span>
+                    <span class="n">process_gm</span><span class="p">,</span> <span class="s1">&#39;inputspec.tissue_class_file&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;probability_maps&#39;</span><span class="p">,</span> <span class="n">pick_wm_prob_1</span><span class="p">),</span>
+                    <span class="n">process_gm</span><span class="p">,</span> <span class="s1">&#39;inputspec.probability_tissue_map&#39;</span><span class="p">)</span>
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;standard2highres_mat&#39;</span><span class="p">,</span>
                     <span class="n">process_gm</span><span class="p">,</span> <span class="s1">&#39;inputspec.standard2highres_mat&#39;</span><span class="p">)</span>
-    
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">process_gm</span><span class="p">,</span> <span class="s1">&#39;outputspec.tissueprior_mni2t1&#39;</span><span class="p">,</span>
-                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;gm_mni2t1&#39;</span><span class="p">)</span>
+    <span class="c1"># preproc.connect(process_gm, &#39;outputspec.tissueprior_mni2t1&#39;,</span>
+    <span class="c1">#                 outputNode, &#39;gm_mni2t1&#39;)</span>
+    <span class="c1"># preproc.connect(process_gm, &#39;outputspec.segment_combo&#39;,</span>
+    <span class="c1">#                 outputNode, &#39;gm_combo&#39;)</span>
+    <span class="c1"># preproc.connect(process_gm, &#39;outputspec.segment_thresh&#39;,</span>
+    <span class="c1">#                 outputNode, &#39;gm_thresh&#39;)                </span>
+    <span class="c1"># preproc.connect(process_gm, &#39;outputspec.segment_bin&#39;,</span>
+    <span class="c1">#                 outputNode, &#39;gm_bin&#39;)</span>
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">process_gm</span><span class="p">,</span> <span class="s1">&#39;outputspec.segment_mask&#39;</span><span class="p">,</span>
                     <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;gm_mask&#39;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">preproc</span></div>
 
 
-<div class="viewcode-block" id="process_segment_map"><a class="viewcode-back" href="../../../workflows/seg_preproc.html#CPAC.seg_preproc.process_segment_map">[docs]</a><span class="k">def</span> <span class="nf">process_segment_map</span><span class="p">(</span><span class="n">wf_name</span><span class="p">,</span> <span class="n">use_ants</span><span class="p">):</span>
-
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This is a sub workflow used inside segmentation workflow to process </span>
+<div class="viewcode-block" id="process_segment_map"><a class="viewcode-back" href="../../../workflows/seg_preproc.html#CPAC.seg_preproc.process_segment_map">[docs]</a><span class="k">def</span> <span class="nf">process_segment_map</span><span class="p">(</span><span class="n">wf_name</span><span class="p">,</span>
+                        <span class="n">use_ants</span><span class="p">,</span>
+                        <span class="n">use_priors</span><span class="p">,</span>
+                        <span class="n">use_threshold</span><span class="p">,</span>
+                        <span class="n">use_erosion</span><span class="p">,</span>
+                        <span class="n">erosion_prop</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This is a sub workflow used inside segmentation workflow to process</span>
 <span class="sd">    probability maps obtained in segmentation. Steps include overlapping </span>
 <span class="sd">    of the prior tissue with probability maps, thresholding and binarizing </span>
 <span class="sd">    it and creating a mask that is used in further analysis.</span>
-
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    wf_name : string</span>
 <span class="sd">        Workflow Name</span>
+<span class="sd">    use_priors: boolean</span>
+<span class="sd">        Whether or not to use template-space tissue priors to further refine</span>
+<span class="sd">        the resulting segmentation tissue masks.</span>
+<span class="sd">    use_threshold: String</span>
+<span class="sd">        Choose threshold to further refine</span>
+<span class="sd">        the resulting segmentation tissue masks. </span>
+<span class="sd">    use_erosion: boolean</span>
+<span class="sd">        Whether or not to erode the resulting segmentation tissue masks.   </span>
+<span class="sd">    use_ants : boolean</span>
+<span class="sd">        Whether or not to use ANTs or FSL for transform application.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -390,16 +496,31 @@
 <span class="sd">        inputspec.standard2highres_mat : string (existing affine transformation .mat file)</span>
 <span class="sd">            path to transformation matrix from mni space to anatomical space</span>
 <span class="sd">    </span>
+<span class="sd">        inputspec.threshold : float</span>
+<span class="sd">            threshold value  </span>
+<span class="sd">        </span>
 <span class="sd">        inputspec.tissue_prior : string (existing nifti file)</span>
-<span class="sd">            path to FSL Standard Tissue prior image </span>
-<span class="sd">            </span>
-<span class="sd">        inputspec.probability_map : string (nifti file)</span>
+<span class="sd">            path to FSL Standard Tissue prior image     </span>
+
+<span class="sd">        inputspec.probability_tissue_map : string (nifti file)</span>
 <span class="sd">            tissue Probability map obtained from fsl FAST</span>
 <span class="sd">        </span>
 <span class="sd">    Workflow Outputs::</span>
 
 <span class="sd">        outputspec.segment_mni2t1 : string (nifti file)</span>
 <span class="sd">            path to output CSF prior template(in MNI space) registered to anatomical space</span>
+<span class="sd">    </span>
+<span class="sd">        outputspec.segment_combo : string (nifti file)</span>
+<span class="sd">            path to output image containing overlap between csf probability map and segment_mni2t1</span>
+<span class="sd">    </span>
+<span class="sd">        outputspec.segment_thresh : string (nifti file)</span>
+<span class="sd">            path to output image after Thresholding segment_combo</span>
+
+<span class="sd">        outputspec.segment_bin : string (nifti file)</span>
+<span class="sd">            path to output image after binarizing segment_thresh</span>
+
+<span class="sd">        outputspec.segment_erosion : string (nifti file)</span>
+<span class="sd">            path to output image after eroding segment_bin</span>
 <span class="sd">    </span>
 <span class="sd">        outputspec.segment_mask : string (nifti file)</span>
 <span class="sd">            path to output image after masking segment_combo with its tissue prior in t1 space</span>
@@ -409,7 +530,11 @@
 <span class="sd"> </span>
 <span class="sd">    - Register tissue prior in MNI space to t1 space. </span>
 <span class="sd">    </span>
-<span class="sd">    - Threshold and binarize segment probability map </span>
+<span class="sd">    - Threshold segment probability map</span>
+<span class="sd">    </span>
+<span class="sd">    - Binarize threshed segment probability map </span>
+
+<span class="sd">    - Erose binarized segment mask </span>
 <span class="sd">    </span>
 <span class="sd">    - Generate segment mask, by applying tissue prior in t1 space to thresholded binarized segment probability map</span>
 
@@ -433,32 +558,37 @@
     <span class="n">preproc</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">wf_name</span><span class="p">)</span>
 
     <span class="n">inputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;tissue_prior&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;threshold&#39;</span><span class="p">,</span>
                                                        <span class="s1">&#39;brain&#39;</span><span class="p">,</span>
-                                                       <span class="s1">&#39;probability_map&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;tissue_class_file&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;probability_tissue_map&#39;</span><span class="p">,</span>
                                                        <span class="s1">&#39;standard2highres_init&#39;</span><span class="p">,</span>
                                                        <span class="s1">&#39;standard2highres_mat&#39;</span><span class="p">,</span>
                                                        <span class="s1">&#39;standard2highres_rig&#39;</span><span class="p">]),</span>
                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
 
-    <span class="n">outputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;tissueprior_mni2t1&#39;</span><span class="p">,</span>
+    <span class="n">outputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span>
+                                                        <span class="c1"># &#39;tissueprior_mni2t1&#39;,</span>
+                                                        <span class="c1"># &#39;segment_combo&#39;,</span>
+                                                        <span class="c1"># &#39;segment_thresh&#39;,</span>
+                                                        <span class="c1"># &#39;segment_bin&#39;,</span>
+                                                        <span class="c1"># &#39;segment_erosion&#39;,</span>
                                                         <span class="s1">&#39;segment_mask&#39;</span><span class="p">]),</span>
                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
-
+    
     <span class="k">def</span> <span class="nf">form_threshold_string</span><span class="p">(</span><span class="n">threshold</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;-thr </span><span class="si">%f</span><span class="s1"> -bin &#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">threshold</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;-thr </span><span class="si">%f</span><span class="s1"> &#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">threshold</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">use_ants</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
 
-        <span class="n">collect_linear_transforms</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Merge</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_collect_linear_transforms&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">use_ants</span><span class="p">:</span>
+        <span class="n">collect_linear_transforms</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Merge</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>
+                                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">_collect_linear_transforms&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
 
         <span class="n">tissueprior_mni_to_t1</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">ants</span><span class="o">.</span><span class="n">ApplyTransforms</span><span class="p">(),</span>
-                                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_prior_mni_to_t1&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
+                                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">_prior_mni_to_t1&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
         <span class="n">tissueprior_mni_to_t1</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">invert_transform_flags</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">]</span>
         <span class="n">tissueprior_mni_to_t1</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="s1">&#39;NearestNeighbor&#39;</span>
-
-        <span class="n">segment_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">MultiImageMaths</span><span class="p">(),</span>
-                               <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_mask&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
-        <span class="n">segment_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s1">&#39;-mas </span><span class="si">%s</span><span class="s1"> &#39;</span>
 
         <span class="c1"># mni to t1</span>
         <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;tissue_prior&#39;</span><span class="p">,</span> <span class="n">tissueprior_mni_to_t1</span><span class="p">,</span> <span class="s1">&#39;input_image&#39;</span><span class="p">)</span>
@@ -469,51 +599,181 @@
         <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;standard2highres_mat&#39;</span><span class="p">,</span> <span class="n">collect_linear_transforms</span><span class="p">,</span> <span class="s1">&#39;in3&#39;</span><span class="p">)</span>
 
         <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">collect_linear_transforms</span><span class="p">,</span> <span class="s1">&#39;out&#39;</span><span class="p">,</span> <span class="n">tissueprior_mni_to_t1</span><span class="p">,</span> <span class="s1">&#39;transforms&#39;</span><span class="p">)</span>
+    
+        <span class="k">if</span> <span class="s1">&#39;FSL-FAST Thresholding&#39;</span> <span class="ow">in</span> <span class="n">use_threshold</span><span class="p">:</span>
+            <span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;tissue_class_file&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;probability_tissue_map&#39;</span><span class="p">)</span>
 
-        <span class="c1">#create segment mask</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;probability_map&#39;</span><span class="p">,</span>
-                        <span class="n">segment_mask</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">tissueprior_mni_to_t1</span><span class="p">,</span> <span class="s1">&#39;output_image&#39;</span><span class="p">,</span> 
-                        <span class="n">segment_mask</span><span class="p">,</span> <span class="s1">&#39;operand_files&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">use_priors</span><span class="p">:</span>
+            <span class="n">overlap_segmentmap_with_prior</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">MultiImageMaths</span><span class="p">(),</span> 
+                                                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;overlap_</span><span class="si">%s</span><span class="s1">_map_with_prior&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
+            <span class="n">overlap_segmentmap_with_prior</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s1">&#39;-mas </span><span class="si">%s</span><span class="s1"> &#39;</span> 
 
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span><span class="p">,</span> <span class="n">overlap_segmentmap_with_prior</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+            
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">tissueprior_mni_to_t1</span><span class="p">,</span> <span class="s1">&#39;output_image&#39;</span><span class="p">,</span> <span class="n">overlap_segmentmap_with_prior</span><span class="p">,</span> <span class="s1">&#39;operand_files&#39;</span><span class="p">)</span>
+            
+            <span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">overlap_segmentmap_with_prior</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+
+
+        <span class="k">if</span> <span class="s1">&#39;Customized Thresholding&#39;</span> <span class="ow">in</span> <span class="n">use_threshold</span><span class="p">:</span>
+            <span class="n">segmentmap_threshold</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(),</span> 
+                                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;threshold_segmentmap_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;threshold&#39;</span><span class="p">,</span> <span class="n">form_threshold_string</span><span class="p">),</span> <span class="n">segmentmap_threshold</span><span class="p">,</span> <span class="s1">&#39;op_string&#39;</span><span class="p">)</span>
+            
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span><span class="p">,</span> <span class="n">segmentmap_threshold</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+            <span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">segmentmap_threshold</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+
+
+        <span class="n">binarize_threshold_segmentmap</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(),</span> 
+                                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;binarize_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
+        <span class="n">binarize_threshold_segmentmap</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s1">&#39;-bin &#39;</span> 
+        
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span><span class="p">,</span> <span class="n">binarize_threshold_segmentmap</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+        <span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">binarize_threshold_segmentmap</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+
+
+        <span class="c1"># # create segment mask</span>
+        <span class="c1"># segment_mask = pe.Node(interface=fsl.MultiImageMaths(),</span>
+        <span class="c1">#                     name=&#39;{0}_mask&#39;.format(wf_name))</span>
+        <span class="c1"># segment_mask.inputs.op_string = &#39; -mas %s &#39;</span>
+        
+        <span class="n">ero_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import scipy.ndimage as nd&#39;</span> <span class="p">,</span> <span class="s1">&#39;import numpy as np&#39;</span><span class="p">,</span> <span class="s1">&#39;import nibabel as nb&#39;</span><span class="p">,</span> <span class="s1">&#39;import os&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">use_erosion</span><span class="p">:</span>
+            <span class="c1"># mask erosion </span>
+            <span class="n">eroded_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;roi_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;skullstrip_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;mask_erosion_prop&#39;</span><span class="p">],</span> 
+                                                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;output_roi_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;eroded_skullstrip_mask&#39;</span><span class="p">],</span> 
+                                                <span class="n">function</span> <span class="o">=</span> <span class="n">mask_erosion</span><span class="p">,</span>
+                                                <span class="n">imports</span> <span class="o">=</span> <span class="n">ero_imports</span><span class="p">),</span>                                    
+                                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;erode_skullstrip_mask_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
+            <span class="n">eroded_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">mask_erosion_prop</span> <span class="o">=</span>  <span class="n">erosion_prop</span><span class="o">**</span><span class="mi">3</span> 
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span> <span class="n">eroded_mask</span><span class="p">,</span> <span class="s1">&#39;skullstrip_mask&#39;</span><span class="p">)</span>
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span><span class="p">,</span> <span class="n">eroded_mask</span><span class="p">,</span> <span class="s1">&#39;roi_mask&#39;</span><span class="p">)</span>
+            
+            <span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">eroded_mask</span><span class="p">,</span> <span class="s1">&#39;output_roi_mask&#39;</span><span class="p">)</span>
+
+            <span class="c1"># erosion </span>
+            <span class="n">erosion_segmentmap</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;roi_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;erosion_prop&#39;</span><span class="p">],</span> 
+                                                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;eroded_roi_mask&#39;</span><span class="p">],</span> 
+                                                <span class="n">function</span> <span class="o">=</span> <span class="n">erosion</span><span class="p">,</span>
+                                                <span class="n">imports</span> <span class="o">=</span> <span class="n">ero_imports</span><span class="p">),</span>                                    
+                                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;erosion_segmentmap_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
+
+            <span class="n">erosion_segmentmap</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">erosion_prop</span> <span class="o">=</span>  <span class="n">erosion_prop</span>   
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span><span class="p">,</span> <span class="n">erosion_segmentmap</span><span class="p">,</span> <span class="s1">&#39;roi_mask&#39;</span><span class="p">)</span>
+            <span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">erosion_segmentmap</span><span class="p">,</span> <span class="s1">&#39;eroded_roi_mask&#39;</span><span class="p">)</span>
 
         <span class="c1">#connect to output nodes</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">tissueprior_mni_to_t1</span><span class="p">,</span> <span class="s1">&#39;output_image&#39;</span><span class="p">,</span> 
-                        <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;tissueprior_mni2t1&#39;</span><span class="p">)</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;segment_mask&#39;</span><span class="p">)</span>
+        <span class="c1"># preproc.connect(tissueprior_mni_to_t1, &#39;output_image&#39;, outputNode, &#39;tissueprior_mni2t1&#39;)</span>
+        
+        <span class="c1"># preproc.connect(overlap_segmentmap_with_prior, &#39;out_file&#39;, outputNode, &#39;segment_combo&#39;)</span>
+
+        <span class="c1"># preproc.connect(segmentmap_threshold, &#39;out_file&#39;, outputNode, &#39;segment_thresh&#39;)</span>
+    
+        <span class="c1"># preproc.connect(binarize_threshold_segmentmap, &#39;out_file&#39;, outputNode, &#39;segment_bin&#39;)</span>
+                
+        <span class="c1"># preproc.connect(erosion_segmentmap, &#39;out_file&#39;, outputNode, &#39;segment_erosion&#39;)  </span>
+        
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span> <span class="p">(</span><span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span><span class="p">,</span> <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;segment_mask&#39;</span><span class="p">)</span>
+
 
     <span class="k">else</span><span class="p">:</span>
-
         <span class="n">tissueprior_mni_to_t1</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span>
-                                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_prior_mni_to_t1&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
+                                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">_prior_mni_to_t1&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
         <span class="n">tissueprior_mni_to_t1</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">apply_xfm</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">tissueprior_mni_to_t1</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;nearestneighbour&#39;</span>
-
-        <span class="n">segment_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">MultiImageMaths</span><span class="p">(),</span>
-                               <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_mask&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
-        <span class="n">segment_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s1">&#39; -bin -mas </span><span class="si">%s</span><span class="s1">&#39;</span>
-
+        
         <span class="c1"># mni to t1</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;tissue_prior&#39;</span><span class="p">,</span>
-                        <span class="n">tissueprior_mni_to_t1</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">,</span>
-                        <span class="n">tissueprior_mni_to_t1</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;standard2highres_mat&#39;</span><span class="p">,</span>
-                        <span class="n">tissueprior_mni_to_t1</span><span class="p">,</span> <span class="s1">&#39;in_matrix_file&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;tissue_prior&#39;</span><span class="p">,</span> <span class="n">tissueprior_mni_to_t1</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">,</span> <span class="n">tissueprior_mni_to_t1</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
 
-        <span class="c1"># create segment mask</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;probability_map&#39;</span><span class="p">,</span>
-                        <span class="n">segment_mask</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">tissueprior_mni_to_t1</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                        <span class="n">segment_mask</span><span class="p">,</span> <span class="s1">&#39;operand_files&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;standard2highres_mat&#39;</span><span class="p">,</span> <span class="n">tissueprior_mni_to_t1</span><span class="p">,</span> <span class="s1">&#39;in_matrix_file&#39;</span><span class="p">)</span>
+            
+        <span class="k">if</span> <span class="s1">&#39;FSL-FAST Thresholding&#39;</span> <span class="ow">in</span> <span class="n">use_threshold</span><span class="p">:</span>
+            <span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;tissue_class_file&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;probability_tissue_map&#39;</span><span class="p">)</span>
 
-        <span class="c1"># connect to output nodes</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">tissueprior_mni_to_t1</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                        <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;tissueprior_mni2t1&#39;</span><span class="p">)</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">segment_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                        <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;segment_mask&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">use_priors</span><span class="p">:</span>
+            <span class="n">overlap_segmentmap_with_prior</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">MultiImageMaths</span><span class="p">(),</span> 
+                                                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;overlap_</span><span class="si">%s</span><span class="s1">_map_with_prior&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
+            <span class="n">overlap_segmentmap_with_prior</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s1">&#39;-mas </span><span class="si">%s</span><span class="s1"> &#39;</span> 
+
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span><span class="p">,</span> <span class="n">overlap_segmentmap_with_prior</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+            
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">tissueprior_mni_to_t1</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">overlap_segmentmap_with_prior</span><span class="p">,</span> <span class="s1">&#39;operand_files&#39;</span><span class="p">)</span>
+            
+            <span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">overlap_segmentmap_with_prior</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+
+
+        <span class="k">if</span> <span class="s1">&#39;Customized Thresholding&#39;</span> <span class="ow">in</span> <span class="n">use_threshold</span><span class="p">:</span>
+            <span class="n">segmentmap_threshold</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(),</span> 
+                                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;threshold_segmentmap_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;threshold&#39;</span><span class="p">,</span> <span class="n">form_threshold_string</span><span class="p">),</span> <span class="n">segmentmap_threshold</span><span class="p">,</span> <span class="s1">&#39;op_string&#39;</span><span class="p">)</span>
+            
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span><span class="p">,</span> <span class="n">segmentmap_threshold</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+            <span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">segmentmap_threshold</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+
+
+        <span class="n">binarize_threshold_segmentmap</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(),</span> 
+                                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;binarize_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
+        <span class="n">binarize_threshold_segmentmap</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s1">&#39;-bin &#39;</span> 
+        
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span><span class="p">,</span> <span class="n">binarize_threshold_segmentmap</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+        <span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">binarize_threshold_segmentmap</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+
+
+        <span class="c1"># # create segment mask</span>
+        <span class="c1"># segment_mask = pe.Node(interface=fsl.MultiImageMaths(),</span>
+        <span class="c1">#                     name=&#39;{0}_mask&#39;.format(wf_name))</span>
+        <span class="c1"># segment_mask.inputs.op_string = &#39; -mas %s &#39;</span>
+        
+        <span class="n">ero_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import scipy.ndimage as nd&#39;</span> <span class="p">,</span> <span class="s1">&#39;import numpy as np&#39;</span><span class="p">,</span> <span class="s1">&#39;import nibabel as nb&#39;</span><span class="p">,</span> <span class="s1">&#39;import os&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">use_erosion</span><span class="p">:</span>
+            <span class="c1"># mask erosion </span>
+            <span class="n">eroded_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;roi_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;skullstrip_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;mask_erosion_prop&#39;</span><span class="p">],</span> 
+                                                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;output_roi_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;eroded_skullstrip_mask&#39;</span><span class="p">],</span> 
+                                                <span class="n">function</span> <span class="o">=</span> <span class="n">mask_erosion</span><span class="p">,</span>
+                                                <span class="n">imports</span> <span class="o">=</span> <span class="n">ero_imports</span><span class="p">),</span>                                    
+                                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;erode_skullstrip_mask_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
+            <span class="n">eroded_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">mask_erosion_prop</span> <span class="o">=</span>  <span class="n">erosion_prop</span><span class="o">**</span><span class="mi">3</span> 
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span> <span class="n">eroded_mask</span><span class="p">,</span> <span class="s1">&#39;skullstrip_mask&#39;</span><span class="p">)</span>
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span><span class="p">,</span> <span class="n">eroded_mask</span><span class="p">,</span> <span class="s1">&#39;roi_mask&#39;</span><span class="p">)</span>
+            
+            <span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">eroded_mask</span><span class="p">,</span> <span class="s1">&#39;output_roi_mask&#39;</span><span class="p">)</span>
+
+            <span class="c1"># erosion </span>
+            <span class="n">erosion_segmentmap</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;roi_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;erosion_prop&#39;</span><span class="p">],</span> 
+                                                <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;eroded_roi_mask&#39;</span><span class="p">],</span> 
+                                                <span class="n">function</span> <span class="o">=</span> <span class="n">erosion</span><span class="p">,</span>
+                                                <span class="n">imports</span> <span class="o">=</span> <span class="n">ero_imports</span><span class="p">),</span>                                    
+                                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;erosion_segmentmap_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
+
+            <span class="n">erosion_segmentmap</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">erosion_prop</span> <span class="o">=</span>  <span class="n">erosion_prop</span>   
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span><span class="p">,</span> <span class="n">erosion_segmentmap</span><span class="p">,</span> <span class="s1">&#39;roi_mask&#39;</span><span class="p">)</span>
+            <span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">erosion_segmentmap</span><span class="p">,</span> <span class="s1">&#39;eroded_roi_mask&#39;</span><span class="p">)</span>
+
+        <span class="c1">#connect to output nodes</span>
+        <span class="c1"># preproc.connect(tissueprior_mni_to_t1, &#39;output_image&#39;, outputNode, &#39;tissueprior_mni2t1&#39;)</span>
+        
+        <span class="c1"># preproc.connect(overlap_segmentmap_with_prior, &#39;out_file&#39;, outputNode, &#39;segment_combo&#39;)</span>
+    
+        <span class="c1"># preproc.connect(binarize_threshold_segmentmap, &#39;out_file&#39;, outputNode, &#39;segment_bin&#39;)</span>
+                
+        <span class="c1"># preproc.connect(erosion_segmentmap, &#39;out_file&#39;, outputNode, &#39;segment_erosion&#39;)  </span>
+        
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span> <span class="p">(</span><span class="n">input_1</span><span class="p">,</span> <span class="n">value_1</span><span class="p">,</span> <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;segment_mask&#39;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">preproc</span></div>
+
+
 </pre></div>
 
           </div>
@@ -549,7 +809,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.4.3 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.5.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>

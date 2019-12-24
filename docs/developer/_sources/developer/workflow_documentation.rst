@@ -49,14 +49,14 @@ Example of *Notes* section for a workflow::
 
 This section should provide at least one example of how to appropriately use the workflow.  The example should be completely standalone and executable directly from a python interpreter with CPAC correctly installed.  The outputs of a workflow should be displayed to the user in a relevant manner.  For instance, the names of the files created or the numerical values of the resulting output run for example data.
 
-Generating website documenation for workflows
-=============================================
+Generating website documentation for workflows
+==============================================
 
 After workflow code has been properly documented, the documentation must be integrated into the browser viewable site.  Nearly all workflow documentation is generated directly from the source file.  This is made possible by the `autodoc extension of sphinx <http://sphinx.pocoo.org/ext/autodoc.html>`_ which converts the docstrings located in the source to html.
 
 To add a documented workflow to the CPAC documentation site:
 
-* In ./CPAC/doc/workflows/, create a *workflow_name*.rst file with the following text (`example <https://raw.github.com/openconnectome/C-PAC/master/doc/workflows/anat_preproc.rst>`_)::
+* In ./CPAC/doc/workflows/, create a *workflow_name*.rst file with the following text (`example <https://raw.github.com/openconnectome/C-PAC/master/doc/workflows/anat_preproc.rst>`__)::
 
     Human readable name of workflow (eg. Anatomical Preprocessing)
     ==============================================================
@@ -64,7 +64,7 @@ To add a documented workflow to the CPAC documentation site:
     .. automodule:: CPAC.workflow_name
         :members:
 
-* Add your workflow to the table of contents in ./CPAC/doc/workflows/index.rst (`example <https://raw.github.com/openconnectome/C-PAC/master/doc/workflows/index.rst>`_)::
+* Add your workflow to the table of contents in ./CPAC/doc/workflows/index.rst (`example <https://raw.github.com/openconnectome/C-PAC/master/doc/workflows/index.rst>`__)::
 
     Workflows
     =========

@@ -21,6 +21,8 @@ The term "noise region-of-interest" (noise ROI) refers to areas such as white ma
 
 The first step of CompCor is to determine noise ROIs. This can be done either by using anatomical data to identify voxels that consist primarily of either WM or CSF, or by defining noise ROIs as voxels with high temporal standard deviation. A principal component analysis (PCA) is then applied to characterize the time series data from the noise ROIs. Significant principal components are then introduced as covariates in a general linear model (GLM) as an estimate of the physiological noise signal space (Behzadi et al., 2007).
 
+Also, C-PAC allows users configure nuisance correction to perform cosine/linear filtering on the time series data prior to CompCor calculation.
+
 tCompCor
 """"""""
 As showed by Lund and Hanson (2001), voxel time courses with a relatively high temporal standard deviation were dominated by physiological noise. Behzadi et al. (2007) proposed an unsupervised method to assess the temporal standard deviation and then used princial components analysis to reduce the data dimensionality.
@@ -130,6 +132,8 @@ The following box contains the full specification for regressors:
 
   aCompCor:
       summary:
+          filter: 'cosine', Principal components are estimated after using a discrete cosine filter with 128s cut-off,
+              Leave filter field blank, if selected aCompcor method is 'DetrendPC'          
           method: 'PC', aCompCor will always extract the principal components
               from tissues signal,
           components: number of components to retain,
@@ -157,6 +161,8 @@ The following box contains the full specification for regressors:
   
   tCompCor:
       summary:
+          filter: 'cosine', Principal components are estimated after using a discrete cosine filter with 128s cut-off,
+              Leave filter field blank, if selected aCompcor method is 'DetrendPC'          
           method: 'PC', tCompCor will always extract the principal components from
               BOLD signal,
           components: number of components to retain,
@@ -272,7 +278,7 @@ The box below contains an example of what these parameters might look like when 
 
         aCompCor:
           summary:
-            method: PC
+            method: DetrendPC
             components: 5
           tissues:
             - WhiteMatter
@@ -281,6 +287,7 @@ The box below contains an example of what these parameters might look like when 
 
         tCompCor:
           summary:
+            filter: cosine
             method: PC
             components: 5
           threshold: 1.5SD
@@ -339,8 +346,9 @@ In order to provide flexibility for the nuisance regression strategies, we chang
 | .. code-block:: yaml | .. code-block:: yaml                                                                                                                           |
 |                      |                                                                                                                                                |
 |     compcor: 1       |     aCompCor:                                                                                                                                  |
-|                      |       summary:                                                                                                                                 |
-|                      |         method: PC                                                                                                                             |
+|                      |       summary:
+|                      |         filter:                                                                                                                                  |
+|                      |         method: DetrendPC                                                                                                                             |
 |                      |         components: 5                                                                                                                          |
 |                      |       tissues:                                                                                                                                 |
 |                      |         - WhiteMatter                                                                                                                          |

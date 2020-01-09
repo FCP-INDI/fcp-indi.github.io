@@ -30,7 +30,8 @@ jobs:
       - run:
           name: Deploy docs
           command: |
-            git clone --single-branch --branch master git@github.com:FCP-INDI/fcp-indi.github.com.git /tmp/repo
+            export GITMESSAGE=`git log -1 --oneline --pretty=%s`
+            git clone --single-branch --branch master git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo
             rsync -rtv ./ /tmp/repo/ --exclude '.git'
             cd /tmp/repo
             git rm -f .gitignore || rm -f .gitignore || true
@@ -39,6 +40,6 @@ jobs:
             git rm -fr docs/developer/.doctrees || rm -f docs/developer/.doctrees || true
             git rm -fr docs/user/_sources || rm -f docs/user/_sources || true
             git rm -fr docs/user/.doctrees || rm -f docs/user/.doctrees || true
-            git commit -m "updates"
+            git commit -m "${GITMESSAGE}" --allow-empty
             git push -f origin master
             cd -

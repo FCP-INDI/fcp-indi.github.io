@@ -25,10 +25,10 @@ As a quick example, in order to run the C-PAC Docker container in participant mo
     docker run -i --rm \
             -v /Users/You/local_bids_data:/bids_dataset \
             -v /Users/You/some_folder:/outputs \
-            -v /tmp:/scratch \
+            -v /tmp:/tmp \
             fcpindi/c-pac:latest /bids_dataset /outputs participant
 
-Note, the ``-v`` flags map your local filesystem locations to a "location" within the Docker image. (For example, the ``/bids_dataset`` and ``/outputs`` directories in the command above are arbitrary names). If you provided ``/Users/You/local_bids_data`` to the ``bids_dir`` input parameter, Docker would not be able to access or see that directory, so it needs to be mapped first. In this example, the local machine's ``/tmp`` directory has been mapped to the ``/scratch`` name because the C-PAC Docker image's default pipeline sets the working directory to ``/scratch``. If you wish to keep your working directory somewhere more permanent, you can simply map this like so: ``-v /Users/You/working_dir:/scratch``.
+Note, the ``-v`` flags map your local filesystem locations to a "location" within the Docker image. (For example, the ``/bids_dataset`` and ``/outputs`` directories in the command above are arbitrary names). If you provided ``/Users/You/local_bids_data`` to the ``bids_dir`` input parameter, Docker would not be able to access or see that directory, so it needs to be mapped first. In this example, the local machine's ``/tmp`` directory has been mapped to the ``/tmp`` name because the C-PAC Docker image's default pipeline sets the working directory to ``/tmp``. If you wish to keep your working directory somewhere more permanent, you can simply map this like so: ``-v /Users/You/working_dir:/tmp``.
 
 You can also provide a link to an AWS S3 bucket containing a BIDS directory as the data source:
 
@@ -36,7 +36,7 @@ You can also provide a link to an AWS S3 bucket containing a BIDS directory as t
 
     docker run -i --rm \
             -v /Users/You/some_folder:/outputs \
-            -v /tmp:/scratch \
+            -v /tmp:/tmp \
             fcpindi/c-pac:latest s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant
 
 To run the C-PAC Docker container with a pipeline configuration file other than the container's default pipeline, assuming the configuration file is in the ``/Users/You/Documents`` directory:
@@ -46,7 +46,7 @@ To run the C-PAC Docker container with a pipeline configuration file other than 
     docker run -i --rm \
             -v /Users/You/local_bids_data:/bids_dataset \
             -v /Users/You/some_folder:/outputs \
-            -v /tmp:/scratch \
+            -v /tmp:/tmp \
             -v /Users/You/Documents:/configs \
             -v /Users/You/resources:/resources \
             fcpindi/c-pac:latest /bids_dataset /outputs participant --pipeline_file /configs/pipeline_config.yml
@@ -60,7 +60,7 @@ Finally, to run the Docker container with a specific data configuration file (in
     docker run -i --rm \
             -v /Users/You/any_directory:/bids_dataset \
             -v /Users/You/some_folder:/outputs \
-            -v /tmp:/scratch \
+            -v /tmp:/tmp \
             -v /Users/You/Documents:/configs \
             fcpindi/c-pac:latest /bids_dataset /outputs participant --data_config_file /configs/data_config.yml
 
@@ -177,14 +177,14 @@ You can pull a Singularity container much like how you would pull a Docker conta
 
 This will produce a Singularity container image in your current directory, named something like ``FCP-INDI-C-PAC-master-latest.simg``.
 
-Running a Singularity image is similar to running a Docker image, except you use ``-B`` for mappings instead of ``-v``:
+Running a Singularity image is similar to running a Docker image, except ``-B`` maps local directories to a location in the Singularity image instead of ``-v``:
 
 .. code-block:: console
 
     singularity run \
             -B /Users/You/local_bids_data:/bids_dataset \
             -B /Users/You/some_folder:/outputs \
-            -B /tmp:/scratch \
+            -B /tmp:/tmp \
             FCP-INDI-C-PAC-master-latest.simg /bids_dataset /outputs participant
 
 Again, you can also provide an AWS S3 link for the data:
@@ -193,7 +193,7 @@ Again, you can also provide an AWS S3 link for the data:
 
     singularity run \
             -B /Users/You/some_folder:/outputs \
-            -B /tmp:/scratch \
+            -B /tmp:/tmp \
             FCP-INDI-C-PAC-master-latest.simg s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant
 
 Default Pipeline
@@ -236,7 +236,7 @@ Once you save the pipeline configuration YAML file, you can provide it to the C-
     docker run -i --rm \
             -v /Users/You/local_bids_data:/bids_dataset \
             -v /Users/You/some_folder:/outputs \
-            -v /tmp:/scratch \
+            -v /tmp:/tmp \
             -v /Users/You/Documents:/configs \
             -v /Users/You/resources:/resources \
             fcpindi/c-pac:latest /bids_dataset /outputs participant --pipeline_file /configs/pipeline_config.yml
@@ -247,7 +247,7 @@ Or you can provide it to the C-PAC Singularity container like so:
 
     singularity run \
             -B /Users/You/some_folder:/outputs \
-            -B /tmp:/scratch \
+            -B /tmp:/tmp \
             -B /Users/You/Documents:/configs \
             fcpindi_c-pac_latest-{date}-{hash value}.img s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant --pipeline_file /configs/pipeline_config.yml
 

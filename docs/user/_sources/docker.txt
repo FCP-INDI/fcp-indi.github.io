@@ -1,0 +1,162 @@
+Run on Docker
+-------------
+
+A C-PAC `Docker image <https://www.docker.com/>`_ is available so that you can easily get an analysis running without needing to install C-PAC.
+
+The Docker image is designed following the specification established by the `BIDS-Apps project <https://github.com/BIDS-Apps>`_, an initiative to create a collection of reproducible neuroimaging workflows that can be executed as self-contained environments using `Docker <https://www.docker.com/>`_ containers.  These workflows take as input any dataset that is organized according to the `Brain Imaging Data Structure (BIDS) standard <http://http://bids.neuroimaging.io>`_ and generating first-level outputs for this dataset. However, you can provide the C-PAC Docker image with a custom non-BIDS dataset by entering your own data configuration file. More details below.
+
+In addition, we have created a Docker default pipeline configuration as part of this initiative that allows you to run the C-PAC pipeline on your data in an environment that is fully provisioned with all of C-PAC's dependencies - more details about the default pipeline are available further below. If you wish to run your own pipeline configuration, you can also provide this to the Docker image at run-time.
+
+To start, first pull the image from Docker Hub:
+
+.. code-block:: console
+
+    docker pull fcpindi/c-pac:latest
+
+Once this is complete, you can use the ``fcpindi/c-pac:latest`` image tag to invoke runs. The full C-PAC Docker image usage options are shown here, with some specific use cases.
+
+As a quick example, in order to run the C-PAC Docker container in participant mode, for one participant, using a BIDS dataset stored on your machine or server, and using the Docker image's default pipeline configuration (broken into multiple lines for visual clarity):
+
+.. code-block:: console
+
+    docker run -i --rm \
+            -v /Users/You/local_bids_data:/bids_dataset \
+            -v /Users/You/some_folder:/outputs \
+            -v /tmp:/tmp \
+            fcpindi/c-pac:latest /bids_dataset /outputs participant
+
+Note, the ``-v`` flags map your local filesystem locations to a "location" within the Docker image. (For example, the ``/bids_dataset`` and ``/outputs`` directories in the command above are arbitrary names). If you provided ``/Users/You/local_bids_data`` to the ``bids_dir`` input parameter, Docker would not be able to access or see that directory, so it needs to be mapped first. In this example, the local machine's ``/tmp`` directory has been mapped to the ``/tmp`` name because the C-PAC Docker image's default pipeline sets the working directory to ``/tmp``. If you wish to keep your working directory somewhere more permanent, you can simply map this like so: ``-v /Users/You/working_dir:/tmp``.
+
+You can also provide a link to an AWS S3 bucket containing a BIDS directory as the data source:
+
+.. code-block:: console
+
+    docker run -i --rm \
+            -v /Users/You/some_folder:/outputs \
+            -v /tmp:/tmp \
+            fcpindi/c-pac:latest s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant
+
+To run the C-PAC Docker container with a pipeline configuration file other than the container's default pipeline, assuming the configuration file is in the ``/Users/You/Documents`` directory:
+
+.. code-block:: console
+
+    docker run -i --rm \
+            -v /Users/You/local_bids_data:/bids_dataset \
+            -v /Users/You/some_folder:/outputs \
+            -v /tmp:/tmp \
+            -v /Users/You/Documents:/configs \
+            -v /Users/You/resources:/resources \
+            fcpindi/c-pac:latest /bids_dataset /outputs participant --pipeline_file /configs/pipeline_config.yml
+
+In this case, we need to map the directory containing the pipeline configuration file ``/Users/You/Documents`` to a Docker image virtual directory ``/configs``. Note we are using this ``/configs`` directory in the ``--pipeline_file`` input flag. In addition, if there are any ROIs, masks, or input files listed in your pipeline configuration file, the directory these are in must be mapped as well- assuming ``/Users/You/resources`` is your directory of ROI and/or mask files, we map it with ``-v /Users/You/resources:/resources``. In the pipeline configuration file you are providing, these ROI and mask files must be listed as ``/resources/ROI.nii.gz`` (etc.) because we have mapped ``/Users/You/resources`` to ``/resources``.
+
+Finally, to run the Docker container with a specific data configuration file (instead of providing a BIDS data directory):
+
+.. code-block:: console
+
+    docker run -i --rm \
+            -v /Users/You/any_directory:/bids_dataset \
+            -v /Users/You/some_folder:/outputs \
+            -v /tmp:/tmp \
+            -v /Users/You/Documents:/configs \
+            fcpindi/c-pac:latest /bids_dataset /outputs participant --data_config_file /configs/data_config.yml
+
+Note: we are still providing ``/bids_dataset`` to the ``bids_dir`` input parameter. However, we have mapped this to any directory on your machine, as C-PAC will not look for data in this directory when you provide a data configuration YAML with the ``--data_config_file`` flag. In addition, if the dataset in your data configuration file is not in BIDS format, just make sure to add the ``--skip_bids_validator`` flag at the end of your command to bypass the BIDS validation process.
+
+The full list of parameters and options that can be passed to the Docker container are shown below:
+
+.. code-block:: console
+
+    usage: run.py [-h] [--pipeline_file PIPELINE_FILE]
+                  [--data_config_file DATA_CONFIG_FILE]
+                  [--aws_input_creds AWS_INPUT_CREDS]
+                  [--aws_output_creds AWS_OUTPUT_CREDS] [--n_cpus N_CPUS]
+                  [--mem_mb MEM_MB] [--mem_gb MEM_GB] [--save_working_dir]
+                  [--participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]]
+                  [--participant_ndx PARTICIPANT_NDX]
+                  bids_dir output_dir {participant,group,test_config,GUI}
+
+    C-PAC Pipeline Runner
+
+    positional arguments:
+      bids_dir              The directory with the input dataset formatted
+                            according to the BIDS standard. Use the format
+                            s3://bucket/path/to/bidsdir to read data directly from
+                            an S3 bucket. This may require AWS S3 credentials
+                            specified via the --aws_input_creds option.
+      output_dir            The directory where the output files should be stored.
+                            If you are running group level analysis this folder
+                            should be prepopulated with the results of the
+                            participant level analysis. Us the format
+                            s3://bucket/path/to/bidsdir to write data directly to
+                            an S3 bucket. This may require AWS S3 credentials
+                            specified via the --aws_output_creds option.
+      {participant,group,test_config,GUI}
+                            Level of the analysis that will be performed. Multiple
+                            participant level analyses can be run independently
+                            (in parallel) using the same output_dir. GUI will open
+                            the CPAC gui (currently only works with singularity)
+                            and test_config will run through the entire
+                            configuration process but will not execute the
+                            pipeline.
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      --pipeline_file PIPELINE_FILE
+                            Name for the pipeline configuration file to use
+      --data_config_file DATA_CONFIG_FILE
+                            Yaml file containing the location of the data that is
+                            to be processed. Can be generated from the CPAC gui.
+                            This file is not necessary if the data in bids_dir is
+                            organized according to the BIDS format. This enables
+                            support for legacy data organization and cloud based
+                            storage. A bids_dir must still be specified when using
+                            this option, but its value will be ignored.
+      --aws_input_creds AWS_INPUT_CREDS
+                            Credentials for reading from S3. If not provided and
+                            s3 paths are specified in the data config we will try
+                            to access the bucket anonymously
+      --aws_output_creds AWS_OUTPUT_CREDS
+                            Credentials for writing to S3. If not provided and s3
+                            paths are specified in the output directory we will
+                            try to access the bucket anonymously
+      --anat_only           Only run anatomical preprocessing.
+      --n_cpus N_CPUS       Number of execution resources available for the
+                            pipeline
+      --mem_mb MEM_MB       Amount of RAM available to the pipeline in megabytes.
+                            Included for compatibility with BIDS-Apps standard,
+                            but mem_gb is preferred
+      --mem_gb MEM_GB       Amount of RAM available to the pipeline in gigabytes.
+                            if this is specified along with mem_mb, this flag will
+                            take precedence.
+      --save_working_dir    Save the contents of the working directory.
+      --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
+                            The label of the participant that should be analyzed.
+                            The label corresponds to sub-<participant_label> from
+                            the BIDS spec (so it does not include "sub-"). If this
+                            parameter is not provided all subjects should be
+                            analyzed. Multiple participants can be specified with
+                            a space separated list. To work correctly this should
+                            come at the end of the command line
+      --participant_ndx PARTICIPANT_NDX
+                            The index of the participant that should be analyzed.
+                            This corresponds to the index of the participant in
+                            the subject list file. This was added to make it
+                            easier to accomodate SGE array jobs. Only a single
+                            participant will be analyzed. Can be used with
+                            participant label, in which case it is the index into
+                            the list that follows the particpant_label flag.
+
+Note that any of the optional arguments above will over-ride any pipeline settings in the default pipeline or in the pipeline configuration file you provide via the ``--pipeline_file`` parameter.
+
+**Further usage notes:**
+
+* You can run only anatomical preprocessing easily, without modifying your data or pipeline configuration files, by providing the ``--anat_only`` flag.
+
+* A GUI can be invoked to assist in pipeline custimization by specifying the ``GUI`` command line argument, as opposed to ``participant`` (this currently only works for Singularity containers).
+
+* As stated, the default behavior is to read in data that is organized in the BIDS format. This includes data that is in Amazon AWS S3 by using the format ``s3://<bucket_name>/<bids_dir>`` for the ``bids_dir`` command line argument. Outputs can be written to S3 using the same format for the ``output_dir``. Credentials for accessing these buckets can be specified on the command line (using ``--aws_input_creds`` or ``--aws_output_creds``).
+
+* When the app is run, a data configuration file is written to the working directory. This file can be passed into subsequent runs, which avoids the overhead of re-parsing the BIDS input directory on each run (i.e. for cluster or cloud runs). These files can be generated without executing the C-PAC pipeline using the test_run command line argument.
+
+* The ``participant_label`` and ``participant_ndx`` arguments allow the user to specify which of the many datasets should be processed, which is useful when parallelizing the run of multiple participants.

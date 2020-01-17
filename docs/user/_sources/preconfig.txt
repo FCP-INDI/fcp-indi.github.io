@@ -4,7 +4,9 @@
 default: The Default Pipeline
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Pipeline Configuration Yaml: ``
+Pipeline Configuration Yaml: `https://github.com/FCP-INDI/C-PAC/blob/master/dev/docker_data/default_pipeline.yml <https://github.com/FCP-INDI/C-PAC/blob/master/dev/docker_data/default_pipeline.yml>`_
+
+**Note:** C-PAC runs this pipeline by default, and it is not necessary to invoke the `--preconfig` flag to run it.
 
 C-PAC is packaged with a default processing pipeline so that you can get your data preprocessing and analysis started immediately. Just pull the C-PAC Docker container and kick off the container with your data, and you're on your way.
 
@@ -27,8 +29,8 @@ Several different individual level analysis are performed on the fMRI data inclu
 * **Seed correlation analysis (SCA):** preprocessed fMRI data is to match template that includes 160 regions of interest defined from a meta-analysis of different task results [19]. A time series is calculated for each region from the mean of all intra-ROI voxel time series. A seperate functional connectivity map is calculated per ROI by correlating its time course with the time courses of every other voxel in the brain. Resulting values are Fisher transformed, written into MNI space at 2mm resolution, and then spatiall smoothed using a 6mm FWHM kernel.
 * **Time series extraction:** similar the procedure used for time series analysis, the preprocessed functional data is written into MNI space at 2mm and then time series for the various atlases are extracted by averaging within region voxel time courses. This procedure was used to generate summary time series for the automated anatomic labelling atlas [20], Eickhoff-Zilles atlas [21], Harvard-Oxford atlas [22], Talaraich and Tournoux atlas [23], 200 and 400 regions from the spatially constrained clustering voxel timeseries [24], and 160 ROIs from a meta-analysis of task results [19]. Time series for 10 ICNs were extracted using spatial regression.
 
-anat-only: Anatomical Preprocessing Only
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+anat-only: Default with Anatomical Preprocessing Only
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_anat-only.yml <https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_anat-only.yml>`_
 
@@ -38,17 +40,46 @@ Based on the preprocessing decisions of the default pipeline, this preconfigurat
 * Tissue segmentation (via FSL FAST)
 * Registration to template (via ANTs/ITK)
 
+preproc: Default without Derivatives
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_anat-only.yml <https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_preproc.yml>`_
+
+Based on the preprocessing decisions of the default pipeline, this preconfiguration allows you to preprocess all of your data, without launching into calculation of outputs and data derivatives. This includes:
+
+Anatomical:
+
+* Brain extraction (via AFNI 3dSkullStrip)
+* Tissue segmentation (via FSL FAST)
+* Registration to template (via ANTs/ITK)
+
+Functional:
+
+* Slice-timing correction
+* Motion estimation & correction
+* Co-registration to structural
+* Nuisance correction & filtering
+* Registration to template (via ANTs/ITK)
+
 ndmg: Neurodata's 'ndmg-f' Pipeline
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_anat-only.yml <https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_benchmark-ndmg.yml>'_
 
-This pipeline is the result of Neurodata's study to converge upon the intersection of pipeline configuration decisions that maximizes discriminability between participants' data. <paper> etc.
+This pipeline is the result of `Neurodata's <https://neurodata.io/>`_ study to converge upon the intersection of pipeline configuration decisions that maximizes discriminability between participants' data, drawing from the connectome graphs produced (labeled 'ndmg_graph' in the C-PAC output directory). This pipeline invokes a minimal set of preprocessing.
+
+Note, the 'ndmg_graph' connectome graph outputs are always produced by C-PAC. This pipeline configuration simply replicates the preprocessing methods described in the paper, linked below.
+
+* `https://www.biorxiv.org/content/10.1101/188706v6 <https://www.biorxiv.org/content/10.1101/188706v6>`_
+* `https://neurodata.io/m2g/ <https://neurodata.io/m2g/>`_
+* `https://github.com/neurodata/m2g <https://github.com/neurodata/m2g>`_
 
 fmriprep-compat: fmriprep-Compatible Pipeline
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-...
+Pipeline Configuration YAML: ` <>`_
+
+This pipeline is designed to reproduce the preprocessing results of the `fmriprep pipeline package <https://fmriprep.readthedocs.io/en/stable/>`_ produced by the `Poldrack Lab at Stanford University <https://poldracklab.stanford.edu/>`_.
 
 benchmark-ANTS: C-PAC Benchmark with ANTs Registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -63,11 +94,6 @@ benchmark-FNIRT: C-PAC Benchmark with FSL FNIRT Registration
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_anat-only.yml <https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_benchmark-FNIRT.yml>'_
 
 The benchmark pipeline has remained mostly unchanged since the project's inception, and is used at the end of each release cycle to ensure the results of C-PAC's key outputs have not changed. It is designed to test a wide range of pipeline options. This pipeline is based on registration-to-template using the FSL FLIRT & FNIRT, as this decision impacts many other aspects of the pipeline further downstream.
-
-monkey: Non-Human Primate Data Starter Pipeline
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_anat-only.yml <https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_benchmark-monkey.yml>'_
 
 
 

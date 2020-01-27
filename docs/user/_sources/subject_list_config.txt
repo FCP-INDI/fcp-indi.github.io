@@ -15,6 +15,47 @@ The data configuration file layout has changed significantly from older versions
 
 If you have already-existing data configuration files and wish to update these for the new version, you can simply use your already-existing data settings preset files to regenerate the data configuration files using your new/upgraded install of C-PAC v1.1.0. If you have any questions, please feel free to reach us at our `support forum <https://groups.google.com/forum/#!forum/cpax_forum>`_.
 
+From Terminal
+-------------
+
+Create data_settings.yml template file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can configure the settings explained below in the **data settings** YAML file, then use the C-PAC command-line interface to generate your **data configuration** file.
+
+If you don't already have a data settings YAML file, you can generate one in your current directory by running::
+
+    singularity run C-PAC_latest.sif bids_dir outputs_dir cli -- utils data_config new_settings_template
+
+or::
+
+    docker run -i --rm --user $(id -u) -v /path/to/data_config:/scratch -w="/scratch" fcpindi/c-pac:latest bids_dir outputs_dir cli -- utils data_config new_settings_template
+
+For either of the above commands, ``bids_dir`` and ``outputs_dir`` are required but not used, so any non-null string will work for those positional arguments.
+
+The Singularity command will created ``data_settings.yml`` in the current working directory you call the command from.
+
+The Docker command requires a few more parameters than the Singularity command:
+
+* ``--user $(id -u)`` is necessary so the generated files will be owned locally by the user running Docker rather than by root (the default).
+* ``-v /path/to/data_config:/scratch`` binds your local ``data_config`` directory to ``/scratch`` on the Docker image, and
+* ``-w="/scratch"`` sets the current working directory on the Docker image to ``/scratch``.
+
+Generate configuration files for individual-level and group-level analyses
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Once you have a template, you can then configure the file as needed. You will need to use a text editor to fill in at least ``dataFormat``, ``bidsBaseDir``, ``outputSubjectListLocation``, and ``subjectListName`` in your settings file before you build.
+
+Once your ``data_settings.yml`` file is ready, you can generate your data configuration file by running::
+
+    singularity run C-PAC_latest.sif bids_dir outputs_dir cli -- utils data_config build /path/to/data_settings.yml
+
+or::
+
+    docker run -i --rm --user $(id -u) -v /path/to/data_config:/scratch -w="/scratch" fcpindi/c-pac:latest bids_dir outputs_dir cli -- utils data_config build /path/to/data_settings.yml
+
+Continue below for some example use cases.
+
 data_settings.yml contents
 --------------------------
 #. **Data format - [BIDS, Custom]:** Whether or not the data is organized in accordance with the BIDS specification. More details below.
@@ -59,29 +100,11 @@ data_settings.yml contents
 
 Continue below for some example use cases.
 
-From Terminal
---------------------------------------------------
-You can configure the settings explained above in the **data settings** YAML file, then use the C-PAC command-line interface to generate your **data configuration** file.
-
-If you don't already have a data settings YAML file, you can generate one in your current directory by running::
-
-   cpac utils data_config new_template
-
-You can then configure the file as needed. Once your data settings file is ready, you can generate your data configuration file by running::
-
-   cpac utils data_config build /path/to/data_settings.yml
-
-Continue below for some example use cases.
-
 Data: BIDS Format
--------------------------
+-----------------
 A full description of the BIDS data organization specification can be found at `bids.neuroimaging.io <http://bids.neuroimaging.io/>`_.
 
 This is the simplest option. As the data is in BIDS format, the C-PAC data configuration builder will know where to find all of the input files, the scan parameters (if available), site information, and field map files (if applicable). The inclusion and exclusion options for the different data levels (participant, site, etc.) work as usual.
-
-**Using the GUI**
-
-Select "BIDS" as your Data Format, and specify where to save the configuration files and the participant list name. Then, provide the BIDS Base Directory, which is the top-most directory level within which your BIDS-organized data set is stored. Click ``Generate Data Config`` in the bottom-right corner to generate the data configuration, and to also save this setup into a data settings file. If you only want to save the settings to generate the data configuration for later, click ``Save Preset``.
 
 **Using the cpac_data_config_setup.py script**
 
@@ -96,23 +119,17 @@ You can also fill in the AWS credentials file field, and the inclusion and exclu
 
 Once your data settings file is ready, generate your data configuration file by running::
 
-   cpac utils data_config build /path/to/data_settings.yml
+    singularity run C-PAC_latest.sif bids_dir outputs_dir cli -- utils data_config build /path/to/data_settings.yml
+
+or::
+
+    docker run -i --rm --user $(id -u) -v /path/to/data_config:/scratch -w="/scratch" fcpindi/c-pac:latest bids_dir outputs_dir cli -- utils data_config build /path/to/data_settings.yml
 
 Data: Custom Layout
-------------------------------------
+-------------------
 The C-PAC Data Configuration builder can handle a wide range of different directory organization layouts, but can only do it seamlessly for you if all of your data is organized in that same layout. If you have input files arranged in different ways, simply generate two different data configuration files, and then manually add one to the end of the other, in a text editor.
 
-**Using the GUI**
-
-Set your Data Format to "Custom", and leave the BIDS Base Directory blank.
-
-In the Anatomical File Path Template field, enter the full file path to any of your anatomical/structural input files (including the file extension .nii/.nii.gz), and then replace the appropriate directory levels with these tags::
-
-   {participant}
-   {site}           (if applicable)
-   {session}        (if applicable)
-
-**Note:** C-PAC currently does not support multiple anatomical series/scans/runs at this time, but will do so in the following release!
+**Using the C-PAC command-line interface (CLI)**
 
 Your template paths should look something like this, for the corresponding directory layouts::
 
@@ -121,21 +138,6 @@ Your template paths should look something like this, for the corresponding direc
 
    Actual file:     /home/data/site-03/sub-1005_session-B1/anat/anat.nii
    Template path:   /home/data/{site}/{participant}_{session}/anat/anat.nii
-
-For the Functional File Path Template field, repeat the process with your functional input files. In addition, different levels of series/scans can be denoted with the following tag::
-
-   {series}
-
-If you have field map files, and wish to perform field map-based distortion correction, the same process can be repeated for your field map phase and magnitude files, via the Field Map Phase File Path Template and Field Map Magnitude File Path Template fields in the GUI.
-
-For the file path templates, only the ``{participant}`` tags are required. Defaults will be assigned to the other levels if they do not exist.
-
-Then, fill in the fields for where you want the data configuration builder to save your files, and the name/label to use to name the files.
-
-Once your settings are complete, nt list name. click ``Generate Data Config`` in the bottom-right corner to generate the data configuration, and to also save this setup into a data settings file. If you only want to save the settings to generate the data configuration for later, click ``Save Preset``.
-
-
-**Using the C-PAC command-line interface (CLI)**
 
 Following the instructions for formatting your path templates given above, populate these fields in your data settings file::
 
@@ -149,10 +151,14 @@ You can also fill in the AWS credentials file field, and the inclusion and exclu
 
 Once your data settings file is ready, generate your data configuration file by running::
 
-   cpac utils data_config build /path/to/data_settings.yml
+    singularity run C-PAC_latest.sif bids_dir outputs_dir cli -- utils data_config build /path/to/data_settings.yml
+
+or::
+
+    docker run -i --rm --user $(id -u) -v /path/to/data_config:/scratch -w="/scratch" fcpindi/c-pac:latest bids_dir outputs_dir cli -- utils data_config build /path/to/data_settings.yml
 
 Custom Path Templates
----------------------------
+---------------------
 Here are the file path templates used for the `1000 Functional Connectomes <http://fcon_1000.projects.nitrc.org/fcpClassic/FcpTable.html>`_ data release, as well as an illustration of the directory structure used for the release::
 
    Anatomical Template:  /path/to/data/{site}/{participant}/anat/mprage_anonymized.nii.gz
@@ -177,8 +183,8 @@ A final example is the file structure used by the `Enhanced Nathan Kline Institu
 Users experiencing difficulties defining file path templates may want to re-organize their data to match one of the examples above. If you manually define a file path template and encounter an error when attempting to generate participant lists, please :doc:`contact us </help>` and we will be happy to help.
 
 Data YAML Fields
------------------------------------
-The data configuration builder GUI or the ``cpac_data_config_setup.py`` command line utility will produce a YAML file containing all of the participants and various properties associated with that participant, such as its ID, session number, the location of its resting-state/functional and anatomical scans. Before each participant definition there is a single line with a dash, which indicates that start of the property definitions. Participant properties are indented under this dash. To illustrate, see the sample participant definition below:
+----------------
+The ``cpac_data_config_setup.py`` command line utility will produce a YAML file containing all of the participants and various properties associated with that participant, such as its ID, session number, the location of its resting-state/functional and anatomical scans. Before each participant definition there is a single line with a dash, which indicates that start of the property definitions. Participant properties are indented under this dash. To illustrate, see the sample participant definition below:
 
 .. code-block:: yaml
 
@@ -247,4 +253,4 @@ The data configuration builder GUI or the ``cpac_data_config_setup.py`` command 
             fmap_mag: /path/to/site01/sub01/ses01/scan_1_magnitude.nii.gz
         site: site01
 
-Note that more than one functional scan is defined under the `func` key (i.e., multiple series), and that individual scan parameters can be defined to override the settings used in the C-PAC pipeline configuration GUI.
+Note that more than one functional scan is defined under the `func` key (i.e., multiple series), and that individual scan parameters can be defined to override the default settings.

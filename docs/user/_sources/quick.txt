@@ -39,7 +39,7 @@ You can also provide a link to an AWS S3 bucket containing a BIDS directory as t
             -v /tmp:/scratch \
             fcpindi/c-pac:latest s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant
 
-To run the C-PAC Docker container with a pipeline configuration file other than the container's default pipeline, assuming the configuration file is in the ``/Users/You/Documents`` directory:
+To run the C-PAC Docker container with a pipeline configuration file other than the container's default pipeline (for example, a pipeline configuration YAML file created in the `C-PAC pipeline builder GUI <https://fcp-indi.github.io/C-PAC_GUI/versions/latest/browser/#/>`_), assuming the configuration file is in the ``/Users/You/Documents`` directory:
 
 .. code-block:: console
 
@@ -52,6 +52,20 @@ To run the C-PAC Docker container with a pipeline configuration file other than 
             fcpindi/c-pac:latest /bids_dataset /outputs participant --pipeline_file /configs/pipeline_config.yml
 
 In this case, we need to map the directory containing the pipeline configuration file ``/Users/You/Documents`` to a Docker image virtual directory ``/configs``. Note we are using this ``/configs`` directory in the ``--pipeline_file`` input flag. In addition, if there are any ROIs, masks, or input files listed in your pipeline configuration file, the directory these are in must be mapped as well- assuming ``/Users/You/resources`` is your directory of ROI and/or mask files, we map it with ``-v /Users/You/resources:/resources``. In the pipeline configuration file you are providing, these ROI and mask files must be listed as ``/resources/ROI.nii.gz`` (etc.) because we have mapped ``/Users/You/resources`` to ``/resources``.
+
+In addition, several pre-configured pipelines come packaged with C-PAC and can be easily invoked using the ``--preconfig`` flag:
+
+.. code-block:: console
+
+    docker run -i --rm \
+            -v /Users/You/local_bids_data:/bids_dataset \
+            -v /Users/You/some_folder:/outputs \
+            -v /tmp:/scratch \
+            -v /Users/You/Documents:/configs \
+            -v /Users/You/resources:/resources \
+            fcpindi/c-pac:latest /bids_dataset /outputs participant --preconfig anat-only
+
+A full list of pre-configured pipelines and their details are :doc:`available here </preconfig>`.
 
 Finally, to run the Docker container with a specific data configuration file (instead of providing a BIDS data directory):
 
@@ -115,6 +129,8 @@ The full list of parameters and options that can be passed to the Docker contain
                             support for legacy data organization and cloud based
                             storage. A bids_dir must still be specified when using
                             this option, but its value will be ignored.
+      --preconfig PIPELINE_LABEL
+                            Name of the pre-configured pipeline to run.
       --aws_input_creds AWS_INPUT_CREDS
                             Credentials for reading from S3. If not provided and
                             s3 paths are specified in the data config we will try

@@ -151,12 +151,7 @@ html_static_path = ['_static']
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-html_sidebars = {
-  '**': [
-    'globaltoc.html',
-    'searchbox.html'
-  ]
- }
+html_sidebars = {'**': ['globaltoc.html', 'searchbox.html'] }
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -269,5 +264,3 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
-
-rst_epilog = ".. |Versions| replace:: {}".format(", ".join(versions))

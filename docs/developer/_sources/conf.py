@@ -172,7 +172,12 @@ html_static_path = ['_static']
 #html_use_opensearch = ''
 
 # This is the file name suffix for HTML files (e.g. ".xhtml").
-#html_file_suffix = None
+html_file_suffix = ".html"
+
+# Suffix for generated links to HTML files
+html_link_suffix = ""
+link_suffix = ""
+
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'C-PACdoc'

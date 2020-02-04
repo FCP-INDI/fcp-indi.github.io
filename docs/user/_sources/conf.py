@@ -13,6 +13,9 @@
 
 import sys, os
 from CPAC import __version__
+from github import Github
+
+g = Github()
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -52,6 +55,13 @@ copyright = u'2020, C-PAC Team'
 #
 # The short X.Y version.
 version = __version__
+
+### Last 5 version tags
+versions = [
+    t.name for t in g.get_user("FCP-INDI").get_repo("C-PAC").get_tags()
+][:5]
+
+
 # The full version, including alpha/beta/rc tags.
 release = '{} Beta'.format(__version__)
 

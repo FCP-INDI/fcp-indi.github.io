@@ -272,4 +272,5 @@ texinfo_documents = [
 
 rst_epilog = """
 .. |Versions| replace:: """.format("""
-""".join(["- {}".format(v) for v in versions]
+""".join(["- {}".format(v) for v in versions])
+)

@@ -154,7 +154,6 @@ html_static_path = ['_static']
 html_sidebars = {
   '**': [
     'globaltoc.html',
-    'use_case_wizard/toc.html',
     'searchbox.html'
   ]
  }
@@ -270,3 +269,5 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
+
+rst_epilog = ".. |Versions| replace:: {}".format(", ".join(versions))

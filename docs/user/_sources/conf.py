@@ -271,6 +271,6 @@ texinfo_documents = [
 #texinfo_show_urls = 'footnote'
 
 rst_epilog = """
-.. |Versions| replace:: """.format("""
+.. |Versions| replace:: {}""".format("""
 """.join(["- {}".format(v) for v in versions])
 )

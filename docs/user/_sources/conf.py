@@ -125,7 +125,7 @@ all_release_notes += """
         release_notes_dir
     ) if fp!="index.txt"
 ]))
-with open(os.path.join(release_notes_dir, 'index.txt')) as f:
+with open(os.path.join(release_notes_dir, 'index.txt'), 'w+') as f:
     f.write(all_release_notes)
 
 

@@ -11,11 +11,13 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+import os
+import sys
 from CPAC import __version__
+from dateutil import parser as dparser
 from github import Github
-
-g = Github()
+from github.GithubException import RateLimitExceededException, \
+    UnknownObjectException
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -56,10 +58,75 @@ copyright = u'2020, C-PAC Team'
 # The short X.Y version.
 version = __version__
 
-### Last 5 version tags
-versions = [
-    t.name for t in g.get_user("FCP-INDI").get_repo("C-PAC").get_tags()
-][:5]
+# Get tags from GitHub
+# Set GITHUBTOKEN to your API token in your environment to increase rate limit.
+g = Github(os.environ.get("GITHUBTOKEN"))
+gh_cpac =  g.get_user("FCP-INDI").get_repo("C-PAC")
+gh_tags =  [t.name for t in gh_cpac.get_tags()]
+
+# Try to get release notes from GitHub
+try:
+    gh_releases = []
+    for t in gh_tags:
+        try:
+            gh_releases.append(gh_cpac.get_release(t).raw_data)
+        except (AttributeError, UnknownObjectException):
+            print("No notes for {}".format(t))
+    gh_releaseNotes = {r['name']: {
+        'body': r['body'],
+        'published_at': r['published_at']
+    } for r in gh_releases}
+except RateLimitExceededException:
+    gh_releaseNotes = {
+        t: {
+            "body": "See https://github.com/FCP-INDI/C-PAC/releases/tag/{} for "
+                    "release notes.".format(t),
+            "published_at": None
+        } for t in gh_tags
+    }
+
+this_dir = os.path.dirname(os.path.abspath(__file__))
+release_notes_dir = os.path.join(this_dir, "_sources", "release_notes")
+os.makedirs(release_notes_dir)
+all_release_notes = ""
+for t in gh_tags:
+    if t in gh_releaseNotes:
+        tag_header = "{}{}{}".format(
+            "Latest Release: " if t==gh_tags[0] else "",
+            t,
+            " ({}})".format(
+                dparser.parse(gh_releaseNotes[t]['published_at']).date(
+                ).strftime("%b %w, %Y")
+            ) if gh_releaseNotes[t]['published_at'] else ""
+        )
+        release_note = """
+        {}
+        {}
+
+        {}
+
+        """.format(
+            tag_header,
+            "^"*len(tag_header),
+            gh_releaseNotes[t]
+        )
+        all_release_notes =+ release_note
+release_notes_path = os.path.join(release_notes_dir, "{}.txt".format(t))
+with open(release_notes_path, 'w+') as f:
+    f.write(release_note)
+
+all_release_notes += """
+    .. toctree::
+       :hidden:
+
+       {}
+""".format("\n".join([
+    "/release_notes/{}".format(fp) for fp in os.listdir(
+        release_notes_path
+    ) if fp!="index.txt"
+]))
+with open(os.path.join(release_notes_dir, 'index.txt')) as f:
+    f.write(all_release_notes)
 
 
 # The full version, including alpha/beta/rc tags.
@@ -270,4 +337,11 @@ texinfo_documents = [
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
 
-rst_epilog = ".. |Versions| replace:: {}".format(", ".join(versions))
+rst_epilog = """
+    .. |Versions| replace:: {versions}
+
+    .. |latest| replace:: ..include /release_notes/{latest}.txt
+""".format(
+    versions=", ".join(gh_tags[:5]),
+    latest=[t for t in gh_tags if t in gh_releaseNotes.keys()][0]
+)

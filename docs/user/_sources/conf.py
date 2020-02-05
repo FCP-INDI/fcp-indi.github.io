@@ -111,9 +111,9 @@ for t in gh_tags:
             gh_releaseNotes[t]
         )
         all_release_notes =+ release_note
-release_notes_path = os.path.join(release_notes_dir, "{}.txt".format(t))
-with open(release_notes_path, 'w+') as f:
-    f.write(release_note)
+        release_notes_path = os.path.join(release_notes_dir, "{}.txt".format(t))
+        with open(release_notes_path, 'w+') as f:
+            f.write(relese_note)
 
 all_release_notes += """
     .. toctree::
@@ -122,7 +122,7 @@ all_release_notes += """
        {}
 """.format("\n".join([
     "/release_notes/{}".format(fp) for fp in os.listdir(
-        release_notes_path
+        release_notes_dir
     ) if fp!="index.txt"
 ]))
 with open(os.path.join(release_notes_dir, 'index.txt')) as f:

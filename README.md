@@ -1,7 +1,7 @@
 # fcp-indi.github.com
 
-Github Pages Repo for FCP-INDI
+GitHub Pages repo for FCP-INDI
 
 ## Editing
 
-Please, always change `source` branch. `master` branch will be overriden by the CI.
+See [CONTRIBUTING](./CONTRIBUTING.md) for editing and contributing guidelines.

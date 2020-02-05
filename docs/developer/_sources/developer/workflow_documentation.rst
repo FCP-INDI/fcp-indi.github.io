@@ -11,7 +11,7 @@ The bulk of documentation for workflows is to be done in the source file itself.
 How to write workflow code with proper documentation
 ====================================================
 
-Proper workflow documentation will follow the general standards provided by numpy (https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt).  Because workflow creation functions are themselves python functions, their parameters and what they return should be documented as such.  Please refer to the `example.py <https://github.com/numpy/numpy/blob/master/doc/example.py>`_ provided by numpy for syntax.
+Proper workflow documentation will follow the general standards provided by numpy (https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard).  Because workflow creation functions are themselves python functions, their parameters and what they return should be documented as such.  Please refer to the `example.py <https://github.com/numpy/numpy/blob/master/doc/example.py>`_ provided by numpy for syntax.
 
 
 :doc:`Example of a documented workflow <../workflows/anat_preproc>`
@@ -30,16 +30,16 @@ Example of *Notes* section for a workflow::
 
     Notes
     -----
-    
+
     `Source <GitHub link pointing to workflow source file>`_
-    
+
     Workflow Inputs::
-    
+
         inputspec.X : possible data type(s) of X
             Detailed description of X
-    
+
     Workflow Outputs::
-    
+
         outputspec.Y : possible data type(s) of Y
             Detailed description of Y
 
@@ -60,7 +60,7 @@ To add a documented workflow to the CPAC documentation site:
 
     Human readable name of workflow (eg. Anatomical Preprocessing)
     ==============================================================
-    
+
     .. automodule:: CPAC.workflow_name
         :members:
 

@@ -122,7 +122,13 @@ for t in gh_tags:
     if t in gh_releaseNotes:
         tag_header = "{}{}{}".format(
             "Latest Release: " if t==gh_tags[0] else "",
-            gh_releaseNotes[t]['name'],
+            (
+                gh_releaseNotes[t]['name'][4:] if (
+                    gh_releaseNotes[t]['name'].startswith("CPAC")
+                ) else gh_releaseNotes[t]['name'][5:] if (
+                    gh_releaseNotes[t]['name'].startswith("C-PAC")
+                ) else gh_releaseNotes[t]['name']
+            ).strip(),
             " ({})".format(
                 dparser.parse(gh_releaseNotes[t]['published_at']).date(
                 ).strftime("%b %w, %Y")

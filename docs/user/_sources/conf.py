@@ -100,15 +100,17 @@ def _unireplace(release_note, unireplace):
             e,
             "|u{}|".format(e2)
         )
-        unireplace = "\n\n".join([
-            unireplace,
-            ".. |u{e}| unicode:: {u}".format(
-                e=e2,
-                u=e
-            )
-        ])
+        unireplace[e2] = e
         return(_unireplace(release_note, unireplace))
-    return(release_note, unireplace)
+    return(
+        release_note,
+            "\n\n".join([
+            ".. |u{e}| unicode:: {u}".format(
+                e=u[0],
+                u=u[1]
+            )
+        for u in unireplace])
+    )
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 release_notes_dir = os.path.join(this_dir, "release_notes")
@@ -138,7 +140,7 @@ for t in gh_tags:
                     errors="backslashreplace"
                 ).decode("utf-8"))
             ),
-            ""
+            {}
         ))
 
         release_notes_path = os.path.join(release_notes_dir, "{}.txt".format(t))

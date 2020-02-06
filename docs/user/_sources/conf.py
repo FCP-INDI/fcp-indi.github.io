@@ -159,7 +159,7 @@ all_release_notes = """{}
        :hidden:
 
        {}
-       
+
 """.format(
     "\n".join([
         ".. include:: {}".format(fp) for fp in rnd
@@ -381,9 +381,9 @@ texinfo_documents = [
 
 rst_epilog = """
 
-    .. |Versions| replace:: {versions}
+.. |Versions| replace:: {versions}
 
-    .. |latest| replace:: ..include /release_notes/{latest}.txt
+.. |latest| replace:: ..include /release_notes/{latest}.txt
 
 """.format(
     versions=", ".join(gh_tags[:5]),

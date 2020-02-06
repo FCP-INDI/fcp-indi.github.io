@@ -152,7 +152,12 @@ for t in gh_tags:
         else:
             print(release_notes_path)
 
-rnd = [d for d in os.listdir(release_notes_dir) if d!="index.txt"]
+rnd = [
+    d for d in os.listdir(release_notes_dir) if d not in [
+        "index.txt",
+        "latest.txt"
+    ]
+]
 rnd.sort(key=sort_tag, reverse=True)
 
 all_release_notes = """{}
@@ -171,6 +176,11 @@ all_release_notes = """{}
 ]))
 with open(os.path.join(release_notes_dir, 'index.txt'), 'w+') as f:
     f.write(all_release_notes.strip())
+
+with open(os.path.join(release_notes_dir, 'latest.txt'), 'w+') as f:
+    ".. include:: /release_notes/{}.txt".format(
+        str([t for t in gh_tags if t in gh_releaseNotes.keys()][0])
+    )
 
 
 # The full version, including alpha/beta/rc tags.
@@ -385,9 +395,6 @@ rst_epilog = """
 
 .. |Versions| replace:: {versions}
 
-.. |latest| replace:: /release_notes/{latest}.txt
-
 """.format(
-    versions=", ".join(gh_tags[:5]),
-    latest=[t for t in gh_tags if t in gh_releaseNotes.keys()][0]
+    versions=", ".join(gh_tags[:5])
 )

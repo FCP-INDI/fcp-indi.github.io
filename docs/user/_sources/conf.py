@@ -98,7 +98,7 @@ def _unireplace(release_note, unireplace):
         e2 = str(e[2:])
         release_note = release_note.replace(
             e,
-            "|u{}|".format(e2)
+            " |u{}| ".format(e2)
         )
         unireplace[e2] = e
         return(_unireplace(release_note, unireplace))
@@ -106,10 +106,10 @@ def _unireplace(release_note, unireplace):
         release_note,
             "\n\n".join([
             ".. |u{e}| unicode:: {u}".format(
-                e=u[0],
-                u=u[1]
+                e=u,
+                u=v
             )
-        for u in unireplace])
+        for u, v in unireplace.items()])
     )
 
 this_dir = os.path.dirname(os.path.abspath(__file__))

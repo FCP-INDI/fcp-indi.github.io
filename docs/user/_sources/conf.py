@@ -147,12 +147,24 @@ for t in gh_tags:
         if gh_releaseNotes[t]['published_at'] and not os.path.exists(
             release_notes_path
         ) and not os.path.exists(
-            os.path.join(release_notes_dir, "v{}.txt".format(t)
+            os.path.join(release_notes_dir, "v{}.txt".format(t))
         ):
             with open(release_notes_path, 'w+') as f:
                 f.write(release_note)
         else:
             print(release_notes_path)
+
+        if tag_header.startswith("Latest"):
+            with open(os.path.join(release_notes_dir, 'latest.txt'), 'w+') as f:
+                """
+
+.. include:: /release_notes/{latest}.txt
+
+.. toctree::
+   :hidden:
+
+   /release_notes/{latest}.txt
+""".format(latest=str(t))
 
 rnd = [
     d for d in os.listdir(release_notes_dir) if d not in [
@@ -178,11 +190,6 @@ all_release_notes = """{}
 ]))
 with open(os.path.join(release_notes_dir, 'index.txt'), 'w+') as f:
     f.write(all_release_notes.strip())
-
-with open(os.path.join(release_notes_dir, 'latest.txt'), 'w+') as f:
-    ".. include:: /release_notes/{}.txt".format(
-        str([t for t in gh_tags if t in gh_releaseNotes.keys()][0])
-    )
 
 
 # The full version, including alpha/beta/rc tags.

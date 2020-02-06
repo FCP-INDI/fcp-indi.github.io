@@ -11,6 +11,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+import m2r
 import os
 import sys
 from CPAC import __version__
@@ -72,61 +73,75 @@ try:
             gh_releases.append(gh_cpac.get_release(t).raw_data)
         except (AttributeError, UnknownObjectException):
             print("No notes for {}".format(t))
-    gh_releaseNotes = {r['name']: {
+    gh_releaseNotes = {r['tag_name']: {
+        'name': r['name'],
         'body': r['body'],
         'published_at': r['published_at']
     } for r in gh_releases}
 except RateLimitExceededException:
     gh_releaseNotes = {
         t: {
+            "name": t,
             "body": "See https://github.com/FCP-INDI/C-PAC/releases/tag/{} for "
                     "release notes.".format(t),
             "published_at": None
         } for t in gh_tags
     }
 
+def sort_tag(t):
+    return(t[0:-4] if t[0].isdigit() else t[1:-4])
+
 this_dir = os.path.dirname(os.path.abspath(__file__))
 release_notes_dir = os.path.join(this_dir, "_sources", "release_notes")
-os.makedirs(release_notes_dir)
-all_release_notes = ""
+os.makedirs(release_notes_dir, exist_ok=True)
+
+# all_release_notes = ""
 for t in gh_tags:
     if t in gh_releaseNotes:
         tag_header = "{}{}{}".format(
             "Latest Release: " if t==gh_tags[0] else "",
-            t,
-            " ({}})".format(
+            gh_releaseNotes[t]['name'],
+            " ({})".format(
                 dparser.parse(gh_releaseNotes[t]['published_at']).date(
                 ).strftime("%b %w, %Y")
             ) if gh_releaseNotes[t]['published_at'] else ""
         )
-        release_note = """
-        {}
-        {}
-
-        {}
-
-        """.format(
+        release_note = """{}
+{}
+{}
+""".format(
             tag_header,
             "^"*len(tag_header),
-            gh_releaseNotes[t]
+            m2r.convert(gh_releaseNotes[t]['body'])
         )
-        all_release_notes =+ release_note
+#         all_release_notes = "\n".join([all_release_notes, release_note])
         release_notes_path = os.path.join(release_notes_dir, "{}.txt".format(t))
-        with open(release_notes_path, 'w+') as f:
-            f.write(relese_note)
+        if gh_releaseNotes[t]['published_at'] and not os.path.exists(
+            release_notes_path
+        ):
+            with open(release_notes_path, 'w+') as f:
+                f.write(release_note)
+        else:
+            print(release_notes_path)
 
-all_release_notes += """
+rnd = [d for d in os.listdir(release_notes_dir) if d!="index.txt"]
+rnd.sort(key=sort_tag, reverse=True)
+
+all_release_notes = """{}
+
     .. toctree::
        :hidden:
 
        {}
-""".format("\n".join([
-    "/release_notes/{}".format(fp) for fp in os.listdir(
-        release_notes_dir
-    ) if fp!="index.txt"
+""".format(
+    "\n".join([
+        ".. include:: {}".format(fp) for fp in rnd
+    ]),
+    "\n       ".join([
+    "/release_notes/{}".format(d) for d in rnd
 ]))
 with open(os.path.join(release_notes_dir, 'index.txt'), 'w+') as f:
-    f.write(all_release_notes)
+    f.write(all_release_notes.strip())
 
 
 # The full version, including alpha/beta/rc tags.

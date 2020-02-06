@@ -156,7 +156,8 @@ for t in gh_tags:
 
         if tag_header.startswith("Latest"):
             with open(os.path.join(release_notes_dir, 'latest.txt'), 'w+') as f:
-                """
+                f.write(
+                    """
 
 .. include:: /release_notes/{latest}.txt
 
@@ -165,6 +166,7 @@ for t in gh_tags:
 
    /release_notes/{latest}.txt
 """.format(latest=str(t))
+                )
 
 rnd = [
     d for d in os.listdir(release_notes_dir) if d not in [
@@ -174,18 +176,19 @@ rnd = [
 ]
 rnd.sort(key=sort_tag, reverse=True)
 
-all_release_notes = """{}
+all_release_notes = """
+{}
 
-    .. toctree::
-       :hidden:
+.. toctree::
+   :hidden:
 
-       {}
+   {}
 
 """.format(
     "\n".join([
-        ".. include:: {}".format(fp) for fp in rnd
+        ".. include:: /release_notes/{}".format(fp) for fp in rnd
     ]),
-    "\n       ".join([
+    "\n   ".join([
     "/release_notes/{}".format(d) for d in rnd
 ]))
 with open(os.path.join(release_notes_dir, 'index.txt'), 'w+') as f:

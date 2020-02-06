@@ -146,6 +146,8 @@ for t in gh_tags:
         release_notes_path = os.path.join(release_notes_dir, "{}.txt".format(t))
         if gh_releaseNotes[t]['published_at'] and not os.path.exists(
             release_notes_path
+        ) and not os.path.exists(
+            os.path.join(release_notes_dir, "v{}.txt".format(t)
         ):
             with open(release_notes_path, 'w+') as f:
                 f.write(release_note)

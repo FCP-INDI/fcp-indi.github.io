@@ -91,8 +91,27 @@ except RateLimitExceededException:
 def sort_tag(t):
     return(t[0:-4] if t[0].isdigit() else t[1:-4])
 
+def _unireplace(release_note, unireplace):
+    u = release_note.find('\u')
+    if (u!=-1):
+        e = release_note[u:u+6]
+        e2 = str(e[2:])
+        release_note = release_note.replace(
+            e,
+            "|u{}|".format(e2)
+        )
+        unireplace = "\n\n".join([
+            unireplace,
+            ".. |u{e}| unicode:: {u}".format(
+                e=e2,
+                u=e
+            )
+        ])
+        return(_unireplace(release_note, unireplace))
+    return(release_note, unireplace)
+
 this_dir = os.path.dirname(os.path.abspath(__file__))
-release_notes_dir = os.path.join(this_dir, "_sources", "release_notes")
+release_notes_dir = os.path.join(this_dir, "release_notes")
 if not os.path.exists(release_notes_dir):
     os.makedirs(release_notes_dir)
 
@@ -107,15 +126,21 @@ for t in gh_tags:
                 ).strftime("%b %w, %Y")
             ) if gh_releaseNotes[t]['published_at'] else ""
         )
-        release_note = """{}
+        release_note = "\n".join(_unireplace(
+            """{}
 {}
 {}
 """.format(
-            tag_header,
-            "^"*len(tag_header),
-            m2r.convert(gh_releaseNotes[t]['body'])
-        )
-#         all_release_notes = "\n".join([all_release_notes, release_note])
+                tag_header,
+                "^"*len(tag_header),
+                m2r.convert(gh_releaseNotes[t]['body'].encode(
+                    "ascii",
+                    errors="backslashreplace"
+                ).decode("utf-8"))
+            ),
+            ""
+        ))
+
         release_notes_path = os.path.join(release_notes_dir, "{}.txt".format(t))
         if gh_releaseNotes[t]['published_at'] and not os.path.exists(
             release_notes_path
@@ -134,6 +159,7 @@ all_release_notes = """{}
        :hidden:
 
        {}
+       
 """.format(
     "\n".join([
         ".. include:: {}".format(fp) for fp in rnd
@@ -354,9 +380,11 @@ texinfo_documents = [
 #texinfo_show_urls = 'footnote'
 
 rst_epilog = """
+
     .. |Versions| replace:: {versions}
 
     .. |latest| replace:: ..include /release_notes/{latest}.txt
+
 """.format(
     versions=", ".join(gh_tags[:5]),
     latest=[t for t in gh_tags if t in gh_releaseNotes.keys()][0]

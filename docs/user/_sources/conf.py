@@ -11,11 +11,14 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+import m2r
+import os
+import sys
 from CPAC import __version__
+from dateutil import parser as dparser
 from github import Github
-
-g = Github()
+from github.GithubException import RateLimitExceededException, \
+    UnknownObjectException
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -56,10 +59,128 @@ copyright = u'2020, C-PAC Team'
 # The short X.Y version.
 version = __version__
 
-### Last 5 version tags
-versions = [
-    t.name for t in g.get_user("FCP-INDI").get_repo("C-PAC").get_tags()
-][:5]
+# Get tags from GitHub
+# Set GITHUBTOKEN to your API token in your environment to increase rate limit.
+g = Github(os.environ.get("GITHUBTOKEN"))
+gh_cpac =  g.get_user("FCP-INDI").get_repo("C-PAC")
+gh_tags =  [t.name for t in gh_cpac.get_tags()]
+
+# Try to get release notes from GitHub
+try:
+    gh_releases = []
+    for t in gh_tags:
+        try:
+            gh_releases.append(gh_cpac.get_release(t).raw_data)
+        except (AttributeError, UnknownObjectException):
+            print("No notes for {}".format(t))
+    gh_releaseNotes = {r['tag_name']: {
+        'name': r['name'],
+        'body': r['body'],
+        'published_at': r['published_at']
+    } for r in gh_releases}
+except RateLimitExceededException:
+    gh_releaseNotes = {
+        t: {
+            "name": t,
+            "body": "See https://github.com/FCP-INDI/C-PAC/releases/tag/{} for "
+                    "release notes.".format(t),
+            "published_at": None
+        } for t in gh_tags
+    }
+
+def sort_tag(t):
+    return(t[0:-4] if t[0].isdigit() else t[1:-4])
+
+def _unireplace(release_note, unireplace):
+    u = release_note.find('\u')
+    if (u!=-1):
+        e = release_note[u:u+6]
+        e2 = str(e[2:])
+        release_note = release_note.replace(
+            e,
+            "|u{}|".format(e2)
+        )
+        unireplace[e2] = e
+        return(_unireplace(release_note, unireplace))
+    return(
+        release_note,
+            "\n\n".join([
+            ".. |u{e}| unicode:: {u}".format(
+                e=u[0],
+                u=u[1]
+            )
+        for u in unireplace])
+    )
+
+this_dir = os.path.dirname(os.path.abspath(__file__))
+release_notes_dir = os.path.join(this_dir, "release_notes")
+if not os.path.exists(release_notes_dir):
+    os.makedirs(release_notes_dir)
+
+# all_release_notes = ""
+for t in gh_tags:
+    if t in gh_releaseNotes:
+        tag_header = "{}{}{}".format(
+            "Latest Release: " if t==gh_tags[0] else "",
+            gh_releaseNotes[t]['name'],
+            " ({})".format(
+                dparser.parse(gh_releaseNotes[t]['published_at']).date(
+                ).strftime("%b %w, %Y")
+            ) if gh_releaseNotes[t]['published_at'] else ""
+        )
+        release_note = "\n".join(_unireplace(
+            """{}
+{}
+{}
+""".format(
+                tag_header,
+                "^"*len(tag_header),
+                m2r.convert(gh_releaseNotes[t]['body'].encode(
+                    "ascii",
+                    errors="backslashreplace"
+                ).decode("utf-8"))
+            ),
+            {}
+        ))
+
+        release_notes_path = os.path.join(release_notes_dir, "{}.txt".format(t))
+        if gh_releaseNotes[t]['published_at'] and not os.path.exists(
+            release_notes_path
+        ):
+            with open(release_notes_path, 'w+') as f:
+                f.write(release_note)
+        else:
+            print(release_notes_path)
+
+rnd = [
+    d for d in os.listdir(release_notes_dir) if d not in [
+        "index.txt",
+        "latest.txt"
+    ]
+]
+rnd.sort(key=sort_tag, reverse=True)
+
+all_release_notes = """{}
+
+    .. toctree::
+       :hidden:
+
+       {}
+
+""".format(
+    "\n".join([
+        ".. include:: {}".format(fp) for fp in rnd
+    ]),
+    "\n       ".join([
+    "/release_notes/{}".format(d) for d in rnd
+]))
+with open(os.path.join(release_notes_dir, 'index.txt'), 'w+') as f:
+    f.write(all_release_notes.strip())
+
+with open(os.path.join(release_notes_dir, 'latest.txt'), 'w+') as f:
+    ".. include:: /release_notes/{}.txt".format(
+        str([t for t in gh_tags if t in gh_releaseNotes.keys()][0])
+    )
 
 
 # The full version, including alpha/beta/rc tags.
@@ -270,4 +391,10 @@ texinfo_documents = [
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
 
-rst_epilog = ".. |Versions| replace:: {}".format(", ".join(versions))
+rst_epilog = """
+
+.. |Versions| replace:: {versions}
+
+""".format(
+    versions=", ".join(gh_tags[:5])
+)

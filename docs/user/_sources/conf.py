@@ -93,7 +93,8 @@ def sort_tag(t):
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 release_notes_dir = os.path.join(this_dir, "_sources", "release_notes")
-os.makedirs(release_notes_dir, exist_ok=True)
+if not os.path.exists(release_notes_dir):
+    os.makedirs(release_notes_dir)
 
 # all_release_notes = ""
 for t in gh_tags:

@@ -383,7 +383,7 @@ rst_epilog = """
 
 .. |Versions| replace:: {versions}
 
-.. |latest| replace:: ..include /release_notes/{latest}.txt
+.. |latest| replace:: {latest}
 
 """.format(
     versions=", ".join(gh_tags[:5]),

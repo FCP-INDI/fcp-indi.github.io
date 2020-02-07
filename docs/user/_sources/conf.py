@@ -14,6 +14,7 @@
 import m2r
 import os
 import sys
+
 from CPAC import __version__
 from dateutil import parser as dparser
 from github import Github
@@ -58,6 +59,7 @@ copyright = u'2020, C-PAC Team'
 #
 # The short X.Y version.
 version = __version__
+
 
 # Get tags from GitHub
 # Set GITHUBTOKEN to your API token in your environment to increase rate limit.

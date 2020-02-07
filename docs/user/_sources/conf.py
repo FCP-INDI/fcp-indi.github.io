@@ -49,6 +49,10 @@ source_suffix = '.txt'
 # The master toctree document.
 master_doc = 'index'
 
+# A list of warning types to suppress arbitrary warning messages.
+suppress_warnings = ['autosectionlabel.*']
+
+
 # General information about the project.
 project = u'C-PAC'
 copyright = u'2020, C-PAC Team'

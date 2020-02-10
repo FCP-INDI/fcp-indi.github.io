@@ -11,8 +11,15 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+import m2r
+import os
+import sys
+
 from CPAC import __version__
+from dateutil import parser as dparser
+from github import Github
+from github.GithubException import RateLimitExceededException, \
+    UnknownObjectException
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -28,7 +35,7 @@ sys.path.insert(0, os.path.abspath('.'))
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.mathjax',
               'sphinx.ext.ifconfig', 'sphinx.ext.viewcode',
-              'exec']
+              'sphinxcontrib.programoutput', 'exec', 'numpydoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -42,9 +49,13 @@ source_suffix = '.txt'
 # The master toctree document.
 master_doc = 'index'
 
+# A list of warning types to suppress arbitrary warning messages.
+suppress_warnings = ['autosectionlabel.*']
+
+
 # General information about the project.
 project = u'C-PAC'
-copyright = u'2019, C-PAC Team'
+copyright = u'2020, C-PAC Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -52,6 +63,150 @@ copyright = u'2019, C-PAC Team'
 #
 # The short X.Y version.
 version = __version__
+
+
+# Get tags from GitHub
+# Set GITHUBTOKEN to your API token in your environment to increase rate limit.
+g = Github(os.environ.get("GITHUBTOKEN"))
+gh_cpac =  g.get_user("FCP-INDI").get_repo("C-PAC")
+gh_tags =  [t.name for t in gh_cpac.get_tags()]
+
+# Try to get release notes from GitHub
+try:
+    gh_releases = []
+    for t in gh_tags:
+        try:
+            gh_releases.append(gh_cpac.get_release(t).raw_data)
+        except (AttributeError, UnknownObjectException):
+            print("No notes for {}".format(t))
+    gh_releaseNotes = {r['tag_name']: {
+        'name': r['name'],
+        'body': r['body'],
+        'published_at': r['published_at']
+    } for r in gh_releases}
+except RateLimitExceededException:
+    gh_releaseNotes = {
+        t: {
+            "name": t,
+            "body": "See https://github.com/FCP-INDI/C-PAC/releases/tag/{} for "
+                    "release notes.".format(t),
+            "published_at": None
+        } for t in gh_tags
+    }
+
+def sort_tag(t):
+    return(t[0:-4] if t[0].isdigit() else t[1:-4])
+
+def _unireplace(release_note, unireplace):
+    u = release_note.find('\u')
+    if (u!=-1):
+        e = release_note[u:u+6]
+        e2 = str(e[2:])
+        release_note = release_note.replace(
+            e,
+            " |u{}| ".format(e2)
+        )
+        unireplace[e2] = e
+        return(_unireplace(release_note, unireplace))
+    return(
+        release_note,
+            "\n\n".join([
+            ".. |u{e}| unicode:: {u}".format(
+                e=u,
+                u=v
+            )
+        for u, v in unireplace.items()])
+    )
+
+this_dir = os.path.dirname(os.path.abspath(__file__))
+release_notes_dir = os.path.join(this_dir, "release_notes")
+if not os.path.exists(release_notes_dir):
+    os.makedirs(release_notes_dir)
+latest_path = os.path.join(release_notes_dir, 'latest.txt')
+# all_release_notes = ""
+for t in gh_tags:
+    if t in gh_releaseNotes:
+        tag_header = "{}{}{}".format(
+            "Latest Release: " if t==gh_tags[0] else "",
+            (
+                gh_releaseNotes[t]['name'][4:] if (
+                    gh_releaseNotes[t]['name'].startswith("CPAC")
+                ) else gh_releaseNotes[t]['name'][5:] if (
+                    gh_releaseNotes[t]['name'].startswith("C-PAC")
+                ) else gh_releaseNotes[t]['name']
+            ).strip(),
+            " ({})".format(
+                dparser.parse(gh_releaseNotes[t]['published_at']).date(
+                ).strftime("%b %w, %Y")
+            ) if gh_releaseNotes[t]['published_at'] else ""
+        )
+        release_note = "\n".join(_unireplace(
+            """{}
+{}
+{}
+""".format(
+                tag_header,
+                "^"*len(tag_header),
+                m2r.convert(gh_releaseNotes[t]['body'].encode(
+                    "ascii",
+                    errors="backslashreplace"
+                ).decode("utf-8"))
+            ),
+            {}
+        ))
+
+        release_notes_path = os.path.join(release_notes_dir, "{}.txt".format(t))
+        if gh_releaseNotes[t]['published_at'] and not os.path.exists(
+            release_notes_path
+        ) and not os.path.exists(
+            os.path.join(release_notes_dir, "v{}.txt".format(t))
+        ):
+            with open(release_notes_path, 'w+') as f:
+                f.write(release_note)
+        else:
+            print(release_notes_path)
+
+        if tag_header.startswith("Latest") and not os.path.exists(latest_path):
+            with open(latest_path, 'w+') as f:
+                f.write(
+                    """
+
+.. include:: /release_notes/{latest}.txt
+
+.. toctree::
+   :hidden:
+
+   /release_notes/{latest}.txt
+""".format(latest=str(t))
+                )
+
+rnd = [
+    d for d in os.listdir(release_notes_dir) if d not in [
+        "index.txt",
+        "latest.txt"
+    ]
+]
+rnd.sort(key=sort_tag, reverse=True)
+
+all_release_notes = """
+{}
+
+.. toctree::
+   :hidden:
+
+   {}
+
+""".format(
+    "\n".join([
+        ".. include:: /release_notes/{}".format(fp) for fp in rnd
+    ]),
+    "\n   ".join([
+    "/release_notes/{}".format(d) for d in rnd
+]))
+with open(os.path.join(release_notes_dir, 'index.txt'), 'w+') as f:
+    f.write(all_release_notes.strip())
+
+
 # The full version, including alpha/beta/rc tags.
 release = '{} Beta'.format(__version__)
 
@@ -67,7 +222,7 @@ release = '{} Beta'.format(__version__)
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = []
+exclude_patterns = ["futuredocs/*"]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
@@ -141,7 +296,12 @@ html_static_path = ['_static']
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-html_sidebars = {'**': ['globaltoc.html', 'searchbox.html'] }
+html_sidebars = {
+  '**': [
+    'globaltoc.html',
+    'searchbox.html'
+  ]
+ }
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -171,7 +331,11 @@ html_sidebars = {'**': ['globaltoc.html', 'searchbox.html'] }
 #html_use_opensearch = ''
 
 # This is the file name suffix for HTML files (e.g. ".xhtml").
-#html_file_suffix = None
+html_file_suffix = ".html"
+
+# Suffix for generated links to HTML files
+html_link_suffix = ""
+link_suffix = ""
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'C-PACdoc'
@@ -250,3 +414,11 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
+
+rst_epilog = """
+
+.. |Versions| replace:: {versions}
+
+""".format(
+    versions=", ".join(gh_tags[:5])
+)

@@ -267,7 +267,7 @@ html_theme_options = {
 html_theme_path = ["../Themes"]
 
 html_css_files = [
-    '_static/custom.css',
+    'custom.css',
 ]
 
 # The name for this set of Sphinx documents.  If None, it defaults to

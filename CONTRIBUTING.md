@@ -26,6 +26,23 @@ Please, always change `source` branch. `master` branch will be overriden by the 
     1. Merge your draft / work-in-progress into your fork's `source` branch. Make sure you push to your fork and not the main repository's `source` branch.
     1. Your fork will publish at `https://[your_GitHub_username].github.io/fcp-indi.github.com/docs/user` and `https://[your_GitHub_username].github.io/fcp-indi.github.com/docs/developer`.
 
+## Flowcharts
+
+- SVGs exported from Lucidchart have scaling coded in in `width` and `height` XML attributes. Add the XML attributes `preserveAspectRatio="xMinYMin meet"` and `viewBox` to the SVG element in the actual SVG files:
+
+```xml
+<svg preserveAspectRatio="xMinYMin meet" viewBox="0 0 {width} {height}"></svg>
+```
+
+where `{width}` and `{height}` are the values already present in the existing `width` and `height` XML attributes.
+- Load SVGs in HTML `object` elements with the `raw:: html` directive to preserve hyperlinks and scaling:
+
+```rst
+.. raw:: html
+
+    <object data="_static/path/to/chart.svg" type="image/svg+xml"></object>
+```
+
 ## Environment notes
 * :snake: Until [C-PAC Python 2 → 3 conversion](https://github.com/FCP-INDI/C-PAC/issues/1114) is complete, these docs require Python 2.7 to build.
 * :heavy_plus_sign: Check [`.circleci/config.yml`](https://github.com/FCP-INDI/fcp-indi.github.com/blob/source/.circleci/config.yml) of the branch you're working from for build dependencies.

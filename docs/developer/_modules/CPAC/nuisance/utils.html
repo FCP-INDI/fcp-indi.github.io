@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>CPAC.nuisance.utils &#8212; C-PAC 1.6.0 Beta documentation</title>
+    <title>CPAC.nuisance.utils &#8212; C-PAC 1.6.1 Beta documentation</title>
     <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     
@@ -28,7 +28,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.6.0 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.6.1 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>  
@@ -41,23 +41,17 @@
   <h1>Source code for CPAC.nuisance.utils</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nb</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
 
-<span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="nn">pe</span>
-<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
-<span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="k">as</span> <span class="nn">fsl</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.ants</span> <span class="k">as</span> <span class="nn">ants</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="k">as</span> <span class="nn">fsl</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
+<span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="nn">pe</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="kn">import</span> <span class="n">afni</span>
 
-<span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.function</span> <span class="kn">import</span> <span class="n">Function</span>
-<span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.masktool</span> <span class="kn">import</span> <span class="n">MaskTool</span>
-<span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.brickstat</span> <span class="kn">import</span> <span class="n">BrickStat</span>
-
-<span class="kn">from</span> <span class="nn">CPAC.nuisance.utils.crc</span> <span class="kn">import</span> <span class="n">encode</span> <span class="k">as</span> <span class="n">crc_encode</span>
 <span class="kn">from</span> <span class="nn">CPAC.nuisance.utils.compcor</span> <span class="kn">import</span> <span class="n">calc_compcor_components</span>
-
-<span class="kn">import</span> <span class="nn">scipy.signal</span> <span class="k">as</span> <span class="nn">signal</span>
+<span class="kn">from</span> <span class="nn">CPAC.nuisance.utils.crc</span> <span class="kn">import</span> <span class="n">encode</span> <span class="k">as</span> <span class="n">crc_encode</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.function</span> <span class="kn">import</span> <span class="n">Function</span>
 
 
 <div class="viewcode-block" id="find_offending_time_points"><a class="viewcode-back" href="../../../workflows/nuisance.html#CPAC.nuisance.find_offending_time_points">[docs]</a><span class="k">def</span> <span class="nf">find_offending_time_points</span><span class="p">(</span><span class="n">fd_j_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fd_p_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dvars_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -190,7 +184,7 @@
     <span class="k">return</span> <span class="n">d</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> <span class="n">threshold_sd</span> <span class="o">*</span> <span class="n">d</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
 
 
-<span class="k">def</span> <span class="nf">temporal_variance_mask</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">by_slice</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">temporal_variance_mask</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">by_slice</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">erosion</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">degree</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 
     <span class="n">threshold_method</span> <span class="o">=</span> <span class="s2">&quot;VAR&quot;</span>
 
@@ -231,7 +225,8 @@
     <span class="n">input_node</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;functional_file_path&#39;</span><span class="p">,</span> <span class="s1">&#39;mask_file_path&#39;</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
     <span class="n">output_node</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mask&#39;</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
 
-    <span class="n">detrend</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">afni</span><span class="o">.</span><span class="n">Detrend</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="s1">&#39;-polort 1&#39;</span><span class="p">,</span> <span class="n">outputtype</span><span class="o">=</span><span class="s1">&#39;NIFTI&#39;</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;detrend&#39;</span><span class="p">)</span>
+    <span class="c1"># C-PAC default performs linear regression while nipype performs quadratic regression</span>
+    <span class="n">detrend</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">afni</span><span class="o">.</span><span class="n">Detrend</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="s1">&#39;-polort </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">degree</span><span class="p">),</span> <span class="n">outputtype</span><span class="o">=</span><span class="s1">&#39;NIFTI&#39;</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;detrend&#39;</span><span class="p">)</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;functional_file_path&#39;</span><span class="p">,</span> <span class="n">detrend</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
     <span class="n">std</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">afni</span><span class="o">.</span><span class="n">TStat</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="s1">&#39;-nzstdev&#39;</span><span class="p">,</span> <span class="n">outputtype</span><span class="o">=</span><span class="s1">&#39;NIFTI&#39;</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;std&#39;</span><span class="p">)</span>
@@ -312,7 +307,8 @@
                                    <span class="n">pipeline_resource_pool</span><span class="p">,</span>
                                    <span class="n">regressor_descriptor</span><span class="p">,</span>
                                    <span class="n">regressor_selector</span><span class="p">,</span>
-                                   <span class="n">use_ants</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                                   <span class="n">use_ants</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                   <span class="n">ventricle_mask_exist</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Add tissue mask generation into pipeline according to the selector.</span>
 
@@ -367,7 +363,7 @@
 
             <span class="k">if</span> <span class="n">regressor_selector</span><span class="p">[</span><span class="s1">&#39;extraction_resolution&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Functional&quot;</span><span class="p">:</span>
                 <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span>
-                    <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;Functional&#39;</span><span class="p">]</span> <span class="o">+</span>
+                    <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;Functional_mean&#39;</span><span class="p">]</span> <span class="o">+</span>
                     <span class="p">(</span><span class="n">mask_to_epi</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
                 <span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
@@ -395,7 +391,8 @@
                     <span class="n">regressor_descriptor</span><span class="p">,</span>
                     <span class="n">regressor_selector</span><span class="p">,</span>
                     <span class="n">node_mask_key</span><span class="p">,</span>
-                    <span class="n">use_ants</span>
+                    <span class="n">use_ants</span><span class="p">,</span>
+                    <span class="n">ventricle_mask_exist</span>
                 <span class="p">)</span>
 
         <span class="k">elif</span> <span class="n">step</span> <span class="o">==</span> <span class="s1">&#39;erosion&#39;</span><span class="p">:</span>
@@ -422,7 +419,8 @@
                                                       <span class="n">regressor_descriptor</span><span class="p">,</span>
                                                       <span class="n">regressor_selector</span><span class="p">,</span>
                                                       <span class="n">mask_key</span><span class="p">,</span>
-                                                      <span class="n">use_ants</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                                                      <span class="n">use_ants</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                      <span class="n">ventricle_mask_exist</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 
     <span class="c1"># Mask CSF with Ventricles</span>
     <span class="k">if</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_Unmasked&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mask_key</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pipeline_resource_pool</span><span class="p">:</span>
@@ -432,60 +430,62 @@
         <span class="n">mask_csf_with_lat_ven</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="s1">&#39;a*b&#39;</span>
         <span class="n">mask_csf_with_lat_ven</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_file</span> <span class="o">=</span> <span class="s1">&#39;csf_lat_ven_mask.nii.gz&#39;</span>
 
-        <span class="n">ventricles_key</span> <span class="o">=</span> <span class="s1">&#39;VentriclesToAnat&#39;</span>
-        <span class="k">if</span> <span class="s1">&#39;resolution&#39;</span> <span class="ow">in</span> <span class="n">regressor_descriptor</span><span class="p">:</span>
-            <span class="n">ventricles_key</span> <span class="o">+=</span> <span class="s1">&#39;_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">regressor_descriptor</span><span class="p">[</span><span class="s1">&#39;resolution&#39;</span><span class="p">])</span>
-    
-        <span class="k">if</span> <span class="n">ventricles_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pipeline_resource_pool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ventricle_mask_exist</span> <span class="p">:</span> 
+            <span class="n">ventricles_key</span> <span class="o">=</span> <span class="s1">&#39;VentriclesToAnat&#39;</span>
+            <span class="k">if</span> <span class="s1">&#39;resolution&#39;</span> <span class="ow">in</span> <span class="n">regressor_descriptor</span><span class="p">:</span>
+                <span class="n">ventricles_key</span> <span class="o">+=</span> <span class="s1">&#39;_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">regressor_descriptor</span><span class="p">[</span><span class="s1">&#39;resolution&#39;</span><span class="p">])</span>
 
-            <span class="n">transforms</span> <span class="o">=</span> <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;Transformations&#39;</span><span class="p">]</span>
-            
-            <span class="k">if</span> <span class="n">use_ants</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ventricles_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pipeline_resource_pool</span><span class="p">:</span>
 
-                <span class="c1"># perform the transform using ANTS</span>
-                <span class="n">collect_linear_transforms</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Merge</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_ants_transforms&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ventricles_key</span><span class="p">))</span>
+                <span class="n">transforms</span> <span class="o">=</span> <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;Transformations&#39;</span><span class="p">]</span>
+                
+                <span class="k">if</span> <span class="n">use_ants</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
 
-                <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">transforms</span><span class="p">[</span><span class="s1">&#39;anat_to_mni_initial_xfm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">collect_linear_transforms</span><span class="p">,</span> <span class="s1">&#39;in1&#39;</span><span class="p">)))</span>
-                <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">transforms</span><span class="p">[</span><span class="s1">&#39;anat_to_mni_rigid_xfm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">collect_linear_transforms</span><span class="p">,</span> <span class="s1">&#39;in2&#39;</span><span class="p">)))</span>
-                <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">transforms</span><span class="p">[</span><span class="s1">&#39;anat_to_mni_affine_xfm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">collect_linear_transforms</span><span class="p">,</span> <span class="s1">&#39;in3&#39;</span><span class="p">)))</span>
+                    <span class="c1"># perform the transform using ANTS</span>
+                    <span class="n">collect_linear_transforms</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Merge</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_ants_transforms&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ventricles_key</span><span class="p">))</span>
 
-                <span class="n">lat_ven_mni_to_anat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">ants</span><span class="o">.</span><span class="n">ApplyTransforms</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_ants&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ventricles_key</span><span class="p">))</span>
-                <span class="n">lat_ven_mni_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">invert_transform_flags</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">]</span>
-                <span class="n">lat_ven_mni_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="s1">&#39;NearestNeighbor&#39;</span>
-                <span class="n">lat_ven_mni_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="mi">3</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">transforms</span><span class="p">[</span><span class="s1">&#39;anat_to_mni_initial_xfm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">collect_linear_transforms</span><span class="p">,</span> <span class="s1">&#39;in1&#39;</span><span class="p">)))</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">transforms</span><span class="p">[</span><span class="s1">&#39;anat_to_mni_rigid_xfm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">collect_linear_transforms</span><span class="p">,</span> <span class="s1">&#39;in2&#39;</span><span class="p">)))</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">transforms</span><span class="p">[</span><span class="s1">&#39;anat_to_mni_affine_xfm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">collect_linear_transforms</span><span class="p">,</span> <span class="s1">&#39;in3&#39;</span><span class="p">)))</span>
 
-                <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">collect_linear_transforms</span><span class="p">,</span> <span class="s1">&#39;out&#39;</span><span class="p">,</span> <span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;transforms&#39;</span><span class="p">)</span>
+                    <span class="n">lat_ven_mni_to_anat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">ants</span><span class="o">.</span><span class="n">ApplyTransforms</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_ants&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ventricles_key</span><span class="p">))</span>
+                    <span class="n">lat_ven_mni_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">invert_transform_flags</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">]</span>
+                    <span class="n">lat_ven_mni_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="s1">&#39;NearestNeighbor&#39;</span>
+                    <span class="n">lat_ven_mni_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="mi">3</span>
 
-                <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;Ventricles&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;input_image&#39;</span><span class="p">)))</span>
-                <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;reference_image&#39;</span><span class="p">)))</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">collect_linear_transforms</span><span class="p">,</span> <span class="s1">&#39;out&#39;</span><span class="p">,</span> <span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;transforms&#39;</span><span class="p">)</span>
 
-                <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">ventricles_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;output_image&#39;</span><span class="p">)</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;Ventricles&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;input_image&#39;</span><span class="p">)))</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;reference_image&#39;</span><span class="p">)))</span>
 
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># perform the transform using FLIRT</span>
-                <span class="n">lat_ven_mni_to_anat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_flirt&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ventricles_key</span><span class="p">))</span>
-                <span class="n">lat_ven_mni_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;nearestneighbour&#39;</span>
+                    <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">ventricles_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;output_image&#39;</span><span class="p">)</span>
 
-                <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">transforms</span><span class="p">[</span><span class="s1">&#39;mni_to_anat_linear_xfm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;in_matrix_file&#39;</span><span class="p">)))</span>
-                <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;Ventricles&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)))</span>
-                <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># perform the transform using FLIRT</span>
+                    <span class="n">lat_ven_mni_to_anat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_flirt&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ventricles_key</span><span class="p">))</span>
+                    <span class="n">lat_ven_mni_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;nearestneighbour&#39;</span>
 
-                <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">ventricles_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">transforms</span><span class="p">[</span><span class="s1">&#39;mni_to_anat_linear_xfm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;in_matrix_file&#39;</span><span class="p">)))</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;Ventricles&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)))</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)))</span>
 
-        <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">ventricles_key</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">mask_csf_with_lat_ven</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)))</span>
-        <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">mask_csf_with_lat_ven</span><span class="p">,</span> <span class="s1">&#39;in_file_b&#39;</span><span class="p">)))</span>
+                    <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">ventricles_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
 
-        <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_Unmasked&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mask_key</span><span class="p">)]</span> <span class="o">=</span> <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span>
-        <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">mask_csf_with_lat_ven</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+            <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">ventricles_key</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">mask_csf_with_lat_ven</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)))</span>
+            <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">mask_csf_with_lat_ven</span><span class="p">,</span> <span class="s1">&#39;in_file_b&#39;</span><span class="p">)))</span>
+
+            <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_Unmasked&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mask_key</span><span class="p">)]</span> <span class="o">=</span> <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span>
+            <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">mask_csf_with_lat_ven</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+        <span class="k">else</span> <span class="p">:</span>
+            <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_Unmasked&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mask_key</span><span class="p">)]</span> <span class="o">=</span> <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">pipeline_resource_pool</span>
 
 
 <span class="k">class</span> <span class="nc">NuisanceRegressor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">selectors</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">selector</span> <span class="o">=</span> <span class="n">selector</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">selectors</span> <span class="o">=</span> <span class="n">selectors</span>
 
         <span class="k">if</span> <span class="s1">&#39;Bandpass&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">selector</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selector</span><span class="p">[</span><span class="s1">&#39;Bandpass&#39;</span><span class="p">]</span>
@@ -545,34 +545,20 @@
         <span class="k">return</span> <span class="n">rep</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">selectors</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="n">regs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;GreyMatter&#39;</span><span class="p">:</span> <span class="s1">&#39;GM&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;WhiteMatter&#39;</span><span class="p">:</span> <span class="s1">&#39;WM&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;CerebrospinalFluid&#39;</span><span class="p">:</span> <span class="s1">&#39;CSF&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;tCompCor&#39;</span><span class="p">:</span> <span class="s1">&#39;tC&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;aCompCor&#39;</span><span class="p">:</span> <span class="s1">&#39;aC&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;GlobalSignal&#39;</span><span class="p">:</span> <span class="s1">&#39;G&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;Motion&#39;</span><span class="p">:</span> <span class="s1">&#39;M&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;Custom&#39;</span><span class="p">:</span> <span class="s1">&#39;T&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;PolyOrt&#39;</span><span class="p">:</span> <span class="s1">&#39;P&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;Bandpass&#39;</span><span class="p">:</span> <span class="s1">&#39;BP&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;Censor&#39;</span><span class="p">:</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span>
-        <span class="p">}</span>
-
-        <span class="n">regs_order</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s1">&#39;GreyMatter&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;WhiteMatter&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;CerebrospinalFluid&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;tCompCor&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;aCompCor&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;GlobalSignal&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;Motion&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;Custom&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;PolyOrt&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;Bandpass&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;Censor&#39;</span><span class="p">,</span>
-        <span class="p">]</span>
+    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="n">selector</span><span class="p">):</span>
+        <span class="n">regs</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">([</span>
+            <span class="p">(</span><span class="s1">&#39;GreyMatter&#39;</span><span class="p">,</span> <span class="s1">&#39;GM&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;WhiteMatter&#39;</span><span class="p">,</span> <span class="s1">&#39;WM&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;CerebrospinalFluid&#39;</span><span class="p">,</span> <span class="s1">&#39;CSF&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;tCompCor&#39;</span><span class="p">,</span> <span class="s1">&#39;tC&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;aCompCor&#39;</span><span class="p">,</span> <span class="s1">&#39;aC&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;GlobalSignal&#39;</span><span class="p">,</span> <span class="s1">&#39;G&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;Motion&#39;</span><span class="p">,</span> <span class="s1">&#39;M&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;Custom&#39;</span><span class="p">,</span> <span class="s1">&#39;T&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;PolyOrt&#39;</span><span class="p">,</span> <span class="s1">&#39;P&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;Bandpass&#39;</span><span class="p">,</span> <span class="s1">&#39;BP&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;Censor&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">)</span>
+        <span class="p">])</span>
 
         <span class="n">tissues</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;GreyMatter&#39;</span><span class="p">,</span> <span class="s1">&#39;WhiteMatter&#39;</span><span class="p">,</span> <span class="s1">&#39;CerebrospinalFluid&#39;</span><span class="p">]</span>
 
@@ -591,7 +577,7 @@
         <span class="c1"># P-2</span>
         <span class="c1"># B-T0.01-B0.1</span>
 
-        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">regs_order</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">regs</span><span class="o">.</span><span class="n">iterkeys</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">r</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">selector</span><span class="p">:</span>
                 <span class="k">continue</span>
 
@@ -619,6 +605,11 @@
                     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">:</span>
                         <span class="n">t</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">t</span>
                     <span class="n">threshold</span> <span class="o">+=</span> <span class="n">t</span>
+                <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;erode_mask&#39;</span><span class="p">):</span> 
+                    <span class="n">threshold</span> <span class="o">+=</span> <span class="s1">&#39;E&#39;</span>
+                <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;degree&#39;</span><span class="p">):</span>
+                    <span class="n">d</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;degree&#39;</span><span class="p">)</span>
+                    <span class="n">threshold</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
 
                 <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="n">threshold</span><span class="p">]</span>
                 <span class="n">pieces</span> <span class="o">+=</span> <span class="p">[</span><span class="n">NuisanceRegressor</span><span class="o">.</span><span class="n">_summary_params</span><span class="p">(</span><span class="n">s</span><span class="p">)]</span>
@@ -699,10 +690,7 @@
         <span class="k">return</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">selectors_representations</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">NuisanceRegressor</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">selector</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">selectors</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">NuisanceRegressor</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selector</span><span class="p">)</span>
 </pre></div>
 
           </div>
@@ -738,7 +726,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.6.0 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.6.1 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>

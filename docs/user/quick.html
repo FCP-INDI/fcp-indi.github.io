@@ -71,7 +71,15 @@
 <span class="go">        fcpindi/c-pac:latest s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant</span>
 </pre></div>
 </div>
-<p>To run the C-PAC Docker container with a pipeline configuration file other than the container’s default pipeline, assuming the configuration file is in the <code class="docutils literal notranslate"><span class="pre">/Users/You/Documents</span></code> directory:</p>
+<p>In addition to the default pipeline, C-PAC comes packaged with a growing library of pre-configured pipelines that are ready to use. To run the C-PAC Docker container with one of the pre-packaged pre-configured pipelines, simply invoke the <code class="docutils literal notranslate"><span class="pre">--preconfig</span></code> flag, shown below. See the full selection of pre-configured pipelines <a class="reference internal" href="preconfig"><span class="doc">here</span></a>.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker run -i --rm \</span>
+<span class="go">        -v /Users/You/local_bids_data:/bids_dataset \</span>
+<span class="go">        -v /Users/You/some_folder:/outputs \</span>
+<span class="go">        -v /tmp:/tmp \</span>
+<span class="go">        fcpindi/c-pac:latest /bids_dataset /outputs --preconfig anat-only</span>
+</pre></div>
+</div>
+<p>To run the C-PAC Docker container with a pipeline configuration file other than one of the pre-configured pipelines, assuming the configuration file is in the <code class="docutils literal notranslate"><span class="pre">/Users/You/Documents</span></code> directory:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">docker run -i --rm \</span>
 <span class="go">        -v /Users/You/local_bids_data:/bids_dataset \</span>
 <span class="go">        -v /Users/You/some_folder:/outputs \</span>
@@ -249,14 +257,31 @@ optional arguments:
 <span class="go">        -B /Users/You/local_bids_data:/bids_dataset \</span>
 <span class="go">        -B /Users/You/some_folder:/outputs \</span>
 <span class="go">        -B /tmp:/tmp \</span>
-<span class="go">        FCP-INDI-C-PAC-master-latest.simg /bids_dataset /outputs participant</span>
+<span class="go">        FCP-INDI-C-PAC-master-latest.simg \</span>
+<span class="go">        /bids_dataset \</span>
+<span class="go">        /outputs \</span>
+<span class="go">        participant</span>
 </pre></div>
 </div>
 <p>Again, you can also provide an AWS S3 link for the data:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">singularity run \</span>
 <span class="go">        -B /Users/You/some_folder:/outputs \</span>
 <span class="go">        -B /tmp:/tmp \</span>
-<span class="go">        FCP-INDI-C-PAC-master-latest.simg s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant</span>
+<span class="go">        FCP-INDI-C-PAC-master-latest.simg \</span>
+<span class="go">        s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS \</span>
+<span class="go">        /outputs \</span>
+<span class="go">        participant</span>
+</pre></div>
+</div>
+<p>As mentioned above, in addition to the default pipeline, C-PAC comes packaged with a growing library of pre-configured pipelines that are ready to use. Once again, you can use the <code class="docutils literal notranslate"><span class="pre">--preconfig</span></code> flag with Singularity to run any of the pre-configured pipelines. See the full selection of pre-configured pipelines <a class="reference internal" href="preconfig"><span class="doc">here</span></a>.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">singularity run \</span>
+<span class="go">        -B /Users/You/some_folder:/outputs \</span>
+<span class="go">        -B /tmp:/tmp \</span>
+<span class="go">        FCP-INDI-C-PAC-master-latest.simg \</span>
+<span class="go">        s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS \</span>
+<span class="go">        /outputs \</span>
+<span class="go">        participant \</span>
+<span class="go">        --preconfig anat-only</span>
 </pre></div>
 </div>
 </div>
@@ -279,6 +304,11 @@ optional arguments:
 <li><strong>Seed correlation analysis (SCA):</strong> preprocessed fMRI data is to match template that includes 160 regions of interest defined from a meta-analysis of different task results [19]. A time series is calculated for each region from the mean of all intra-ROI voxel time series. A separate functional connectivity map is calculated per ROI by correlating its time course with the time courses of every other voxel in the brain. Resulting values are Fisher transformed, written into MNI space at 2mm resolution, and then spatial smoothed using a 6mm FWHM kernel.</li>
 <li><strong>Time series extraction:</strong> similar the procedure used for time series analysis, the preprocessed functional data is written into MNI space at 2mm and then time series for the various atlases are extracted by averaging within region voxel time courses. This procedure was used to generate summary time series for the automated anatomic labelling atlas [20], Eickhoff-Zilles atlas [21], Harvard-Oxford atlas [22], Talaraich and Tournoux atlas [23], 200 and 400 regions from the spatially constrained clustering voxel timeseries [24], and 160 ROIs from a meta-analysis of task results [19]. Time series for 10 ICNs were extracted using spatial regression.</li>
 </ul>
+</div>
+<div class="section" id="pre-configured-pipelines">
+<h2>Pre-configured Pipelines<a class="headerlink" href="#pre-configured-pipelines" title="Permalink to this headline">¶</a></h2>
+<p>In addition to the default pipeline, C-PAC comes packaged with a growing library of pre-configured pipelines that are ready to use. They can be invoked when running C-PAC using the <code class="docutils literal notranslate"><span class="pre">--preconfig</span></code> flag detailed above.</p>
+<p>Detailed information about the selection of pre-configured pipelines are <a class="reference internal" href="preconfig"><span class="doc">available here</span></a>.</p>
 </div>
 <div class="section" id="design-a-pipeline">
 <h2>Design A Pipeline<a class="headerlink" href="#design-a-pipeline" title="Permalink to this headline">¶</a></h2>
@@ -380,6 +410,7 @@ optional arguments:
 <li class="toctree-l2"><a class="reference internal" href="#run-on-docker">Run on Docker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#run-on-singularity">Run on Singularity</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#default-pipeline">Default Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pre-configured-pipelines">Pre-configured Pipelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#design-a-pipeline">Design A Pipeline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#acknowledgments">Acknowledgments</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>

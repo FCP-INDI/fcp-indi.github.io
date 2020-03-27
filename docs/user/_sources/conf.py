@@ -54,8 +54,8 @@ suppress_warnings = ['autosectionlabel.*']
 
 
 # General information about the project.
-project = 'C-PAC'
-copyright = '2020, C-PAC Team'
+project = u'C-PAC'
+copyright = u'2020, C-PAC Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -68,8 +68,36 @@ version = __version__
 # Get tags from GitHub
 # Set GITHUBTOKEN to your API token in your environment to increase rate limit.
 g = Github(os.environ.get("GITHUBTOKEN"))
-gh_cpac =  g.get_user("FCP-INDI").get_repo("C-PAC")
-gh_tags =  [t.name for t in gh_cpac.get_tags()]
+
+def _gh_rate_limit():
+    print("""Release notes not updated due to GitHub API rate limit.
+
+       MMM.           .MMM      __________________________________________
+       MMMMMMMMMMMMMMMMMMM     |                                          |
+       MMMMMMMMMMMMMMMMMMM     | Set GITHUBTOKEN to your API token in     |
+      MMMMMMMMMMMMMMMMMMMMM    | your environment to increase rate limit. |
+     MMMMMMMMMMMMMMMMMMMMMMM   | See CONTRIBUTING.md#environment-notes    |
+    MMMMMMMMMMMMMMMMMMMMMMMM   |_   ______________________________________|
+    MMMM::- -:::::::- -::MMMM    |/
+     MM~:~ 00~:::::~ 00~:~MM
+.. MMMMM::.00:::+:::.00::MMMMM ..
+      .MM::::: ._. :::::MM.
+         MMMM;:::::;MMMM
+  -MM        MMMMMMM
+  ^  M+     MMMMMMMMM
+      MMMMMMM MM MM MM
+           MM MM MM MM
+           MM MM MM MM
+        .~~MM~MM~MM~MM~~.
+     ~~~~MM:~MM~~~MM~:MM~~~~
+""")
+
+try:
+    gh_cpac = g.get_user("FCP-INDI").get_repo("C-PAC")
+    gh_tags = [t.name for t in gh_cpac.get_tags()]
+except RateLimitExceededException:
+    _gh_rate_limit()
+    gh_tags = []
 gh_tags.sort(reverse=True)
 
 # Try to get release notes from GitHub
@@ -86,6 +114,7 @@ try:
         'published_at': r['published_at']
     } for r in gh_releases}
 except RateLimitExceededException:
+    _gh_rate_limit()
     gh_releaseNotes = {
         t: {
             "name": t,
@@ -362,8 +391,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'C-PAC.tex', 'C-PAC Documentation',
-   'C-PAC Team', 'manual'),
+  ('index', 'C-PAC.tex', u'C-PAC Documentation',
+   u'C-PAC Team', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -392,8 +421,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'c-pac', 'C-PAC Documentation',
-     ['C-PAC Team'], 1)
+    ('index', 'c-pac', u'C-PAC Documentation',
+     [u'C-PAC Team'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -406,8 +435,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'C-PAC', 'C-PAC Documentation',
-   'C-PAC Team', 'C-PAC', 'One line description of project.',
+  ('index', 'C-PAC', u'C-PAC Documentation',
+   u'C-PAC Team', 'C-PAC', 'One line description of project.',
    'Miscellaneous'),
 ]
 

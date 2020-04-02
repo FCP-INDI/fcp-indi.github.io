@@ -68,8 +68,37 @@ version = __version__
 # Get tags from GitHub
 # Set GITHUBTOKEN to your API token in your environment to increase rate limit.
 g = Github(os.environ.get("GITHUBTOKEN"))
-gh_cpac =  g.get_user("FCP-INDI").get_repo("C-PAC")
-gh_tags =  [t.name for t in gh_cpac.get_tags()]
+
+def _gh_rate_limit():
+    print("""Release notes not updated due to GitHub API rate limit.
+
+       MMM.           .MMM      __________________________________________
+       MMMMMMMMMMMMMMMMMMM     |                                          |
+       MMMMMMMMMMMMMMMMMMM     | Set GITHUBTOKEN to your API token in     |
+      MMMMMMMMMMMMMMMMMMMMM    | your environment to increase rate limit. |
+     MMMMMMMMMMMMMMMMMMMMMMM   | See CONTRIBUTING.md#environment-notes    |
+    MMMMMMMMMMMMMMMMMMMMMMMM   |_   ______________________________________|
+    MMMM::- -:::::::- -::MMMM    |/
+     MM~:~ 00~:::::~ 00~:~MM
+.. MMMMM::.00:::+:::.00::MMMMM ..
+      .MM::::: ._. :::::MM.
+         MMMM;:::::;MMMM
+  -MM        MMMMMMM
+  ^  M+     MMMMMMMMM
+      MMMMMMM MM MM MM
+           MM MM MM MM
+           MM MM MM MM
+        .~~MM~MM~MM~MM~~.
+     ~~~~MM:~MM~~~MM~:MM~~~~
+""")
+
+try:
+    gh_cpac = g.get_user("FCP-INDI").get_repo("C-PAC")
+    gh_tags = [t.name for t in gh_cpac.get_tags()]
+except RateLimitExceededException:
+    _gh_rate_limit()
+    gh_tags = []
+gh_tags.sort(reverse=True)
 
 # Try to get release notes from GitHub
 try:
@@ -85,6 +114,7 @@ try:
         'published_at': r['published_at']
     } for r in gh_releases}
 except RateLimitExceededException:
+    _gh_rate_limit()
     gh_releaseNotes = {
         t: {
             "name": t,

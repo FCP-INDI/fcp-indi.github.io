@@ -70,6 +70,7 @@ version = __version__
 g = Github(os.environ.get("GITHUBTOKEN"))
 gh_cpac =  g.get_user("FCP-INDI").get_repo("C-PAC")
 gh_tags =  [t.name for t in gh_cpac.get_tags()]
+gh_tags.sort(reverse=True)
 
 # Try to get release notes from GitHub
 try:

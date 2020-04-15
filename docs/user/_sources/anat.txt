@@ -164,6 +164,8 @@ Configuring CPAC to Run Anatomical Registration
 
 #. **Interpolation Method - [Linear, BSpline, LanczosWindowedSinc]:** Interpolation method for writing out transformed anatomical images. ANTS registration tools only. Options are Linear, BSpline, or LanczosWindowedSinc.
 
+#. **ANTs Registration Parameters :** Clicking on the setting icon will bring up a dialog where you can set 'antsRegistration' parameters. 
+
 #. **FNIRT Configuration - [path]:** Configuration file specifying settings used during registration. Required if FSL is selected as the registration method. This file can be found in the :file:`/etc/flirtsch` directory of your FSL install.
 
 #. **FNIRT Reference Mask - [path]:** A reference mask to be used by FNIRT.
@@ -192,6 +194,62 @@ The box below contains an example of what these parameters might look like when 
     ref_mask : $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain_mask_symmetric_dil.nii.gz
     regWithSkull : [0]
     already_skullstripped : [0]
+    ANTs_para_T1_registration:
+        - collapse-output-transforms: 0
+        - dimensionality: 3
+        - initial-moving-transform : 
+            initializationFeature: 0       
+        - transforms:
+            - Rigid: 
+                gradientStep : 0.1
+                metric : 
+                    type : MI     
+                    metricWeight: 1
+                    numberOfBins : 32
+                    samplingStrategy : Regular
+                    samplingPercentage : 0.25
+                convergence: 
+                    iteration : 1000x500x250x100
+                    convergenceThreshold : 1e-08
+                    convergenceWindowSize : 10
+                smoothing-sigmas : 3.0x2.0x1.0x0.0
+                shrink-factors : 8x4x2x1
+                use-histogram-matching : True
+            - Affine: 
+                gradientStep : 0.1
+                metric : 
+                    type : MI       
+                    metricWeight: 1
+                    numberOfBins : 32
+                    samplingStrategy : Regular
+                    samplingPercentage : 0.25        
+                convergence: 
+                    iteration : 1000x500x250x100
+                    convergenceThreshold : 1e-08
+                    convergenceWindowSize : 10
+                smoothing-sigmas : 3.0x2.0x1.0x0.0
+                shrink-factors : 8x4x2x1
+                use-histogram-matching : True
+            - SyN: 
+                gradientStep : 0.1
+                updateFieldVarianceInVoxelSpace : 3.0
+                totalFieldVarianceInVoxelSpace : 0.0
+                metric: 
+                    type : CC
+                    metricWeight: 1
+                    radius : 4
+                convergence: 
+                    iteration : 100x100x70x20
+                    convergenceThreshold : 1e-09
+                    convergenceWindowSize : 15
+                smoothing-sigmas : 3.0x2.0x1.0x0.0
+                shrink-factors : 6x4x2x1
+                use-histogram-matching : True
+                winsorize-image-intensities :
+                    lowerQuantile : 0.01
+                    upperQuantile : 0.99    
+
+
 
 Anatomical Tissue Segmentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

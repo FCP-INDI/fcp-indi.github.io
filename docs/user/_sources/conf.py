@@ -99,6 +99,7 @@ try:
 except RateLimitExceededException:
     _gh_rate_limit()
     gh_tags = []
+
 gh_tags.sort(reverse=True)
 
 # Try to get release notes from GitHub

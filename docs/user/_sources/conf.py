@@ -55,8 +55,8 @@ suppress_warnings = ['autosectionlabel.*']
 
 
 # General information about the project.
-project = u'C-PAC'
-copyright = u'2020, C-PAC Team'
+project = 'C-PAC'
+copyright = '2020, C-PAC Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -99,7 +99,6 @@ try:
 except RateLimitExceededException:
     _gh_rate_limit()
     gh_tags = []
-
 gh_tags.sort(reverse=True)
 
 # Try to get release notes from GitHub
@@ -109,7 +108,7 @@ try:
         try:
             gh_releases.append(gh_cpac.get_release(t).raw_data)
         except (AttributeError, UnknownObjectException):
-            print("No notes for {}".format(t))
+            print(f"No notes for {t}")
     gh_releaseNotes = {r['tag_name']: {
         'name': r['name'],
         'body': r['body'],
@@ -120,8 +119,8 @@ except RateLimitExceededException:
     gh_releaseNotes = {
         t: {
             "name": t,
-            "body": "See https://github.com/FCP-INDI/C-PAC/releases/tag/{} for "
-                    "release notes.".format(t),
+            "body": f"See https://github.com/FCP-INDI/C-PAC/releases/tag/{t} for "
+                    "release notes.",
             "published_at": None
         } for t in gh_tags
     }
@@ -130,24 +129,21 @@ def sort_tag(t):
     return(t[0:-4] if t[0].isdigit() else t[1:-4])
 
 def _unireplace(release_note, unireplace):
-    u = release_note.find('\u')
+    u = release_note.find('\\u')
     if (u!=-1):
         e = release_note[u:u+6]
         e2 = str(e[2:])
         release_note = release_note.replace(
             e,
-            " |u{}| ".format(e2)
+            f" |u{e2}| "
         )
         unireplace[e2] = e
         return(_unireplace(release_note, unireplace))
     return(
         release_note,
             "\n\n".join([
-            ".. |u{e}| unicode:: {u}".format(
-                e=u,
-                u=v
-            )
-        for u, v in unireplace.items()])
+            f".. |u{u}| unicode:: {v}"
+        for u, v in list(unireplace.items())])
     )
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -393,8 +389,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'C-PAC.tex', u'C-PAC Documentation',
-   u'C-PAC Team', 'manual'),
+  ('index', 'C-PAC.tex', 'C-PAC Documentation',
+   'C-PAC Team', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -423,8 +419,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'c-pac', u'C-PAC Documentation',
-     [u'C-PAC Team'], 1)
+    ('index', 'c-pac', 'C-PAC Documentation',
+     ['C-PAC Team'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -437,8 +433,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'C-PAC', u'C-PAC Documentation',
-   u'C-PAC Team', 'C-PAC', 'One line description of project.',
+  ('index', 'C-PAC', 'C-PAC Documentation',
+   'C-PAC Team', 'C-PAC', 'One line description of project.',
    'Miscellaneous'),
 ]
 

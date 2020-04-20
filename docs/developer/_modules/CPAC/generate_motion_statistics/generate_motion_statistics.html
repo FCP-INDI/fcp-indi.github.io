@@ -6,9 +6,10 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>CPAC.generate_motion_statistics.generate_motion_statistics &#8212; C-PAC 1.6.1.a Beta documentation</title>
+    <title>CPAC.generate_motion_statistics.generate_motion_statistics &#8212; C-PAC 1.6.2 Beta documentation</title>
     <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
     
     <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
@@ -28,7 +29,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.6.1.a Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.6.2 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>  
@@ -44,10 +45,10 @@
 <span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nb</span>
 <span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="nn">pe</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
-<span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.function</span> <span class="kn">import</span> <span class="n">Function</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.function</span> <span class="k">import</span> <span class="n">Function</span>
 
 
-<div class="viewcode-block" id="motion_power_statistics"><a class="viewcode-back" href="../../../workflows/generate_motion_statistics.html#CPAC.generate_motion_statistics.motion_power_statistics">[docs]</a><span class="k">def</span> <span class="nf">motion_power_statistics</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;motion_stats&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="motion_power_statistics"><a class="viewcode-back" href="../../../workflows/generate_motion_statistics.html#CPAC.generate_motion_statistics.motion_power_statistics">[docs]</a><span class="k">def</span> <span class="nf">motion_power_statistics</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;motion_stats&#39;</span><span class="p">,</span> <span class="n">motion_correct_tool</span><span class="o">=</span><span class="s1">&#39;3dvolreg&#39;</span><span class="p">):</span>
 
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The main purpose of this workflow is to get various statistical measures</span>
@@ -258,26 +259,35 @@
                <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;FDP_1D&#39;</span><span class="p">)</span>
 
     <span class="c1"># Calculating mean Framewise Displacement as per jenkinson et al., 2002</span>
-    <span class="n">calculate_FDJ</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">],</span>
-                                     <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
-                                     <span class="n">function</span><span class="o">=</span><span class="n">calculate_FD_J</span><span class="p">,</span>
-                                     <span class="n">as_module</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="n">calculate_FDJ</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">,</span>
+                                                  <span class="s1">&#39;motion_correct_tool&#39;</span><span class="p">],</span>
+                                    <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
+                                    <span class="n">function</span><span class="o">=</span><span class="n">calculate_FD_J</span><span class="p">,</span>
+                                    <span class="n">as_module</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;calculate_FDJ&#39;</span><span class="p">)</span>
+    
+    <span class="n">calculate_FDJ</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">motion_correct_tool</span> <span class="o">=</span> <span class="n">motion_correct_tool</span>
+    <span class="k">if</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;3dvolreg&#39;</span><span class="p">:</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;transformations&#39;</span><span class="p">,</span>
+                <span class="n">calculate_FDJ</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;mcflirt&#39;</span><span class="p">:</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;max_displacement&#39;</span><span class="p">,</span>
+                <span class="n">calculate_FDJ</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;transformations&#39;</span><span class="p">,</span>
-               <span class="n">calculate_FDJ</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">calculate_FDJ</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-               <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;FDJ_1D&#39;</span><span class="p">)</span>
+            <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;FDJ_1D&#39;</span><span class="p">)</span>
 
-    <span class="n">calc_motion_parameters</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;subject_id&quot;</span><span class="p">,</span>
-                                                           <span class="s2">&quot;scan_id&quot;</span><span class="p">,</span>
-                                                           <span class="s2">&quot;movement_parameters&quot;</span><span class="p">,</span>
-                                                           <span class="s2">&quot;max_displacement&quot;</span><span class="p">],</span>
+    <span class="n">calc_motion_parameters</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;subject_id&#39;</span><span class="p">,</span>
+                                                           <span class="s1">&#39;scan_id&#39;</span><span class="p">,</span>
+                                                           <span class="s1">&#39;movement_parameters&#39;</span><span class="p">,</span>
+                                                           <span class="s1">&#39;max_displacement&#39;</span><span class="p">,</span>
+                                                           <span class="s1">&#39;motion_correct_tool&#39;</span><span class="p">],</span>
                                               <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
                                               <span class="n">function</span><span class="o">=</span><span class="n">gen_motion_parameters</span><span class="p">,</span>
                                               <span class="n">as_module</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;calc_motion_parameters&#39;</span><span class="p">)</span>
 
+    <span class="n">calc_motion_parameters</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">motion_correct_tool</span> <span class="o">=</span> <span class="n">motion_correct_tool</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;subject_id&#39;</span><span class="p">,</span>
                <span class="n">calc_motion_parameters</span><span class="p">,</span> <span class="s1">&#39;subject_id&#39;</span><span class="p">)</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;scan_id&#39;</span><span class="p">,</span>
@@ -290,16 +300,18 @@
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">calc_motion_parameters</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
                <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;motion_params&#39;</span><span class="p">)</span>
 
-    <span class="n">calc_power_parameters</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;subject_id&quot;</span><span class="p">,</span>
-                                                          <span class="s2">&quot;scan_id&quot;</span><span class="p">,</span>
-                                                          <span class="s2">&quot;fdp&quot;</span><span class="p">,</span>
-                                                          <span class="s2">&quot;fdj&quot;</span><span class="p">,</span>
-                                                          <span class="s2">&quot;dvars&quot;</span><span class="p">],</span>
+    <span class="n">calc_power_parameters</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;subject_id&#39;</span><span class="p">,</span>
+                                                          <span class="s1">&#39;scan_id&#39;</span><span class="p">,</span>
+                                                          <span class="s1">&#39;fdp&#39;</span><span class="p">,</span>
+                                                          <span class="s1">&#39;fdj&#39;</span><span class="p">,</span>
+                                                          <span class="s1">&#39;dvars&#39;</span><span class="p">,</span>
+                                                          <span class="s1">&#39;motion_correct_tool&#39;</span><span class="p">],</span>
                                              <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
                                              <span class="n">function</span><span class="o">=</span><span class="n">gen_power_parameters</span><span class="p">,</span>
                                              <span class="n">as_module</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                                     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;calc_power_parameters&#39;</span><span class="p">)</span>
 
+    <span class="n">calc_power_parameters</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">motion_correct_tool</span> <span class="o">=</span> <span class="n">motion_correct_tool</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;subject_id&#39;</span><span class="p">,</span>
                <span class="n">calc_power_parameters</span><span class="p">,</span> <span class="s1">&#39;subject_id&#39;</span><span class="p">)</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;scan_id&#39;</span><span class="p">,</span>
@@ -308,8 +320,10 @@
                <span class="n">calc_power_parameters</span><span class="p">,</span> <span class="s1">&#39;dvars&#39;</span><span class="p">)</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">calculate_FDP</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
                <span class="n">calc_power_parameters</span><span class="p">,</span> <span class="s1">&#39;fdp&#39;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">calculate_FDJ</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-               <span class="n">calc_power_parameters</span><span class="p">,</span> <span class="s1">&#39;fdj&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;3dvolreg&#39;</span><span class="p">:</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">calculate_FDJ</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                <span class="n">calc_power_parameters</span><span class="p">,</span> <span class="s1">&#39;fdj&#39;</span><span class="p">)</span>
 
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">calc_power_parameters</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
                <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;power_params&#39;</span><span class="p">)</span>
@@ -350,7 +364,7 @@
     <span class="k">return</span> <span class="n">out_file</span></div>
 
 
-<div class="viewcode-block" id="calculate_FD_J"><a class="viewcode-back" href="../../../workflows/generate_motion_statistics.html#CPAC.generate_motion_statistics.calculate_FD_J">[docs]</a><span class="k">def</span> <span class="nf">calculate_FD_J</span><span class="p">(</span><span class="n">in_file</span><span class="p">):</span>
+<div class="viewcode-block" id="calculate_FD_J"><a class="viewcode-back" href="../../../workflows/generate_motion_statistics.html#CPAC.generate_motion_statistics.calculate_FD_J">[docs]</a><span class="k">def</span> <span class="nf">calculate_FD_J</span><span class="p">(</span><span class="n">in_file</span><span class="p">,</span> <span class="n">motion_correct_tool</span><span class="o">=</span><span class="s1">&#39;3dvolreg&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Method to calculate framewise displacement as per Jenkinson et al. 2002</span>
 
@@ -366,39 +380,45 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">pm_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">in_file</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;3dvolreg&#39;</span><span class="p">:</span>
+        <span class="n">pm_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">in_file</span><span class="p">)</span>
 
-    <span class="n">pm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">pm_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pm_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">4</span><span class="p">))</span>
-    <span class="n">pm</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">12</span><span class="p">]</span> <span class="o">=</span> <span class="n">pm_</span>
-    <span class="n">pm</span><span class="p">[:,</span> <span class="mi">12</span><span class="p">:]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
+        <span class="n">pm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">pm_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pm_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">4</span><span class="p">))</span>
+        <span class="n">pm</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">12</span><span class="p">]</span> <span class="o">=</span> <span class="n">pm_</span>
+        <span class="n">pm</span><span class="p">[:,</span> <span class="mi">12</span><span class="p">:]</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
 
-    <span class="c1"># The default radius (as in FSL) of a sphere represents the brain</span>
-    <span class="n">rmax</span> <span class="o">=</span> <span class="mf">80.0</span>
+        <span class="c1"># The default radius (as in FSL) of a sphere represents the brain</span>
+        <span class="n">rmax</span> <span class="o">=</span> <span class="mf">80.0</span>
 
-    <span class="n">T_rb_prev</span> <span class="o">=</span> <span class="n">pm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">T_rb_prev</span> <span class="o">=</span> <span class="n">pm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
 
-    <span class="n">fd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">fd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">pm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">pm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-        <span class="n">T_rb</span> <span class="o">=</span> <span class="n">pm</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">pm</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">T_rb</span> <span class="o">=</span> <span class="n">pm</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
 
-        <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">T_rb</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">T_rb_prev</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-        <span class="n">A</span> <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
-        <span class="n">b</span> <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">T_rb</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">T_rb_prev</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+            <span class="n">A</span> <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
 
-        <span class="n">fd</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">rmax</span> <span class="o">*</span> <span class="n">rmax</span> <span class="o">/</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">A</span><span class="p">))</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
-        <span class="p">)</span>
+            <span class="n">fd</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">rmax</span> <span class="o">*</span> <span class="n">rmax</span> <span class="o">/</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">A</span><span class="p">))</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+            <span class="p">)</span>
 
-        <span class="n">T_rb_prev</span> <span class="o">=</span> <span class="n">T_rb</span>
+            <span class="n">T_rb_prev</span> <span class="o">=</span> <span class="n">T_rb</span>
+
+    <span class="k">elif</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;mcflirt&#39;</span><span class="p">:</span>
+        <span class="n">rel_rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">in_file</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">fd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">rel_rms</span><span class="p">)</span>
 
     <span class="n">out_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;FD_J.1D&#39;</span><span class="p">)</span>
     <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">out_file</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%.8f</span><span class="s1">&#39;</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="n">out_file</span></div>
 
 
 <div class="viewcode-block" id="gen_motion_parameters"><a class="viewcode-back" href="../../../workflows/generate_motion_statistics.html#CPAC.generate_motion_statistics.gen_motion_parameters">[docs]</a><span class="k">def</span> <span class="nf">gen_motion_parameters</span><span class="p">(</span><span class="n">subject_id</span><span class="p">,</span> <span class="n">scan_id</span><span class="p">,</span> <span class="n">movement_parameters</span><span class="p">,</span>
-                          <span class="n">max_displacement</span><span class="p">):</span>
+                          <span class="n">max_displacement</span><span class="p">,</span> <span class="n">motion_correct_tool</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Method to calculate all the movement parameters</span>
 
@@ -428,7 +448,12 @@
 
     <span class="c1"># remove any other information other than matrix from</span>
     <span class="c1"># max displacement file. AFNI adds information to the file</span>
-    <span class="n">maxdisp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">max_displacement</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">motion_correct_tool</span><span class="o">==</span><span class="s1">&#39;3dvolreg&#39;</span><span class="p">:</span>
+        <span class="n">maxdisp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">max_displacement</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">motion_correct_tool</span><span class="o">==</span><span class="s1">&#39;mcflirt&#39;</span><span class="p">:</span>
+        <span class="n">maxdisp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">max_displacement</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="c1"># TODO: mcflirt outputs absdisp, instead of maxdisp</span>
+        <span class="n">reldisp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">max_displacement</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> 
 
     <span class="n">abs_relative</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
     <span class="n">max_relative</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">abs_relative</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
@@ -443,9 +468,9 @@
         <span class="p">(</span><span class="s1">&#39;Max_Relative_RMS_Displacement&#39;</span><span class="p">,</span> <span class="n">max_relative</span><span class="p">(</span><span class="n">rms</span><span class="p">)),</span>
         <span class="p">(</span><span class="s1">&#39;Movements_gt_threshold&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">abs_relative</span><span class="p">(</span><span class="n">rms</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.1</span><span class="p">)),</span>
         <span class="p">(</span><span class="s1">&#39;Mean_Relative_Mean_Rotation&#39;</span><span class="p">,</span> <span class="n">avg_relative</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">mot</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))),</span>
-        <span class="p">(</span><span class="s1">&#39;Mean_Relative_Maxdisp&#39;</span><span class="p">,</span> <span class="n">avg_relative</span><span class="p">(</span><span class="n">maxdisp</span><span class="p">)),</span>
-        <span class="p">(</span><span class="s1">&#39;Max_Relative_Maxdisp&#39;</span><span class="p">,</span> <span class="n">max_relative</span><span class="p">(</span><span class="n">maxdisp</span><span class="p">)),</span>
-        <span class="p">(</span><span class="s1">&#39;Max_Abs_Maxdisp&#39;</span><span class="p">,</span> <span class="n">max_abs</span><span class="p">(</span><span class="n">maxdisp</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s1">&#39;Mean_Relative_Maxdisp&#39;</span><span class="p">,</span> <span class="n">avg_relative</span><span class="p">(</span><span class="n">maxdisp</span><span class="p">)),</span> <span class="c1"># to be updated </span>
+        <span class="p">(</span><span class="s1">&#39;Max_Relative_Maxdisp&#39;</span><span class="p">,</span> <span class="n">max_relative</span><span class="p">(</span><span class="n">maxdisp</span><span class="p">)),</span> <span class="c1"># to be updated </span>
+        <span class="p">(</span><span class="s1">&#39;Max_Abs_Maxdisp&#39;</span><span class="p">,</span> <span class="n">max_abs</span><span class="p">(</span><span class="n">maxdisp</span><span class="p">)),</span> <span class="c1"># to be updated </span>
         <span class="p">(</span><span class="s1">&#39;Max Relative_Roll&#39;</span><span class="p">,</span> <span class="n">max_relative</span><span class="p">(</span><span class="n">mot</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span>
         <span class="p">(</span><span class="s1">&#39;Max_Relative_Pitch&#39;</span><span class="p">,</span> <span class="n">max_relative</span><span class="p">(</span><span class="n">mot</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span>
         <span class="p">(</span><span class="s1">&#39;Max_Relative_Yaw&#39;</span><span class="p">,</span> <span class="n">max_relative</span><span class="p">(</span><span class="n">mot</span><span class="p">[</span><span class="mi">2</span><span class="p">])),</span>
@@ -482,7 +507,7 @@
     <span class="k">return</span> <span class="n">out_file</span></div>
 
 
-<div class="viewcode-block" id="gen_power_parameters"><a class="viewcode-back" href="../../../workflows/generate_motion_statistics.html#CPAC.generate_motion_statistics.gen_power_parameters">[docs]</a><span class="k">def</span> <span class="nf">gen_power_parameters</span><span class="p">(</span><span class="n">subject_id</span><span class="p">,</span> <span class="n">scan_id</span><span class="p">,</span> <span class="n">fdp</span><span class="p">,</span> <span class="n">fdj</span><span class="p">,</span> <span class="n">dvars</span><span class="p">):</span>
+<div class="viewcode-block" id="gen_power_parameters"><a class="viewcode-back" href="../../../workflows/generate_motion_statistics.html#CPAC.generate_motion_statistics.gen_power_parameters">[docs]</a><span class="k">def</span> <span class="nf">gen_power_parameters</span><span class="p">(</span><span class="n">subject_id</span><span class="p">,</span> <span class="n">scan_id</span><span class="p">,</span> <span class="n">fdp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fdj</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dvars</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">motion_correct_tool</span><span class="o">=</span><span class="s1">&#39;3dvolreg&#39;</span><span class="p">):</span>
 
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Method to generate Power parameters for scrubbing</span>
@@ -510,36 +535,47 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">fdp_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">fdp</span><span class="p">)</span>
-    <span class="n">fdj_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">fdj</span><span class="p">)</span>
     <span class="n">dvars_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">dvars</span><span class="p">)</span>
 
     <span class="c1"># Mean (across time/frames) of the absolute values</span>
     <span class="c1"># for Framewise Displacement (FD)</span>
     <span class="n">meanFD_Power</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">fdp_data</span><span class="p">)</span>
 
-    <span class="c1"># Mean FD Jenkinson</span>
-    <span class="n">meanFD_Jenkinson</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">fdj_data</span><span class="p">)</span>
-
-    <span class="c1"># Root mean square (RMS; across time/frames)</span>
-    <span class="c1"># of the absolute values for FD</span>
-    <span class="n">rmsFDJ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">fdj_data</span><span class="p">))</span>
-
-    <span class="c1"># Mean of the top quartile of FD is $FDquartile</span>
-    <span class="n">quat</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fdj_data</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span>
-    <span class="n">FDJquartile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">fdj_data</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][:</span><span class="n">quat</span><span class="p">])</span>
-
     <span class="c1"># Mean DVARS</span>
     <span class="n">meanDVARS</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dvars_data</span><span class="p">)</span>
 
-    <span class="n">info</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="p">(</span><span class="s1">&#39;Subject&#39;</span><span class="p">,</span> <span class="n">subject_id</span><span class="p">),</span>
-        <span class="p">(</span><span class="s1">&#39;Scan&#39;</span><span class="p">,</span> <span class="n">scan_id</span><span class="p">),</span>
-        <span class="p">(</span><span class="s1">&#39;MeanFD_Power&#39;</span><span class="p">,</span> <span class="n">meanFD_Power</span><span class="p">),</span>
-        <span class="p">(</span><span class="s1">&#39;MeanFD_Jenkinson&#39;</span><span class="p">,</span> <span class="n">meanFD_Jenkinson</span><span class="p">),</span>
-        <span class="p">(</span><span class="s1">&#39;rootMeanSquareFD&#39;</span><span class="p">,</span> <span class="n">rmsFDJ</span><span class="p">),</span>
-        <span class="p">(</span><span class="s1">&#39;FDquartile(top1/4thFD)&#39;</span><span class="p">,</span> <span class="n">FDJquartile</span><span class="p">),</span>
-        <span class="p">(</span><span class="s1">&#39;MeanDVARS&#39;</span><span class="p">,</span> <span class="n">meanDVARS</span><span class="p">),</span>
-    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;3dvolreg&#39;</span><span class="p">:</span>
+
+        <span class="n">fdj_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">fdj</span><span class="p">)</span>
+        
+        <span class="c1"># Mean FD Jenkinson</span>
+        <span class="n">meanFD_Jenkinson</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">fdj_data</span><span class="p">)</span>
+
+        <span class="c1"># Root mean square (RMS; across time/frames)</span>
+        <span class="c1"># of the absolute values for FD</span>
+        <span class="n">rmsFDJ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">fdj_data</span><span class="p">))</span>
+
+        <span class="c1"># Mean of the top quartile of FD is $FDquartile</span>
+        <span class="n">quat</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fdj_data</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">FDJquartile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">fdj_data</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][:</span><span class="n">quat</span><span class="p">])</span>
+
+        <span class="n">info</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s1">&#39;Subject&#39;</span><span class="p">,</span> <span class="n">subject_id</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;Scan&#39;</span><span class="p">,</span> <span class="n">scan_id</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;MeanFD_Power&#39;</span><span class="p">,</span> <span class="n">meanFD_Power</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;MeanFD_Jenkinson&#39;</span><span class="p">,</span> <span class="n">meanFD_Jenkinson</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;rootMeanSquareFD&#39;</span><span class="p">,</span> <span class="n">rmsFDJ</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;FDquartile(top1/4thFD)&#39;</span><span class="p">,</span> <span class="n">FDJquartile</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;MeanDVARS&#39;</span><span class="p">,</span> <span class="n">meanDVARS</span><span class="p">),</span>
+        <span class="p">]</span>
+
+    <span class="k">elif</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;mcflirt&#39;</span><span class="p">:</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s1">&#39;Subject&#39;</span><span class="p">,</span> <span class="n">subject_id</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;Scan&#39;</span><span class="p">,</span> <span class="n">scan_id</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;MeanFD_Power&#39;</span><span class="p">,</span> <span class="n">meanFD_Power</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;MeanDVARS&#39;</span><span class="p">,</span> <span class="n">meanDVARS</span><span class="p">),</span>
+        <span class="p">]</span>
 
     <span class="n">out_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;pow_params.txt&#39;</span><span class="p">)</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">out_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
@@ -618,14 +654,14 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.6.1.a Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.6.2 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
       </ul>
     </div>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, C-PAC Team.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

@@ -133,9 +133,134 @@
 </div>
 <p>Note: we are still providing <code class="docutils literal notranslate"><span class="pre">/bids_dataset</span></code> to the <code class="docutils literal notranslate"><span class="pre">bids_dir</span></code> input parameter. However, we have mapped this to any directory on your machine, as C-PAC will not look for data in this directory when you provide a data configuration YAML with the <code class="docutils literal notranslate"><span class="pre">--data_config_file</span></code> flag. In addition, if the dataset in your data configuration file is not in BIDS format, just make sure to add the <code class="docutils literal notranslate"><span class="pre">--skip_bids_validator</span></code> flag at the end of your command to bypass the BIDS validation process.</p>
 <p>The full list of parameters and options that can be passed to the Docker container are shown below:</p>
-<div class="section" id="cpac-run-help">
-<h3>cpac run –help<a class="headerlink" href="#cpac-run-help" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>/usr/local/bin/python: No module named /build/C-PAC/dev/docker_data/run
+<div class="section" id="usage">
+<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>usage: run.py [-h] [--pipeline_file PIPELINE_FILE] [--group_file GROUP_FILE]
+              [--data_config_file DATA_CONFIG_FILE] [--preconfig PRECONFIG]
+              [--pipeline_override PIPELINE_OVERRIDE]
+              [--aws_input_creds AWS_INPUT_CREDS]
+              [--aws_output_creds AWS_OUTPUT_CREDS] [--n_cpus N_CPUS]
+              [--mem_mb MEM_MB] [--mem_gb MEM_GB]
+              [--save_working_dir [SAVE_WORKING_DIR]] [--disable_file_logging]
+              [--participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]]
+              [--participant_ndx PARTICIPANT_NDX] [-v]
+              [--bids_validator_config BIDS_VALIDATOR_CONFIG]
+              [--skip_bids_validator] [--anat_only] [--tracking_opt-out]
+              [--monitoring]
+              bids_dir output_dir {participant,group,test_config,gui,cli}
+
+C-PAC Pipeline Runner
+
+positional arguments:
+  bids_dir              The directory with the input dataset formatted
+                        according to the BIDS standard. Use the format
+                        s3://bucket/path/to/bidsdir to read data directly from
+                        an S3 bucket. This may require AWS S3 credentials
+                        specified via the --aws_input_creds option.
+  output_dir            The directory where the output files should be stored.
+                        If you are running group level analysis this folder
+                        should be prepopulated with the results of the
+                        participant level analysis. Use the format
+                        s3://bucket/path/to/bidsdir to write data directly to
+                        an S3 bucket. This may require AWS S3 credentials
+                        specified via the --aws_output_creds option.
+  {participant,group,test_config,gui,cli}
+                        Level of the analysis that will be performed. Multiple
+                        participant level analyses can be run independently
+                        (in parallel) using the same output_dir. GUI will open
+                        the CPAC gui (currently only works with singularity)
+                        and test_config will run through the entire
+                        configuration process but will not execute the
+                        pipeline.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --pipeline_file PIPELINE_FILE
+                        Path for the pipeline configuration file to use. Use
+                        the format s3://bucket/path/to/pipeline_file to read
+                        data directly from an S3 bucket. This may require AWS
+                        S3 credentials specified via the --aws_input_creds
+                        option.
+  --group_file GROUP_FILE
+                        Path for the group analysis configuration file to use.
+                        Use the format s3://bucket/path/to/pipeline_file to
+                        read data directly from an S3 bucket. This may require
+                        AWS S3 credentials specified via the --aws_input_creds
+                        option. The output directory needs to refer to the
+                        output of a preprocessing individual pipeline.
+  --data_config_file DATA_CONFIG_FILE
+                        Yaml file containing the location of the data that is
+                        to be processed. Can be generated from the CPAC gui.
+                        This file is not necessary if the data in bids_dir is
+                        organized according to the BIDS format. This enables
+                        support for legacy data organization and cloud based
+                        storage. A bids_dir must still be specified when using
+                        this option, but its value will be ignored. Use the
+                        format s3://bucket/path/to/data_config_file to read
+                        data directly from an S3 bucket. This may require AWS
+                        S3 credentials specified via the --aws_input_creds
+                        option.
+  --preconfig PRECONFIG
+                        Name of the pre-configured pipeline to run.
+  --pipeline_override PIPELINE_OVERRIDE
+                        Override specific options from the pipeline
+                        configuration. E.g.: &quot;maximumMemoryPerParticipant: 10&quot;
+  --aws_input_creds AWS_INPUT_CREDS
+                        Credentials for reading from S3. If not provided and
+                        s3 paths are specified in the data config we will try
+                        to access the bucket anonymously use the string &quot;env&quot;
+                        to indicate that input credentials should read from
+                        the environment. (E.g. when using AWS iam roles).
+  --aws_output_creds AWS_OUTPUT_CREDS
+                        Credentials for writing to S3. If not provided and s3
+                        paths are specified in the output directory we will
+                        try to access the bucket anonymously use the string
+                        &quot;env&quot; to indicate that output credentials should read
+                        from the environment. (E.g. when using AWS iam roles).
+  --n_cpus N_CPUS       Number of execution resources available for the
+                        pipeline.
+  --mem_mb MEM_MB       Amount of RAM available to the pipeline in megabytes.
+                        Included for compatibility with BIDS-Apps standard,
+                        but mem_gb is preferred
+  --mem_gb MEM_GB       Amount of RAM available to the pipeline in gigabytes.
+                        if this is specified along with mem_mb, this flag will
+                        take precedence.
+  --save_working_dir [SAVE_WORKING_DIR]
+                        Save the contents of the working directory.
+  --disable_file_logging
+                        Disable file logging, this is useful for clusters that
+                        have disabled file locking.
+  --participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]
+                        The label of the participant that should be analyzed.
+                        The label corresponds to sub-&lt;participant_label&gt; from
+                        the BIDS spec (so it does not include &quot;sub-&quot;). If this
+                        parameter is not provided all participants should be
+                        analyzed. Multiple participants can be specified with
+                        a space separated list. To work correctly this should
+                        come at the end of the command line.
+  --participant_ndx PARTICIPANT_NDX
+                        The index of the participant that should be analyzed.
+                        This corresponds to the index of the participant in
+                        the data config file. This was added to make it easier
+                        to accommodate SGE array jobs. Only a single
+                        participant will be analyzed. Can be used with
+                        participant label, in which case it is the index into
+                        the list that follows the participant_label flag. Use
+                        the value &quot;-1&quot; to indicate that the participant index
+                        should be read from the AWS_BATCH_JOB_ARRAY_INDEX
+                        environment variable.
+  -v, --version         show program&#39;s version number and exit
+  --bids_validator_config BIDS_VALIDATOR_CONFIG
+                        JSON file specifying configuration of bids-validator:
+                        See https://github.com/bids-standard/bids-validator
+                        for more info.
+  --skip_bids_validator
+                        Skips bids validation.
+  --anat_only           run only the anatomical preprocessing
+  --tracking_opt-out    Disable usage tracking. Only the number of
+                        participants on the analysis is tracked.
+  --monitoring          Enable monitoring server on port 8080. You need to
+                        bind the port using the Docker flag &quot;-p&quot;.
 </pre></div>
 </div>
 <p>Note that any of the optional arguments above will over-ride any pipeline settings in the default pipeline or in the pipeline configuration file you provide via the <code class="docutils literal notranslate"><span class="pre">--pipeline_file</span></code> parameter.</p>

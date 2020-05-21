@@ -65,7 +65,7 @@ The data configuration file layout has changed significantly from older versions
 </pre></div>
 </div>
 <p>or:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>docker run -i --rm --user $(id -u) -v /path/to/data_config:/scratch -w=&quot;/scratch&quot; fcpindi/c-pac:latest bids_dir outputs_dir cli -- utils data_config new_settings_template
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>docker run -i --rm --user $(id -u):$(id -g) -v /path/to/data_config:/scratch -w=&quot;/scratch&quot; fcpindi/c-pac:latest bids_dir outputs_dir cli -- utils data_config new_settings_template
 </pre></div>
 </div>
 <p>For either of the above commands, <code class="docutils literal notranslate"><span class="pre">bids_dir</span></code> and <code class="docutils literal notranslate"><span class="pre">outputs_dir</span></code> are required but not used, so any non-null string will work for those positional arguments.</p>
@@ -80,12 +80,25 @@ The data configuration file layout has changed significantly from older versions
 <div class="section" id="generate-configuration-files-for-individual-level-and-group-level-analyses">
 <h3>Generate configuration files for individual-level and group-level analyses<a class="headerlink" href="#generate-configuration-files-for-individual-level-and-group-level-analyses" title="Permalink to this headline">¶</a></h3>
 <p>Once you have a template, you can then configure the file as needed. You will need to use a text editor to fill in at least <code class="docutils literal notranslate"><span class="pre">dataFormat</span></code>, <code class="docutils literal notranslate"><span class="pre">bidsBaseDir</span></code> (if using BIDS data), <code class="docutils literal notranslate"><span class="pre">outputSubjectListLocation</span></code>, and <code class="docutils literal notranslate"><span class="pre">subjectListName</span></code> in your settings file before you build.</p>
-<p>Once your <code class="docutils literal notranslate"><span class="pre">data_settings.yml</span></code> file is ready, you can generate your data configuration file by running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">singularity</span> <span class="n">run</span> <span class="n">C</span><span class="o">-</span><span class="n">PAC_latest</span><span class="o">.</span><span class="n">sif</span> <span class="n">bids_dir</span> <span class="n">outputs_dir</span> <span class="n">cli</span> <span class="o">--</span> <span class="n">utils</span> <span class="n">data_config</span> <span class="n">build</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data_settings</span><span class="o">.</span><span class="n">yml</span>
+<p>Once your <code class="docutils literal notranslate"><span class="pre">data_settings.yml</span></code> file is ready, you can generate your data configuration file by running the following commands, binding any directories in your <code class="docutils literal notranslate"><span class="pre">data_settings.yml</span></code> to the same locations in the container:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">singularity</span> <span class="n">run</span> \
+<span class="o">-</span><span class="n">B</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">bids_dir</span> \
+<span class="o">-</span><span class="n">B</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">outputs</span> \
+<span class="o">-</span><span class="n">B</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="ow">in</span><span class="o">/</span><span class="n">data_settings</span><span class="o">/</span><span class="mi">1</span> \
+<span class="o">-</span><span class="n">B</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="ow">in</span><span class="o">/</span><span class="n">data_settings</span><span class="o">/</span><span class="mi">2</span> \
+<span class="n">C</span><span class="o">-</span><span class="n">PAC_latest</span><span class="o">.</span><span class="n">sif</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">bids_dir</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">outputs</span> <span class="n">cli</span> <span class="o">--</span> <span class="n">utils</span> \
+<span class="n">data_config</span> <span class="n">build</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data_settings</span><span class="o">.</span><span class="n">yml</span>
 </pre></div>
 </div>
 <p>or:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>docker run -i --rm --user $(id -u) -v /path/to/data_config:/scratch -w=&quot;/scratch&quot; fcpindi/c-pac:latest bids_dir outputs_dir cli -- utils data_config build /path/to/data_settings.yml
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>docker run -i --rm --user $(id -u):$(id -g) \
+-v /path/to/bids_dir:/path/to/bids_dir \
+-v /path/to/outputs:/path/to/outputs \
+-v /path/to/data/in/data_settings/1:/path/to/data/in/data_settings/1 \
+-v /path/to/data/in/data_settings/2:/path/to/data/in/data_settings/2 \
+-v /path/to/data_config:/scratch -w=&quot;/scratch&quot; \
+fcpindi/c-pac:latest /path/to/bids_dir /path/to/outputs cli -- utils \
+data_config build /path/to/data_settings.yml
 </pre></div>
 </div>
 <p>Continue below for some example use cases.</p>

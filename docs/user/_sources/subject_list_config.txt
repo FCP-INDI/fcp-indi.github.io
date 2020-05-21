@@ -29,7 +29,7 @@ If you don't already have a data settings YAML file, you can generate one in you
 
 or::
 
-    docker run -i --rm --user $(id -u) -v /path/to/data_config:/scratch -w="/scratch" fcpindi/c-pac:latest bids_dir outputs_dir cli -- utils data_config new_settings_template
+    docker run -i --rm --user $(id -u):$(id -g) -v /path/to/data_config:/scratch -w="/scratch" fcpindi/c-pac:latest bids_dir outputs_dir cli -- utils data_config new_settings_template
 
 For either of the above commands, ``bids_dir`` and ``outputs_dir`` are required but not used, so any non-null string will work for those positional arguments.
 
@@ -46,13 +46,26 @@ Generate configuration files for individual-level and group-level analyses
 
 Once you have a template, you can then configure the file as needed. You will need to use a text editor to fill in at least ``dataFormat``, ``bidsBaseDir`` (if using BIDS data), ``outputSubjectListLocation``, and ``subjectListName`` in your settings file before you build.
 
-Once your ``data_settings.yml`` file is ready, you can generate your data configuration file by running::
+Once your ``data_settings.yml`` file is ready, you can generate your data configuration file by running the following commands, binding any directories in your ``data_settings.yml`` to the same locations in the container::
 
-    singularity run C-PAC_latest.sif bids_dir outputs_dir cli -- utils data_config build /path/to/data_settings.yml
+    singularity run \
+    -B /path/to/bids_dir \
+    -B /path/to/outputs \
+    -B /path/to/data/in/data_settings/1 \
+    -B /path/to/data/in/data_settings/2 \
+    C-PAC_latest.sif /path/to/bids_dir /path/to/outputs cli -- utils \
+    data_config build /path/to/data_settings.yml
 
 or::
 
-    docker run -i --rm --user $(id -u) -v /path/to/data_config:/scratch -w="/scratch" fcpindi/c-pac:latest bids_dir outputs_dir cli -- utils data_config build /path/to/data_settings.yml
+    docker run -i --rm --user $(id -u):$(id -g) \
+    -v /path/to/bids_dir:/path/to/bids_dir \
+    -v /path/to/outputs:/path/to/outputs \
+    -v /path/to/data/in/data_settings/1:/path/to/data/in/data_settings/1 \
+    -v /path/to/data/in/data_settings/2:/path/to/data/in/data_settings/2 \
+    -v /path/to/data_config:/scratch -w="/scratch" \
+    fcpindi/c-pac:latest /path/to/bids_dir /path/to/outputs cli -- utils \
+    data_config build /path/to/data_settings.yml
 
 Continue below for some example use cases.
 

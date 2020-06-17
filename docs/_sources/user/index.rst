@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to C-PAC's Documentation!
-=================================
+Welcome to C-PAC's user guide!
+==============================
 
 Latest Release: C-PAC v1.5.0 (Oct 9, 2019)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

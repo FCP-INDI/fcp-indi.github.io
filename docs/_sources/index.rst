@@ -11,10 +11,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   installation
-   workflow_documentation
-   workflows/index
-   testing
+   developer/index
+   user/index
 
 Indices and tables
 ==================

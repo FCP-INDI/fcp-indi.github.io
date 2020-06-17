@@ -3,33 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Workflows
-=========
+Welcome to CPAC's documentation!
+================================
 
 Contents:
 
 .. toctree::
-    :maxdepth: 2
+   :maxdepth: 1
 
-    cpac_pipeline
-    anat_preproc
-    func_preproc
-    seg_preproc
-    sca
-    basc
-    nuisance
-    alff
-    vmhc
-    reho
-    generate_motion_statistics
-    scrubbing
-    group_analysis
-    easy_thresh     
-    mdmr
-    median_angle
-    registration
-    timeseries
-    network_centrality
+   User Guide<user/index>
+   Developer Documentation<developer/index>
+   
 
 Indices and tables
 ==================

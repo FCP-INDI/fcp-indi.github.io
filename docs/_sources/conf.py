@@ -41,7 +41,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.mathjax',
 templates_path = ['_templates']
 
 # The suffix of source filenames.
-source_suffix = '.txt'
+source_suffix = '.rst'
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
@@ -171,12 +171,12 @@ for t in gh_tags:
                 f.write(
                     """
 
-.. include:: /release_notes/{latest}.txt
+.. include:: /user/release_notes/{latest}.txt
 
 .. toctree::
    :hidden:
 
-   /release_notes/{latest}.txt
+   /user/release_notes/{latest}.txt
 """.format(latest=str(t))
                 )
 
@@ -198,10 +198,10 @@ all_release_notes = """
 
 """.format(
     "\n".join([
-        ".. include:: /release_notes/{}".format(fp) for fp in rnd
+        ".. include:: /user/release_notes/{}".format(fp) for fp in rnd
     ]),
     "\n   ".join([
-    "/release_notes/{}".format(d) for d in rnd
+    "/user/release_notes/{}".format(d) for d in rnd
 ]))
 with open(os.path.join(release_notes_dir, 'index.txt'), 'w+') as f:
     f.write(all_release_notes.strip())

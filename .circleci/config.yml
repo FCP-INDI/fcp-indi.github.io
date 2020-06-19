@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  build-develop:
     working_directory: /build
     branches:
       only:
@@ -12,16 +12,62 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apt-get update && apt-get -y install rsync python-dev graphviz libgraphviz-dev pkg-config
-            pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/master/requirements.txt
-            pip install --user git+https://github.com/FCP-INDI/C-PAC.git
-            pip install --user sphinx
-            pip install --user numpydoc
+            apt-get update && apt-get -y install git rsync python-dev graphviz libgraphviz-dev pkg-config python3-sphinx
+            pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/develop/requirements.txt
+            pip install --user git+https://github.com/shnizzedy/C-PAC.git@develop sphinx m2r numpydoc PyGithub sphinxcontrib-programoutput torch
+            git clone https://github.com/shnizzedy/C-PAC.git /build/C-PAC
+            cd /build/C-PAC
+            git checkout develop
+            cd /build
       - run:
-          name: Build docs
+          name: Build develop branch docs
           command: |
-            ./bin/build
+            ./bin/build develop
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
+          # taken to be the root directory of the workspace.
+          root: /build
+          # Must be relative path from root
+          paths: develop
 
+  build-latest:
+    working_directory: /build
+    branches:
+      only:
+        - source
+    docker:
+      - image: python:3.7
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            apt-get update && apt-get -y install git rsync python-dev graphviz libgraphviz-dev pkg-config python3-sphinx
+            pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/develop/requirements.txt
+            pip install --user git+https://github.com/FCP-INDI/C-PAC.git sphinx m2r numpydoc PyGithub sphinxcontrib-programoutput torch
+            git clone https://github.com/FCP-INDI/C-PAC.git /build/C-PAC
+      - run:
+          name: Build develop branch docs
+          command: |
+            ./bin/build latest
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
+          # taken to be the root directory of the workspace.
+          root: /build
+          # Must be relative path from root
+          paths: latest
+          
+  deploy:
+    working_directory: /build
+    branches:
+      only:
+        - source
+    docker:
+      - image: python:3.7
+    steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: /home/circleci/project/build
       - run:
           name: Configure git user
           command: |
@@ -43,3 +89,14 @@ jobs:
             git commit -m "${GITMESSAGE}" --allow-empty
             git push -f origin master
             cd -
+
+workflows:
+  version: 2
+  build_and_deploy:
+    jobs:
+      - build-develop
+      - build-latest
+      - deploy:
+          requires:
+            - build-develop
+            - build-latest

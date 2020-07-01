@@ -51,10 +51,12 @@ jobs:
           name: 🚀 Deploying docs
           command: |
             cd /build
-            export GITMESSAGE=`git log -1 --oneline --pretty=%s`
-            git clone --single-branch --branch gh-pages git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo || git clone --single-branch --branch master git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo && git checkout -b gh-pages
+            git clone git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo
             rsync -rtv ./ /tmp/repo/ --exclude '.git'
             cd /tmp/repo
+            git fetch origin
+            if [[ $(git branch | grep master) ]]; then git checkout -b gh-pages; elif [[ $(git branch | grep source) ]]; then if [[ $(git ls-remote --heads git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git gh-pages) ]]; then git checkout origin/gh-pages && git checkout -b gh-pages; else git checkout origin/master && git checkout -b gh-pages; fi; fi
+            export GITMESSAGE=`git log origin/source -1 --oneline --pretty=%s`
             git rm -f .gitignore || rm -f .gitignore || true
             git add .
             git rm -fr docs/develop/developer/_sources || rm -f docs/develop/developer/_sources || true

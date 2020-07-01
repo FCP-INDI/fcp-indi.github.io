@@ -1,4 +1,17 @@
-version: 2
+version: 2.1
+commands:
+  install-dependencies:
+    steps:
+      - run:
+          name: ↑ Installing dependencies
+          command: |
+            apt-get update && apt-get -y install git rsync python-dev graphviz libgraphviz-dev pkg-config python3-sphinx
+            pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/develop/requirements.txt
+            pip install --user git+https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git@develop sphinx m2r numpydoc PyGithub sphinxcontrib-programoutput torch
+            git clone https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git /build/C-PAC
+            cd /build/C-PAC
+            git checkout develop
+            cd /build
 jobs:
   build-develop:
     working_directory: /build
@@ -6,16 +19,7 @@ jobs:
       - image: python:3.7
     steps:
       - checkout
-      - run:
-          name: ↑ Installing dependencies
-          command: |
-            apt-get update && apt-get -y install git rsync python-dev graphviz libgraphviz-dev pkg-config python3-sphinx
-            pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/develop/requirements.txt
-            pip install --user git+https://github.com/shnizzedy/C-PAC.git@develop sphinx m2r numpydoc PyGithub sphinxcontrib-programoutput torch
-            git clone https://github.com/shnizzedy/C-PAC.git /build/C-PAC
-            cd /build/C-PAC
-            git checkout develop
-            cd /build
+      - install-dependencies
       - run:
           name: 🏗️ Building develop branch docs
           command: |
@@ -37,6 +41,7 @@ jobs:
       - attach_workspace:
           # Must be absolute path or relative path from working_directory
           at: /
+      - install-dependencies
       - run:
           name: 🔧 Configuring git user
           command: |
@@ -61,7 +66,7 @@ jobs:
             cd -
 
 workflows:
-  version: 2
+  version: 2.1
   build_and_deploy:
     jobs:
       - build-develop:

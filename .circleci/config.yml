@@ -1,44 +1,83 @@
 version: 2
 jobs:
-  build:
+  build-develop:
     working_directory: /build
-    branches:
-      only:
-        - source
     docker:
       - image: python:3.7
     steps:
       - checkout
       - run:
-          name: Install dependencies
+          name: ↑ Installing dependencies
           command: |
             apt-get update && apt-get -y install git rsync python-dev graphviz libgraphviz-dev pkg-config python3-sphinx
             pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/develop/requirements.txt
-            pip install --user git+https://github.com/FCP-INDI/C-PAC.git sphinx m2r numpydoc PyGithub sphinxcontrib-programoutput torch
-            git clone https://github.com/FCP-INDI/C-PAC.git /build/C-PAC
+            pip install --user git+https://github.com/shnizzedy/C-PAC.git@develop sphinx m2r numpydoc PyGithub sphinxcontrib-programoutput torch
+            git clone https://github.com/shnizzedy/C-PAC.git /build/C-PAC
+            cd /build/C-PAC
+            git checkout develop
+            cd /build
       - run:
-          name: Build docs
+          name: 🏗️ Building develop branch docs
           command: |
-            ./bin/build
-
+            ./bin/build develop
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
+          # taken to be the root directory of the workspace.
+          root: /
+          # Must be relative path from root
+          paths: 
+            - build/develop
+            - root/.ssh
+          
+  deploy:
+    working_directory: /
+    docker:
+      - image: python:3.7
+    steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: /
       - run:
-          name: Configure git user
+          name: 🔧 Configuring git user
           command: |
             git config --global user.email "ci-build@fcp-indi.github.com"
             git config --global user.name "ci-build"
       - run:
-          name: Deploy docs
+          name: 🚀 Deploying docs
           command: |
             export GITMESSAGE=`git log -1 --oneline --pretty=%s`
-            git clone --single-branch --branch master git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo
+            git clone --single-branch --branch gh-pages git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo || git clone --single-branch --branch master git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo && git checkout -b gh-pages
             rsync -rtv ./ /tmp/repo/ --exclude '.git'
             cd /tmp/repo
             git rm -f .gitignore || rm -f .gitignore || true
             git add .
-            git rm -fr docs/developer/_sources || rm -f docs/developer/_sources || true
-            git rm -fr docs/developer/.doctrees || rm -f docs/developer/.doctrees || true
-            git rm -fr docs/user/_sources || rm -f docs/user/_sources || true
-            git rm -fr docs/user/.doctrees || rm -f docs/user/.doctrees || true
+            git rm -fr docs/develop/developer/_sources || rm -f docs/develop/developer/_sources || true
+            git rm -fr docs/develop/developer/.doctrees || rm -f docs/develop/developer/.doctrees || true
+            git rm -fr docs/develop/user/_sources || rm -f docs/develop/user/_sources || true
+            git rm -fr docs/develop/user/.doctrees || rm -f docs/develop/user/.doctrees || true
             git commit -m "${GITMESSAGE}" --allow-empty
-            git push -f origin master
+            git push -f origin gh-pages
             cd -
+
+workflows:
+  version: 2
+  build_and_deploy:
+    jobs:
+      - build-develop:
+          filters:
+            branches:
+              only:
+                - source
+      # - build-latest:
+      #     filters:
+      #       branches:
+      #         only:
+      #           - source
+      - deploy:
+          filters:
+            branches:
+              only:
+                - source
+          requires:
+            - build-develop
+            # - build-latests

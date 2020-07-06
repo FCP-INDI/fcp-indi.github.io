@@ -33,9 +33,16 @@ sys.path.insert(0, os.path.abspath('.'))
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.mathjax',
-              'sphinx.ext.ifconfig', 'sphinx.ext.viewcode',
-              'sphinxcontrib.programoutput', 'exec', 'numpydoc']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinxcontrib.fulltoc',
+    'sphinx.ext.ifconfig',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.viewcode',
+    'sphinxcontrib.programoutput',
+    'exec',
+    'numpydoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -68,8 +75,37 @@ version = __version__
 # Get tags from GitHub
 # Set GITHUBTOKEN to your API token in your environment to increase rate limit.
 g = Github(os.environ.get("GITHUBTOKEN"))
-gh_cpac =  g.get_user("FCP-INDI").get_repo("C-PAC")
-gh_tags =  [t.name for t in gh_cpac.get_tags()]
+
+def _gh_rate_limit():
+    print("""Release notes not updated due to GitHub API rate limit.
+
+       MMM.           .MMM      __________________________________________
+       MMMMMMMMMMMMMMMMMMM     |                                          |
+       MMMMMMMMMMMMMMMMMMM     | Set GITHUBTOKEN to your API token in     |
+      MMMMMMMMMMMMMMMMMMMMM    | your environment to increase rate limit. |
+     MMMMMMMMMMMMMMMMMMMMMMM   | See CONTRIBUTING.md#environment-notes    |
+    MMMMMMMMMMMMMMMMMMMMMMMM   |_   ______________________________________|
+    MMMM::- -:::::::- -::MMMM    |/
+     MM~:~ 00~:::::~ 00~:~MM
+.. MMMMM::.00:::+:::.00::MMMMM ..
+      .MM::::: ._. :::::MM.
+         MMMM;:::::;MMMM
+  -MM        MMMMMMM
+  ^  M+     MMMMMMMMM
+      MMMMMMM MM MM MM
+           MM MM MM MM
+           MM MM MM MM
+        .~~MM~MM~MM~MM~~.
+     ~~~~MM:~MM~~~MM~:MM~~~~
+""")
+
+try:
+    gh_cpac = g.get_user("FCP-INDI").get_repo("C-PAC")
+    gh_tags = [t.name for t in gh_cpac.get_tags()]
+except RateLimitExceededException:
+    _gh_rate_limit()
+    gh_tags = []
+gh_tags.sort(reverse=True)
 
 # Try to get release notes from GitHub
 try:
@@ -85,6 +121,7 @@ try:
         'published_at': r['published_at']
     } for r in gh_releases}
 except RateLimitExceededException:
+    _gh_rate_limit()
     gh_releaseNotes = {
         t: {
             "name": t,
@@ -98,7 +135,7 @@ def sort_tag(t):
     return(t[0:-4] if t[0].isdigit() else t[1:-4])
 
 def _unireplace(release_note, unireplace):
-    u = release_note.find('\u')
+    u = release_note.find('\\u')
     if (u!=-1):
         e = release_note[u:u+6]
         e2 = str(e[2:])
@@ -302,7 +339,8 @@ html_static_path = ['_static']
 # Custom sidebar templates, maps document names to template names.
 html_sidebars = {
   '**': [
-    'globaltoc.html',
+    'localtoc.html',
+    # 'globaltoc.html',
     'searchbox.html'
   ]
  }

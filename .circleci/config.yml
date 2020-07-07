@@ -1,5 +1,10 @@
 version: 2.1
 commands:
+  get-version:
+    steps:
+      - run:
+          name: 🔧 Setting version
+          command: if [ -f ./build_version.txt ]; then echo "export BUILD_VERSION=$(cat ./build_version.txt)" >> $BASH_ENV; else echo "export BUILD_VERSION=develop" >> $BASH_ENV; fi
   install-dependencies:
     parameters:
       version:
@@ -19,7 +24,9 @@ commands:
     steps:
       - attach_workspace:
           at: /
-      - install-dependencies
+      - get-version
+      - install-dependencies:
+          version: ${BUILD_VERSION}
       - run:
           name: 🔧 Configuring git user
           command: |
@@ -73,18 +80,17 @@ jobs:
       - image: python:3.7
     steps:
       - checkout
-      - install-dependencies:
-          version: develop
       - run:
-          name:  Setting version
-          command: |
-            BUILD_VERSION = $(cat /build_version.txt)
-            
+          name: 🔬 Checking for tag file
+          command: test -f ./build_version.txt
+      - get-version
+      - install-dependencies:
+          version: ${BUILD_VERSION}
       - run:
           name: 🏗️ Building version branch docs
           command: ./bin/build ${BUILD_VERSION}
       - run:
-          name: Storing commit message
+          name: 📑 Storing commit message
           command: git log origin/source -1 --oneline --pretty=%s > /root/GITMESSAGE.txt
       - persist_to_workspace:
           root: /

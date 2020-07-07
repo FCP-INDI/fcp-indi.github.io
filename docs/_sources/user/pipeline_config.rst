@@ -79,8 +79,8 @@ Data Management and Environment Settings
 * :doc:`Computer Settings <compute_config>`
 * :doc:`Output Settings <output_config>`
 
-Pre- and post-processing 
-'''''''''''''''''''''''''
+Pre- and post-processing
+''''''''''''''''''''''''
 
 * :doc:`Anatomical Preprocessing </anat>`
 * :doc:`Functional Preprocessing </func>`

@@ -75,7 +75,7 @@ Note: we are still providing ``/bids_dataset`` to the ``bids_dir`` input paramet
 
 The full list of parameters and options that can be passed to the Docker container are shown below:
 
-.. include:: /run/help.txt
+.. include:: /user/run/help.rst
 
 Note that any of the optional arguments above will over-ride any pipeline settings in the default pipeline or in the pipeline configuration file you provide via the ``--pipeline_file`` parameter.
 
@@ -90,8 +90,3 @@ Note that any of the optional arguments above will over-ride any pipeline settin
 * When the app is run, a data configuration file is written to the working directory. This file can be passed into subsequent runs, which avoids the overhead of re-parsing the BIDS input directory on each run (i.e. for cluster or cloud runs). These files can be generated without executing the C-PAC pipeline using the test_run command line argument.
 
 * The ``participant_label`` and ``participant_ndx`` arguments allow the user to specify which of the many datasets should be processed, which is useful when parallelizing the run of multiple participants.
-
-.. toctree::
-   :hidden:
-
-   /run/help.txt

@@ -2,10 +2,10 @@ Appendix
 ========
 
 Installing C-PAC
-----------------
+^^^^^^^^^^^^^^^^
 
 Before You Start
-^^^^^^^^^^^^^^^^
+----------------
 
 **WAIT! Installing C-PAC is not required, and is an option for those who want to maintain their own installation, often on a server or cluster. For a faster way to get started:**
 
@@ -18,11 +18,11 @@ C-PAC can be run without installing through any of these three options:
 For more details, skip ahead to the :doc:`C-PAC Quickstart </quick>` or :doc:`Run C-PAC </running>` pages.
 
 Requirements
-^^^^^^^^^^^^
+------------
 
 System Requirements
 """""""""""""""""""
-C-PAC is **designed to run in a \*nix-like environment** and thus does not support Windows.  The C-PAC team actively tests C-PAC in Ubuntu Linux, although older versions of that distribution and other \*nixes (such as Mac OS X) should work as well.   As a general rule, C-PAC can operate on any machine capable of reliably running `AFNI <http://afni.nimh.nih.gov/afni>`__ and `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`__. 
+C-PAC is **designed to run in a \*nix-like environment** and thus does not support Windows.  The C-PAC team actively tests C-PAC in Ubuntu Linux, although older versions of that distribution and other \*nixes (such as Mac OS X) should work as well.   As a general rule, C-PAC can operate on any machine capable of reliably running `AFNI <http://afni.nimh.nih.gov/afni>`__ and `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`__.
 
 Hardware Requirements
 """""""""""""""""""""
@@ -41,7 +41,7 @@ A Note About the \*nix Command Line
 * `Unix for the Beginning Mage <http://unixmages.com/>`__
 
 Overview
-^^^^^^^^^^^^^^^^^^^^^
+--------
 If you are using Ubuntu (version 12/14) you can download  and run `cpac_install.sh <https://github.com/FCP-INDI/C-PAC/blob/master/scripts/cpac_install.sh?raw=true>`__ with the following terminal commands as root:
 
 .. code-block:: console
@@ -50,15 +50,15 @@ If you are using Ubuntu (version 12/14) you can download  and run `cpac_install.
     mv cpac_install.sh?raw=true cpac_install.sh
     chmod +x cpac_install.sh
     sudo ./cpac_install.sh -r
-   
-This will install all of the prerequisites and resources listed below. If you have previously installed versions of these, they will not be reinstalled, and the script will not check the release version to match the requirements of C-PAC. 
- 
+
+This will install all of the prerequisites and resources listed below. If you have previously installed versions of these, they will not be reinstalled, and the script will not check the release version to match the requirements of C-PAC.
+
 **Note**: This script is intended for Ubuntu Linux 12/14,  but it may work for older releases of Ubuntu.
 
 **For other operating systems**, this page will guide you through the following C-PAC installation steps:
 
 * Installing the required system-level dependencies
-* Installing the required Python dependencies 
+* Installing the required Python dependencies
 * Installing AFNI and FSL
 * Installing C3D and ANTS (optional, but recommended)
 * Installing the required C-PAC image resources
@@ -71,7 +71,7 @@ It will also provide information on how to:
 * Run C-PAC without installing.
 
 Instructions
-^^^^^^^^^^^^^^
+------------
 
 Installing System-Level Dependencies
 """"""""""""""""""""""""""""""""""""
@@ -101,13 +101,13 @@ A complete installation of C-PAC requires that the following dependencies be ins
 The command to install all of these on Ubuntu 12/14 is:
 
 .. code-block:: console
-    
+
     sudo apt-get install -y cmake git make unzip libcanberra-gtk-module libxp6 netpbm libglu1-mesa gsl-bin zlib1g-dev graphviz graphviz-dev pkg-config build-essential libxml2-dev libxslt-dev python-dev xvfb
 
-OS-Specific Instructions 
+OS-Specific Instructions
 ''''''''''''''''''''''''
 
-**Mac OS X:** 
+**Mac OS X:**
 
 * Installing system-level and Python dependencies will be made much easier if you download the `Xcode Command Line Tools from Apple <https://developer.apple.com/downloads/index.action>`__ (requires a free Apple account), which includes (among other things) Git and gcc.
 * You may want to consider using a package manager such as `Homebrew <http://brew.sh/>`__, `Macports <https://www.macports.org/>`__, or `Fink <http://www.finkproject.org/>`__.
@@ -136,7 +136,6 @@ Note: Specific maximum versions are required for the following dependencies. C-P
 * `Nipype <http://nipype.readthedocs.io/en/latest/>`__ - version 1.1.2
 * `NetworkX <http://networkx.lanl.gov/>`__ - version 1.11
 * `Jinja2 <http://jinja.pocoo.org/docs/intro/#installation>`__ - version 2.7.2
-* `wxPython 3 <https://wxpython.org/>`__ - version 3.0.0 (if using the GUI)
 
 These specific versions can be installed via pip:
 
@@ -183,18 +182,18 @@ The following commands will install all the Python dependencies within a Minicon
    conda install -y cython numpy scipy matplotlib networkx==1.11 traits pyyaml jinja2==2.7.2 nose ipython pip wxpython pandas
    pip install lockfile pygraphviz nibabel nipype==1.1.2 patsy psutil boto3 INDI-Tools future==0.15.2 prov simplejson fs==0.5.4
    source deactivate
- 
-OS-Specific Instructions 
+
+OS-Specific Instructions
 ''''''''''''''''''''''''
 
-**Mac OS X:** 
+**Mac OS X:**
 
 * It is recommended that you use either Canopy or Anaconda/Miniconda to install Python packages such as wxPython, SciPy and NumPy.  Manually installing these packages on OS X can be difficult and error-prone.  If you use Anaconda/Conda, the commands above should install all packages seamlessly (assuming you download the Mac OS X Miniconda install script instead of the Linux script when using `wget`).
 
 
 Installing AFNI and FSL
 """""""""""""""""""""""
-C-PAC harnesses the power of two leading neuroimaging software packages (`AFNI <http://afni.nimh.nih.gov/>`__ and `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`__) to perform key analyses. These packages must be installed before running C-PAC. 
+C-PAC harnesses the power of two leading neuroimaging software packages (`AFNI <http://afni.nimh.nih.gov/>`__ and `FSL <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`__) to perform key analyses. These packages must be installed before running C-PAC.
 
 To install AFNI on a non-Fedora 21 64-bit Linux machine you may run the follow commands as the super user:
 
@@ -250,7 +249,7 @@ For FSL to be available globally on your machine, you should then add the follow
 
 For more details about installing FSL (including instructions for other architectures) please refer to the FSL documentation `here <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation>`__.
 
-OS-Specific Instructions 
+OS-Specific Instructions
 ''''''''''''''''''''''''
 
 **Mac OS X:**
@@ -263,17 +262,17 @@ OS-Specific Instructions
             source ~/.bashrc
         fi
 
-Installing C3D and ANTS (optional, but recommended) 
+Installing C3D and ANTS (optional, but recommended)
 """""""""""""""""""""""""""""""""""""""""""""""""""
 ANTS is an optional, but recommended package for performing image registration / normalization.  ANTS depends upon C3D, which can be installed by following the steps below.  If you do not want to install ANTS, you may skip this step.  You can always install ANTS later.
 
 Installing C3D
 ''''''''''''''
 
-#. Download C3D from `here <http://sourceforge.net/projects/c3d/>`__ or `here <http://www.nitrc.org/frs/downloadlink.php/1327>`__ (for Mac users). 
-#. Unzip the downloaded archive, and place the extracted folder in the location of your choosing. 
+#. Download C3D from `here <http://sourceforge.net/projects/c3d/>`__ or `here <http://www.nitrc.org/frs/downloadlink.php/1327>`__ (for Mac users).
+#. Unzip the downloaded archive, and place the extracted folder in the location of your choosing.
 
-#. Add the following text to your :file:`.bashrc` file: 
+#. Add the following text to your :file:`.bashrc` file:
 
 .. code-block:: console
 
@@ -293,7 +292,7 @@ Where :file:`/path_to/C3D` is the location of the extracted folder.
 Installing ANTS
 '''''''''''''''
 
-To install ANTS, follow the instructions below. 
+To install ANTS, follow the instructions below.
 
 For Debian-based platforms, install the Neurodebian keys (see the FSL installation instructions above) and run the following command as the super user:
 
@@ -306,7 +305,7 @@ For other platforms, download ANTS from Github and compile from source:
 .. code-block:: console
 
     cd /tmp
-    git clone https://github.com/stnava/ANTs.git 
+    git clone https://github.com/stnava/ANTs.git
 
 This will create a folder named "ANTS" in the directory where you ran the command from.
 
@@ -326,7 +325,7 @@ Next, run these commands from this directory to build your ANTS install:
 
 Where <number> is how many cores you wish to dedicate to building your install - the more you use, the sooner it will complete. For example, if you want to use four cores, you would run 'make -j 4'.
 
-Once this is complete, you will need to modify your environment. Add the following text to your :file:`.bashrc` file: 
+Once this is complete, you will need to modify your environment. Add the following text to your :file:`.bashrc` file:
 
 .. code-block:: console
 
@@ -341,12 +340,12 @@ You can test the installation by opening a new terminal window and running this 
 
 If this returns a help page with a list of parameters, your ANTS installation was a success.
 
-OS-Specific Instructions 
+OS-Specific Instructions
 ''''''''''''''''''''''''
 
 **Mac OS X:**
 
-* Similar to the AFNI and FSL path setup, you must also add the C3D and ANTS paths to your :file:`.bash_profile` file. 
+* Similar to the AFNI and FSL path setup, you must also add the C3D and ANTS paths to your :file:`.bash_profile` file.
 
 Installing ICA-AROMA
 """"""""""""""""""""
@@ -387,7 +386,7 @@ These files are included in the C-PAC Image Resources package, available `here <
     cp -nr tissuepriors/3mm $FSLDIR/data/standard/tissuepriors
     cp -nr tissuepriors/4mm $FSLDIR/data/standard/tissuepriors
     cp -n HarvardOxford-lateral-ventricles-thr25-2mm.nii.gz $FSLDIR/data/atlases/HarvardOxford
- 
+
 These commands perform the following steps:
 
 * The image resources are downloaded.
@@ -405,7 +404,7 @@ Congratulations, you are now ready to install C-PAC itself!
 C-PAC is available for download from the `C-PAC Homepage <http://fcp-indi.github.com/>`__. Click the button labeled "Download as tar.gz". Unpack the downloaded archive and navigate to the new directory. To install C-PAC, run the command ``sudo python setup.py install``. C-PAC will be installed alongside your other python packages. If this fails, check to make sure that you have all the dependencies installed.  You may also install C-PAC using the commands below:
 
  .. code-block:: console
-   
+
    cd /tmp
    git clone https://github.com/FCP-INDI/C-PAC.git
    cd C-PAC
@@ -419,7 +418,7 @@ Once you are able to successfully ``import CPAC`` it is safe to delete any setup
 
 **Note:** The test process described here only acts to confirm that the C-PAC python package has been correctly installed. To fully test C-PAC on your system, please see the :doc:`Benchmark Page </benchmark>`.
 
-Updating C-PAC 
+Updating C-PAC
 """"""""""""""
 C-PAC is being actively developed, and new versions (containing bug fixes and new features) are often released. To update to the latest version, simply download it from the `C-PAC Homepage <http://fcp-indi.github.com/>`__ and repeat the instructions in the `Installing C-PAC` section above. A list of previous versions and the changes they contain is available on the :doc:`Release Notes Page </rnotes>`.
 
@@ -440,74 +439,4 @@ Some network centrality features will not be available without compiling the C-b
 
     python setup.py build_ext --inplace
 
-**Note:** Unfortunately, it is not possible at this time to use the C-PAC GUI without installing C-PAC.
-
-Benchmark Your Install
-^^^^^^^^^^^^^^^^^^^^^^
-
-The C-PAC benchmark package consists of all of the configuration files and scripts needed to test C-PAC on your machine and compare your outputs with a standard set of outputs processed by the C-PAC team. Specifically, it contains:
-
-* A shell script to automatically configure the paths within all of the settings files (``adjustSettingPaths.sh``).
-
-* A pipeline configuration file using ANTS (``pipeline_config_benchmark.yml``).
-
-* A data configuration (``CPAC_benchmark_participants.yml``).
-
-* Masks, and ROIs for timeseries extraction, centrality, dual regression, etc.
-
-* A Python script to compare your outputs with ours (``correlations_workflow_pipeline.py``).
-
-The benchmark package can be downloaded `here <https://s3.amazonaws.com/fcp-indi/resources/benchmark_package.tar.gz>`__.  The following instructions will guide you through the process of running the C-PAC benchmark.
-
-Prerequisites
-"""""""""""""
-
-Before running the benchmark, make sure that your computer has at least 56 GB of RAM.  The benchmark pipeline configuration runs 4 participants at a time with 12 GB allocated for each participant, so 56 GB will give you enough RAM to accommodate these participants plus some extra RAM for any other applications that are running.  If you do not have 56 GB of RAM, you can modify the benchmark pipeline configuration to run fewer participants at a time- just ensure that you have around 14 GB available for each participant.
-
-Also ensure that you have at least 720 GB of free space on the volume you're running the benchmark on.  This will allow you to keep a working directory (which is chronically emptied as participants are run and should not exceed 55 GB) and two copies of the outputs (one 333 GB copy of our team's pre-computed outputs, and another 333 GB for the outputs generated by your server or workstation).
-
-Downloading the Precomputed C-PAC Outputs from the FCP-INDI S3 Bucket
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-The C-PAC precomputed outputs are stored in Amazon Web Service's Simple Storage Service (S3). They can be accessed using `Cyberduck <https://cyberduck.io/>`__, a file transfer programs for Mac OS X and Windows that handles S3 natively and allow you to navigate through the data using a file browser. For individuals who are more comfortable with the terminal, Cyberduck also has a `command line version <https://duck.sh>`__ that works with Windows, Mac OS X, and Linux.  There is also an official `AWS command line tool <https://aws.amazon.com/cli/>`__ that can also be used. Instructions for using the grpahical version of Cyberduck are as follows: 
-
-#. Open Cyberduck and click on *Open Connection*.
-#. Set the application protocol in the dropdown menu to *S3 (Amazon Simple Storage Service)*.
-#. Set the server to *s3.amazonaws.com*.
-#. Check the box labelled *Anonymous Login*.
-#. Expand the More Options tab and set Path to *fcp-indi/resources/cpac_benchmark*.
-#. Click *Connect*.
-
-The end result should appear similar to the following:
-
-.. figure:: /_images/cyberduck.png
-
-The pre-computed outputs are separated by version number within the directory that will now appear so that you can download the outputs for the version that you are testing out.
-
-Configuring C-PAC
-"""""""""""""""""
-First, extract the package using the command ``tar xzvf benchmark_package.tar.gz``. Then, navigate to ``benchmark_package/scripts`` in the terminal and execute ``./adjustSettingPaths.sh``.  This will ensure that the paths used in the configuration files are in accord with whichever directory you choose to store ``benchmark_package`` in.  This script assumes that it lives in the ``/scripts`` directory.  If it has been moved elsewhere, it may be executed using ``./adjustSettingPaths.sh <path to benchmark_package directory>``
-
-Next, load in the data configuration.  This contains paths to images that are publicly downloadable from Amazon Webs Services S3.  Open the C-PAC GUI and click `Load` next to the subject pane. Select ``CPAC_benchmark_participants.yml``.
-
-Finally, load in the pipeline configuration.  In the main C-PAC window, under `Pipelines`, click `Load` and select the ``pipeline_config_benchmark.yml`` file located in ``/settings/configs`` in the benchmark directory. A new pipeline will show up in the list window.  Select this pipeline and click `Edit` to inspect it.
-
-Running An Individual-Level Analysis
-""""""""""""""""""""""""""""""""""""
-Once you have configured C-PAC by loading in the pipeline configuration YAML and data configuration, you may run the individual-level analysis pipeline by clicking the appropriate button at the bottom of the main C-PAC window. This will bring up a log window that displays the progress of the C-PAC run.
-
-Comparing Outputs
-"""""""""""""""""
-Navigate to the ``benchmark_packages/scripts`` directory within the benchmark package. Here you will find a script named ``correlations_workflow_pipeline.py``, which can help you compare your outputs and the reference outputs from the C-PAC team.
-
-This will produce Pearson's r and a concordance correlation coefficient between two sets of output for the following measures:
-
-* ALFF and f/ALFF
-* Centrality
-* Dual Regression
-* ReHo
-* VMHC
-
-To run this script, type ``python correlations_workflow_pipeline.py <path to output1 pipeline> <path to output2 pipeline> <number of cores to use> <descriptive name>``.  Make sure that the paths you use point to the ``pipeline`` directories within the output directories.  To determine the maximum number of cores on your machine, type ``nproc`` in a terminal window.
-
-When this script is done, it will produce plots for the correlation measures, stored in the directories 'MNI_outputs', 'MNI_SCA', 'native_outputs', 'natived_SCA', 'nonscrub_vs_scrub', and 'registration'.  It also produces Python pickle files containing dictionaries with measures as keys and Pearson or concordance correlations as values. Python pickles can be thought of as similar to .mat files in MATLAB- they allow you to save variables in the workspace to an external file on the hard drive. 
-
+.. include:: benchmark.rst

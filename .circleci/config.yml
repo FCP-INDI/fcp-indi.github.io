@@ -1,47 +1,32 @@
 version: 2.1
 commands:
+  get-version:
+    steps:
+      - run:
+          name: 🔧 Setting version
+          command: if [ -f ./build_version.txt ]; then echo "export BUILD_VERSION=$(cat ./build_version.txt)" >> $BASH_ENV; else echo "export BUILD_VERSION=develop" >> $BASH_ENV; fi
   install-dependencies:
+    parameters:
+      version:
+        type: string
     steps:
       - run:
           name: ↑ Installing dependencies
           command: |
             apt-get update && apt-get -y install git rsync python-dev graphviz libgraphviz-dev pkg-config python3-sphinx
-            pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/develop/requirements.txt
-            pip install --user git+https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git@develop sphinx m2r numpydoc PyGithub sphinxcontrib-fulltoc sphinxcontrib-programoutput torch
+            pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/<< parameters.version >>/requirements.txt
+            pip install --user git+https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git@<< parameters.version >> sphinx m2r numpydoc PyGithub sphinxcontrib-fulltoc sphinxcontrib-programoutput torch
             git clone https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git /build/C-PAC
             cd /build/C-PAC
-            git checkout develop
+            git checkout << parameters.version >>
             cd /build
-jobs:
-  build-develop:
-    working_directory: /build
-    docker:
-      - image: python:3.7
-    steps:
-      - checkout
-      - install-dependencies
-      - run:
-          name: 🏗️ Building develop branch docs
-          command: |
-            ./bin/build develop
-      - persist_to_workspace:
-          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
-          # taken to be the root directory of the workspace.
-          root: /
-          # Must be relative path from root
-          paths: 
-            - build/docs
-            - root/.ssh
-          
-  deploy:
-    working_directory: /
-    docker:
-      - image: python:3.7
+  prep-deploy:
     steps:
       - attach_workspace:
-          # Must be absolute path or relative path from working_directory
           at: /
-      - install-dependencies
+      - get-version
+      - install-dependencies:
+          version: ${BUILD_VERSION}
       - run:
           name: 🔧 Configuring git user
           command: |
@@ -49,26 +34,94 @@ jobs:
             git config --global user.name "ci-build"
       - run:
           name: 📑 Generating list of versions
-          command: echo ""
+          command: python /build/scripts/version_list.py
+  deploy:
+    steps:
       - run:
           name: 🚀 Deploying docs
           command: |
             cd /build
-            git clone git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo
+            git clone --single-branch --branch gh-pages git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo || git clone --single-branch --branch master git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo
             rsync -rtv ./ /tmp/repo/ --exclude '.git'
             cd /tmp/repo
-            git fetch origin
-            if [[ $(git branch | grep master) ]]; then git checkout -b gh-pages; elif [[ $(git branch | grep source) ]]; then if [[ $(git ls-remote --heads git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git gh-pages) ]]; then git checkout origin/gh-pages && git checkout -b gh-pages; else git checkout origin/master && git checkout -b gh-pages; fi; fi
-            export GITMESSAGE=`git log origin/source -1 --oneline --pretty=%s`
             git rm -f .gitignore || rm -f .gitignore || true
             git add .
             git rm -fr docs/develop/developer/_sources || rm -f docs/develop/developer/_sources || true
             git rm -fr docs/develop/developer/.doctrees || rm -f docs/develop/developer/.doctrees || true
             git rm -fr docs/develop/user/_sources || rm -f docs/develop/user/_sources || true
             git rm -fr docs/develop/user/.doctrees || rm -f docs/develop/user/.doctrees || true
-            git commit -m "${GITMESSAGE}" --allow-empty
-            git push -f origin gh-pages
+            git commit -m "$(cat /root/GITMESSAGE.txt)" --allow-empty
+            git push origin HEAD:gh-pages -f
             cd -
+              
+jobs:
+  build-develop:
+    working_directory: /build
+    docker:
+      - image: python:3.7
+    steps:
+      - checkout
+      - install-dependencies:
+          version: develop
+      - run:
+          name: 🏗️ Building develop branch docs
+          command: ./bin/build develop
+      - run:
+          name: Storing commit message
+          command: git log origin/source -1 --oneline --pretty=%s > /root/GITMESSAGE.txt
+      - persist_to_workspace:
+          root: /
+          paths: 
+            - build/docs
+            - build/scripts
+            - root/.ssh
+            - root/GITMESSAGE.txt
+            
+  build-version:
+    working_directory: /build
+    docker:
+      - image: python:3.7
+    steps:
+      - checkout
+      - run:
+          name: 🔬 Checking for tag file
+          command: test -f ./build_version.txt
+      - get-version
+      - install-dependencies:
+          version: ${BUILD_VERSION}
+      - run:
+          name: 🏗️ Building version branch docs
+          command: ./bin/build ${BUILD_VERSION}
+      - run:
+          name: 📑 Storing commit message
+          command: git log origin/source -1 --oneline --pretty=%s > /root/GITMESSAGE.txt
+      - persist_to_workspace:
+          root: /
+          paths: 
+            - build_version.txt
+            - build/docs
+            - build/scripts
+            - root/.ssh
+            - root/GITMESSAGE.txt
+          
+  deploy-develop:
+    working_directory: /
+    docker:
+      - image: python:3.7
+    steps:
+      - prep-deploy
+      - deploy
+      
+  deploy-version:
+    working_directory: /
+    docker:
+      - image: python:3.7
+    steps:
+      - prep-deploy 
+      - run:
+          name: 🔖 Checking if latest
+          command: if $(python /build/scripts/is_latest.py); then cp -r /build/docs/${BUILD_VERSION} /build/docs/latest; fi
+      - deploy
 
 workflows:
   version: 2.1
@@ -79,16 +132,22 @@ workflows:
             branches:
               only:
                 - source
-      # - build-latest:
-      #     filters:
-      #       branches:
-      #         only:
-      #           - source
-      - deploy:
+      - build-version:
+          filters:
+            branches:
+              only:
+                - build-version
+      - deploy-develop:
           filters:
             branches:
               only:
                 - source
           requires:
             - build-develop
-            # - build-latests
+      - deploy-version:
+          filters:
+            branches:
+              only:
+                - build-version
+          requires:
+            - build-version

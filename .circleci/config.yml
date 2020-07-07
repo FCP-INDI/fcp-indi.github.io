@@ -20,7 +20,7 @@ commands:
             cd /build/C-PAC
             git checkout << parameters.version >>
             cd /build
-  deploy:
+  prep-deploy:
     steps:
       - attach_workspace:
           at: /
@@ -35,9 +35,8 @@ commands:
       - run:
           name: 📑 Generating list of versions
           command: python /build/scripts/version_list.py
-      - run:
-          name: 🔖 Checking if latest
-          command: if $(python /build/scripts/is_latest.py); then cp -r /build/docs/${BUILD_VERSION} /build/docs/latest; fi
+  deploy:
+    steps:
       - run:
           name: 🚀 Deploying docs
           command: |
@@ -110,6 +109,7 @@ jobs:
     docker:
       - image: python:3.7
     steps:
+      - prep-deploy
       - deploy
       
   deploy-version:
@@ -117,6 +117,10 @@ jobs:
     docker:
       - image: python:3.7
     steps:
+      - prep-deploy 
+      - run:
+          name: 🔖 Checking if latest
+          command: if $(python /build/scripts/is_latest.py); then cp -r /build/docs/${BUILD_VERSION} /build/docs/latest; fi
       - deploy
 
 workflows:

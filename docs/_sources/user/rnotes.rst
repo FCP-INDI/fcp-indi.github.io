@@ -1,5 +1,5 @@
 Release Notes
 -------------
 
-.. include:: /release_notes/index.rst
+.. include:: /user/release_notes/index.rst
 

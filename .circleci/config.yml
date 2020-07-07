@@ -1,48 +1,23 @@
 version: 2.1
 commands:
   install-dependencies:
+    parameters:
+      version:
+        type: string
     steps:
       - run:
           name: ↑ Installing dependencies
           command: |
             apt-get update && apt-get -y install git rsync python-dev graphviz libgraphviz-dev pkg-config python3-sphinx
-            pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/develop/requirements.txt
-            pip install --user git+https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git@develop sphinx m2r numpydoc PyGithub sphinxcontrib-fulltoc sphinxcontrib-programoutput torch
+            pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/<< parameters.version >>/requirements.txt
+            pip install --user git+https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git@<< parameters.version >> sphinx m2r numpydoc PyGithub sphinxcontrib-fulltoc sphinxcontrib-programoutput torch
             git clone https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git /build/C-PAC
             cd /build/C-PAC
-            git checkout develop
+            git checkout << parameters.version >>
             cd /build
-jobs:
-  build-develop:
-    working_directory: /build
-    docker:
-      - image: python:3.7
-    steps:
-      - checkout
-      - install-dependencies
-      - run:
-          name: 🏗️ Building develop branch docs
-          command: ./bin/build develop
-      - run:
-          name: Storing commit message
-          command: git log origin/source -1 --oneline --pretty=%s > /root/GITMESSAGE.txt
-      - persist_to_workspace:
-          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
-          # taken to be the root directory of the workspace.
-          root: /
-          # Must be relative path from root
-          paths: 
-            - build/docs
-            - root/.ssh
-            - root/GITMESSAGE.txt
-          
   deploy:
-    working_directory: /
-    docker:
-      - image: python:3.7
     steps:
       - attach_workspace:
-          # Must be absolute path or relative path from working_directory
           at: /
       - install-dependencies
       - run:
@@ -69,6 +44,49 @@ jobs:
             git commit -m "$(cat /root/GITMESSAGE.txt)" --allow-empty
             git push origin HEAD:gh-pages -f
             cd -
+              
+jobs:
+  build-develop:
+    working_directory: /build
+    docker:
+      - image: python:3.7
+    steps:
+      - checkout
+      - install-dependencies:
+          version: develop
+      - run:
+          name: 🏗️ Building develop branch docs
+          command: ./bin/build develop
+      - run:
+          name: Storing commit message
+          command: git log origin/source -1 --oneline --pretty=%s > /root/GITMESSAGE.txt
+      - persist_to_workspace:
+          root: /
+          paths: 
+            - build/docs
+            - root/.ssh
+            - root/GITMESSAGE.txt
+          
+  deploy-develop:
+    working_directory: /
+    docker:
+      - image: python:3.7
+    steps:
+      - deploy
+
+  deploy-latest:
+    working_directory: /
+    docker:
+      - image: python:3.7
+    steps:
+      - deploy
+      
+  deploy-version:
+    working_directory: /
+    docker:
+      - image: python:3.7
+    steps:
+      - deploy
 
 workflows:
   version: 2.1
@@ -79,16 +97,34 @@ workflows:
             branches:
               only:
                 - source
-      # - build-latest:
-      #     filters:
-      #       branches:
-      #         only:
-      #           - source
-      - deploy:
+      - build-version:
+          filters:
+            branches:
+              only:
+                - build-version
+      - build-latest:
+          filters:
+            branches:
+              only:
+                - build-latest
+      - deploy-develop:
           filters:
             branches:
               only:
                 - source
           requires:
             - build-develop
-            # - build-latests
+      - deploy-version:
+          filters:
+            branches:
+              only:
+                - build-version
+          requires:
+            - build-version
+      - deploy-latest:
+          filters:
+            branches:
+              only:
+                - source
+          requires:
+            - build-latest

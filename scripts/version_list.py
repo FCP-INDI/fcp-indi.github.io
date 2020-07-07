@@ -6,7 +6,7 @@ def rewrite_versions():
     Collects built versions and outputs a text file that lists 'latest', 
     latest version number, 'develop', descending prior verions.
     """
-    versions_txt_path = 'docs/_sources/_static/versions.rst'
+    versions_txt_path = 'docs/_sources/_static/versions.txt'
     with open(versions_txt_path, 'w') as vtp:
         vtp.write('\n'.join(sort_versions(os.listdir('docs'))))
     

@@ -153,10 +153,10 @@ def _unireplace(release_note, unireplace):
     )
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
-release_notes_dir = os.path.join(this_dir, "release_notes")
+release_notes_dir = os.path.join(this_dir, "user", "release_notes")
 if not os.path.exists(release_notes_dir):
     os.makedirs(release_notes_dir)
-latest_path = os.path.join(release_notes_dir, 'latest.rst')
+latest_path = os.path.join(release_notes_dir, "latest.rst")
 # all_release_notes = ""
 for t in gh_tags:
     if t in gh_releaseNotes:

@@ -66,15 +66,34 @@ jobs:
             - build/docs
             - root/.ssh
             - root/GITMESSAGE.txt
-          
-  deploy-develop:
-    working_directory: /
+            
+  build-version:
+    working_directory: /build
     docker:
       - image: python:3.7
     steps:
-      - deploy
-
-  deploy-latest:
+      - checkout
+      - install-dependencies:
+          version: develop
+      - run:
+          name:  Setting version
+          command: |
+            BUILD_VERSION = $(cat /build_version.txt)
+            
+      - run:
+          name: 🏗️ Building version branch docs
+          command: ./bin/build ${BUILD_VERSION}
+      - run:
+          name: Storing commit message
+          command: git log origin/source -1 --oneline --pretty=%s > /root/GITMESSAGE.txt
+      - persist_to_workspace:
+          root: /
+          paths: 
+            - build/docs
+            - root/.ssh
+            - root/GITMESSAGE.txt
+          
+  deploy-develop:
     working_directory: /
     docker:
       - image: python:3.7
@@ -102,11 +121,6 @@ workflows:
             branches:
               only:
                 - build-version
-      - build-latest:
-          filters:
-            branches:
-              only:
-                - build-latest
       - deploy-develop:
           filters:
             branches:
@@ -121,10 +135,3 @@ workflows:
                 - build-version
           requires:
             - build-version
-      - deploy-latest:
-          filters:
-            branches:
-              only:
-                - source
-          requires:
-            - build-latest

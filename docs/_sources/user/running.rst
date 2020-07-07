@@ -3,10 +3,7 @@ Running C-PAC
 Overview
 --------
 
-As with configuring the subject list, pipeline configuration, and group analysis files, there are two ways of executing a C-PAC run:
-
-* Using C-PAC's command line interface
-* Using the main dialog in the C-PAC GUI
+As with configuring the subject list, pipeline configuration, and group analysis files, execute a C-PAC run by using C-PAC's command line interface.
 
 In addition to running C-PAC traditionally on your own local computer or on a server, there are three other avenues through which you can run C-PAC without going through the install process:
 
@@ -16,9 +13,9 @@ In addition to running C-PAC traditionally on your own local computer or on a se
 
 More details of these options are available below.
 
-.. include:: docker.txt
+.. include:: docker.rst
 
-.. include:: singularity.txt
+.. include:: singularity.rst
 
 On the AWS Cloud
 ------------------------------
@@ -151,7 +148,7 @@ When you are done, your session configuration should look similar to the followi
 
 .. figure:: /_images/cloud_x2go.png
 
-Note: If X2Go does not work on your computer, you can also access the C-PAC GUI by adding the ``-X`` flag to the ssh command to enable X11 port forwarding (i.e., the ssh command would be ``ssh -X -i /path/to/pem/file ubuntu@<Public Domain Name>``).  X11 port forwarding is very slow compared to X2Go, however, so it is recommended that you troubleshoot X2Go further before turning to this option.
+Note: If X2Go does not work on your computer, you can add the ``-X`` flag to the ssh command to enable X11 port forwarding (i.e., the ssh command would be ``ssh -X -i /path/to/pem/file ubuntu@<Public Domain Name>``).  X11 port forwarding is very slow compared to X2Go, however, so it is recommended that you troubleshoot X2Go further before turning to this option.
 
 Uploading Data to Your Instance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -280,7 +277,7 @@ To add additional nodes to your C-PAC HPC cluster, use the following Starcluster
 Accessing the Head Node
 '''''''''''''''''''''''
 
-If you wish to use the C-PAC GUI while accessing the head node, type the following command:
+If you wish to access the head node, type the following command:
 
 .. code-block:: console
 

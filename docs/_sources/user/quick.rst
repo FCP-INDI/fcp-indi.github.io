@@ -1,11 +1,11 @@
 C-PAC Quickstart
 ================
 
-.. include:: quick_overview.txt
+.. include:: quick_overview.rst
 
-.. include:: docker.txt
+.. include:: docker.rst
 
-.. include:: singularity.txt
+.. include:: singularity.rst
 
 Default Pipeline
 ----------------
@@ -38,7 +38,7 @@ In addition to the default pipeline, C-PAC comes packaged with a growing library
 
 Detailed information about the selection of pre-configured pipelines are :doc:`available here </preconfig>`.
 
-..include:: design_a_pipeline.txt
+..include:: design_a_pipeline.rst
 
 Acknowledgments
 ---------------

@@ -3,10 +3,10 @@ Functional Preprocessing
 
 .. raw:: html
 
-    <div class="flowchart-container"><object data="_static/flowcharts/functional.svg" type="image/svg+xml"></object></div>
+    <div class="flowchart-container"><object data="../_static/flowcharts/functional.svg" type="image/svg+xml"></object></div>
 
 Initial Preprocessing
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_images/func_init_options.png
 
@@ -38,14 +38,14 @@ You can configure your slice time correction settings through the C-PAC pipeline
 Note that if a scan parameters file was used to construct the participant list, the parameters defined in this file will override the settings used here.
 
 Configuration Without the GUI
-""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""
 
 The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run slice timing correction and drop TRs:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"
     :widths: 5,30,15
-    :file: _static/params/ts_config.csv
+    :file: ../_static/params/ts_config.csv
 
 The box below contains an example of what these parameters might look like when defined in the YAML::
 
@@ -140,7 +140,7 @@ The following key/value pairs must be defined in your :doc:`pipeline configurati
 .. csv-table::
     :header: "Key","Description","Potential Values"
     :widths: 5,30,15
-    :file: _static/params/fmap_distcorr_config.csv
+    :file: ../_static/params/fmap_distcorr_config.csv
 
 The box below contains an example of what these parameters might look like when defined in the pipeline configuration YAML::
 
@@ -205,14 +205,14 @@ Configuring FSL BET options:
 
 
 Configuration Without the GUI
-""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""
 
 The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run functional to anatomical registration:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"
     :widths: 5,30,15
-    :file: _static/params/fta_config.csv
+    :file: ../_static/params/fta_config.csv
 
 The box below contains an example of what these parameters might look like when defined in the YAML::
 
@@ -224,8 +224,8 @@ The box below contains an example of what these parameters might look like when 
     functionalMasking: ['AFNI']
 
 Functional to MNI Registration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: /_images/func_to_mni_reg.png
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. figure:: /../_images/func_to_mni_reg.png
 
 #. **Run Functional to MNI Registration - [On, Off]:** Register functional images to a standard MNI152 template. This option must be enabled if you wish to calculate any derivatives.
 
@@ -244,14 +244,14 @@ Functional to MNI Registration
 #. **Resolutions to Resample to - [1 An integer indicating three same dimensions (e.g., 1mm, 2mm, 3mm, 4mm); 2 A float number indicating three same dimensions (e.g., 3.5mm etc.); 3 Three numbers connected by 'x' indicating three different dimensions (e.g., 2.67mmx2.67mmx3mm etc.)]:** The resolution (in mm) to which functional images are transformed during registration.  Note that selecting a 1 mm or 2 mm resolution will substantially increase your RAM needs.  For most cases, 3 mm or 4 mm resolutions are suggested.
 
 Configuration Without the GUI
-""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""
 
 The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run functional to anatomical registration:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"
     :widths: 5,30,15
-    :file: _static/params/ftm_config.csv
+    :file: ../_static/params/ftm_config.csv
 
 The box below contains an example of what these parameters might look like when defined in the YAML::
 

@@ -31,9 +31,9 @@ If you re-run C-PAC with an output directory containing a working directory (fro
 
     :ref:`Common Issue: I'm re-running a pipeline, but I am receiving many crashes <working_dir_crashes>`
 
-.. include:: docker.txt
+.. include:: docker.rst
 
-.. include:: singularity.txt
+.. include:: singularity.rst
 
 On the AWS Cloud
 ------------------------------

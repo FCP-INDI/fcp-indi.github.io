@@ -150,7 +150,7 @@ this_dir = os.path.dirname(os.path.abspath(__file__))
 release_notes_dir = os.path.join(this_dir, "release_notes")
 if not os.path.exists(release_notes_dir):
     os.makedirs(release_notes_dir)
-latest_path = os.path.join(release_notes_dir, 'latest.txt')
+latest_path = os.path.join(release_notes_dir, 'latest.rst')
 # all_release_notes = ""
 for t in gh_tags:
     if t in gh_releaseNotes:
@@ -183,11 +183,11 @@ for t in gh_tags:
             {}
         ))
 
-        release_notes_path = os.path.join(release_notes_dir, "{}.txt".format(t))
+        release_notes_path = os.path.join(release_notes_dir, "{}.rst".format(t))
         if gh_releaseNotes[t]['published_at'] and not os.path.exists(
             release_notes_path
         ) and not os.path.exists(
-            os.path.join(release_notes_dir, "v{}.txt".format(t))
+            os.path.join(release_notes_dir, "v{}.rst".format(t))
         ):
             with open(release_notes_path, 'w+') as f:
                 f.write(release_note)
@@ -199,19 +199,19 @@ for t in gh_tags:
                 f.write(
                     """
 
-.. include:: /user/release_notes/{latest}.txt
+.. include:: /user/release_notes/{latest}.rst
 
 .. toctree::
    :hidden:
 
-   /user/release_notes/{latest}.txt
+   /user/release_notes/{latest}.rst
 """.format(latest=str(t))
                 )
 
 rnd = [
     d for d in os.listdir(release_notes_dir) if d not in [
-        "index.txt",
-        "latest.txt"
+        "index.rst",
+        "latest.rst"
     ]
 ]
 rnd.sort(key=sort_tag, reverse=True)
@@ -231,7 +231,7 @@ all_release_notes = """
     "\n   ".join([
     "/user/release_notes/{}".format(d) for d in rnd
 ]))
-with open(os.path.join(release_notes_dir, 'index.txt'), 'w+') as f:
+with open(os.path.join(release_notes_dir, 'index.rst'), 'w+') as f:
     f.write(all_release_notes.strip())
 
 

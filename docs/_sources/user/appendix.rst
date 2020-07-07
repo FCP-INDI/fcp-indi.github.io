@@ -439,4 +439,4 @@ Some network centrality features will not be available without compiling the C-b
 
     python setup.py build_ext --inplace
 
-.. include:: benchmark.txt
+.. include:: benchmark.rst

@@ -15,7 +15,11 @@ def sort_versions(versions):
     v2 = versions.copy()
     v2.sort(reverse=True)
     {v2.remove(v) for v in {'latest', 'develop', '_sources'} if v in v2}
-    return(['latest', v2[0], 'develop', *v2[1:]])
+    if len(v2):
+        if len(v2)<2:
+            return(['latest', v2[0], 'develop'])
+        return(['latest', v2[0], 'develop', *v2[1:]])
+    return(['latest', 'develop'])
     
 
 if __name__ == '__main__':

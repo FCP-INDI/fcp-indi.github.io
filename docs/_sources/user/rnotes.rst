@@ -1,9 +1,5 @@
 Release Notes
 -------------
 
-.. include:: /release_notes/index.txt
+.. include:: /release_notes/index.rst
 
-.. toctree::
-   :hidden:
-
-   /release_notes/index.txt

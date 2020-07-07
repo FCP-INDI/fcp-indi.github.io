@@ -6,7 +6,7 @@ Functional Preprocessing
     <div class="flowchart-container"><object data="../_static/flowcharts/functional.svg" type="image/svg+xml"></object></div>
 
 Initial Preprocessing
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_images/func_init_options.png
 
@@ -21,7 +21,7 @@ Initial Preprocessing
 
 
 Configuration Without the GUI
-""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""
 The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run initial functional preprocessing:
 
 .. csv-table::
@@ -64,7 +64,7 @@ You can configure your slice time correction settings through the C-PAC pipeline
 Note that if a scan parameters file was used to construct the participant list, the parameters defined in this file will override the settings used here.
 
 Configuration Without the GUI
-""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""
 
 The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run slice timing correction and drop TRs:
 
@@ -231,7 +231,7 @@ Configuring FSL BET options:
 
 
 Configuration Without the GUI
-""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""
 
 The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run functional to anatomical registration:
 
@@ -250,7 +250,7 @@ The box below contains an example of what these parameters might look like when 
     functionalMasking: ['AFNI']
 
 Functional to Template Registration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. figure:: /_images/func_to_template_reg.png
 
 #. **Run Functional to Template Registration - [On, Off]:** Register functional images to a standard MNI152 template or EPI template. This option must be enabled if you wish to calculate any derivatives.
@@ -274,7 +274,7 @@ Functional to Template Registration
 #. **ANTs Registration Parameters :** Clicking on the setting icon will bring up a dialog where you can set 'antsRegistration' parameters.
 
 Configuration Without the GUI
-""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""
 
 The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run functional to anatomical registration:
 

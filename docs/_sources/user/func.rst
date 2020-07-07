@@ -1,8 +1,8 @@
 Functional Preprocessing
 -------------------------
 
-Initial Preprocessing 
-^^^^^^^^^^^^^^^^^^^^^^^
+Initial Preprocessing
+^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: /_images/func_init_options.png
 
@@ -11,7 +11,7 @@ Initial Preprocessing
 #. **Scaling - [On, Off]:** Choose On to scale the brain to a different size, especially optimal for rodent data.
 #. **Scaling Factor - [integer]:**  The scaling factor of the brain. Default is 10.
 
-Slice Timing Correction 
+Slice Timing Correction
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Most fMRI images are created by combining multiple 2D slices into a single 3D volume. Slices are acquired one after another, either sequentially in ascending or descending order, or in an interleaved manner, such that every other slice is acquired in a first pass, and the remaining slices are acquired in a second pass. The time elapsed between the acquisition of the first and last slice is equivalent to the repetition time (TR) used. Slice timing correction acts to adjust the timecourse of voxels in each slice to account for these differences. This is done by interpolating the data in each slice to match the timing of a reference slice. Slice timing correction is necessary because many statistical models used for fMRI analysis assume that all voxels are measured simultaneously. As such, differences in acquisition time between slices can cause confounds.
@@ -33,14 +33,14 @@ You can configure your slice time correction settings through the C-PAC pipeline
 Note that if a scan parameters file was used to construct the participant list, the parameters defined in this file will override the settings used here.
 
 Configuration Without the GUI
-""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""
 
 The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run slice timing correction and drop TRs:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"
     :widths: 5,30,15
-    :file: _static/params/ts_config.csv
+    :file: ../_static/params/ts_config.csv
 
 The box below contains an example of what these parameters might look like when defined in the YAML::
 
@@ -56,11 +56,11 @@ Through the Data Configuration
 You can also specify slice timing parameters within the subject list.  If you wish to specify slice timing correction parameters in this way, scan parameters must be supplied to C-PAC in a ``.csv`` file, and the path to this file provided when :doc:`setting up a new subject list </subject_list_config>`.
 
 .. line-block::
-  **If all subjects within a site have the same acquisition order:** 
-  Use the template :file:`scan_parameters.csv` file available for download `here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/scan_parameters.csv>`__. 
+  **If all subjects within a site have the same acquisition order:**
+  Use the template :file:`scan_parameters.csv` file available for download `here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/scan_parameters.csv>`__.
 
   **If subjects within a site have different acquisition orders:**
-  Use the template :file:`scan_parameters_multiscan.csv` file available for download `here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/scan_parameters_multiscan.csv>`__. 
+  Use the template :file:`scan_parameters_multiscan.csv` file available for download `here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/scan_parameters_multiscan.csv>`__.
 
 Slice Timing information should be entered into these files as follows:
 
@@ -72,7 +72,7 @@ Slice Timing information should be entered into these files as follows:
 
     * **altplus** - Alternating in the +z direction
     * **alt+z** - Alternating in the +z direction
-    * **alt+z2** - Alternating, but beginning at slice #1 
+    * **alt+z2** - Alternating, but beginning at slice #1
     * **altminus** - Alternating in the -z direction
     * **alt-z** - Alternating in the -z direction
     * **alt-z2** - Alternating, starting at slice #nz-2 instead of #nz-1
@@ -98,7 +98,7 @@ The path to the acquisition order file for each scan should be specified in the 
 
 Field Map-Based Distortion Correction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Distortion correction is a method that aims to reduce distortion in EPI (fMRI) images caused by inhomogeneities in the magnetic field (which often stem from differences in tissue across tissue boundaries in the head). C-PAC has the option of including field map-based distortion correction into your pre-processing pipeline, and two methods, **Phase Difference (PhaseDiff)** or **Phase-Encoding Polarity (Blip-up/Blip-down)** to perform distortion correction. 
+Distortion correction is a method that aims to reduce distortion in EPI (fMRI) images caused by inhomogeneities in the magnetic field (which often stem from differences in tissue across tissue boundaries in the head). C-PAC has the option of including field map-based distortion correction into your pre-processing pipeline, and two methods, **Phase Difference (PhaseDiff)** or **Phase-Encoding Polarity (Blip-up/Blip-down)** to perform distortion correction.
 
 Performing PhaseDiff distortion correction requires the acquisition of a phase difference image and two magnitude images. The "best of the two" magnitude images is chosen, and a final input of one phase difference file and one magnitude file are then used by the pre-processing pipeline.
 Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-encoding direction-specific EPI field maps to correct for distortion in the direction of the phase-encoding. It uses AFNI 3dQWarp to calculate the distortion unwarp for EPI field maps of opposite/same phase encoding direction.
@@ -135,7 +135,7 @@ The following key/value pairs must be defined in your :doc:`pipeline configurati
 .. csv-table::
     :header: "Key","Description","Potential Values"
     :widths: 5,30,15
-    :file: _static/params/fmap_distcorr_config.csv
+    :file: ../_static/params/fmap_distcorr_config.csv
 
 The box below contains an example of what these parameters might look like when defined in the pipeline configuration YAML::
 
@@ -164,14 +164,14 @@ Functional to Anatomical Registration
 #. **Functional Masking - [AFNI, FSL, FSL_AFNI, Anatomical_Refined]:** Choose which tool to be used in functional masking - AFNI (3dAutoMask), FSL (BET), FSL_AFNI (BET+3dAutoMask) or Anatomical_Refined (generate functional mask by registering anatomical mask to functional space). Default is AFNI.
 
 Configuration Without the GUI
-""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""
 
 The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run functional to anatomical registration:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"
     :widths: 5,30,15
-    :file: _static/params/fta_config.csv
+    :file: ../_static/params/fta_config.csv
 
 The box below contains an example of what these parameters might look like when defined in the YAML::
 
@@ -183,14 +183,14 @@ The box below contains an example of what these parameters might look like when 
     functionalMasking: ['AFNI']
 
 Functional to MNI Registration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. figure:: /_images/func_to_mni_reg.png
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. figure:: /../_images/func_to_mni_reg.png
 
 #. **Run Functional to MNI Registration - [On, Off]:** Register functional images to a standard MNI152 template. This option must be enabled if you wish to calculate any derivatives.
 
 #. **ANTs Interpolation Method - [Linear, BSpline, LanczosWindowedSinc]:** Interpolation method for writing out transformed anatomical images. ANTS registration tools only. Options are Linear, BSpline, or LanczosWindowedSinc.
 
-#. **FSL Interpolation Method - [trilinear, sinc, spline]:** Interpolation method for writing out transformed anatomical images. FSL registration tools only. Options are trilinear, sinc, or spline. 
+#. **FSL Interpolation Method - [trilinear, sinc, spline]:** Interpolation method for writing out transformed anatomical images. FSL registration tools only. Options are trilinear, sinc, or spline.
 
 #. **Functional Standard Resolution - [1 An integer indicating three same dimensions (e.g., 1mm, 2mm, 3mm, 4mm); 2 A float number indicating three same dimensions (e.g., 3.5mm etc.); 3 Three numbers connected by 'x' indicating three different dimensions (e.g., 2.67mmx2.67mmx3mm etc.)]:** The resolution (in mm) to which the preprocessed, registered functional timeseries outputs are written into. **Note that selecting a 1 mm or 2 mm resolution might substantially increase your RAM needs- these resolutions should be selected with caution. For most cases, 3 mm or 4 mm resolutions are suggested. Float numbers and three different dimensions are supported.**
 
@@ -203,14 +203,14 @@ Functional to MNI Registration
 #. **Resolutions to Resample to - [1 An integer indicating three same dimensions (e.g., 1mm, 2mm, 3mm, 4mm); 2 A float number indicating three same dimensions (e.g., 3.5mm etc.); 3 Three numbers connected by 'x' indicating three different dimensions (e.g., 2.67mmx2.67mmx3mm etc.)]:** The resolution (in mm) to which functional images are transformed during registration.  Note that selecting a 1 mm or 2 mm resolution will substantially increase your RAM needs.  For most cases, 3 mm or 4 mm resolutions are suggested.
 
 Configuration Without the GUI
-""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""
 
 The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run functional to anatomical registration:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"
     :widths: 5,30,15
-    :file: _static/params/ftm_config.csv
+    :file: ../_static/params/ftm_config.csv
 
 The box below contains an example of what these parameters might look like when defined in the YAML::
 
@@ -219,14 +219,14 @@ The box below contains an example of what these parameters might look like when 
     template_brain_only_for_anat : /usr/share/fsl/5.0/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz
     template_skull_for_anat : /usr/share/fsl/5.0/data/standard/MNI152_T1_${resolution_for_anat}.nii.gz
     identityMatrix : /usr/share/fsl/5.0/etc/flirtsch/ident.mat
-    resolution_for_func_derivative : 2mm  
+    resolution_for_func_derivative : 2mm
 
 
 Functional to EPI Registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. figure:: /_images/func_to_epi_reg.png
 
-#. **Run Functional to EPI Registration - [On, Off]:** Register functional images to a standard EPI template. 
+#. **Run Functional to EPI Registration - [On, Off]:** Register functional images to a standard EPI template.
 
 #. **Standard Brain Template - [path]:** Used as a reference image for functional EPI registration.
 

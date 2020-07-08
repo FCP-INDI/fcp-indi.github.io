@@ -4,9 +4,9 @@ Please, always base changes on the `source` branch. `master` branch will be over
 
 ### Versions
 
-#### `develop`
+#### `nightly`
 
-Pushes to `source` will rebuild docs at https://fcp-indi.github.io/docs/develop
+Pushes to `source` will rebuild docs at https://fcp-indi.github.io/docs/nightly
 
 #### C-PAC release tags
 Pushes to `build-version` will look for a C-PAC version tag (e.g, `v1.7.0`) in a file called `build_version.txt` at the root of the repo.
@@ -68,4 +68,4 @@ where `{width}` and `{height}` are the values already present in the existing `w
 
 ## Environment notes
 * :heavy_plus_sign: Check [`.circleci/config.yml`](https://github.com/FCP-INDI/fcp-indi.github.com/blob/source/.circleci/config.yml) for build dependencies.
-* :octocat: Set an environment variable `GITHUBTOKEN` to a [personal access token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line) to increase [your API rate limit](https://developer.github.com/v3/#rate-limiting) from 60 to 5000 requests per hour (for getting [release notes from GitHub](https://github.com/FCP-INDI/C-PAC/releases)).
+* :octocat: Set an environment variable `GITHUBTOKEN` to a [personal access token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line) to increase [your API rate limit](https://nightlyer.github.com/v3/#rate-limiting) from 60 to 5000 requests per hour (for getting [release notes from GitHub](https://github.com/FCP-INDI/C-PAC/releases)).

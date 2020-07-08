@@ -1,6 +1,6 @@
 ## Branches
 
-Please, always base changes on the `source` branch. `gh-pages` branch will be overwritten by the CI deployment.
+Please, always base changes on the `source` branch. `master` branch will be overwritten by the CI deployment.
 
 ### Versions
 

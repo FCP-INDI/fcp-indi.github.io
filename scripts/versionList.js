@@ -29,21 +29,21 @@ function redirectVersion(here, version) {
 
 
 function createDropdown(here) {
-  // ↓ temporary ↓
-  const versions = ['latest', 'v1.6.2a', 'develop'];
-  // ↑ temporary ↑
-  let dropdownElement = document.createElement('select');
-  versions.forEach(version => {
-    let option = document.createElement('option');
-    option.text = version;
-    option.value = version;
-    dropdownElement.add(option);
-    let indexInString = here.search(versionPattern);
-    if (here.slice(indexInString, indexInString + version.length) === version) {
-      option.setAttribute('selected', 'selected');
-    }
-  });
-  return(dropdownElement);
+  fetch("https://fcp-indi.github.io/docs/versions.txt").then(response => response.text().then(version_list => {
+    const versions = version_list.split('\n');
+    let dropdownElement = document.createElement('select');
+    versions.forEach(version => {
+      let option = document.createElement('option');
+      option.text = version;
+      option.value = version;
+      dropdownElement.add(option);
+      let indexInString = here.search(versionPattern);
+      if (here.slice(indexInString, indexInString + version.length) === version) {
+        option.setAttribute('selected', 'selected');
+      }
+    });
+    return(dropdownElement);
+  }));
 }
 
 versionDropdown();

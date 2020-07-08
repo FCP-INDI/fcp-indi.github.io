@@ -4,7 +4,7 @@ commands:
     steps:
       - run:
           name: 🔧 Setting version
-          command: if [ -f /build/build_version.txt ]; then echo "export BUILD_VERSION=$(cat /build/build_version.txt)" >> $BASH_ENV; else echo "export BUILD_VERSION=develop" >> $BASH_ENV; fi
+          command: if [ -f /build/build_version.txt ]; then echo "export BUILD_VERSION=$(cat /build/build_version.txt)" >> $BASH_ENV; else echo "export BUILD_VERSION=nightly" >> $BASH_ENV; fi
   install-dependencies:
     parameters:
       version:
@@ -48,22 +48,23 @@ commands:
             git add .
             git rm -fr docs/_sources || rm -f docs/_sources || true
             git rm -fr docs/.doctrees || rm -f docs/.doctrees || true
+            git rm -fr build_version.txt || rm -f build_version.txt || true
             git commit -m "$(cat /root/GITMESSAGE.txt)" --allow-empty
             git push origin HEAD:gh-pages -f
             cd -
               
 jobs:
-  build-develop:
+  build-nightly:
     working_directory: /build
     docker:
       - image: python:3.7
     steps:
       - checkout
       - install-dependencies:
-          version: develop
+          version: nightly
       - run:
-          name: 🏗️ Building develop branch docs
-          command: ./bin/build develop
+          name: 🏗️ Building nightly branch docs
+          command: ./bin/build nightly
       - run:
           name: Storing commit message
           command: git log origin/source -1 --oneline --pretty=%s > /root/GITMESSAGE.txt
@@ -102,7 +103,7 @@ jobs:
             - root/.ssh
             - root/GITMESSAGE.txt
           
-  deploy-develop:
+  deploy-nightly:
     working_directory: /
     docker:
       - image: python:3.7
@@ -125,7 +126,7 @@ workflows:
   version: 2.1
   build_and_deploy:
     jobs:
-      - build-develop:
+      - build-nightly:
           filters:
             branches:
               only:
@@ -135,13 +136,13 @@ workflows:
             branches:
               only:
                 - build-version
-      - deploy-develop:
+      - deploy-nightly:
           filters:
             branches:
               only:
                 - source
           requires:
-            - build-develop
+            - build-nightly
       - deploy-version:
           filters:
             branches:

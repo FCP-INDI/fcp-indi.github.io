@@ -21,12 +21,12 @@ commands:
             git checkout << parameters.version >>
             cd /build
   prep-deploy:
+    parameters:
+      version:
+        type: string
     steps:
-      - attach_workspace:
-          at: /
-      - get-version
       - install-dependencies:
-          version: ${BUILD_VERSION}
+          version: << parameters.version >>
       - run:
           name: 🔧 Configuring git user
           command: |
@@ -61,7 +61,7 @@ jobs:
     steps:
       - checkout
       - install-dependencies:
-          version: nightly
+          version: develop
       - run:
           name: 🏗️ Building nightly branch docs
           command: ./bin/build nightly
@@ -108,7 +108,10 @@ jobs:
     docker:
       - image: python:3.7
     steps:
-      - prep-deploy
+      - attach_workspace:
+          at: /
+      - prep-deploy: 
+          version: develop
       - deploy
       
   deploy-version:
@@ -116,7 +119,11 @@ jobs:
     docker:
       - image: python:3.7
     steps:
-      - prep-deploy 
+      - attach_workspace:
+          at: /
+      - get-version
+      - prep-deploy:
+          version: ${BUILD_VERSION}
       - run:
           name: 🔖 Checking if latest
           command: if $(python /build/scripts/is_latest.py); then cp -r /build/docs/${BUILD_VERSION} /build/docs/latest; fi

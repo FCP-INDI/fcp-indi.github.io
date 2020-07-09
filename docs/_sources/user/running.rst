@@ -322,7 +322,7 @@ Once you are done submitting the job, you can check its status by typing ``qstat
 
 The `job-ID` is a number assigned to your job when it is submitted to the scheduler.  The `state` of the job can be represented by one of several values: `r` means that the job is running, `qw` means that the job is queued and waiting, and `E` means that an error has occurred. The `queue` column indicates on which nodes of your cluster the C-PAC job is being executed.
 
-If an error has occurred on any of the nodes while your pipeline executes, you should check the `cluster_temp_files` directory that was created in the directory from which you ran C-PAC.  This will contain copies of the job submission scripts that C-PAC generated to start your job.  It will also contain files containing the standard out and error messages for a given job.  You should check these first to determine what may have caused the error.  If these files do not help you determine what may have caused the error, feel free to ask for :doc:`help </help>` on the C-PAC forum.
+If an error has occurred on any of the nodes while your pipeline executes, you should check the `cluster_temp_files` directory that was created in the directory from which you ran C-PAC.  This will contain copies of the job submission scripts that C-PAC generated to start your job.  It will also contain files containing the standard out and error messages for a given job.  You should check these first to determine what may have caused the error.  If these files do not help you determine what may have caused the error, feel free to ask for :doc:`help </user/help>` on the C-PAC forum.
 
 Terminating a Starcluster Instance
 ''''''''''''''''''''''''''''''''''

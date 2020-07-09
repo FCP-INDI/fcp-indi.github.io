@@ -15,7 +15,7 @@ C-PAC can be run without installing through any of these three options:
 * On the Amazon AWS Cloud
 * Through OpenNeuro
 
-For more details, skip ahead to the :doc:`C-PAC Quickstart </quick>` or :doc:`Run C-PAC </running>` pages.
+For more details, skip ahead to the :doc:`C-PAC Quickstart </user/quick>` or :doc:`Run C-PAC </user/running>` pages.
 
 Requirements
 ------------
@@ -368,8 +368,8 @@ Installing C-PAC Image Resources
 """"""""""""""""""""""""""""""""
 During preprocessing and analysis, C-PAC utilizes many of the standard brain atlases and tissue maps provided by FSL. Additionally, C-PAC requires the following non-standard files in order to run properly:
 
-* Binarized tissue prior probability maps (used during :doc:`tissue segmentation </anat>`)
-* Symmetric versions of the MNI152 brain template and masks (used when calculating :doc:`VMHC </vmhc>`)
+* Binarized tissue prior probability maps (used during :doc:`tissue segmentation </user/anat>`)
+* Symmetric versions of the MNI152 brain template and masks (used when calculating :doc:`VMHC </user/vmhc>`)
 
 These files are included in the C-PAC Image Resources package, available `here <http://fcon_1000.projects.nitrc.org/indi/cpac_resources.tar.gz>`__. You may install these files using the following commands or use the included script (install_resources.sh):
 
@@ -412,15 +412,15 @@ C-PAC is available for download from the `C-PAC Homepage <http://fcp-indi.github
 
 Testing Your C-PAC Installation
 '''''''''''''''''''''''''''''''
-In a new terminal window, open iPython (or Python) and enter the command ``import CPAC``. If installation was successful, this will execute without an error and present you with a blank new line. If you encounter an error (e.g. ``no module named C-PAC``), try re-running the C-PAC install command above. If this does not work, see the :doc:`Troubleshooting and Help Page </help>`.  Note that if you do not open a new terminal window and are still within the C-PAC installation directory ('C-PAC'), you may encounter errors that can be alleviated by leaving the 'C-PAC' directory.
+In a new terminal window, open iPython (or Python) and enter the command ``import CPAC``. If installation was successful, this will execute without an error and present you with a blank new line. If you encounter an error (e.g. ``no module named C-PAC``), try re-running the C-PAC install command above. If this does not work, see the :doc:`Troubleshooting and Help Page </user/help>`.  Note that if you do not open a new terminal window and are still within the C-PAC installation directory ('C-PAC'), you may encounter errors that can be alleviated by leaving the 'C-PAC' directory.
 
 Once you are able to successfully ``import CPAC`` it is safe to delete any setup files downloaded during the install process (e.g. Nipype and C-PAC downloads, FSL install scripts, etc.), as they are no longer needed.
 
-**Note:** The test process described here only acts to confirm that the C-PAC python package has been correctly installed. To fully test C-PAC on your system, please see the :doc:`Benchmark Page </benchmark>`.
+**Note:** The test process described here only acts to confirm that the C-PAC python package has been correctly installed. To fully test C-PAC on your system, please see the :doc:`Benchmark Page </user/benchmark>`.
 
 Updating C-PAC
 """"""""""""""
-C-PAC is being actively developed, and new versions (containing bug fixes and new features) are often released. To update to the latest version, simply download it from the `C-PAC Homepage <http://fcp-indi.github.com/>`__ and repeat the instructions in the `Installing C-PAC` section above. A list of previous versions and the changes they contain is available on the :doc:`Release Notes Page </rnotes>`.
+C-PAC is being actively developed, and new versions (containing bug fixes and new features) are often released. To update to the latest version, simply download it from the `C-PAC Homepage <http://fcp-indi.github.com/>`__ and repeat the instructions in the `Installing C-PAC` section above. A list of previous versions and the changes they contain is available on the :doc:`Release Notes Page </user/rnotes>`.
 
 **Note: If you are using Anaconda/Miniconda you may also use the following command (replacing 'cpac' with your environment name) to remove an old environment before creating a new environment to replace it.**
 

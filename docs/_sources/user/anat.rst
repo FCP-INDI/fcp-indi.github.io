@@ -171,7 +171,7 @@ Configuring CPAC to Run Anatomical Registration
 Configuration Without the GUI
 """""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run anatomical preprocessing:
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run anatomical preprocessing:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"
@@ -262,7 +262,7 @@ Configuring CPAC to Run Anatomical Tissue Segmentation
 Configuration Without the GUI
 """""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run anatomical tissue segmentation:
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run anatomical tissue segmentation:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"

@@ -5,9 +5,9 @@ A standard C-PAC run output directory for one participant-session is shown below
 
 This is with all derivatives enabled, and the output, smoothing, and z-scoring options all at "Default":
 
-* :doc:`No extra functional outputs or debugging outputs </output_config>`
-* :doc:`Smoothed outputs only </after_warp>`
-* :doc:`z-score standardized outputs only </after_warp>`
+* :doc:`No extra functional outputs or debugging outputs </user/output_config>`
+* :doc:`Smoothed outputs only </user/after_warp>`
+* :doc:`z-score standardized outputs only </user/after_warp>`
 
 .. figure:: /_images/output_dir_default.png
 
@@ -68,7 +68,7 @@ The output directory folders below are produced during a default run. If you ena
 * **symmetric_mni_to_anatomical_nonlinear_xfm**: Same as mni_to_anatomical_nonlinear_xfm, except the inverse warp from the symmetric template back to anatomical space.
 * **vmhc_fisher_zstd_zstat_map**: Fisher r-to-z transformed, Z-stat output of Voxel-Mirrored Homotopic Connectivity (VMHC).
 * **voxel_timeseries**: 1-D file (and also CSV and .npz files, if selected) containing the voxel-wise extracted timeseries based on each ROI provided. Sub-directories in this folder for each ROI.
-* **QC-interface_{scan}_{nuisance/preprocessing strategy}.html**: :doc:`QC Interface HTML page </qc_interface>` for each scan and nuisance/preprocessing strategy combination.
+* **QC-interface_{scan}_{nuisance/preprocessing strategy}.html**: :doc:`QC Interface HTML page </user/qc_interface>` for each scan and nuisance/preprocessing strategy combination.
 
 Sub-Directories
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -36,7 +36,7 @@ CONFIGURING C-PAC TO RUN AROMA-ICA:
 CONFIGURING AROMA-ICA USING A YAML FILE:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run AROMA-ICA::
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run AROMA-ICA::
 
     runICA :  [1]
     aroma_TR :  0.01

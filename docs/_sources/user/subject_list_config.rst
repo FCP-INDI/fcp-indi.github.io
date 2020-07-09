@@ -87,7 +87,7 @@ data_settings.yml contents
 
 #. **(Optional) AWS Credentials File - [path]:** Required if downloading data from a non-public S3 bucket on Amazon Web Services (AWS). This usually takes the form of a CSV file.
 
-#. **(Optional) Scan Parameters File - [path]:**  Path to a CSV file specifying the slice time acquisition parameters for scans.  If set to 'None', these parameters will either be defined by the NifTI headers or by an explicit slice order specified in the pipeline configuration builder. Instructions for creating this CSV file can be found :doc:`here </func>`. **Note:** If your data is in BIDS format, the data configuration builder will read the scan parameters described in the data's affiliated JSON file(s), if they exist, and a scan parameters CSV file is not required.
+#. **(Optional) Scan Parameters File - [path]:**  Path to a CSV file specifying the slice time acquisition parameters for scans.  If set to 'None', these parameters will either be defined by the NifTI headers or by an explicit slice order specified in the pipeline configuration builder. Instructions for creating this CSV file can be found :doc:`here </user/func>`. **Note:** If your data is in BIDS format, the data configuration builder will read the scan parameters described in the data's affiliated JSON file(s), if they exist, and a scan parameters CSV file is not required.
 
 #. **(Optional) Brain Mask File Path Template - [text]:** File Path Template for brain mask files. For anatomical skull-stripping. Note: use this for BIDS data directories as well, as the specification for anatomical brain masks is still subject to change. Place tags for the appropriate data directory levels with the tags {site}, {participant}, and {session}. Only {participant} is required. Example: /data/{site}/{participant}/{session}/{participant}_{session}_brain-mask.nii.gz
 
@@ -193,7 +193,7 @@ A final example is the file structure used by the `Enhanced Nathan Kline Institu
 
 .. figure:: /_images/nki-rs_template.png
 
-Users experiencing difficulties defining file path templates may want to re-organize their data to match one of the examples above. If you manually define a file path template and encounter an error when attempting to generate participant lists, please :doc:`contact us </help>` and we will be happy to help.
+Users experiencing difficulties defining file path templates may want to re-organize their data to match one of the examples above. If you manually define a file path template and encounter an error when attempting to generate participant lists, please :doc:`contact us </user/help>` and we will be happy to help.
 
 Data YAML Fields
 ----------------

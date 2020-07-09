@@ -6,7 +6,7 @@ Pre-Processing Steps
 
     <div class="flowchart-container"><object data="../_static/flowcharts/pipeline-individual.svg" type="image/svg+xml"></object></div>
 
-The following index provides links to pages containing overviews and configuration instructions for the various pre-processing steps that C-PAC performs.  For more information about how to set up a pipeline configuration, see the :doc:`pipeline configuration page </pipeline_config>`.
+The following index provides links to pages containing overviews and configuration instructions for the various pre-processing steps that C-PAC performs.  For more information about how to set up a pipeline configuration, see the :doc:`pipeline configuration page </user/pipeline_config>`.
 
 .. toctree::
    :maxdepth: 1

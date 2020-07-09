@@ -111,7 +111,7 @@ Configuring Nuisance Signal Regression Options
 Configuration Without the GUI
 """""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run nuisance correction:
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run nuisance correction:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"
@@ -295,7 +295,7 @@ Configuring Median Angle Correction Options
 Configuration Without the GUI
 """""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run median angle correction:
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run median angle correction:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"
@@ -319,7 +319,7 @@ Configuring Temporal Filtering Options
 Configuration Without the GUI
 """""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run temporal filtering:
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run temporal filtering:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"

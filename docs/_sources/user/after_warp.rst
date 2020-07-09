@@ -38,7 +38,7 @@ Configuring C-PAC to Run After-Warping Steps
 Configuration Using a YAML File
 """"""""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run the after warping options:
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run the after warping options:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"

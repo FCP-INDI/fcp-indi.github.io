@@ -34,7 +34,7 @@ The spatial maps used during Dual Regression can be generated any number of ways
 
 Configuring C-PAC
 ^^^^^^^^^^^^^^^^^
-Before SCA can be calculated, you **must** first extract a seed time series from which to calculate correlations. This is done by configuring and running :doc:`Time Series Extraction </tse>`.  **You will not be able to proceed in the GUI without first entering in an ROI Specification, and will receive an error if the specification is not defined.** 
+Before SCA can be calculated, you **must** first extract a seed time series from which to calculate correlations. This is done by configuring and running :doc:`Time Series Extraction </user/tse>`.  **You will not be able to proceed in the GUI without first entering in an ROI Specification, and will receive an error if the specification is not defined.** 
 
 .. figure:: /_images/sca_gui.png
 
@@ -50,7 +50,7 @@ Before SCA can be calculated, you **must** first extract a seed time series from
 Configuration Without the GUI
 """"""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run SCA:
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run SCA:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"

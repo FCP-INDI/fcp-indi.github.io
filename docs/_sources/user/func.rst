@@ -25,7 +25,7 @@ Note that if a scan parameters file was used to construct the participant list, 
 Configuration Without the GUI
 """""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run slice timing correction and drop TRs:
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run slice timing correction and drop TRs:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"
@@ -43,7 +43,7 @@ The box below contains an example of what these parameters might look like when 
 Through the Data Configuration
 """"""""""""""""""""""""""""""
 
-You can also specify slice timing parameters within the subject list.  If you wish to specify slice timing correction parameters in this way, scan parameters must be supplied to C-PAC in a ``.csv`` file, and the path to this file provided when :doc:`setting up a new subject list </subject_list_config>`.
+You can also specify slice timing parameters within the subject list.  If you wish to specify slice timing correction parameters in this way, scan parameters must be supplied to C-PAC in a ``.csv`` file, and the path to this file provided when :doc:`setting up a new subject list </user/subject_list_config>`.
 
 .. line-block::
   **If all subjects within a site have the same acquisition order:**
@@ -120,7 +120,7 @@ The C-PAC pipeline configuration builder provides options for configuring the Di
 Configuration Without the GUI
 """""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run distortion correction:
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run distortion correction:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"
@@ -156,7 +156,7 @@ Functional to Anatomical Registration
 Configuration Without the GUI
 """""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run functional to anatomical registration:
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run functional to anatomical registration:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"
@@ -195,7 +195,7 @@ Functional to MNI Registration
 Configuration Without the GUI
 """""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </pipeline_config>` for C-PAC to run functional to anatomical registration:
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run functional to anatomical registration:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"

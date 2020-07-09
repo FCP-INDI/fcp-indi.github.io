@@ -43,7 +43,7 @@ You can then edit the file as needed, or leave it as the default. If you want to
 
    cpac run --pipe_config {path to pipeline config} {path to data config}
 
-Pipeline configuration files, like the data settings and data configuration files discussed in the :doc:`data configuration builder section </subject_list_config>`, are stored as YAML files.  Similarly, each of the parameters used by C-PAC to assemble your pipeline can be specified as key-value pairs, so a pipeline configuration YAML would have multiple lines of the form ``key: value`` like so::
+Pipeline configuration files, like the data settings and data configuration files discussed in the :doc:`data configuration builder section </user/subject_list_config>`, are stored as YAML files.  Similarly, each of the parameters used by C-PAC to assemble your pipeline can be specified as key-value pairs, so a pipeline configuration YAML would have multiple lines of the form ``key: value`` like so::
 
     # Name for this pipeline configuration - useful for identification.
     pipelineName :  pipeline01
@@ -64,7 +64,7 @@ Pipeline configuration files, like the data settings and data configuration file
     # Directory where CPAC should place processed data.
     outputDirectory :  /home/runs/pipeline01/output
 
-An example of a pipeline configuration YAML file can be found `here <https://raw.githubusercontent.com/FCP-INDI/C-PAC/master/CPAC/resources/configs/pipeline_config_template.yml>`_.  Tables explaining the keys and their potential values can be found on the individual pages for each of the outputs C-PAC is capable of producing.  All pipeline configuration files should have the keys in the :doc:`Output Settings </output_config>` table defined.
+An example of a pipeline configuration YAML file can be found `here <https://raw.githubusercontent.com/FCP-INDI/C-PAC/master/CPAC/resources/configs/pipeline_config_template.yml>`_.  Tables explaining the keys and their potential values can be found on the individual pages for each of the outputs C-PAC is capable of producing.  All pipeline configuration files should have the keys in the :doc:`Output Settings </user/output_config>` table defined.
 
 Why a list?
 '''''''''''
@@ -82,18 +82,18 @@ Data Management and Environment Settings
 Pre- and post-processing
 ''''''''''''''''''''''''
 
-* :doc:`Anatomical Preprocessing </anat>`
-* :doc:`Functional Preprocessing </func>`
-* :doc:`Nuisance Corrections </nuisance>`
-* :doc:`Time Series Extraction </tse>`
-* :doc:`After Warp Settings </after_warp>`
+* :doc:`Anatomical Preprocessing </user/anat>`
+* :doc:`Functional Preprocessing </user/func>`
+* :doc:`Nuisance Corrections </user/nuisance>`
+* :doc:`Time Series Extraction </user/tse>`
+* :doc:`After Warp Settings </user/after_warp>`
 
 Derivatives
 '''''''''''
 
-* :doc:`Seed-based Correlation Analysis (SCA) and Dual Regression </sca>` - Analyze the connectivity between brain regions.
-* :doc:`Voxel-mirrored Homotopic Connectivity (VMHC) </vmhc>` - Investigate connectivity between hemispheres.
-* :doc:`Amplitude of Low Frequency Fluctuations (ALFF) and fractional ALFF (fALFF) </alff>` - Measure the power of slow fluctuations in brain activity.
-* :doc:`Regional Homogeneity (ReHo) </reho>` - Measure the similarity of activity patterns across neighboring voxels.
-* :doc:`Network Centrality </centrality>` - Analyze the structure of functional networks.
+* :doc:`Seed-based Correlation Analysis (SCA) and Dual Regression </user/sca>` - Analyze the connectivity between brain regions.
+* :doc:`Voxel-mirrored Homotopic Connectivity (VMHC) </user/vmhc>` - Investigate connectivity between hemispheres.
+* :doc:`Amplitude of Low Frequency Fluctuations (ALFF) and fractional ALFF (fALFF) </user/alff>` - Measure the power of slow fluctuations in brain activity.
+* :doc:`Regional Homogeneity (ReHo) </user/reho>` - Measure the similarity of activity patterns across neighboring voxels.
+* :doc:`Network Centrality </user/centrality>` - Analyze the structure of functional networks.
 

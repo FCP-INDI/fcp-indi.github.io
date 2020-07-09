@@ -103,10 +103,10 @@ The Configurable Pipeline for the Analysis of Connectomes (C-PAC) is a configura
 
 * standard quality assurance measurements
 * standard image preprocessing based upon user specified preferences
-* generation of functional connectivity maps (e.g., :doc:`seed-based correlation analyses </sca>`)
+* generation of functional connectivity maps (e.g., :doc:`seed-based correlation analyses </user/sca>`)
 * customizable extraction of time-series data
 * generation of graphical representations of the connectomes at various scales (e.g., voxel, parcellation unit)
-* generation of local R-fMRI measures (e.g., :doc:`regional homogeneity </reho>`, :doc:`voxel-matched homotopic connectivity </vmhc>`, :doc:`frequency amplitude measures </alff>`)
+* generation of local R-fMRI measures (e.g., :doc:`regional homogeneity </user/reho>`, :doc:`voxel-matched homotopic connectivity </user/vmhc>`, :doc:`frequency amplitude measures </user/alff>`)
 
 Importantly, C-PAC makes it possible to use a single configuration file to launch a factorial number of pipelines differing with respect to specific processing steps (e.g., spatial/temporal filter settings, global correction strategies, motion correction strategies, group analysis models). Additional noteworthy features include the ability to easily:
 
@@ -174,7 +174,6 @@ Primary support for the work by Michael P. Milham, Cameron Craddock and the INDI
 
 User Guide Index
 ^^^^^^^^^^^^^^^^
-
 .. toctree::
    :maxdepth: 2
    :includehidden:

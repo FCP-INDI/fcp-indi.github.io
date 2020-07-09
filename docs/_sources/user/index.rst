@@ -173,7 +173,7 @@ Funding Acknowledgements
 Primary support for the work by Michael P. Milham, Cameron Craddock and the INDI team was provided by gifts from Joseph P. Healey and the `Stavros Niarchos Foundation <http://www.snf.org/>`_ to the `Child Mind Institute <http://www.childmind.org/>`_, as well as by `NIMH <http://www.nimh.nih.gov/index.shtml>`_ awards to Dr. Milham (R03MH096321) and F.X. Castellanos (R01MH083246).
 
 User Guide Index
-----------------
+^^^^^^^^^^^^^^^^
 
 .. toctree::
    :maxdepth: 2

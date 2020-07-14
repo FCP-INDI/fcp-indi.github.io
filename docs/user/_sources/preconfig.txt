@@ -97,3 +97,34 @@ benchmark-FNIRT: C-PAC Benchmark with FSL FNIRT Registration
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_benchmark-FNIRT.yml <https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_benchmark-FNIRT.yml>`_
 
 The benchmark pipeline has remained mostly unchanged since the project's inception, and is used at the end of each release cycle to ensure the results of C-PAC's key outputs have not changed. It is designed to test a wide range of pipeline options. This pipeline is based on registration-to-template using the FSL FLIRT & FNIRT, as this decision impacts many other aspects of the pipeline further downstream.
+
+
+Monkey: Default with Monkey Preprocessing 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_monkey.yml <https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_monkey.yml>`_
+
+This pipeline is based on the work of Xu et al. (2019) and `nhp-ABCD-BIDS-pipeline. <https://zenodo.org/record/3888969#.Xw31IpNKjyU>`_
+
+* `Nanditha Rajamani, et al. "U-Net Model for Brain Extraction: Training in Humans and Transferring to Non-human Primates." OHBM (2019) <https://ww5.aievolution.com/hbm1901/index.cfm?do=abs.viewAbs&abs=4924>`_
+* `Julian S B Ramirez, Alice M Graham, Jacqueline R Thompson, Jennifer Y Zhu, Darrick Sturgeon, Jennifer L Bagley, Elina Thomas, Samantha Papadakis, Muhammed Bah, Anders Perrone, Eric Earl, Oscar Miranda-Dominguez, Eric Feczko, Eric J Fombonne, David G Amaral, Joel T Nigg, Elinor L Sullivan, Damien A Fair, Maternal Interleukin-6 Is Associated With Macaque Offspring Amygdala Development and Behavior, Cerebral Cortex, Volume 30, Issue 3, March 2020, Pages 1573–1585 <https://doi.org/10.1093/cercor/bhz188>`_
+
+Based on the preprocessing decisions of the default pipeline, this preconfiguration allows you to preprocess all of your macaque data, includes:
+
+Anatomical:
+
+* Brain extraction (via U-Net)
+* Tissue segmentation (via ANTs-prior based)
+* Registration to template (via ANTs/ITK)
+
+Functional:
+
+* Despike
+* Slice-timing correction
+* Motion estimation & correction
+* EPI N4 Bias Correction
+* Brain Extraction (Anatomical-refined)
+* Co-registration to structural
+* Nuisance correction & filtering
+* Registration to template (via ANTs/ITK)
+* spatial smoothing

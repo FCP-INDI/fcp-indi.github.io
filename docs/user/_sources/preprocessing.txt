@@ -13,6 +13,7 @@ The following index provides links to pages containing overviews and configurati
 
    Anatomical Preprocessing <anat>
    Functional Preprocessing <func>
+   Longitudinal Preprocessing <longitudinal>
    Nuisance Corrections <nuisance>
    ICA Denoising<aroma_ica>
    Time Series Extraction <tse>

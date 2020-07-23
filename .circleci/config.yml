@@ -15,12 +15,30 @@ jobs:
             apt-get update && apt-get -y install git rsync python-dev graphviz libgraphviz-dev pkg-config python3-sphinx
             pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/develop/requirements.txt
             pip install --user git+https://github.com/FCP-INDI/C-PAC.git sphinx m2r numpydoc PyGithub sphinxcontrib-programoutput
-            git clone https://github.com/FCP-INDI/C-PAC.git /build/C-PAC
+            git clone https://github.com/FCP-INDI/C-PAC.git
+            python -m venv ~/simple
+            source ~/simple/bin/activate
+            pip install cpac
+            deactivate
+      - setup_remote_docker
+      - run:
+          name: Run cpac commands
+          command: |
+            source ~/simple/bin/activate
+            cpac run --help
+            mkdir -p docs/user/_sources/cpac
+            printf ".. code-block:: console\n\n   $ cpac --help\n\n" > docs/user/_sources/cpac/help.txt
+            cpac --help | sed -e "s/.*/   &/" >> docs/user/_sources/cpac/help.txt
+            mkdir -p docs/user/_sources/run
+            printf "Usage: cpac run\n\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\n.. code-block:: console\n\n   $ cpac run --help\n\n" > docs/user/_sources/run/help.txt
+            cpac run --help | sed -e "s/.*/   &/" >> docs/user/_sources/run/help.txt
+            mkdir -p docs/user/_sources/utils
+            printf "Usage: cpac utils\n\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\n.. code-block:: console\n\n   $ cpac utils --help\n\n" > docs/user/_sources/utils/help.txt
+            cpac utils --help | sed -e "s/.*/   &/" >> docs/user/_sources/utils/help.txt
+            deactivate
       - run:
           name: Build docs
-          command: |
-            ./bin/build
-
+          command: ./bin/build
       - run:
           name: Configure git user
           command: |

@@ -1,8 +1,7 @@
 import os
 import sys
 from os.path import basename
-from io import StringIO ## for Python 3
-
+from io import StringIO
 from docutils.parsers.rst import Directive
 from docutils import nodes
 

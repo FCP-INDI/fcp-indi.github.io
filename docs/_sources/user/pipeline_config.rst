@@ -13,16 +13,16 @@ There are two ways of setting up or editing a pipeline configuration for C-PAC:
 Definitions
 '''''''''''
 * Workflow
-    .. include:: /glossary/workflow.rst
+    .. include:: /user/glossary/workflow.rst
         :start-line: 3
 * Pipeline
-    .. include:: /glossary/pipeline.rst
+    .. include:: /user/glossary/pipeline.rst
         :start-line: 3
 * Strategy
-    .. include:: /glossary/strategy.rst
+    .. include:: /user/glossary/strategy.rst
         :start-line: 3
 * Derivative
-    .. include:: /glossary/derivative.rst
+    .. include:: /user/glossary/derivative.rst
         :start-line: 3
 
 .. include:: design_a_pipeline.rst

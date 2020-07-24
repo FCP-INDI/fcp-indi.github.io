@@ -23,7 +23,7 @@ You can specify a platform with the ``--platform docker`` or ``--platform singul
 
 Usage
 `````
-.. include:: /cpac/help.txt
+.. include:: /user/cpac/help.txt
 
 ``--platform docker``
 *********************
@@ -68,9 +68,9 @@ Note: we are still providing the postionally-required ``bids_dir`` input paramet
 
 The full list of parameters and options that can be passed to C-PAC are shown below:
 
-.. include:: /run/help.txt
+.. include:: /user/run/help.txt
 
-.. include:: /utils/help.txt
+.. include:: /user/utils/help.txt
 
 Note that any of the optional arguments above will over-ride any pipeline settings in the default pipeline or in the pipeline configuration file you provide via the ``--pipeline_file`` parameter.
 

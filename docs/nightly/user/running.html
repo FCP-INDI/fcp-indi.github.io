@@ -1,0 +1,452 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Running C-PAC &#8212; C-PAC 1.6.2 Beta documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex" />
+    <link rel="search" title="Search" href="../search" />
+    <link rel="next" title="Group-Level Analysis" href="group_analysis" />
+    <link rel="prev" title="PyPEER Integration" href="pypeer" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="group_analysis" title="Group-Level Analysis"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pypeer" title="PyPEER Integration"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.6.2 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index" accesskey="U">Welcome to C-PAC’s user guide!</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="running-c-pac">
+<h1>Running C-PAC<a class="headerlink" href="#running-c-pac" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>As with configuring the subject list, pipeline configuration, and group analysis files, execute a C-PAC run by using C-PAC’s command line interface.</p>
+<p>In addition to running C-PAC traditionally on your own local computer or on a server, there are three other avenues through which you can run C-PAC without going through the install process:</p>
+<ul class="simple">
+<li>With a Docker or Singularity container (optionally with <a class="reference internal" href="cpac"><span class="doc">a simple Python commandline interface</span></a>)</li>
+<li>On the Amazon AWS Cloud</li>
+<li>Through OpenNeuro</li>
+</ul>
+<p>More details of these options are available below.</p>
+<p>If you re-run C-PAC with an output directory containing a working directory (from the runtime flag <code class="docutils literal notranslate"><span class="pre">--save_working_dir</span></code>), C-PAC will use that working directories contents in the re-run. If you try to re-run on an output directory with a saved working directory from a different version of C-PAC than the one that you’re currently running, differences in the working directory could cause problems.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>C-PAC migrated from Python 2 to Python 3 in v1.6.2 (see <a class="reference external" href="rnotes">release notes</a>). If your working directory contains Python 2 pickles from an older version of C-PAC and you want to continue to use this working directory, run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cpac</span> <span class="n">utils</span> <span class="n">repickle</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">working_dir</span>
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>docker run -i --rm --user $(id -u):$(id -g) -v /path/to/working_dir:/working fcpindi/c-pac:latest /bids_dir /outputs cli -- utils repickle /working
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">singularity</span> <span class="n">run</span> <span class="n">C</span><span class="o">-</span><span class="n">PAC_latest</span><span class="o">.</span><span class="n">sif</span> <span class="o">/</span><span class="n">bids_dir</span> <span class="o">/</span><span class="n">outputs</span> <span class="n">cli</span> <span class="o">--</span> <span class="n">utils</span> <span class="n">repickle</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">working_dir</span>
+</pre></div>
+</div>
+<p class="last">before running C-PAC ≥ v1.6.2</p>
+</div>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="help#working-dir-crashes"><span class="std std-ref">Common Issue: I’m re-running a pipeline, but I am receiving many crashes</span></a></p>
+</div>
+</div>
+<div class="section" id="cpac-python-package">
+<h2>cpac (Python package)<a class="headerlink" href="#cpac-python-package" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://pypi.org/project/cpac/">cpac</a> is available so that you can easily run analyses without needing interact with the container platform that allows you to run C-PAC without installing all of the underlying software.</p>
+<p>Currently the cpac supports Singularity (version ≥ 2.5 ≤ 3.0) and Docker.</p>
+<p>cpac requires Python 3.6 or greater. To get cpac, simply</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install cpac</span>
+</pre></div>
+</div>
+<p>As a quick example, in order to run C-PAC in participant mode, for one participant, using a BIDS dataset stored on your machine or server, and using the container image’s default pipeline configuration:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">cpac run /Users/You/local_bids_data /Users/You/some_folder_for_outputs participant</span>
+</pre></div>
+</div>
+<p>By default, the cpac will try Docker first and fall back to Singularity if Docker fails. If both fail, an exception is raised.</p>
+<p>You can specify a platform with the <code class="docutils literal notranslate"><span class="pre">--platform</span> <span class="pre">docker</span></code> or <code class="docutils literal notranslate"><span class="pre">--platform</span> <span class="pre">singularity</span></code>. If you specify a platform without specifying an image, these are the defaults, using the first successfully found image:</p>
+<div class="section" id="usage">
+<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="platform-docker">
+<h4><code class="docutils literal notranslate"><span class="pre">--platform</span> <span class="pre">docker</span></code><a class="headerlink" href="#platform-docker" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li>Look for <code class="docutils literal notranslate"><span class="pre">fcpindi/c-pac:latest</span></code> locally.</li>
+<li>Pull <code class="docutils literal notranslate"><span class="pre">fcpindi/c-pac:latest</span></code> from Docker Hub.</li>
+</ul>
+</div>
+<div class="section" id="platform-singularity">
+<h4><code class="docutils literal notranslate"><span class="pre">--platform</span> <span class="pre">singularity</span></code><a class="headerlink" href="#platform-singularity" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li>Look in the present working directory for any Singularity images. If more than one is found, use the most recently modified.</li>
+<li>Pull <code class="docutils literal notranslate"><span class="pre">FCP-INDI/C-PAC</span></code> from Singularity Hub.</li>
+<li>Pull <code class="docutils literal notranslate"><span class="pre">fcpindi/c-pac:latest</span></code> from Docker Hub and convert to a Singularity image.</li>
+</ul>
+<p>You can also specify a container image with an <code class="docutils literal notranslate"><span class="pre">--image</span></code> argument, passing an image name (e.g., <code class="docutils literal notranslate"><span class="pre">fcpindi/c-pac</span></code>) for a Docker image or a filepath (e.g. <code class="docutils literal notranslate"><span class="pre">~/singularity_images/C-PAC.sif</span></code>) for a Singularity image. You can also specify a <code class="docutils literal notranslate"><span class="pre">--tag</span></code> (e.g., <code class="docutils literal notranslate"><span class="pre">latest</span></code> or <code class="docutils literal notranslate"><span class="pre">nightly</span></code>).</p>
+<p>You can also provide a link to an AWS S3 bucket containing a BIDS directory as the data source:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">cpac run s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /Users/You/some_folder_for_outputs participant</span>
+</pre></div>
+</div>
+<p>In addition to the default pipeline, C-PAC comes packaged with a growing library of pre-configured pipelines that are ready to use. To run C-PAC with one of the pre-packaged pre-configured pipelines, simply invoke the <code class="docutils literal notranslate"><span class="pre">--preconfig</span></code> flag, shown below. See the full selection of pre-configured pipelines <span class="xref std std-doc">here</span>.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">cpac run /Users/You/local_bids_data /Users/You/some_folder_for_outputs --preconfig anat-only</span>
+</pre></div>
+</div>
+<p>To run C-PAC with a pipeline configuration file other than one of the pre-configured pipelines, assuming the configuration file is in the <code class="docutils literal notranslate"><span class="pre">/Users/You/Documents</span></code> directory:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">cpac run /Users/You/local_bids_data /Users/You/some_folder_for_outputs participant --pipeline_file /Users/You/Documents/pipeline_config.yml</span>
+</pre></div>
+</div>
+<p>Finally, to run C-PAC with a specific data configuration file (instead of providing a BIDS data directory):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">cpac run /Users/You/any_directory /Users/You/some_folder_for_outputs participant --data_config_file /Users/You/Documents/data_config.yml</span>
+</pre></div>
+</div>
+<p>Note: we are still providing the postionally-required <code class="docutils literal notranslate"><span class="pre">bids_dir</span></code> input parameter. However C-PAC will not look for data in this directory when you provide a data configuration YAML with the <code class="docutils literal notranslate"><span class="pre">--data_config_file</span></code> flag. Providing <code class="docutils literal notranslate"><span class="pre">.</span></code> or <code class="docutils literal notranslate"><span class="pre">$PWD</span></code> will simply pass the present working directory. In addition, if the dataset in your data configuration file is not in BIDS format, just make sure to add the <code class="docutils literal notranslate"><span class="pre">--skip_bids_validator</span></code> flag at the end of your command to bypass the BIDS validation process.</p>
+<p>The full list of parameters and options that can be passed to C-PAC are shown below:</p>
+<p>Note that any of the optional arguments above will over-ride any pipeline settings in the default pipeline or in the pipeline configuration file you provide via the <code class="docutils literal notranslate"><span class="pre">--pipeline_file</span></code> parameter.</p>
+<p><strong>Further usage notes:</strong></p>
+<ul class="simple">
+<li>You can run only anatomical preprocessing easily, without modifying your data or pipeline configuration files, by providing the <code class="docutils literal notranslate"><span class="pre">--anat_only</span></code> flag.</li>
+<li>As stated, the default behavior is to read data that is organized in the BIDS format. This includes data that is in Amazon AWS S3 by using the format <code class="docutils literal notranslate"><span class="pre">s3://&lt;bucket_name&gt;/&lt;bids_dir&gt;</span></code> for the <code class="docutils literal notranslate"><span class="pre">bids_dir</span></code> command line argument. Outputs can be written to S3 using the same format for the <code class="docutils literal notranslate"><span class="pre">output_dir</span></code>. Credentials for accessing these buckets can be specified on the command line (using <code class="docutils literal notranslate"><span class="pre">--aws_input_creds</span></code> or <code class="docutils literal notranslate"><span class="pre">--aws_output_creds</span></code>).</li>
+<li>When the app is run, a data configuration file is written to the working directory. This directory can be specified with <code class="docutils literal notranslate"><span class="pre">--working_dir</span></code> or the directory from which you run <code class="docutils literal notranslate"><span class="pre">cpac</span></code> will be used. This file can be passed into subsequent runs, which avoids the overhead of re-parsing the BIDS input directory on each run (i.e. for cluster or cloud runs). These files can be generated without executing the C-PAC pipeline using the <code class="docutils literal notranslate"><span class="pre">test_run</span></code> command line argument.</li>
+<li>The <code class="docutils literal notranslate"><span class="pre">participant_label</span></code> and <code class="docutils literal notranslate"><span class="pre">participant_ndx</span></code> arguments allow the user to specify which of the many datasets should be processed, which is useful when parallelizing the run of multiple participants.</li>
+<li>If you want to pass runtime options to your container plaform (Docker or Singularity), you can pass them with <code class="docutils literal notranslate"><span class="pre">-o</span></code> or <code class="docutils literal notranslate"><span class="pre">--container_options</span></code>.</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="on-the-aws-cloud">
+<h2>On the AWS Cloud<a class="headerlink" href="#on-the-aws-cloud" title="Permalink to this headline">¶</a></h2>
+<p>The C-PAC team has released an Amazon Marketplace AMI, making it easier for researchers to use C-PAC in the cloud.  You can use the AMI to either launch a single machine for basic runs or create a high performance computing (HPC) cluster using Starcluster.  Clusters can be dynamically scaled up as your computational needs increase.  Detailed explanations of cloud computing and HPC are beyond the scope of this documentation, but we will define a few key terms before we start.  If these terms are familiar, you may skip them and proceed to later sections.</p>
+<ul class="simple">
+<li><strong>Amazon Machine Instance (AMI)</strong> - A disk image of an operating system and any additional installed software that can be used to create a virtual machine.</li>
+<li><strong>Instance</strong> - A single running virtual machine whose initial state is based on the AMI that it is launched from.  Instances can be classified as spot instances or on-demand instances.  On-demand instances are reliably created the moment they are requested for a fixed rate.  Spot instances are created based on whether or not a bid that you set is accepted by Amazon.  They can be significantly cheaper than on-demand instances, but are only created when Amazon accepts your bid.</li>
+<li><strong>Instance Type</strong> - The hardware specification for a given instance. A list of the instance types made available by Amazon may be found <a class="reference external" href="http://aws.amazon.com/ec2/instance-types">here</a>.</li>
+<li><strong>Terminated Instance</strong> - An instance is considered terminated when its resources have been completely freed up for use by others in the Amazon cloud.  Any data on a terminated instance that is not relocated to persistent storage such as EBS (see below) will be completely discarded.  Instance termination is the virtual equivalent of throwing out a physical server.  When you have terminated an instance, you are no longer paying for it.  Note that by default, instances do not have persistent storage attached to them- you will need to configure persistent storage when you set up the instance.</li>
+<li><strong>Stopped Instance</strong> - An instance is considered stopped when it is not active, but its resources are still available for future use whenever you choose to reactivate it.  Stopping an instance is the virtual equivalent of turning a computer off or putting it in hibernate mode.  When you stop an instance, you continue to pay for the storage associated with it (i.e., the main and other volumes attached to it), but not for the instance itself.  You should stop an instance when the analyses you are working on are not fully done and you would like to preserve the current state of a running instance.</li>
+<li><strong>Simple Storage Service (S3)</strong> - A form of storage offered by Amazon.  S3 is not intended to be directly attached to instances since it lacks a filesystem, but it can be used to archive large datasets.  Amazon provides tools for uploading data to S3 ‘buckets’ where it can be stored.  It is less costly than EBS.</li>
+<li><strong>Elastic Block Storage (EBS)</strong> - A form of persistent storage offered by Amazon for use with instances.  When you have terminated an instance, items stored in an EBS volume can be accessed by any future instances that you start up.</li>
+<li><strong>EC2 Instance Store</strong> - A form of temporary storage that comes included with some instance types.  Instance store volumes must be added manually before launching an instance, and all files stored on them will be lost when the instance is terminated.  The instance store is typically mounted at <code class="docutils literal notranslate"><span class="pre">/mnt</span></code>.</li>
+</ul>
+<p>Lastly, it would be important to review any terms related to <a class="reference internal" href="compute_config"><span class="doc">the Sun Grid Engine job scheduler</span></a>.</p>
+<p>Before you can create a single C-PAC machine or a C-PAC HPC cluster, you must first generate credentials that will allow you to log into any AWS instance that you create.  The following steps will walk you through the process of creating all the necessary credentials and encryption keys that you will need.</p>
+<ol class="arabic simple">
+<li>Go to <a class="reference external" href="http://aws.amazon.com/console/">http://aws.amazon.com/console/</a></li>
+<li>Click the <cite>Sign in to the AWS Console</cite> button</li>
+<li>Enter your e-mail address and password.  If you do not already have an account, enter your e-mail address, select <cite>I am a new user.</cite> and click the <cite>Sign in</cite> button.  Provide Amazon with the information (e-mail address, payment method) needed to create your account.</li>
+<li>Amazon has different regions that it hosts its web services from (e.g. Oregon, Northern Virginia, Tokyo). In the upper right-hand corner there will be a region that you are logged into next to your user name. Change this to your preferred region.  The Marketplace AMI is available in all regions, although public AMIs (non-Marketplace AMIs shared from personal accounts) may not be.</li>
+<li>Click on your name in the upper right corner and navigate to <cite>Security Credentials</cite>.  Accept the disclaimer that appears on the page.</li>
+<li>Click on <cite>Access Keys</cite> and click on the blue <cite>Create New Access Key</cite> button.  Click <cite>Download Key File</cite> and move the resulting csv file to a safe and memorable location on your hard drive.</li>
+<li>Click on the box in the upper left corner of AWS.  Click on <cite>EC2</cite>.  Click on <cite>Key Pairs</cite> in the left-hand column.</li>
+<li>Click on the blue <cite>Create Key Pair</cite> button. Give your key an appropriate name and click on the blue <cite>Create</cite> button.  A .pem file will now save to disk.  Move this file to a safe and memorable location on your hard drive.</li>
+<li>On your local drive, open a terminal and run the following command: <code class="docutils literal notranslate"><span class="pre">chmod</span> <span class="pre">400</span> <span class="pre">/path/to/pem/file</span></code></li>
+</ol>
+<p>Now that you have generated the access keys and a pem file, you may launch a single instance via Amazon’s web interface by following the steps below.  If you are planning on processing many subjects or obtaining computationally-intensive derivatives (such as network centrality), you should use Starcluster instead.</p>
+<ol class="arabic simple">
+<li>In the left-hand column under the <cite>INSTANCES</cite> header in the AWS console, click <cite>Instances</cite>. This is a dashboard of all instances you currently have running in the AWS cloud. Click the blue <cite>Launch Instance</cite> button.</li>
+<li>On the left-hand side of the new page, click on the <cite>Amazon Marketplace</cite> tab and search <cite>c-pac</cite> in the search text box.</li>
+<li>Click the blue <cite>Select</cite> button next to the C-PAC AMI.  Click the blue <cite>Continue</cite> button on the next screen.</li>
+<li>Now choose the instance type that you would like to use.  Note that C-PAC requires at least 8 GB of RAM- the m3.xlarge instance type has 15 GB of RAM and 4 CPUs and functions well with C-PAC for small runs and experimentation.  This instance type is equivalent to a standard desktop machine in terms of processing power. To select this type, click on the <cite>General purpose</cite> tab and click the box next to <cite>m3.xlarge</cite>.  Then, click the <cite>Next: Configure Instance Details</cite> button.  Note that for most larger runs you will want to choose a more powerful instance type, such as c3.4xlarge or c3.8xlarge.</li>
+<li>The details page can be used to request spot instances, as well as other functionality (including VPN, VPC options). For a basic run you do not need to change anything, although you can tailor it according to your future needs. Hovering over the ‘i’ icons on this page will give you more insight into the options available.  When done, click <cite>Next: Add Storage.</cite></li>
+<li>On the storage page, you can allocate space for the workstation, such as user and system directories.  This is where you can attach instance store volumes if your instance type comes with them.  To do this, click the <cite>Add New Volume</cite> button and select the instance store via the dropdown menu in the <cite>Type</cite> column.  You may need to do this multiple times if your instance comes with multiple instance stores.  If you want the files stored on the root volume to be kept after the instance is terminated, uncheck the box below the <cite>Delete on Termination</cite> column.  Note that persistent storage for the datasets can be allocated and attached as described in a later section. Click <cite>Next: Tag Instance</cite>.</li>
+<li>On this page you can tag the instance with metadata (e.g., details related to the specific purpose for the instance).  Tags are key-value pairs, so any contextual data that can be encapsulated in this format can be saved. Click <cite>Next: Configure Security Group</cite>.</li>
+<li>On this page, you can modify who has access to the instance. The AMI defaults allow remote access from anywhere. If you would like to customize security to allow only a certain set of IP addresses and users access to the instance, you can do so here. If you find that custom settings, such as using the <cite>My IP</cite> setting or specifying a range of IP addresses, do not work, consult with your institution’s network administrator to make sure that you are entering settings correctly.  Click <cite>Review and Launch</cite> when you are done.</li>
+<li>This final page summarizes the instance details you are about to launch. You might receive some warnings as a result of security or the instance type not being in the free tier.  These warnings can be ignored.</li>
+<li>Click the <cite>Launch</cite> button. A dialogue box will ask you to choose a key pair for the instance. Every instance requires a key pair in order for you to securely log in and use it. Change the top drop down menu bar to <cite>Choose an existing key pair</cite> and select the key pair you created in the <cite>Creating AWS Access and Network Keys</cite> section in the other drop down menu.  Check the acknowledgement check box and click the blue <cite>Launch Instances</cite> button.</li>
+<li>You can click the <cite>View Instances</cite> blue button on the lower right of the page after to watch your new instance start up in the instance console.</li>
+<li>When the <cite>Instance State</cite> column reads <cite>running</cite> and the <cite>Status Checks</cite> column reads <cite>2/2</cite>, the instance should be active. Click on the row for the new instance.  In the bottom pane, take note of the values for the <cite>Instance ID</cite>, <cite>Public DNS</cite>, and <cite>Availability zone</cite> fields under the <cite>Description</cite> tab.</li>
+</ol>
+<ol class="arabic simple">
+<li>Once your instance is up and running, you can create a persistent storage volume for your data and results.  In the left-hand column under the <cite>ELASTIC BLOCK STORE</cite> header in the AWS console, click <cite>Volumes</cite>. This is a dashboard of all volumes that you currently have stored in EBS. Click the blue <cite>Create Volume</cite> button.</li>
+<li>Change the size field in the proceeding dialogue to have enough space to encompass the amount of data you expect to store.  A single volume can be as small as 1 GB or as large as 16 TB.  Change the availability zone to match the zone from your instance’s <cite>Description</cite> tab.</li>
+<li>Click the checkbox next to the newly-created volume.  Click <cite>Actions</cite> followed by <cite>Attach Volumes</cite>.  Enter the <cite>Instance ID</cite> from the instance’s <cite>Description</cite> tab in the <cite>Instance</cite> field.  The <cite>Device</cite> field should fill itself automatically and should be of the form <cite>/dev/sdb</cite> or similar.  Note the letter used after the <cite>sd</cite>.  Click the blue <cite>Attach</cite> button.</li>
+<li>Execute the following command from the terminal to make it so that your instance can see the volume (replace the letter <cite>b</cite> at the end of <cite>/dev/xvdb</cite> with the letter from the previous step).</li>
+</ol>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ssh -i /path/to/pem/file ubuntu@&lt;Public Domain Name&gt; &#39;sudo mkfs -t ext4 /dev/xvdb &amp;&amp; sudo mount /dev/xvdb /media/ebs</span>
+</pre></div>
+</div>
+<p>To use this volume with future instances, you may attach it to the instance using the AWS console and then use this command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">ssh -i /path/to/pem/file ubuntu@&lt;Public Domain Name&gt; &#39;sudo mount /dev/xvdb /media/ebs&#39;</span>
+</pre></div>
+</div>
+<p>Note that the creation of a persistent volume is heavily automated in Starcluster, so if you will be creating many different persistent volumes you should use Starcluster instead.</p>
+<p>There are now two different means of accessing the instance.  Either through X2Go (a desktop GUI-based session) or through ssh (a command line session).</p>
+<ol class="arabic simple">
+<li>Open a terminal and type <code class="docutils literal notranslate"><span class="pre">ssh</span> <span class="pre">-i</span> <span class="pre">/path/to/pem/file</span> <span class="pre">ubuntu&#64;&lt;Public</span> <span class="pre">Domain</span> <span class="pre">Name&gt;</span></code>.</li>
+<li>Type <cite>yes</cite> when asked if you trust the source.</li>
+</ol>
+<ol class="arabic simple">
+<li>Install the X2Go client using the instructions <a class="reference external" href="http://wiki.x2go.org/doku.php/doc:installation:x2goclient">here</a>.</li>
+<li>Open X2go and create a new session.</li>
+<li>For <cite>Host:</cite>, enter the Public DNS from earlier.</li>
+<li>For <cite>Login:</cite> enter <cite>ubuntu</cite>.</li>
+<li><cite>SSH port:</cite> should be <cite>22</cite>.</li>
+<li>For <cite>Use RSA/DSA key for ssh connection:</cite>, select the key you generated for the instance.</li>
+<li>Select <cite>LXDE</cite> for <cite>Session</cite> and click <cite>OK</cite>.</li>
+</ol>
+<p>When you are done, your session configuration should look similar to the following:</p>
+<div class="figure">
+<img alt="../_images/cloud_x2go.png" src="../_images/cloud_x2go.png" />
+</div>
+<p>Note: If X2Go does not work on your computer, you can add the <code class="docutils literal notranslate"><span class="pre">-X</span></code> flag to the ssh command to enable X11 port forwarding (i.e., the ssh command would be <code class="docutils literal notranslate"><span class="pre">ssh</span> <span class="pre">-X</span> <span class="pre">-i</span> <span class="pre">/path/to/pem/file</span> <span class="pre">ubuntu&#64;&lt;Public</span> <span class="pre">Domain</span> <span class="pre">Name&gt;</span></code>).  X11 port forwarding is very slow compared to X2Go, however, so it is recommended that you troubleshoot X2Go further before turning to this option.</p>
+<p>To upload data to your newly-created AWS instance, you can run the following command on the computer containing your data:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">scp -r -i /path/to/pem/key /path/to/data ubuntu@&lt;Public Domain Name&gt;:/path/to/server/directory</span>
+</pre></div>
+</div>
+<p>If you have configured persistent storage, you will want to ensure that <cite>/path/to/server/directory</cite> is pointing to the mount point for the persistent storage.  If you followed the instructions above or the instructions in the Starcluster section below, the mount point should be <cite>/media/ebs</cite>.</p>
+<p>Starcluster is suggested for more sophisticated C-PAC runs.  Using Starcluster, you can parallelize your analyses by distributing subjects across multiple nodes in an HPC cluster.  The following section describes how to install and configure Starcluster to work with C-PAC, dynamically add nodes to your cluster and leverage C-PAC’s grid functionality.</p>
+<p>If you have pip installed, Starcluster can be installed via:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install starcluster</span>
+</pre></div>
+</div>
+<p>Note that if you are using a *nix-based OS and you are not using an environment such as Miniconda, you will need to run the above command with <code class="docutils literal notranslate"><span class="pre">sudo</span></code>.</p>
+<p>If you do not have pip installed, see the <a class="reference external" href="http://star.mit.edu/cluster/docs/latest/installation.html">Official Starcluster Installation Instructions</a> for alternative installation methods.</p>
+<p>The C-PAC Starcluster plug-ins configure the SGE environment that C-PAC uses and ensure that storage space is writable.  From the terminal, download the C-PAC Starcluster plug-ins and install them by running the following commands:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">cd /tmp</span>
+<span class="go">git clone https://github.com/FCP-INDI/CPAC_CLOUD</span>
+<span class="go">cd CPAC_CLOUD/sc_plugins</span>
+<span class="go">mv *.py ~/.starcluster/plugins</span>
+</pre></div>
+</div>
+<p>Now you will need to create a Starcluster configuration file so that Starcluster can use your keys and know which instance types you would like to use.  To begin, type <code class="docutils literal notranslate"><span class="pre">starcluster</span> <span class="pre">help</span></code> and select option 2.</p>
+<p>Fill in the AWS access keys from the CVS file that you created in the <cite>Creating AWS Access and Network Keys</cite> section:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">aws</span> <span class="n">info</span><span class="p">]</span>
+<span class="n">AWS_ACCESS_KEY_ID</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">Your</span> <span class="n">Acces</span> <span class="n">Key</span><span class="o">&gt;</span>
+<span class="n">AWS_SECRET_ACCESS_KEY</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">Your</span> <span class="n">Secret</span> <span class="n">Key</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>You do not need to define the <code class="docutils literal notranslate"><span class="pre">AWS_USER_ID</span></code> field unless you want to create custom AMIs based off the C-PAC AMI.  The public C-PAC AMI is available in us-east-1, so you should not change the value of <code class="docutils literal notranslate"><span class="pre">AWS_REGION_NAME</span></code>.</p>
+<p>Point your key definition to the pem file you generated in the <cite>Creating AWS Access and Network Keys</cite> section:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">key</span> <span class="n">cpac_key</span><span class="p">]</span>
+<span class="n">KEY_LOCATION</span><span class="o">=/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">pem</span><span class="o">/</span><span class="n">file</span>
+</pre></div>
+</div>
+<p>Find the image ID for the C-PAC AMI by logging into the AWS Console using your favorite web browser.  Make sure that you are in the <cite>N. Virginia</cite> region.  Navigate to the EC2 service click <cite>Images</cite> -&gt; <cite>AMIs</cite>.  Then click <cite>Owned by Me</cite> in the upper left corner and switch it to <cite>Public images</cite>.  Search for ‘CPAC’.  Select the version of C-PAC that you wish to use and look in the lower pane for the <cite>AMI ID</cite> field.</p>
+<p>Add the following cluster definition to your configuration file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">cluster</span> <span class="n">cpac_cluster</span><span class="p">]</span>
+<span class="n">KEYNAME</span> <span class="o">=</span> <span class="n">cpac_key</span>
+<span class="n">PLUGINS</span> <span class="o">=</span> <span class="n">cpac_sge</span><span class="p">,</span> <span class="n">mnt_config</span>
+<span class="n">CLUSTER_SIZE</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">CLUSTER_SHELL</span> <span class="o">=</span> <span class="n">bash</span>
+<span class="n">NODE_IMAGE_ID</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">Image</span> <span class="n">ID</span><span class="o">&gt;</span>
+<span class="n">MASTER_INSTANCE_TYPE</span> <span class="o">=</span> <span class="n">t2</span><span class="o">.</span><span class="n">medium</span>
+<span class="n">NODE_INSTANCE_TYPE</span> <span class="o">=</span> <span class="n">c3</span><span class="o">.</span><span class="mi">8</span><span class="n">xlarge</span>
+</pre></div>
+</div>
+<p>You can customize this to have additional nodes or use different instance types as per your needs.  Note that you can always add nodes later using Starcluster from the command line.  If you wish to use spot instances rather than on-demand instances, then add the following line to the cluster definition:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SPOT</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">bidding_price</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Also add the following two plug-in definitions for the C-PAC Starcluster plug-ins:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">plugin</span> <span class="n">cpac_sge</span><span class="p">]</span>
+<span class="n">setup_class</span> <span class="o">=</span> <span class="n">cpac_sge</span><span class="o">.</span><span class="n">PEInstaller</span>
+<span class="n">pe_url</span> <span class="o">=</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">raw</span><span class="o">.</span><span class="n">githubusercontent</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">FCP</span><span class="o">-</span><span class="n">INDI</span><span class="o">/</span><span class="n">CPAC_CLOUD</span><span class="o">/</span><span class="n">master</span><span class="o">/</span><span class="n">mpi_smp</span><span class="o">.</span><span class="n">conf</span>
+
+<span class="p">[</span><span class="n">plugin</span> <span class="n">mnt_config</span><span class="p">]</span>
+<span class="n">setup_class</span> <span class="o">=</span> <span class="n">mnt_perm</span><span class="o">.</span><span class="n">MntPermissions</span>
+</pre></div>
+</div>
+<p>By default, the cluster will have an EBS-backed root volume and, if available, an instance store volume mounted at <code class="docutils literal notranslate"><span class="pre">/mnt</span></code>.  Neither of these volumes are persistent and they will be destroyed when the cluster terminates. A shared directory mounted at <cite>/home</cite> on the head node can be used across nodes. If you need more storage than what is available on the head node or if you want to keep your data after the cluster is terminated, you will need to create a new volume that can be attached to all nodes in the cluster.  To do so, begin by creating an EBS-backed volume:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">starcluster createvolume --shutdown-volume-host &lt;volume_size_in_gigabytes&gt; &lt;region&gt; -I t2.micro -i &lt;Image ID&gt;</span>
+</pre></div>
+</div>
+<p>Type <code class="docutils literal notranslate"><span class="pre">starcluster</span> <span class="pre">listvolumes</span></code> and get the <cite>volume-id</cite> for the volume that you just created.  Open up your Starcluster configuration file and add the following volume definition:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">volume</span> <span class="n">cpac_volume</span><span class="p">]</span>
+<span class="n">VOLUME_ID</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">Volume</span> <span class="n">ID</span><span class="o">&gt;</span>
+<span class="n">MOUNT_PATH</span> <span class="o">=</span> <span class="o">/</span><span class="n">media</span><span class="o">/</span><span class="n">ebs</span>
+</pre></div>
+</div>
+<p>Append the following line to your <cite>cpac_cluster</cite> definition:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VOLUMES</span> <span class="o">=</span> <span class="n">cpac_volume</span>
+</pre></div>
+</div>
+<p>The <a class="reference external" href="http://star.mit.edu/cluster/docs/latest/manual/volumes.html">Starcluster documentation</a> explains how to perform other operations such as resizing and removing volumes.</p>
+<p>To start up the head node on your C-PAC HPC cluster, use the following Starcluster command (with substitutions where necessary):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">starcluster start -c cpac_cluster &lt;cluster_name&gt;</span>
+</pre></div>
+</div>
+<p>To add additional nodes to your C-PAC HPC cluster, use the following Starcluster command (with substitutions where necessary):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">starcluster addnode -n &lt;number_of_nodes_to_add&gt; &lt;cluster_name&gt;</span>
+</pre></div>
+</div>
+<p>If you wish to access the head node, type the following command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">starcluster sshmaster -X -u ubuntu &lt;cluster_name&gt;</span>
+</pre></div>
+</div>
+<p>If you only wish to access the command line interface, you may omit the <cite>-X</cite> flag:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">starcluster sshmaster -u ubuntu &lt;cluster_name&gt;</span>
+</pre></div>
+</div>
+<p>You may also use the instructions for X2Go from the <cite>Starting a Single C-PAC Instance via the AWS Console</cite> section to access the head node via a graphical shell.  To do so, obtain the public DNS for the head node by typing <code class="docutils literal notranslate"><span class="pre">starcluster</span> <span class="pre">listclusters</span></code>.  The public DNS will be in the last column of the row labeled <cite>master</cite>.</p>
+<p>C-PAC performs the heavy lifting of creating an SGE job submission script and submitting it to the SGE job scheduler seamlessly.</p>
+<p><strong>Via the shell:</strong></p>
+<ol class="arabic simple">
+<li>Open your pipeline configuration YAML file in your preferred text editor.</li>
+<li>Change the <code class="docutils literal notranslate"><span class="pre">runOnGrid</span></code> field to a value of <code class="docutils literal notranslate"><span class="pre">True</span></code>.</li>
+<li>Make sure that the <code class="docutils literal notranslate"><span class="pre">resourceManager</span></code> field is set to <code class="docutils literal notranslate"><span class="pre">SGE</span></code>.</li>
+<li>Set the <code class="docutils literal notranslate"><span class="pre">parallelEnvironment</span></code> field to <code class="docutils literal notranslate"><span class="pre">mpi_smp</span></code>.</li>
+<li>Execute the following command to run your pipeline.</li>
+</ol>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">cpac_run.py /path/to/pipeline_config.yml /path/to/CPAC_subject_list.yml</span>
+</pre></div>
+</div>
+<p>Once you are done submitting the job, you can check its status by typing <code class="docutils literal notranslate"><span class="pre">qstat</span></code>.  This command will produce output that looks similar to the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">job</span><span class="o">-</span><span class="n">ID</span>  <span class="n">prior</span>   <span class="n">name</span>       <span class="n">user</span>         <span class="n">state</span> <span class="n">submit</span><span class="o">/</span><span class="n">start</span> <span class="n">at</span>     <span class="n">queue</span>                          <span class="n">slots</span> <span class="n">ja</span><span class="o">-</span><span class="n">task</span><span class="o">-</span><span class="n">ID</span>
+<span class="o">-----------------------------------------------------------------------------------------------------------------</span>
+      <span class="mi">1</span> <span class="mf">0.55500</span> <span class="n">submit_201</span> <span class="n">ubuntu</span>       <span class="n">r</span>     <span class="mi">06</span><span class="o">/</span><span class="mi">05</span><span class="o">/</span><span class="mi">2015</span> <span class="mi">20</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">13</span> <span class="nb">all</span><span class="o">.</span><span class="n">q</span><span class="nd">@master</span>                       <span class="mi">1</span> <span class="mi">1</span>
+      <span class="mi">1</span> <span class="mf">0.55500</span> <span class="n">submit_201</span> <span class="n">ubuntu</span>       <span class="n">r</span>     <span class="mi">06</span><span class="o">/</span><span class="mi">05</span><span class="o">/</span><span class="mi">2015</span> <span class="mi">20</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">13</span> <span class="nb">all</span><span class="o">.</span><span class="n">q</span><span class="nd">@node001</span>                      <span class="mi">1</span> <span class="mi">2</span>
+      <span class="mi">2</span> <span class="mf">0.55500</span> <span class="n">submit_201</span> <span class="n">ubuntu</span>       <span class="n">r</span>     <span class="mi">06</span><span class="o">/</span><span class="mi">05</span><span class="o">/</span><span class="mi">2015</span> <span class="mi">20</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">58</span> <span class="nb">all</span><span class="o">.</span><span class="n">q</span><span class="nd">@node002</span>                      <span class="mi">1</span> <span class="mi">1</span>
+      <span class="mi">2</span> <span class="mf">0.00000</span> <span class="n">submit_201</span> <span class="n">ubuntu</span>       <span class="n">qw</span>    <span class="mi">06</span><span class="o">/</span><span class="mi">05</span><span class="o">/</span><span class="mi">2015</span> <span class="mi">20</span><span class="p">:</span><span class="mi">42</span><span class="p">:</span><span class="mi">47</span>                                    <span class="mi">1</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<p>The <cite>job-ID</cite> is a number assigned to your job when it is submitted to the scheduler.  The <cite>state</cite> of the job can be represented by one of several values: <cite>r</cite> means that the job is running, <cite>qw</cite> means that the job is queued and waiting, and <cite>E</cite> means that an error has occurred. The <cite>queue</cite> column indicates on which nodes of your cluster the C-PAC job is being executed.</p>
+<p>If an error has occurred on any of the nodes while your pipeline executes, you should check the <cite>cluster_temp_files</cite> directory that was created in the directory from which you ran C-PAC.  This will contain copies of the job submission scripts that C-PAC generated to start your job.  It will also contain files containing the standard out and error messages for a given job.  You should check these first to determine what may have caused the error.  If these files do not help you determine what may have caused the error, feel free to ask for <a class="reference internal" href="help"><span class="doc">help</span></a> on the C-PAC forum.</p>
+<p>When you are done and have exited from your cluster, the following command will terminate the cluster:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">starcluster terminate &lt;cluster_name&gt;</span>
+</pre></div>
+</div>
+<p>If you receive an error from Starcluster while trying to terminate the instance, the following command will force Starcluster to terminate your cluster:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">starcluster terminate -f &lt;cluster_name&gt;</span>
+</pre></div>
+</div>
+<p><strong>Warning:</strong> If you are not using persistent storage (see <cite>Attaching Persistent Storage to Your Cluster</cite>) then all of your data will be lost upon termination of the cluster.  You will need to copy your data to another drive if you wish to keep it.</p>
+<ul class="simple">
+<li><a class="reference external" href="http://star.mit.edu/cluster/docs/latest/manual/index.html">The StarCluster User Manual</a></li>
+<li><a class="reference external" href="http://docs.aws.amazon.com/gettingstarted/latest/awsgsg-intro/gsg-aws-intro.html">Getting Started with AWS</a></li>
+</ul>
+</div>
+<div class="section" id="with-openneuro">
+<h2>With OpenNeuro<a class="headerlink" href="#with-openneuro" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="https://openneuro.org">OpenNeuro</a> project is an initiative to provide easy access to public neuroimaging datasets and the ability to quickly run analysis pipelines on these datasets directly through a web interface. C-PAC is available as an app on OpenNeuro, and more information on running apps on the platform is available <a class="reference external" href="https://openneuro.org/faq">here</a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index">
+              <img class="logo" src="../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index">Table of Contents</a></h3>
+  <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index#the-c-pac-mission">The C-PAC Mission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index#latest-release-version-1-7-0-beta-jul-4-2020">Latest Release: Version 1.7.0 Beta (Jul 4, 2020)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index#the-c-pac-team">The C-PAC Team</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index#funding-acknowledgements">Funding Acknowledgements</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index#user-guide-index">User Guide Index</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="quick">1. C-PAC Quickstart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="subject_list_config">2. Specify Your Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pipeline_config">3. Select Your Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="preprocessing">4. Pre-Process Your Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="derivatives">5. Compute Derivatives</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">6. All Run Options</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cpac-python-package">cpac (Python package)</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#usage">Usage</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#platform-docker"><code class="docutils literal notranslate"><span class="pre">--platform</span> <span class="pre">docker</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#platform-singularity"><code class="docutils literal notranslate"><span class="pre">--platform</span> <span class="pre">singularity</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#on-the-aws-cloud">On the AWS Cloud</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#with-openneuro">With OpenNeuro</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="group_analysis">7. Run Group Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="output_dir">8. Check Your Outputs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="help">9. Troubleshoot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="rnotes">10. Release Notes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="appendix">Appendix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="appendix#benchmark-package">Benchmark Package</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index">Welcome to CPAC’s developer documentation!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="group_analysis" title="Group-Level Analysis"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pypeer" title="PyPEER Integration"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.6.2 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index" >Welcome to C-PAC’s user guide!</a> &#187;</li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+    <script defer src="https://fcp-indi.github.io/scripts/versionList.js"></script>
+
+  </body>
+</html>

@@ -3,7 +3,7 @@ Longitudinal Preprocessing
 
 .. raw:: html
 
-    <div class="flowchart-container"><object data="_static/flowcharts/longitudinal.svg" type="image/svg+xml"></object></div>
+    <div class="flowchart-container"><object data="../_static/flowcharts/longitudinal.svg" type="image/svg+xml"></object></div>
 
 Background
 ^^^^^^^^^^
@@ -29,7 +29,7 @@ The following key/value pairs must be defined in your :doc:`pipeline configurati
 .. csv-table::
     :header: "Key","Description","Potential Values"
     :widths: 5,30,15
-    :file: _static/params/longitudinal_config.csv
+    :file: ../_static/params/longitudinal_config.csv
 
 The box below contains an example of what these parameters might look like when defined in the YAML::
     

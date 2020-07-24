@@ -11,7 +11,7 @@ Before You Start
 
 C-PAC can be run without installing through any of these three options:
 
-.. include:: /user/run/without_installing.txt
+.. include:: /user/run/without_installing.rst
 
 For more details, skip ahead to the :doc:`C-PAC Quickstart </user/quick>` or :doc:`Run C-PAC </user/running>` pages.
 

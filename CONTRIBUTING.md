@@ -63,7 +63,7 @@ where `{width}` and `{height}` are the values already present in the existing `w
 ```rst
 .. raw:: html
 
-    <object data="_static/path/to/chart.svg" type="image/svg+xml"></object>
+    <object data="../_static/path/to/chart.svg" type="image/svg+xml"></object>
 ```
 
 ## Environment notes

@@ -25,13 +25,17 @@ You can configure the settings explained below in the **data settings** YAML fil
 
 If you don't already have a data settings YAML file, you can generate one in your current directory by running::
 
+    cpac utils data_config new_settings_template
+
+or::
+
     singularity run C-PAC_latest.sif bids_dir outputs_dir cli -- utils data_config new_settings_template
 
 or::
 
     docker run -i --rm --user $(id -u):$(id -g) -v /path/to/data_config:/scratch -w="/scratch" fcpindi/c-pac:latest bids_dir outputs_dir cli -- utils data_config new_settings_template
 
-For either of the above commands, ``bids_dir`` and ``outputs_dir`` are required but not used, so any non-null string will work for those positional arguments.
+If running a container directly (either of the latter options rather than the first option, which is through :doc:`cpac (Python package) <cpac>`), ``bids_dir`` and ``outputs_dir`` are required but not used, so any non-null string will work for those positional arguments.
 
 The Singularity command will create ``data_settings.yml`` in the current working directory you call the command from.
 
@@ -132,6 +136,10 @@ You can also fill in the AWS credentials file field, and the inclusion and exclu
 
 Once your data settings file is ready, generate your data configuration file by running::
 
+    cpac utils data_config build /path/to/data_settings.yml
+
+or::
+
     singularity run C-PAC_latest.sif bids_dir outputs_dir cli -- utils data_config build /path/to/data_settings.yml
 
 or::
@@ -163,6 +171,10 @@ Following the instructions for formatting your path templates given above, popul
 You can also fill in the AWS credentials file field, and the inclusion and exclusion fields, as needed.
 
 Once your data settings file is ready, generate your data configuration file by running::
+
+    cpac utils data_config build /path/to/data_settings.yml
+
+or::
 
     singularity run C-PAC_latest.sif bids_dir outputs_dir cli -- utils data_config build /path/to/data_settings.yml
 

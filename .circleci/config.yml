@@ -1,62 +1,193 @@
-version: 2
+version: 2.1
+commands:
+  get-version:
+    steps:
+      - run:
+          name: 🔧 Setting version
+          command: if [ -f /build/build_version.txt ]; then echo "export BUILD_VERSION=$(cat /build/build_version.txt)" >> $BASH_ENV; else echo "export BUILD_VERSION=nightly" >> $BASH_ENV; fi
+  install-dependencies:
+    parameters:
+      version:
+        type: string
+    steps:
+      - run:
+          name: ↑ Installing dependencies
+          command: |
+            apt-get update && apt-get -y install git rsync python-dev graphviz libgraphviz-dev pkg-config python3-sphinx
+            pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/<< parameters.version >>/requirements.txt
+            pip install --user git+https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git@<< parameters.version >> sphinx m2r numpydoc PyGithub sphinxcontrib-fulltoc sphinxcontrib-programoutput torch
+            git clone https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git /build/C-PAC
+            cd /build/C-PAC
+            git checkout << parameters.version >>
+            cd /build
+            python -m venv ~/simple
+            source ~/simple/bin/activate
+            pip install cpac
+            deactivate
+  run-cpac-commands:
+    steps:
+      - setup_remote_docker
+      - run:
+          name: 👊 Running cpac commands
+          command: |
+            source ~/simple/bin/activate
+            cpac run --help
+            mkdir -p docs/_sources/user/cpac
+            printf ".. code-block:: console\n\n   $ cpac --help\n\n" > docs/_sources/user/cpac/help.rst
+            cpac --help | sed -e "s/.*/   &/" >> docs/_sources/user/cpac/help.rst
+            mkdir -p docs/_sources/user/run
+            printf "Usage: cpac run\n\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\n.. code-block:: console\n\n   $ cpac run --help\n\n" > docs/_sources/user/run/help.rst
+            cpac run --help | sed -e "s/.*/   &/" >> docs/_sources/user/run/help.rst
+            mkdir -p docs/_sources/user/utils
+            printf "Usage: cpac utils\n\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\n.. code-block:: console\n\n   $ cpac utils --help\n\n" > docs/_sources/user/utils/help.rst
+            cpac utils --help | sed -e "s/.*/   &/" >> docs/_sources/user/utils/help.rst
+            deactivate
+  prep-deploy:
+    parameters:
+      version:
+        type: string
+    steps:
+      - install-dependencies:
+          version: << parameters.version >>
+      - run:
+          name: 🔧 Configuring git user
+          command: |
+            git config --global user.email "ci-build@fcp-indi.github.com"
+            git config --global user.name "ci-build"
+      - run:
+          name: 📑 Generating list of versions
+          command: python /build/scripts/version_list.py
+  deploy:
+    steps:
+      - run:
+          name: 🚀 Deploying docs
+          command: |
+            cd /build
+            git clone --single-branch --branch master git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo || git clone --single-branch --branch master git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo
+            rsync -rtv ./ /tmp/repo/ --exclude '.git'
+            cd /tmp/repo
+            git rm -f .gitignore || rm -f .gitignore || true
+            git add .
+            git rm -fr docs/_sources || rm -fr docs/_sources || true
+            git rm -fr docs/**/_sources || rm -fr docs/**/_sources || true
+            git rm -fr docs/.doctrees || rm -fr docs/.doctrees || true
+            git rm -fr docs/**/.doctrees || rm -fr docs/**/.doctrees || true
+            git rm -fr bin || rm -fr bin || true
+            git rm -fr build_version.txt || rm -fr build_version.txt || true
+            git rm -fr C-PAC || rm -fr C-PAC || true
+            git rm -fr cpac || rm -fr cpac || true
+            git rm -fr scripts/__pycache__ || rm -fr scripts/__pycache__ || true
+            git commit -m "$(cat /root/GITMESSAGE.txt)" --allow-empty
+            git push origin HEAD:master -f
+            cd -
+              
 jobs:
-  build:
+  build-nightly:
     working_directory: /build
-    branches:
-      only:
-        - source
+    docker:
+      - image: python:3.7
+    steps:
+      - checkout
+      - install-dependencies:
+          version: develop
+      - run-cpac-commands
+      - run:
+          name: 🏗️ Building nightly branch docs
+          command: ./bin/build nightly
+      - run:
+          name: Storing commit message
+          command: git log origin/source -1 --oneline --pretty=%s > /root/GITMESSAGE.txt
+      - persist_to_workspace:
+          root: /
+          paths:
+            - build/404.html
+            - build/docs
+            - build/index.html
+            - build/scripts
+            - root/.ssh
+            - root/GITMESSAGE.txt
+            
+  build-version:
+    working_directory: /build
     docker:
       - image: python:3.7
     steps:
       - checkout
       - run:
-          name: Install dependencies
-          command: |
-            apt-get update && apt-get -y install git rsync python-dev graphviz libgraphviz-dev pkg-config python3-sphinx
-            pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/develop/requirements.txt
-            pip install --user git+https://github.com/FCP-INDI/C-PAC.git sphinx m2r numpydoc PyGithub sphinxcontrib-programoutput
-            git clone https://github.com/FCP-INDI/C-PAC.git /build/C-PAC
-            python -m venv ~/simple
-            source ~/simple/bin/activate
-            pip install cpac
-            deactivate
-      - setup_remote_docker
+          name: 🔬 Checking for tag file
+          command: test -f ./build_version.txt
+      - get-version
+      - install-dependencies:
+          version: ${BUILD_VERSION}
+      - run-cpac-commands
       - run:
-          name: Run cpac commands
-          command: |
-            source ~/simple/bin/activate
-            cpac run --help
-            mkdir -p docs/user/_sources/cpac
-            printf ".. code-block:: console\n\n   $ cpac --help\n\n" > docs/user/_sources/cpac/help.txt
-            cpac --help | sed -e "s/.*/   &/" >> docs/user/_sources/cpac/help.txt
-            mkdir -p docs/user/_sources/run
-            printf "Usage: cpac run\n\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\n.. code-block:: console\n\n   $ cpac run --help\n\n" > docs/user/_sources/run/help.txt
-            cpac run --help | sed -e "s/.*/   &/" >> docs/user/_sources/run/help.txt
-            mkdir -p docs/user/_sources/utils
-            printf "Usage: cpac utils\n\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\n.. code-block:: console\n\n   $ cpac utils --help\n\n" > docs/user/_sources/utils/help.txt
-            cpac utils --help | sed -e "s/.*/   &/" >> docs/user/_sources/utils/help.txt
-            deactivate
+          name: 🏗️ Building version branch docs
+          command: ./bin/build ${BUILD_VERSION}
       - run:
-          name: Build docs
-          command: ./bin/build
+          name: 📑 Storing commit message
+          command: git log origin/source -1 --oneline --pretty=%s > /root/GITMESSAGE.txt
+      - persist_to_workspace:
+          root: /
+          paths: 
+            - build/404.html
+            - build/build_version.txt
+            - build/docs
+            - build/index.html
+            - build/scripts
+            - root/.ssh
+            - root/GITMESSAGE.txt
+          
+  deploy-nightly:
+    working_directory: /
+    docker:
+      - image: python:3.7
+    steps:
+      - attach_workspace:
+          at: /
+      - prep-deploy: 
+          version: develop
+      - deploy
+      
+  deploy-version:
+    working_directory: /
+    docker:
+      - image: python:3.7
+    steps:
+      - attach_workspace:
+          at: /
+      - get-version
+      - prep-deploy:
+          version: ${BUILD_VERSION}
       - run:
-          name: Configure git user
-          command: |
-            git config --global user.email "ci-build@fcp-indi.github.com"
-            git config --global user.name "ci-build"
-      - run:
-          name: Deploy docs
-          command: |
-            export GITMESSAGE=`git log -1 --oneline --pretty=%s`
-            git clone --single-branch --branch master git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo
-            rsync -rtv ./ /tmp/repo/ --exclude '.git'
-            cd /tmp/repo
-            git rm -f .gitignore || rm -f .gitignore || true
-            git add .
-            git rm -fr docs/developer/_sources || rm -f docs/developer/_sources || true
-            git rm -fr docs/developer/.doctrees || rm -f docs/developer/.doctrees || true
-            git rm -fr docs/user/_sources || rm -f docs/user/_sources || true
-            git rm -fr docs/user/.doctrees || rm -f docs/user/.doctrees || true
-            git commit -m "${GITMESSAGE}" --allow-empty
-            git push -f origin master
-            cd -
+          name: 🔖 Checking if latest
+          command: if $(python /build/scripts/is_latest.py); then cp -r /build/docs/${BUILD_VERSION} /build/docs/latest; fi
+      - deploy
+
+workflows:
+  version: 2.1
+  build_and_deploy:
+    jobs:
+      - build-nightly:
+          filters:
+            branches:
+              only:
+                - source
+      - build-version:
+          filters:
+            branches:
+              only:
+                - build-version
+      - deploy-nightly:
+          filters:
+            branches:
+              only:
+                - source
+          requires:
+            - build-nightly
+      - deploy-version:
+          filters:
+            branches:
+              only:
+                - build-version
+          requires:
+            - build-version

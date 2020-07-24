@@ -20,6 +20,27 @@ commands:
             cd /build/C-PAC
             git checkout << parameters.version >>
             cd /build
+            python -m venv ~/simple
+            source ~/simple/bin/activate
+            pip install cpac
+            deactivate
+  run-cpac-commands:
+      - setup_remote_docker
+      - run:
+          name: Run cpac commands
+          command: |
+            source ~/simple/bin/activate
+            cpac run --help
+            mkdir -p docs/user/_sources/cpac
+            printf ".. code-block:: console\n\n   $ cpac --help\n\n" > docs/user/_sources/cpac/help.txt
+            cpac --help | sed -e "s/.*/   &/" >> docs/user/_sources/cpac/help.txt
+            mkdir -p docs/user/_sources/run
+            printf "Usage: cpac run\n\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\n.. code-block:: console\n\n   $ cpac run --help\n\n" > docs/user/_sources/run/help.txt
+            cpac run --help | sed -e "s/.*/   &/" >> docs/user/_sources/run/help.txt
+            mkdir -p docs/user/_sources/utils
+            printf "Usage: cpac utils\n\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\n.. code-block:: console\n\n   $ cpac utils --help\n\n" > docs/user/_sources/utils/help.txt
+            cpac utils --help | sed -e "s/.*/   &/" >> docs/user/_sources/utils/help.txt
+            deactivate
   prep-deploy:
     parameters:
       version:
@@ -67,6 +88,7 @@ jobs:
       - checkout
       - install-dependencies:
           version: develop
+      - run-cpac-commands
       - run:
           name: 🏗️ Building nightly branch docs
           command: ./bin/build nightly
@@ -95,6 +117,7 @@ jobs:
       - get-version
       - install-dependencies:
           version: ${BUILD_VERSION}
+      - run-cpac-commands
       - run:
           name: 🏗️ Building version branch docs
           command: ./bin/build ${BUILD_VERSION}

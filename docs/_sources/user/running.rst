@@ -7,9 +7,7 @@ As with configuring the subject list, pipeline configuration, and group analysis
 
 In addition to running C-PAC traditionally on your own local computer or on a server, there are three other avenues through which you can run C-PAC without going through the install process:
 
-* With a Docker container
-* On the Amazon AWS Cloud
-* Through OpenNeuro
+.. include:: /user/run/without_installing.rst
 
 More details of these options are available below.
 
@@ -18,6 +16,10 @@ If you re-run C-PAC with an output directory containing a working directory (fro
 .. note::
 
     C-PAC migrated from Python 2 to Python 3 in v1.6.2 (see `release notes <rnotes>`_). If your working directory contains Python 2 pickles from an older version of C-PAC and you want to continue to use this working directory, run::
+
+        cpac utils repickle /path/to/working_dir
+
+    or::
 
          docker run -i --rm --user $(id -u):$(id -g) -v /path/to/working_dir:/working fcpindi/c-pac:latest /bids_dir /outputs cli -- utils repickle /working
 
@@ -31,12 +33,10 @@ If you re-run C-PAC with an output directory containing a working directory (fro
 
     :ref:`Common Issue: I'm re-running a pipeline, but I am receiving many crashes <working_dir_crashes>`
 
-.. include:: docker.rst
-
-.. include:: singularity.rst
+.. include:: /user/cpac.rst
 
 On the AWS Cloud
-------------------------------
+----------------
 
 The C-PAC team has released an Amazon Marketplace AMI, making it easier for researchers to use C-PAC in the cloud.  You can use the AMI to either launch a single machine for basic runs or create a high performance computing (HPC) cluster using Starcluster.  Clusters can be dynamically scaled up as your computational needs increase.  Detailed explanations of cloud computing and HPC are beyond the scope of this documentation, but we will define a few key terms before we start.  If these terms are familiar, you may skip them and proceed to later sections.
 
@@ -82,7 +82,7 @@ Before you can create a single C-PAC machine or a C-PAC HPC cluster, you must fi
 #. On your local drive, open a terminal and run the following command: ``chmod 400 /path/to/pem/file``
 
 Starting a Single C-PAC Instance via the AWS Console
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Now that you have generated the access keys and a pem file, you may launch a single instance via Amazon's web interface by following the steps below.  If you are planning on processing many subjects or obtaining computationally-intensive derivatives (such as network centrality), you should use Starcluster instead.
 

@@ -1,7 +1,7 @@
 Let's Go!
 ---------
 
-#. The recommended way to run C-PAC is through the use of a container such as Docker or Singularity.
+#. The recommended way to run C-PAC is through the use of a container such as Docker or Singularity. Using these containers can be facilitated by :doc:`cpac`.
 
 #. Containers are completely pre-built environments that help ensure reproducibility (same exact library versions, behavior, etc.).
 

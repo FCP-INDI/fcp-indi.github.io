@@ -67,5 +67,15 @@ where `{width}` and `{height}` are the values already present in the existing `w
 ```
 
 ## Environment notes
-* :heavy_plus_sign: Check [`.circleci/config.yml`](https://github.com/FCP-INDI/fcp-indi.github.com/blob/source/.circleci/config.yml) for build dependencies.
-* :octocat: Set an environment variable `GITHUBTOKEN` to a [personal access token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line) to increase [your API rate limit](https://nightlyer.github.com/v3/#rate-limiting) from 60 to 5000 requests per hour (for getting [release notes from GitHub](https://github.com/FCP-INDI/C-PAC/releases)).
+* Because [C-PAC](https://github.com/FCP-INDI/C-PAC.git) and [cpac](https://github.com/FCP-INDI/cpac.git) have conflicting commandline commands, we first run any `cpac` commands in a virtual environment and spoof the `command-output` directive with `code-block` like 
+   ```RST
+   .. code-block:: console
+
+       cpac run --help
+       
+   .. program-output:: cpac_py run --help
+      :shell:
+      :ellipsis: 0,9
+   ```
+* :heavy_plus_sign: Check [`.circleci/config.yml`](https://github.com/FCP-INDI/fcp-indi.github.com/blob/source/.circleci/config.yml) of the branch you're working from for build dependencies.
+* :octocat: Set an environment variable `GITHUBTOKEN` to a [personal access token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line) to increase [your API rate limit](https://developer.github.com/v3/#rate-limiting) from 60 to 5000 requests per hour (for getting [release notes from GitHub](https://github.com/FCP-INDI/C-PAC/releases)).

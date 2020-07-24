@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>CPAC.registration.registration &#8212; C-PAC 1.7.0 Beta documentation</title>
+    <title>CPAC.registration.registration &#8212; C-PAC 1.6.2.a Beta documentation</title>
     <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
@@ -30,8 +30,8 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.6.2.a Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -702,7 +702,8 @@
     <span class="k">return</span> <span class="n">register_func_to_epi</span>
 
 
-<div class="viewcode-block" id="create_wf_calculate_ants_warp"><a class="viewcode-back" href="../../../workflows/registration.html#CPAC.registration.create_wf_calculate_ants_warp">[docs]</a><span class="k">def</span> <span class="nf">create_wf_calculate_ants_warp</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;create_wf_calculate_ants_warp&#39;</span><span class="p">,</span> <span class="n">num_threads</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">reg_ants_skull</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="c1"># TODO: refactor - change anatomical brain/skull to input brain/skull</span>
+<div class="viewcode-block" id="create_wf_calculate_ants_warp"><a class="viewcode-back" href="../../../developer/workflows/registration#CPAC.registration.create_wf_calculate_ants_warp">[docs]</a><span class="k">def</span> <span class="nf">create_wf_calculate_ants_warp</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;create_wf_calculate_ants_warp&#39;</span><span class="p">,</span> <span class="n">num_threads</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">reg_ants_skull</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Calculates the nonlinear ANTS registration transform. This workflow</span>
@@ -745,7 +746,7 @@
 <span class="sd">    </span>
 <span class="sd">    Workflow Inputs::</span>
 <span class="sd">    </span>
-<span class="sd">        inputspec.moving_brain : string (nifti file)</span>
+<span class="sd">        inputspec.anatomical_brain : string (nifti file)</span>
 <span class="sd">            File of brain to be normalized (registered)</span>
 <span class="sd">        inputspec.reference_brain : string (nifti file)</span>
 <span class="sd">            Target brain file to normalize to</span>
@@ -913,7 +914,7 @@
         <span class="n">calc_ants_warp_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;reference_skull&#39;</span><span class="p">,</span>
                 <span class="n">calculate_ants_warp</span><span class="p">,</span> <span class="s1">&#39;reference_skull&#39;</span><span class="p">)</span>
 
-    <span class="k">else</span><span class="p">:</span>
+    <span class="k">else</span><span class="p">:</span> 
         <span class="n">calc_ants_warp_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;moving_brain&#39;</span><span class="p">,</span>
                 <span class="n">calculate_ants_warp</span><span class="p">,</span> <span class="s1">&#39;moving_skull&#39;</span><span class="p">)</span>
 
@@ -969,337 +970,6 @@
     <span class="k">return</span> <span class="n">calc_ants_warp_wf</span></div>
 
 
-<span class="k">def</span> <span class="nf">connect_func_to_anat_init_reg</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="n">strat_list</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
-
-    <span class="n">new_strat_list</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="n">diff_complete</span> <span class="o">=</span> <span class="kc">False</span>
-    
-    <span class="k">if</span> <span class="mi">1</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">runRegisterFuncToAnat</span><span class="p">:</span>
-
-        <span class="k">for</span> <span class="n">num_strat</span><span class="p">,</span> <span class="n">strat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">strat_list</span><span class="p">):</span>
-
-            <span class="n">diff_complete</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">if</span> <span class="s2">&quot;despiked_fieldmap&quot;</span> <span class="ow">in</span> <span class="n">strat</span> <span class="ow">and</span> <span class="s2">&quot;fieldmap_mask&quot;</span> <span class="ow">in</span> <span class="n">strat</span><span class="p">:</span>
-                <span class="n">diff_complete</span> <span class="o">=</span> <span class="kc">True</span>
-
-            <span class="c1"># if field map-based distortion correction is on, but BBR is off,</span>
-            <span class="c1"># send in the distortion correction files here</span>
-            <span class="c1"># TODO: is this robust to the possibility of forking both</span>
-            <span class="c1"># TODO: distortion correction and BBR at the same time?</span>
-            <span class="c1"># TODO: (note if you are forking with BBR on/off, at this point</span>
-            <span class="c1"># TODO:  there is still only one strat, so you would have to fork</span>
-            <span class="c1"># TODO:  here instead to have a func-&gt;anat with fieldmap and</span>
-            <span class="c1"># TODO:  without, and send the without-fieldmap to the BBR fork)</span>
-
-            <span class="c1"># TODO: if we&#39;re moving the distortion correction warp</span>
-            <span class="c1">#       application, then the below is unnecessary</span>
-            <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">            dist_corr = False</span>
-<span class="sd">            if &#39;diff_distcor&#39; in nodes and 1 not in c.runBBReg:</span>
-<span class="sd">                dist_corr = True</span>
-<span class="sd">                # TODO: for now, disabling dist corr when BBR is disabled</span>
-<span class="sd">                err = &quot;\n\n[!] Field map distortion correction is enabled, &quot; \</span>
-<span class="sd">                    &quot;but Boundary-Based Registration is off- BBR is &quot; \</span>
-<span class="sd">                    &quot;required for distortion correction.\n\n&quot;</span>
-<span class="sd">                raise Exception(err)</span>
-<span class="sd">            &#39;&#39;&#39;</span>
-
-            <span class="n">func_to_anat</span> <span class="o">=</span> <span class="n">create_register_func_to_anat</span><span class="p">(</span><span class="n">diff_complete</span><span class="p">,</span>
-                                                        <span class="n">f</span><span class="s1">&#39;func_to_anat_FLIRT_</span><span class="si">{num_strat}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-            <span class="c1"># Input registration parameters</span>
-            <span class="n">func_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;trilinear&#39;</span>
-
-            <span class="k">if</span> <span class="s1">&#39;Mean Functional&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">func_reg_input</span><span class="p">:</span>
-                <span class="c1"># Input functional image (mean functional)</span>
-                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;mean_functional&#39;</span><span class="p">]</span>
-                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                    <span class="n">func_to_anat</span><span class="p">,</span> <span class="s1">&#39;inputspec.func&#39;</span><span class="p">)</span>
-
-            <span class="k">elif</span> <span class="s1">&#39;Selected Functional Volume&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">func_reg_input</span><span class="p">:</span>
-                <span class="c1"># Input functional image (specific volume)</span>
-                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;selected_func_volume&#39;</span><span class="p">]</span>
-                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                    <span class="n">func_to_anat</span><span class="p">,</span> <span class="s1">&#39;inputspec.func&#39;</span><span class="p">)</span>
-
-            <span class="c1"># Input skull-stripped anatomical</span>
-            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;anatomical_brain&#39;</span><span class="p">]</span>
-            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                <span class="n">func_to_anat</span><span class="p">,</span> <span class="s1">&#39;inputspec.anat&#39;</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">diff_complete</span><span class="p">:</span>
-                <span class="c1"># apply field map distortion correction outputs to</span>
-                <span class="c1"># the func-&gt;anat registration</span>
-                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;diff_phase_dwell&#39;</span><span class="p">]</span>
-                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                    <span class="n">func_to_anat</span><span class="p">,</span>
-                                    <span class="s1">&#39;echospacing_input.echospacing&#39;</span><span class="p">)</span>
-
-                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;diff_phase_pedir&#39;</span><span class="p">]</span>
-                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                    <span class="n">func_to_anat</span><span class="p">,</span> <span class="s1">&#39;pedir_input.pedir&#39;</span><span class="p">)</span>
-
-                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s2">&quot;despiked_fieldmap&quot;</span><span class="p">]</span>
-                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                    <span class="n">func_to_anat</span><span class="p">,</span> <span class="s1">&#39;inputspec.fieldmap&#39;</span><span class="p">)</span>
-
-                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s2">&quot;fieldmap_mask&quot;</span><span class="p">]</span>
-                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                    <span class="n">func_to_anat</span><span class="p">,</span> <span class="s1">&#39;inputspec.fieldmapmask&#39;</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">runRegisterFuncToAnat</span><span class="p">:</span>
-                <span class="n">strat</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
-                <span class="n">new_strat_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">strat</span><span class="p">)</span>
-
-            <span class="n">strat</span><span class="o">.</span><span class="n">append_name</span><span class="p">(</span><span class="n">func_to_anat</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-
-            <span class="n">strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
-                <span class="s1">&#39;mean_functional_in_anat&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_anat</span><span class="p">,</span> <span class="s1">&#39;outputspec.anat_func_nobbreg&#39;</span><span class="p">),</span>
-                <span class="s1">&#39;functional_to_anat_linear_xfm&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_anat</span><span class="p">,</span> <span class="s1">&#39;outputspec.func_to_anat_linear_xfm_nobbreg&#39;</span><span class="p">)</span>
-            <span class="p">})</span>
-
-    <span class="n">strat_list</span> <span class="o">+=</span> <span class="n">new_strat_list</span>
-
-    <span class="k">return</span> <span class="n">workflow</span><span class="p">,</span> <span class="n">strat_list</span><span class="p">,</span> <span class="n">diff_complete</span>
-
-
-<span class="k">def</span> <span class="nf">connect_func_to_anat_bbreg</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="n">strat_list</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">diff_complete</span><span class="p">):</span>
-
-    <span class="kn">from</span> <span class="nn">CPAC.utils.utils</span> <span class="k">import</span> <span class="n">pick_wm</span>
-
-    <span class="n">new_strat_list</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">if</span> <span class="mi">1</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">runRegisterFuncToAnat</span> <span class="ow">and</span> <span class="mi">1</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">runBBReg</span><span class="p">:</span>
-
-        <span class="k">for</span> <span class="n">num_strat</span><span class="p">,</span> <span class="n">strat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">strat_list</span><span class="p">):</span>
-
-            <span class="c1"># this is needed here in case tissue segmentation is set on/off</span>
-            <span class="c1"># and you have bbreg enabled- this will ensure bbreg will run for</span>
-            <span class="c1"># the strat that has segmentation but will not run (thus avoiding</span>
-            <span class="c1"># a crash) on the strat without segmentation</span>
-            <span class="k">if</span> <span class="s1">&#39;anatomical_wm_mask&#39;</span> <span class="ow">in</span> <span class="n">strat</span><span class="p">:</span>
-
-                <span class="n">func_to_anat_bbreg</span> <span class="o">=</span> <span class="n">create_bbregister_func_to_anat</span><span class="p">(</span>
-                    <span class="n">diff_complete</span><span class="p">,</span>
-                    <span class="n">f</span><span class="s1">&#39;func_to_anat_bbreg_</span><span class="si">{num_strat}</span><span class="s1">&#39;</span>
-                <span class="p">)</span>
-
-                <span class="c1"># Input registration parameters</span>
-                <span class="n">func_to_anat_bbreg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">bbr_schedule</span> <span class="o">=</span> \
-                    <span class="n">c</span><span class="o">.</span><span class="n">boundaryBasedRegistrationSchedule</span>
-
-                <span class="k">if</span> <span class="s1">&#39;Mean Functional&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">func_reg_input</span><span class="p">:</span>
-                    <span class="c1"># Input functional image (mean functional)</span>
-                    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;mean_functional&#39;</span><span class="p">]</span>
-                    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                        <span class="n">func_to_anat_bbreg</span><span class="p">,</span> <span class="s1">&#39;inputspec.func&#39;</span><span class="p">)</span>
-
-                <span class="k">elif</span> <span class="s1">&#39;Selected Functional Volume&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">func_reg_input</span><span class="p">:</span>
-                    <span class="c1"># Input functional image (specific volume)</span>
-                    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;selected_func_volume&#39;</span><span class="p">]</span>
-                    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                        <span class="n">func_to_anat_bbreg</span><span class="p">,</span> <span class="s1">&#39;inputspec.func&#39;</span><span class="p">)</span>
-
-                <span class="c1"># Input anatomical whole-head image (reoriented)</span>
-                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;anatomical_reorient&#39;</span><span class="p">]</span>
-                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                    <span class="n">func_to_anat_bbreg</span><span class="p">,</span>
-                                    <span class="s1">&#39;inputspec.anat_skull&#39;</span><span class="p">)</span>
-
-                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;functional_to_anat_linear_xfm&#39;</span><span class="p">]</span>
-                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                    <span class="n">func_to_anat_bbreg</span><span class="p">,</span>
-                                    <span class="s1">&#39;inputspec.linear_reg_matrix&#39;</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="s1">&#39;T1_template&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">template_based_segmentation</span> <span class="ow">or</span> \
-                        <span class="s1">&#39;EPI_template&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">template_based_segmentation</span> <span class="ow">or</span> \
-                            <span class="mi">1</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">ANTs_prior_based_segmentation</span> <span class="p">:</span>
-                    <span class="c1"># Input segmentation mask,</span>
-                    <span class="c1"># since template_based_segmentation or ANTs_prior_based_segmentation cannot generate</span>
-                    <span class="c1"># probability maps</span>
-                    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;anatomical_wm_mask&#39;</span><span class="p">]</span>
-                    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                    <span class="n">func_to_anat_bbreg</span><span class="p">,</span>
-                                    <span class="s1">&#39;inputspec.anat_wm_segmentation&#39;</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># Input segmentation probability maps for white matter</span>
-                    <span class="c1"># segmentation</span>
-                    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;seg_probability_maps&#39;</span><span class="p">]</span>
-                    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="p">(</span><span class="n">out_file</span><span class="p">,</span> <span class="n">pick_wm</span><span class="p">),</span>
-                                        <span class="n">func_to_anat_bbreg</span><span class="p">,</span>
-                                        <span class="s1">&#39;inputspec.anat_wm_segmentation&#39;</span><span class="p">)</span>
-
-                <span class="c1"># apply field map distortion correction outputs to</span>
-                <span class="c1"># the func-&gt;anat registration</span>
-                <span class="k">if</span> <span class="n">diff_complete</span><span class="p">:</span>
-                    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;diff_phase_dwell&#39;</span><span class="p">]</span>
-                    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                        <span class="n">func_to_anat_bbreg</span><span class="p">,</span>
-                                        <span class="s1">&#39;echospacing_input.echospacing&#39;</span><span class="p">)</span>
-
-                    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;diff_phase_pedir&#39;</span><span class="p">]</span>
-                    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                        <span class="n">func_to_anat_bbreg</span><span class="p">,</span>
-                                        <span class="s1">&#39;pedir_input.pedir&#39;</span><span class="p">)</span>
-
-                    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s2">&quot;despiked_fieldmap&quot;</span><span class="p">]</span>
-                    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                        <span class="n">func_to_anat_bbreg</span><span class="p">,</span>
-                                        <span class="s1">&#39;inputspec.fieldmap&#39;</span><span class="p">)</span>
-
-                    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s2">&quot;fieldmap_mask&quot;</span><span class="p">]</span>
-                    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                        <span class="n">func_to_anat_bbreg</span><span class="p">,</span>
-                                        <span class="s1">&#39;inputspec.fieldmapmask&#39;</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">runBBReg</span><span class="p">:</span>
-                    <span class="n">strat</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
-                    <span class="n">new_strat_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">strat</span><span class="p">)</span>
-
-                <span class="n">strat</span><span class="o">.</span><span class="n">append_name</span><span class="p">(</span><span class="n">func_to_anat_bbreg</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-
-                <span class="n">strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
-                    <span class="s1">&#39;mean_functional_in_anat&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_anat_bbreg</span><span class="p">,</span> <span class="s1">&#39;outputspec.anat_func&#39;</span><span class="p">),</span>
-                    <span class="s1">&#39;functional_to_anat_linear_xfm&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_anat_bbreg</span><span class="p">,</span> <span class="s1">&#39;outputspec.func_to_anat_linear_xfm&#39;</span><span class="p">)</span>
-                <span class="p">},</span> <span class="n">override</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># anatomical segmentation is not being run in this particular</span>
-                <span class="c1"># strategy/fork - we don&#39;t want this to stop workflow building</span>
-                <span class="c1"># unless there is only one strategy</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">strat_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                    <span class="k">pass</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">err</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">[!] Boundary-based registration (BBR) &quot;</span> \
-                        <span class="s2">&quot;for functional-to-anatomical registration is &quot;</span> \
-                        <span class="s2">&quot;enabled, but anatomical segmentation is not. &quot;</span> \
-                        <span class="s2">&quot;BBR requires the outputs of segmentation. &quot;</span> \
-                        <span class="s2">&quot;Please modify your pipeline configuration and &quot;</span> \
-                        <span class="s2">&quot;run again.</span><span class="se">\n\n</span><span class="s2">&quot;</span>
-                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
-
-    <span class="n">strat_list</span> <span class="o">+=</span> <span class="n">new_strat_list</span>
-
-    <span class="k">return</span> <span class="n">workflow</span><span class="p">,</span> <span class="n">strat_list</span>
-
-
-<span class="k">def</span> <span class="nf">connect_func_to_template_reg</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="n">strat_list</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
-    
-    <span class="kn">from</span> <span class="nn">CPAC.registration</span> <span class="k">import</span> <span class="n">output_func_to_standard</span>
-
-    <span class="n">new_strat_list</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">num_strat</span><span class="p">,</span> <span class="n">strat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">strat_list</span><span class="p">):</span>
-
-        <span class="k">if</span> <span class="s1">&#39;EPI_template&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">runRegisterFuncToTemplate</span><span class="p">:</span>
-
-            <span class="k">for</span> <span class="n">reg</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">regOption</span><span class="p">:</span>
-
-                <span class="k">if</span> <span class="s1">&#39;T1_template&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">runRegisterFuncToTemplate</span><span class="p">:</span>
-                    <span class="n">strat</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
-
-                <span class="n">func_to_epi</span> <span class="o">=</span> \
-                    <span class="n">create_register_func_to_epi</span><span class="p">(</span>
-                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_to_epi_</span><span class="si">{0}</span><span class="s1">_</span><span class="si">{1}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">reg</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">num_strat</span><span class="p">),</span>
-                        <span class="n">reg_option</span><span class="o">=</span><span class="n">reg</span><span class="p">,</span>
-                        <span class="n">reg_ants_skull</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">regWithSkull</span>
-                    <span class="p">)</span>
-
-                <span class="c1"># Input registration parameters</span>
-                <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">ANTs_para_EPI_registration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">err_msg</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">[!] C-PAC says: </span><span class="se">\n</span><span class="s1">&#39;</span>\
-                        <span class="s2">&quot;You have selected </span><span class="se">\&#39;</span><span class="s2">regOption: [</span><span class="si">{0}</span><span class="s2">]</span><span class="se">\&#39;</span><span class="s2"> and </span><span class="se">\&#39;</span><span class="s2">runRegisterFuncToTemplate :  [&#39;</span><span class="si">{1}</span><span class="s2">&#39;]</span><span class="se">\&#39;</span><span class="s2">. </span><span class="se">\n</span><span class="s2">&quot;</span>\
-                                <span class="s1">&#39;However, no EPI-to-template ANTs parameters were specified. &#39;</span> \
-                                <span class="s1">&#39;Please specify ANTs parameters properly and try again&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">regOption</span><span class="p">),</span>
-                                                                                                <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">runRegisterFuncToTemplate</span><span class="p">))</span>
-                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">func_to_epi</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">ants_para</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">ANTs_para_EPI_registration</span>
-
-                <span class="n">func_to_epi</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">funcRegANTSinterpolation</span>
-
-                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">get_leaf_properties</span><span class="p">()</span>
-                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;inputspec.func_4d&#39;</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="s1">&#39;Mean Functional&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">func_reg_input</span><span class="p">:</span>
-                    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;mean_functional&#39;</span><span class="p">]</span>
-                    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;inputspec.func_3d&#39;</span><span class="p">)</span>
-
-                <span class="k">elif</span> <span class="s1">&#39;Selected Functional Volume&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">func_reg_input</span><span class="p">:</span>
-                    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;selected_func_volume&#39;</span><span class="p">]</span>
-                    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;inputspec.func_3d&#39;</span><span class="p">)</span>
-
-                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;template_epi&#39;</span><span class="p">]</span>
-                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;inputspec.epi&#39;</span><span class="p">)</span>
-
-                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;functional_brain_mask&#39;</span><span class="p">]</span>
-                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;inputspec.func_3d_mask&#39;</span><span class="p">)</span>
-
-                <span class="c1"># update resource pool</span>
-                <span class="n">strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
-                    <span class="s1">&#39;functional_to_epi-standard&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;outputspec.func_in_epi&#39;</span><span class="p">),</span>
-                <span class="p">})</span>
-
-                <span class="k">if</span> <span class="n">reg</span> <span class="o">==</span> <span class="s1">&#39;FSL&#39;</span><span class="p">:</span>
-                    <span class="n">strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
-                        <span class="s1">&#39;epi_registration_method&#39;</span><span class="p">:</span> <span class="s1">&#39;FSL&#39;</span><span class="p">,</span>
-                        <span class="s1">&#39;func_to_epi_linear_xfm&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;outputspec.fsl_flirt_xfm&#39;</span><span class="p">),</span>  
-                        <span class="s1">&#39;func_to_epi_nonlinear_xfm&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;outputspec.fsl_fnirt_xfm&#39;</span><span class="p">),</span>
-                        <span class="s1">&#39;epi_to_func_linear_xfm&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;outputspec.invlinear_xfm&#39;</span><span class="p">),</span>
-                    <span class="p">})</span>
-
-                <span class="k">elif</span> <span class="n">reg</span> <span class="o">==</span> <span class="s1">&#39;ANTS&#39;</span><span class="p">:</span>
-                    <span class="n">strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
-                        <span class="s1">&#39;epi_registration_method&#39;</span><span class="p">:</span> <span class="s1">&#39;ANTS&#39;</span><span class="p">,</span>
-                        <span class="s1">&#39;func_to_epi_ants_initial_xfm&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;outputspec.ants_initial_xfm&#39;</span><span class="p">),</span>
-                        <span class="s1">&#39;func_to_epi_ants_rigid_xfm&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;outputspec.ants_rigid_xfm&#39;</span><span class="p">),</span>
-                        <span class="s1">&#39;func_to_epi_ants_affine_xfm&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;outputspec.ants_affine_xfm&#39;</span><span class="p">),</span>
-                        <span class="s1">&#39;func_to_epi_nonlinear_xfm&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;outputspec.warp_field&#39;</span><span class="p">),</span>
-                        <span class="s1">&#39;epi_to_func_nonlinear_xfm&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;outputspec.inverse_warp_field&#39;</span><span class="p">),</span> <span class="c1"># rename</span>
-                    <span class="p">})</span>
-
-                <span class="n">strat</span><span class="o">.</span><span class="n">append_name</span><span class="p">(</span><span class="n">func_to_epi</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-
-                <span class="k">for</span> <span class="n">output_name</span><span class="p">,</span> <span class="n">func_key</span><span class="p">,</span> <span class="n">ref_key</span><span class="p">,</span> <span class="n">image_type</span> <span class="ow">in</span> <span class="p">[</span> \
-                        <span class="p">(</span><span class="s1">&#39;functional_brain_mask_to_standard&#39;</span><span class="p">,</span> <span class="s1">&#39;functional_brain_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;template_skull_for_func_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_mask&#39;</span><span class="p">),</span>
-                        <span class="p">(</span><span class="s1">&#39;functional_brain_mask_to_standard_derivative&#39;</span><span class="p">,</span> <span class="s1">&#39;functional_brain_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;template_skull_for_func_derivative&#39;</span><span class="p">,</span> <span class="s1">&#39;func_mask&#39;</span><span class="p">),</span>
-                        <span class="p">(</span><span class="s1">&#39;mean_functional_to_standard&#39;</span><span class="p">,</span> <span class="s1">&#39;mean_functional&#39;</span><span class="p">,</span> <span class="s1">&#39;template_brain_for_func_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_derivative&#39;</span><span class="p">),</span>
-                        <span class="p">(</span><span class="s1">&#39;mean_functional_to_standard_derivative&#39;</span><span class="p">,</span> <span class="s1">&#39;mean_functional&#39;</span><span class="p">,</span> <span class="s1">&#39;template_brain_for_func_derivative&#39;</span><span class="p">,</span> <span class="s1">&#39;func_derivative&#39;</span><span class="p">),</span>
-                        <span class="p">(</span><span class="s1">&#39;motion_correct_to_standard&#39;</span><span class="p">,</span> <span class="s1">&#39;motion_correct&#39;</span><span class="p">,</span> <span class="s1">&#39;template_brain_for_func_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_4d&#39;</span><span class="p">),</span>
-                <span class="p">]:</span>
-                    <span class="n">output_func_to_standard</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="n">func_key</span><span class="p">,</span> <span class="n">ref_key</span><span class="p">,</span>
-                                            <span class="n">output_name</span><span class="p">,</span> <span class="n">strat</span><span class="p">,</span>
-                                            <span class="n">num_strat</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span>
-                                            <span class="n">input_image_type</span><span class="o">=</span><span class="n">image_type</span><span class="p">,</span>
-                                            <span class="n">registration_template</span><span class="o">=</span><span class="s1">&#39;epi&#39;</span><span class="p">,</span>
-                                            <span class="n">func_type</span><span class="o">=</span><span class="s1">&#39;non-ica-aroma&#39;</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="s1">&#39;T1_template&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">runRegisterFuncToTemplate</span><span class="p">:</span>
-                    <span class="n">new_strat_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">strat</span><span class="p">)</span>
-
-    <span class="n">strat_list</span> <span class="o">+=</span> <span class="n">new_strat_list</span>
-
-
-    <span class="k">for</span> <span class="n">num_strat</span><span class="p">,</span> <span class="n">strat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">strat_list</span><span class="p">):</span>
-
-        <span class="k">if</span> <span class="s1">&#39;T1_template&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">runRegisterFuncToTemplate</span> <span class="ow">and</span> \
-                <span class="s1">&#39;functional_to_epi-standard&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">strat</span><span class="p">:</span>
-
-            <span class="k">for</span> <span class="n">output_name</span><span class="p">,</span> <span class="n">func_key</span><span class="p">,</span> <span class="n">ref_key</span><span class="p">,</span> <span class="n">image_type</span> <span class="ow">in</span> <span class="p">[</span> \
-                    <span class="p">(</span><span class="s1">&#39;functional_brain_mask_to_standard&#39;</span><span class="p">,</span> <span class="s1">&#39;functional_brain_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;template_skull_for_func_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_mask&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;functional_brain_mask_to_standard_derivative&#39;</span><span class="p">,</span> <span class="s1">&#39;functional_brain_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;template_skull_for_func_derivative&#39;</span><span class="p">,</span> <span class="s1">&#39;func_mask&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;mean_functional_to_standard&#39;</span><span class="p">,</span> <span class="s1">&#39;mean_functional&#39;</span><span class="p">,</span> <span class="s1">&#39;template_brain_for_func_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_derivative&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;mean_functional_to_standard_derivative&#39;</span><span class="p">,</span> <span class="s1">&#39;mean_functional&#39;</span><span class="p">,</span> <span class="s1">&#39;template_brain_for_func_derivative&#39;</span><span class="p">,</span> <span class="s1">&#39;func_derivative&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;motion_correct_to_standard&#39;</span><span class="p">,</span> <span class="s1">&#39;motion_correct&#39;</span><span class="p">,</span> <span class="s1">&#39;template_brain_for_func_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_4d&#39;</span><span class="p">),</span>
-            <span class="p">]:</span>
-                <span class="n">output_func_to_standard</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="n">func_key</span><span class="p">,</span> <span class="n">ref_key</span><span class="p">,</span>
-                                        <span class="n">output_name</span><span class="p">,</span> <span class="n">strat</span><span class="p">,</span> <span class="n">num_strat</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span>
-                                        <span class="n">input_image_type</span><span class="o">=</span><span class="n">image_type</span><span class="p">,</span>
-                                        <span class="n">registration_template</span><span class="o">=</span><span class="s1">&#39;t1&#39;</span><span class="p">,</span>
-                                        <span class="n">func_type</span><span class="o">=</span><span class="s1">&#39;non-ica-aroma&#39;</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">workflow</span><span class="p">,</span> <span class="n">strat_list</span>
 </pre></div>
 
           </div>
@@ -1342,8 +1012,8 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.6.2.a Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li> 
       </ul>
     </div>
 

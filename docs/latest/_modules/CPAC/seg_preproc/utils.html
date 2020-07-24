@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>CPAC.seg_preproc.utils &#8212; C-PAC 1.7.0 Beta documentation</title>
+    <title>CPAC.seg_preproc.utils &#8212; C-PAC 1.6.2.a Beta documentation</title>
     <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
@@ -30,8 +30,8 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.6.2.a Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -362,176 +362,6 @@
     <span class="n">output_img</span><span class="o">.</span><span class="n">to_filename</span><span class="p">(</span><span class="n">eroded_roi_mask</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">eroded_roi_mask</span></div>
-
-
-<div class="viewcode-block" id="hardcoded_antsJointLabelFusion"><a class="viewcode-back" href="../../../workflows/seg_preproc.html#CPAC.seg_preproc.hardcoded_antsJointLabelFusion">[docs]</a><span class="k">def</span> <span class="nf">hardcoded_antsJointLabelFusion</span><span class="p">(</span><span class="n">anatomical_brain</span><span class="p">,</span> <span class="n">anatomical_brain_mask</span><span class="p">,</span> <span class="n">template_brain_list</span><span class="p">,</span> <span class="n">template_segmentation_list</span><span class="p">):</span>
-    
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    run antsJointLabelFusion.sh</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-
-<span class="sd">    anatomical_brain : string (nifti file)</span>
-<span class="sd">        Target image to be labeled.</span>
-
-<span class="sd">    anatomical_brain_mask: string (nifti file)</span>
-<span class="sd">        Target mask image</span>
-
-<span class="sd">    template_brain_list: list</span>
-<span class="sd">        Atlas to be warped to target image.</span>
-
-<span class="sd">    template_segmentation_list: list </span>
-<span class="sd">        Labels corresponding to atlas.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-
-<span class="sd">    multiatlas_Intensity : string (nifti file)</span>
-
-<span class="sd">    multiatlas_Labels : string (nifti file)</span>
-
-
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="kn">import</span> <span class="nn">os</span>
-    <span class="kn">import</span> <span class="nn">subprocess</span>
-
-    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;$</span><span class="si">{ANTSPATH}</span><span class="s2">${ANTSPATH:+/}antsJointLabelFusion.sh&quot;</span><span class="p">]</span> 
-    <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot; -d 3 -o ants_multiatlas_ -t </span><span class="si">{0}</span><span class="s2"> -x </span><span class="si">{1}</span><span class="s2"> -y b -c 0&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">anatomical_brain</span><span class="p">,</span> <span class="n">anatomical_brain_mask</span><span class="p">))</span>
-    
-    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">template_brain_list</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">template_segmentation_list</span><span class="p">)):</span>
-        <span class="n">err_msg</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">[!] C-PAC says: &#39;</span>\
-                    <span class="s1">&#39;Please check ANTs Prior-based Segmentation setting. &#39;</span> \
-                    <span class="s1">&#39;For performing ANTs Prior-based segmentation method &#39;</span>\
-                    <span class="s1">&#39;the number of specified segmentations should be identical to the number of atlas image sets.&#39;</span>\
-                    <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>    
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">template_brain_list</span><span class="p">)):</span>
-            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot; -g </span><span class="si">{0}</span><span class="s2"> -l </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">template_brain_list</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="n">template_segmentation_list</span><span class="p">[</span><span class="n">index</span><span class="p">]))</span>
-
-    <span class="c1"># write out the actual command-line entry for testing/validation later</span>
-    <span class="n">command_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;command.txt&#39;</span><span class="p">)</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">command_file</span><span class="p">,</span> <span class="s1">&#39;wt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">))</span>
-    
-    <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-    <span class="n">bash_cmd</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span> 
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">retcode</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span><span class="n">bash_cmd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> 
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;[!] antsJointLabel segmentation method did not complete successfully.&#39;</span>
-                        <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">Error details:</span><span class="se">\n</span><span class="si">{0}</span><span class="se">\n</span><span class="si">{1}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">output</span><span class="p">))</span>
-
-    <span class="n">multiatlas_Intensity</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">multiatlas_Labels</span> <span class="o">=</span> <span class="kc">None</span>
-
-    <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">f</span><span class="p">)]</span>
-
-    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s2">&quot;Intensity&quot;</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">multiatlas_Intensity</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">f</span>
-        <span class="k">if</span> <span class="s2">&quot;Labels&quot;</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">multiatlas_Labels</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">f</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">multiatlas_Labels</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">[!] No multiatlas labels file found.&quot;</span>
-                        <span class="s2">&quot;antsJointLabelFusion may not have completed successfully.</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">multiatlas_Intensity</span><span class="p">,</span> <span class="n">multiatlas_Labels</span></div>
-
-
-<div class="viewcode-block" id="pick_tissue_from_labels_file"><a class="viewcode-back" href="../../../workflows/seg_preproc.html#CPAC.seg_preproc.pick_tissue_from_labels_file">[docs]</a><span class="k">def</span> <span class="nf">pick_tissue_from_labels_file</span><span class="p">(</span><span class="n">multiatlas_Labels</span><span class="p">,</span> <span class="n">csf_label</span><span class="p">,</span> 
-                                <span class="n">left_gm_label</span><span class="p">,</span> <span class="n">left_wm_label</span><span class="p">,</span>
-                                <span class="n">right_gm_label</span><span class="p">,</span> <span class="n">right_wm_label</span><span class="p">):</span>
-
-
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    pick tissue mask from multiatlas labels file</span>
-<span class="sd">    based off of FreeSurferColorLUT https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT</span>
-<span class="sd">    or user provided label value</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-
-<span class="sd">    multiatlas_Labels : string (nifti file)</span>
-
-<span class="sd">    csf_label: integer </span>
-<span class="sd">        label value corresponding to CSF in multiatlas file</span>
-
-<span class="sd">    left_gm_label: integer </span>
-<span class="sd">        label value corresponding to Left Gray Matter in multiatlas file</span>
-
-<span class="sd">    left_wm_label: integer </span>
-<span class="sd">        label value corresponding to Left White Matter in multiatlas file</span>
-
-<span class="sd">    right_gm_label: integer </span>
-<span class="sd">        label value corresponding to Right Gray Matter in multiatlas file</span>
-
-<span class="sd">    right_wm_label: integer </span>
-<span class="sd">        label value corresponding to Right White Matter in multiatlas file</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-
-<span class="sd">    csf_mask : string (nifti file)</span>
-
-<span class="sd">    gm_mask : string (nifti file)</span>
-
-<span class="sd">    wm_mask : string (nifti file)</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span> <span class="nn">os</span>
-    <span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nb</span>
-    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-
-    <span class="n">img</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">multiatlas_Labels</span><span class="p">)</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
-
-    <span class="c1"># pick tissue mask from multiatlas labels file</span>
-    <span class="c1"># based off of FreeSurferColorLUT or user provided label values</span>
-    <span class="c1"># hard-coded csf/gm/wm label values are based off of FreeSurferColorLUT</span>
-
-    <span class="n">csf</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">csf_label</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">csf</span><span class="p">[</span><span class="n">csf</span> <span class="o">!=</span> <span class="mi">24</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">csf</span><span class="p">[</span><span class="n">csf</span> <span class="o">==</span> <span class="mi">24</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">csf</span><span class="p">[</span><span class="n">csf</span> <span class="o">!=</span> <span class="n">csf_label</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">csf</span><span class="p">[</span><span class="n">csf</span> <span class="o">==</span> <span class="n">csf_label</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-
-    <span class="n">gm</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">left_gm_label</span> <span class="o">==</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">right_gm_label</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">gm</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">gm</span> <span class="o">!=</span> <span class="mi">42</span><span class="p">,</span> <span class="n">gm</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span> 
-        <span class="n">gm</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">gm</span> <span class="o">==</span> <span class="mi">42</span><span class="p">,</span> <span class="n">gm</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">gm</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">gm</span> <span class="o">!=</span> <span class="n">right_gm_label</span><span class="p">,</span> <span class="n">gm</span> <span class="o">!=</span> <span class="n">left_gm_label</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span> 
-        <span class="n">gm</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">gm</span> <span class="o">==</span> <span class="n">right_gm_label</span><span class="p">,</span> <span class="n">gm</span> <span class="o">==</span> <span class="n">left_gm_label</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
-
-    <span class="n">wm</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">left_wm_label</span> <span class="o">==</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">right_wm_label</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">wm</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">wm</span> <span class="o">!=</span> <span class="mi">41</span><span class="p">,</span> <span class="n">wm</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">wm</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">wm</span> <span class="o">==</span> <span class="mi">41</span><span class="p">,</span> <span class="n">wm</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">wm</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">wm</span> <span class="o">!=</span> <span class="n">right_wm_label</span><span class="p">,</span> <span class="n">wm</span> <span class="o">!=</span> <span class="n">left_wm_label</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">wm</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">wm</span> <span class="o">==</span> <span class="n">right_wm_label</span><span class="p">,</span> <span class="n">wm</span> <span class="o">==</span> <span class="n">left_wm_label</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
-
-    
-    <span class="n">save_img_csf</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">Nifti1Image</span><span class="p">(</span><span class="n">csf</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">get_header</span><span class="p">(),</span> <span class="n">affine</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">get_affine</span><span class="p">())</span>
-    <span class="n">save_img_gm</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">Nifti1Image</span><span class="p">(</span><span class="n">gm</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">get_header</span><span class="p">(),</span> <span class="n">affine</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">get_affine</span><span class="p">())</span>
-    <span class="n">save_img_wm</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">Nifti1Image</span><span class="p">(</span><span class="n">wm</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">get_header</span><span class="p">(),</span> <span class="n">affine</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">get_affine</span><span class="p">())</span>
-
-    <span class="n">save_img_csf</span><span class="o">.</span><span class="n">to_filename</span><span class="p">(</span><span class="s1">&#39;csf_mask.nii.gz&#39;</span><span class="p">)</span>
-    <span class="n">save_img_gm</span><span class="o">.</span><span class="n">to_filename</span><span class="p">(</span><span class="s1">&#39;gm_mask.nii.gz&#39;</span><span class="p">)</span>
-    <span class="n">save_img_wm</span><span class="o">.</span><span class="n">to_filename</span><span class="p">(</span><span class="s1">&#39;wm_mask.nii.gz&#39;</span><span class="p">)</span>
-
-    <span class="n">csf_mask</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span><span class="s1">&#39;csf_mask.nii.gz&#39;</span><span class="p">)</span>
-    <span class="n">gm_mask</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span><span class="s1">&#39;gm_mask.nii.gz&#39;</span><span class="p">)</span>
-    <span class="n">wm_mask</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span><span class="s1">&#39;wm_mask.nii.gz&#39;</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">csf_mask</span><span class="p">,</span> <span class="n">gm_mask</span><span class="p">,</span> <span class="n">wm_mask</span></div>
 </pre></div>
 
           </div>
@@ -574,8 +404,8 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.6.2.a Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li> 
       </ul>
     </div>
 

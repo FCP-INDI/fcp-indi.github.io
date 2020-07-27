@@ -13,6 +13,8 @@
 
 import m2r
 import os
+import re
+import semver
 import sys
 
 from CPAC import __version__
@@ -20,6 +22,76 @@ from dateutil import parser as dparser
 from github import Github
 from github.GithubException import RateLimitExceededException, \
     UnknownObjectException
+
+# "Dealing with Invalid Versions" from
+# https://python-semver.readthedocs.io/en/latest/usage.html
+
+
+def coerce(version):
+    """
+    Convert an incomplete version string into a semver-compatible VersionInfo
+    object
+
+    * Tries to detect a "basic" version string (``major.minor.patch``).
+    * If not enough components can be found, missing components are
+        set to zero to obtain a valid semver version.
+
+    :param str version: the version string to convert
+    :return: a tuple with a :class:`VersionInfo` instance (or ``None``
+        if it's not a version) and the rest of the string which doesn't
+        belong to a basic version.
+    :rtype: tuple(:class:`VersionInfo` | None, str)
+    """
+    BASEVERSION = re.compile(
+        r"""[vV]?
+            (?P<major>0|[1-9]\d*)
+            (\.
+            (?P<minor>0|[1-9]\d*)
+            (\.
+                (?P<patch>0|[1-9]\d*)
+            )?
+            )?
+        """,
+        re.VERBOSE,
+    )
+    
+    match = BASEVERSION.search(version)
+    if not match:
+        return (None, version)
+
+    ver = {
+        key: 0 if value is None else value for key, value in match.groupdict().items()
+    }
+    ver = semver.VersionInfo(**ver)
+    rest = match.string[match.end() :]  # noqa:E203
+    return ver, rest
+    
+    
+def compare_versions(new, old):
+    """
+    Function to compare two versions.
+    
+    Parameters
+    ----------
+    new: str
+    
+    old: str
+    
+    Returns
+    -------
+    bool
+        Is the "new" at least as new as "old"?
+    """
+    comparisons = list(zip(coerce(new), coerce(old)))
+    if any([v is None for v in comparisons[0]]):
+        return(False)
+    outright = semver.compare(str(comparisons[0][0]), str(comparisons[0][1]))
+    return (
+        bool(outright == 1) or bool(
+            (outright == 0) and comparisons[1][0] >= comparisons[1][1]
+        )
+    )
+    
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -107,6 +179,17 @@ except RateLimitExceededException:
     gh_tags = []
 gh_tags.sort(reverse=True)
 
+build_version_path = os.path.abspath(os.path.join(
+    __file__, os.pardir, os.pardir, os.pardir, 'build_version.txt'
+))
+# don't build release notes for newer releases
+if os.path.exists(build_version_path):
+    with open(build_version_path, 'r') as bvf:
+        build_version = bvf.read().strip()
+    gh_tags = [gh_tag for gh_tag in gh_tags if compare_versions(
+        build_version, gh_tag
+    )]
+
 # Try to get release notes from GitHub
 try:
     gh_releases = []
@@ -114,7 +197,7 @@ try:
         try:
             gh_releases.append(gh_cpac.get_release(t).raw_data)
         except (AttributeError, UnknownObjectException):
-            print(f"No notes for {t}")
+            print("No notes for {}".format(t))
     gh_releaseNotes = {r['tag_name']: {
         'name': r['name'],
         'body': r['body'],
@@ -125,8 +208,11 @@ except RateLimitExceededException:
     gh_releaseNotes = {
         t: {
             "name": t,
-            "body": f"See https://github.com/FCP-INDI/C-PAC/releases/tag/{t} for "
-                    "release notes.",
+            "body": "".join([
+                "See https://github.com/FCP-INDI/C-PAC/releases/tag/",
+                t,
+                " for release notes."
+            ]),
             "published_at": None
         } for t in gh_tags
     }
@@ -141,14 +227,14 @@ def _unireplace(release_note, unireplace):
         e2 = str(e[2:])
         release_note = release_note.replace(
             e,
-            f" |u{e2}| "
+            " |u{}| ".format(e2)
         )
         unireplace[e2] = e
         return(_unireplace(release_note, unireplace))
     return(
         release_note,
             "\n\n".join([
-            f".. |u{u}| unicode:: {v}"
+            ".. |u{}| unicode:: {}".format(u, v)
         for u, v in list(unireplace.items())])
     )
 
@@ -461,3 +547,4 @@ rst_epilog = """
 """.format(
     versions=", ".join(gh_tags[:5])
 )
+    

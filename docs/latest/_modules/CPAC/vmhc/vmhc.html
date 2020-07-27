@@ -1,0 +1,378 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>CPAC.vmhc.vmhc &#8212; C-PAC 1.7.0 Beta documentation</title>
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex" />
+    <link rel="search" title="Search" href="../../../search" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for CPAC.vmhc.vmhc</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="nn">pe</span>
+<span class="kn">import</span> <span class="nn">nipype.algorithms.rapidart</span> <span class="k">as</span> <span class="nn">ra</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="k">as</span> <span class="nn">fsl</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.io</span> <span class="k">as</span> <span class="nn">nio</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">CPAC.vmhc</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.afni</span> <span class="k">import</span> <span class="n">preprocess</span>
+<span class="kn">from</span> <span class="nn">CPAC.registration</span> <span class="k">import</span> <span class="n">create_wf_calculate_ants_warp</span><span class="p">,</span> \
+                              <span class="n">output_func_to_standard</span>
+<span class="kn">from</span> <span class="nn">CPAC.image_utils</span> <span class="k">import</span> <span class="n">spatial_smooth</span>
+
+<div class="viewcode-block" id="create_vmhc"><a class="viewcode-back" href="../../../developer/workflows/vmhc#CPAC.vmhc.create_vmhc">[docs]</a><span class="k">def</span> <span class="nf">create_vmhc</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="n">num_strat</span><span class="p">,</span> <span class="n">strat</span><span class="p">,</span> <span class="n">pipeline_config_object</span><span class="p">,</span>
+        <span class="n">func_key</span><span class="o">=</span><span class="s1">&#39;functional_nuisance_residuals&#39;</span><span class="p">,</span> <span class="n">output_name</span><span class="o">=</span><span class="s1">&#39;vmhc&#39;</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the map of brain functional homotopy, the high degree of synchrony</span>
+<span class="sd">    in spontaneous activity between geometrically corresponding interhemispheric (i.e., homotopic) regions.</span>
+
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    None</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    vmhc_workflow : workflow</span>
+
+<span class="sd">        Voxel Mirrored Homotopic Connectivity Analysis Workflow</span>
+
+
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    `Source &lt;https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/vmhc/vmhc.py&gt;`_</span>
+
+<span class="sd">    Workflow Inputs::</span>
+
+<span class="sd">        inputspec.brain : string (existing nifti file)</span>
+<span class="sd">            Anatomical image(without skull)</span>
+
+<span class="sd">        inputspec.symmetric_brain : string (existing nifti file)</span>
+<span class="sd">            MNI152_T1_2mm_symmetric_brain.nii.gz</span>
+
+<span class="sd">        inputspec.rest_res_filt : string (existing nifti file)</span>
+<span class="sd">            Band passed Image with nuisance signal regressed out(and optionally scrubbed). Recommended</span>
+<span class="sd">            bandpass filter (0.001,0.1) )</span>
+
+<span class="sd">        inputspec.reorient : string (existing nifti file)</span>
+<span class="sd">            RPI oriented anatomical data</span>
+
+<span class="sd">        inputspec.example_func2highres_mat : string (existing affine transformation .mat file)</span>
+<span class="sd">            Specifies an affine transform that should be applied to the example_func before non linear warping</span>
+
+<span class="sd">        inputspec.standard_for_func: string (existing nifti file)</span>
+<span class="sd">            MNI152_T1_standard_resolution_brain.nii.gz</span>
+
+<span class="sd">        inputspec.symmetric_skull : string (existing nifti file)</span>
+<span class="sd">            MNI152_T1_2mm_symmetric.nii.gz</span>
+
+<span class="sd">        inputspec.twomm_brain_mask_dil : string (existing nifti file)</span>
+<span class="sd">            MNI152_T1_2mm_brain_mask_symmetric_dil.nii.gz</span>
+
+<span class="sd">        inputspec.config_file_twomm_symmetric : string (existing .cnf file)</span>
+<span class="sd">            T1_2_MNI152_2mm_symmetric.cnf</span>
+
+<span class="sd">        inputspec.rest_mask : string (existing nifti file)</span>
+<span class="sd">            A mask functional volume(derived by dilation from motion corrected functional volume)</span>
+
+<span class="sd">        fwhm_input.fwhm : list (float)</span>
+<span class="sd">            For spatial smoothing the Z-transformed correlations in MNI space.</span>
+<span class="sd">            Generally the value of this parameter is 1.5 or 2 times the voxel size of the input Image.</span>
+
+<span class="sd">        inputspec.mean_functional : string (existing nifti file)</span>
+<span class="sd">            The mean functional image for use in the func-to-anat registration matrix conversion</span>
+<span class="sd">            to ITK (ANTS) format, if the user selects to use ANTS.</span>
+
+
+<span class="sd">    Workflow Outputs::</span>
+
+<span class="sd">        outputspec.highres2symmstandard : string (nifti file)</span>
+<span class="sd">            Linear registration of T1 image to symmetric standard image</span>
+
+<span class="sd">        outputspec.highres2symmstandard_mat : string (affine transformation .mat file)</span>
+<span class="sd">            An affine transformation .mat file from linear registration and used in non linear registration</span>
+
+<span class="sd">        outputspec.highres2symmstandard_warp : string (nifti file)</span>
+<span class="sd">            warp file from Non Linear registration of T1 to symmetrical standard brain</span>
+
+<span class="sd">        outputspec.fnirt_highres2symmstandard : string (nifti file)</span>
+<span class="sd">            Non Linear registration of T1 to symmetrical standard brain</span>
+
+<span class="sd">        outputspec.highres2symmstandard_jac : string (nifti file)</span>
+<span class="sd">            jacobian determinant image from Non Linear registration of T1 to symmetrical standard brain</span>
+
+<span class="sd">        outputspec.rest_res_2symmstandard : string (nifti file)</span>
+<span class="sd">            nonlinear registration (func to standard) image</span>
+
+<span class="sd">        outputspec.VMHC_FWHM_img : string (nifti file)</span>
+<span class="sd">            pearson correlation between res2standard and flipped res2standard</span>
+
+<span class="sd">        outputspec.VMHC_Z_FWHM_img : string (nifti file)</span>
+<span class="sd">            Fisher Z transform map</span>
+
+<span class="sd">        outputspec.VMHC_Z_stat_FWHM_img : string (nifti file)</span>
+<span class="sd">            Z statistic map</span>
+
+<span class="sd">    Order of commands:</span>
+
+<span class="sd">    - Perform linear registration of Anatomical brain in T1 space to symmetric standard space. For details</span>
+<span class="sd">    see `flirt &lt;http://www.fmrib.ox.ac.uk/fsl/flirt/index.html&gt;`_::</span>
+
+<span class="sd">        flirt</span>
+<span class="sd">        -ref MNI152_T1_2mm_symmetric_brain.nii.gz</span>
+<span class="sd">        -in mprage_brain.nii.gz</span>
+<span class="sd">        -out highres2symmstandard.nii.gz</span>
+<span class="sd">        -omat highres2symmstandard.mat</span>
+<span class="sd">        -cost corratio</span>
+<span class="sd">        -searchcost corratio</span>
+<span class="sd">        -dof 12</span>
+<span class="sd">        -interp trilinear</span>
+
+<span class="sd">    - Perform nonlinear registration (higres to standard) to symmetric standard brain. For details</span>
+<span class="sd">    see `fnirt &lt;http://fsl.fmrib.ox.ac.uk/fsl/fnirt/&gt;`_::</span>
+
+<span class="sd">        fnirt</span>
+<span class="sd">        --in=head.nii.gz</span>
+<span class="sd">        --aff=highres2symmstandard.mat</span>
+<span class="sd">        --cout=highres2symmstandard_warp.nii.gz</span>
+<span class="sd">        --iout=fnirt_highres2symmstandard.nii.gz</span>
+<span class="sd">        --jout=highres2symmstandard_jac.nii.gz</span>
+<span class="sd">        --config=T1_2_MNI152_2mm_symmetric.cnf</span>
+<span class="sd">        --ref=MNI152_T1_2mm_symmetric.nii.gz</span>
+<span class="sd">        --refmask=MNI152_T1_2mm_brain_mask_symmetric_dil.nii.gz</span>
+<span class="sd">        --warpres=10,10,10</span>
+
+<span class="sd">    - Perform spatial smoothing on the input functional image(inputspec.rest_res_filt).  For details</span>
+<span class="sd">    see `PrinciplesSmoothing &lt;http://imaging.mrc-cbu.cam.ac.uk/imaging/PrinciplesSmoothing&gt;`_</span>
+<span class="sd">    `fslmaths &lt;http://www.fmrib.ox.ac.uk/fslcourse/lectures/practicals/intro/index.htm&gt;`_::</span>
+
+<span class="sd">        fslmaths rest_res_filt.nii.gz</span>
+<span class="sd">        -kernel gauss FWHM/ sqrt(8*ln(2))</span>
+<span class="sd">        -fmean -mas rest_mask.nii.gz</span>
+<span class="sd">        rest_res_filt_FWHM.nii.gz</span>
+
+<span class="sd">    - Apply nonlinear registration (func to standard). For details see</span>
+<span class="sd">    `applywarp &lt;http://www.fmrib.ox.ac.uk/fsl/fnirt/warp_utils.html#applywarp&gt;`_::</span>
+
+<span class="sd">        applywarp</span>
+<span class="sd">        --ref=MNI152_T1_2mm_symmetric.nii.gz</span>
+<span class="sd">        --in=rest_res_filt_FWHM.nii.gz</span>
+<span class="sd">        --out=rest_res_2symmstandard.nii.gz</span>
+<span class="sd">        --warp=highres2symmstandard_warp.nii.gz</span>
+<span class="sd">        --premat=example_func2highres.mat</span>
+
+
+<span class="sd">    - Copy and L/R swap the output of applywarp command (rest_res_2symmstandard.nii.gz). For details</span>
+<span class="sd">    see  `fslswapdim &lt;http://fsl.fmrib.ox.ac.uk/fsl/fsl4.0/avwutils/index.html&gt;`_::</span>
+
+<span class="sd">        fslswapdim</span>
+<span class="sd">        rest_res_2symmstandard.nii.gz</span>
+<span class="sd">        -x y z</span>
+<span class="sd">        tmp_LRflipped.nii.gz</span>
+
+
+<span class="sd">    - Calculate pearson correlation between rest_res_2symmstandard.nii.gz and flipped</span>
+<span class="sd">    rest_res_2symmstandard.nii.gz(tmp_LRflipped.nii.gz). For details see</span>
+<span class="sd">    `3dTcorrelate &lt;http://afni.nimh.nih.gov/pub/dist/doc/program_help/3dTcorrelate.html&gt;`_::</span>
+
+<span class="sd">        3dTcorrelate</span>
+<span class="sd">        -pearson</span>
+<span class="sd">        -polort -1</span>
+<span class="sd">        -prefix VMHC_FWHM.nii.gz</span>
+<span class="sd">        rest_res_2symmstandard.nii.gz</span>
+<span class="sd">        tmp_LRflipped.nii.gz</span>
+
+<span class="sd">    Workflow:</span>
+
+<span class="sd">    .. image:: ../images/vmhc_graph.dot.png</span>
+<span class="sd">        :width: 500</span>
+
+<span class="sd">    Workflow Detailed:</span>
+
+<span class="sd">    .. image:: ../images/vmhc_detailed_graph.dot.png</span>
+<span class="sd">        :width: 500</span>
+
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    .. [1] Zuo, X.-N., Kelly, C., Di Martino, A., Mennes, M., Margulies, D. S., Bangaru, S.,</span>
+<span class="sd">           Grzadzinski, R., et al. (2010). Growing together and growing apart: regional and</span>
+<span class="sd">           sex differences in the lifespan developmental trajectories of functional homotopy.</span>
+<span class="sd">           The Journal of neuroscience : the official journal of the Society for Neuroscience,</span>
+<span class="sd">           30(45), 15034-43. doi:10.1523/JNEUROSCI.2612-10.2010</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; vmhc_w = create_vmhc()</span>
+<span class="sd">    &gt;&gt;&gt; vmhc_w.inputs.inputspec.symmetric_brain = &#39;MNI152_T1_2mm_symmetric_brain.nii.gz&#39;</span>
+<span class="sd">    &gt;&gt;&gt; vmhc_w.inputs.inputspec.symmetric_skull = &#39;MNI152_T1_2mm_symmetric.nii.gz&#39;</span>
+<span class="sd">    &gt;&gt;&gt; vmhc_w.inputs.inputspec.twomm_brain_mask_dil = &#39;MNI152_T1_2mm_brain_mask_symmetric_dil.nii.gz&#39;</span>
+<span class="sd">    &gt;&gt;&gt; vmhc_w.inputs.inputspec.config_file_twomm = &#39;T1_2_MNI152_2mm_symmetric.cnf&#39;</span>
+<span class="sd">    &gt;&gt;&gt; vmhc_w.inputs.inputspec.standard_for_func= &#39;MNI152_T1_2mm.nii.gz&#39;</span>
+<span class="sd">    &gt;&gt;&gt; vmhc_w.inputs.fwhm_input.fwhm = [4.5, 6]</span>
+<span class="sd">    &gt;&gt;&gt; vmhc_w.get_node(&#39;fwhm_input&#39;).iterables = (&#39;fwhm&#39;, [4.5, 6])</span>
+<span class="sd">    &gt;&gt;&gt; vmhc_w.inputs.inputspec.rest_res = os.path.abspath(&#39;/home/data/s1001/rest_res_filt.nii.gz&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; vmhc_w.inputs.inputspec.reorient = os.path.abspath(&#39;/home/data/s1001/anat/mprage_RPI.nii.gz&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; vmhc_w.inputs.inputspec.brain = os.path.abspath(&#39;/home/data/s1001/anat/mprage_brain.nii.gz&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; vmhc_w.inputs.inputspec.example_func2highres_mat = os.path.abspath(&#39;/home/data/s1001/func2highres.mat&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; vmhc_w.inputs.inputspec.rest_mask = os.path.abspath(&#39;/home/data/s1001/func/original/rest_mask.nii.gz&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; vmhc_w.run() # doctest: +SKIP</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">get_nodes_names</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func_key</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;func_key should be a string, not a </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">func_key</span><span class="p">)))</span>
+
+    <span class="c1"># we begin by smoothing the input file, which should be the current leaf node</span>
+    <span class="n">smooth_key</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">_smooth&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">func_key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">smooth_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">strat</span><span class="p">:</span>
+        <span class="n">spatial_smooth</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="s1">&#39;leaf&#39;</span><span class="p">,</span> <span class="s1">&#39;functional_brain_mask&#39;</span><span class="p">,</span> <span class="n">smooth_key</span><span class="p">,</span>
+            <span class="n">strat</span><span class="p">,</span> <span class="n">num_strat</span><span class="p">,</span> <span class="n">pipeline_config_object</span><span class="p">,</span> <span class="n">input_image_type</span><span class="o">=</span><span class="s1">&#39;func_4d&#39;</span><span class="p">)</span>
+
+    <span class="c1"># next write it to symmetric MNI space</span>
+    <span class="n">func_symm_mni_key</span> <span class="o">=</span> <span class="s1">&#39;func_preproc_symm_mni&#39;</span>
+    <span class="k">if</span> <span class="n">func_symm_mni_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">strat</span><span class="p">:</span>
+        <span class="n">output_func_to_standard</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="n">smooth_key</span><span class="p">,</span> <span class="s1">&#39;template_skull_for_func_preproc&#39;</span><span class="p">,</span>
+            <span class="n">func_symm_mni_key</span><span class="p">,</span> <span class="n">strat</span><span class="p">,</span> <span class="n">num_strat</span><span class="p">,</span> <span class="n">pipeline_config_object</span><span class="p">,</span> <span class="n">input_image_type</span><span class="o">=</span><span class="s1">&#39;func_4d&#39;</span><span class="p">)</span>
+
+    <span class="c1"># write out a swapped version of the file</span>
+    <span class="c1"># copy and L/R swap file</span>
+    <span class="n">copy_and_L_R_swap</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">SwapDimensions</span><span class="p">(),</span>
+                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;copy_and_L_R_swap_</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_strat</span><span class="p">))</span>
+
+    <span class="n">copy_and_L_R_swap</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">new_dims</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;-x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">)</span>
+
+    <span class="n">func_node</span><span class="p">,</span> <span class="n">func_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="n">func_symm_mni_key</span><span class="p">]</span>
+    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_node</span><span class="p">,</span> <span class="n">func_file</span><span class="p">,</span>
+                     <span class="n">copy_and_L_R_swap</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="c1"># calculate correlation between original and swapped images</span>
+    <span class="n">pearson_correlation</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">TCorrelate</span><span class="p">(),</span>
+                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;pearson_correlation_</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_strat</span><span class="p">))</span>
+
+    <span class="n">pearson_correlation</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">pearson</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">pearson_correlation</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">polort</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">pearson_correlation</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+
+    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_node</span><span class="p">,</span> <span class="n">func_file</span><span class="p">,</span>
+                     <span class="n">pearson_correlation</span><span class="p">,</span> <span class="s1">&#39;xset&#39;</span><span class="p">)</span>
+
+    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">copy_and_L_R_swap</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                     <span class="n">pearson_correlation</span><span class="p">,</span> <span class="s1">&#39;yset&#39;</span><span class="p">)</span>
+
+    <span class="c1"># add the outputs to the resource pool</span>
+    <span class="n">strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
+        <span class="s1">&#39;vmhc_raw_score&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">pearson_correlation</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+    <span class="p">})</span>
+
+    <span class="n">strat</span><span class="o">.</span><span class="n">append_name</span><span class="p">(</span><span class="n">copy_and_L_R_swap</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">strat</span><span class="o">.</span><span class="n">append_name</span><span class="p">(</span><span class="n">pearson_correlation</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">workflow</span><span class="p">,</span> <span class="n">strat</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index">
+              <img class="logo" src="../../../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index">Table of Contents</a></h3>
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user/index">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index">Welcome to CPAC’s developer documentation!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+    <script defer src="https://fcp-indi.github.io/scripts/versionList.js"></script>
+
+  </body>
+</html>

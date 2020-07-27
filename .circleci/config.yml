@@ -5,15 +5,15 @@ commands:
       - run:
           name: 🔧 Setting version
           command: if [ -f /build/build_version.txt ]; then echo "export BUILD_VERSION=$(cat /build/build_version.txt)" >> $BASH_ENV; else echo "export BUILD_VERSION=nightly" >> $BASH_ENV; fi
-  install-dependencies:
+  install-build-dependencies:
     parameters:
       version:
         type: string
     steps:
       - run:
-          name: ↑ Installing dependencies
+          name: ↑ Installing build dependencies
           command: |
-            apt-get update && apt-get -y install git rsync python-dev graphviz libgraphviz-dev pkg-config python3-sphinx
+            apt-get update && apt-get -y install git python-dev graphviz libgraphviz-dev pkg-config python3-sphinx
             pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/<< parameters.version >>/requirements.txt
             pip install --user git+https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git@<< parameters.version >> sphinx six m2r numpydoc PyGithub sphinxcontrib-fulltoc sphinxcontrib-programoutput torch
             git clone https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git /build/C-PAC
@@ -21,17 +21,21 @@ commands:
             git checkout << parameters.version >>
             cd /build
   prep-deploy:
-    parameters:
-      version:
-        type: string
     steps:
-      - install-dependencies:
-          version: << parameters.version >>
+      - run:
+          name: ↑ Installing deploy dependencies
+          command: apt-get update && apt-get -y install git rsync
       - run:
           name: 🔧 Configuring git user
           command: |
             git config --global user.email "ci-build@fcp-indi.github.com"
             git config --global user.name "ci-build"
+      - run:
+          name: 🔀 Combining new docs with existing docs
+          command: |
+            cd /build
+            git clone --single-branch --branch master git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo || git clone --single-branch --branch master git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo
+            rsync -rtv ./ /tmp/repo/ --exclude '.git'
       - run:
           name: 📑 Generating list of versions
           command: python /build/scripts/version_list.py
@@ -40,9 +44,6 @@ commands:
       - run:
           name: 🚀 Deploying docs
           command: |
-            cd /build
-            git clone --single-branch --branch master git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo || git clone --single-branch --branch master git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo
-            rsync -rtv ./ /tmp/repo/ --exclude '.git'
             cd /tmp/repo
             git rm -f .gitignore || rm -f .gitignore || true
             git add .
@@ -57,6 +58,23 @@ commands:
             git commit -m "$(cat /root/GITMESSAGE.txt)" --allow-empty
             git push origin HEAD:master -f
             cd -
+  store-commit-message:
+    steps:
+      - run:
+          name: 📑 Storing commit message
+          command: git log origin/source -1 --oneline --pretty=%s > /root/GITMESSAGE.txt
+  persist-new-build:
+    steps:
+      - persist_to_workspace:
+          root: /
+          paths: 
+            - build/404.html
+            - build/build_version.txt
+            - build/docs
+            - build/index.html
+            - build/scripts
+            - root/.ssh
+            - root/GITMESSAGE.txt
               
 jobs:
   build-nightly:
@@ -65,23 +83,13 @@ jobs:
       - image: python:2.7
     steps:
       - checkout
-      - install-dependencies:
+      - install-build-dependencies:
           version: develop
       - run:
           name: 🏗️ Building nightly branch docs
           command: ./bin/build nightly
-      - run:
-          name: Storing commit message
-          command: git log origin/source -1 --oneline --pretty=%s > /root/GITMESSAGE.txt
-      - persist_to_workspace:
-          root: /
-          paths:
-            - build/404.html
-            - build/docs
-            - build/index.html
-            - build/scripts
-            - root/.ssh
-            - root/GITMESSAGE.txt
+      - store-commit-message
+      - persist-new-build
             
   build-version:
     working_directory: /build
@@ -93,24 +101,13 @@ jobs:
           name: 🔬 Checking for tag file
           command: test -f ./build_version.txt
       - get-version
-      - install-dependencies:
+      - install-build-dependencies:
           version: ${BUILD_VERSION}
       - run:
           name: 🏗️ Building version branch docs
           command: ./bin/build ${BUILD_VERSION}
-      - run:
-          name: 📑 Storing commit message
-          command: git log origin/source -1 --oneline --pretty=%s > /root/GITMESSAGE.txt
-      - persist_to_workspace:
-          root: /
-          paths: 
-            - build/404.html
-            - build/build_version.txt
-            - build/docs
-            - build/index.html
-            - build/scripts
-            - root/.ssh
-            - root/GITMESSAGE.txt
+      - store-commit-message
+      - persist-new-build
           
   deploy-nightly:
     working_directory: /
@@ -119,8 +116,7 @@ jobs:
     steps:
       - attach_workspace:
           at: /
-      - prep-deploy: 
-          version: develop
+      - prep-deploy
       - deploy
       
   deploy-version:
@@ -131,8 +127,7 @@ jobs:
       - attach_workspace:
           at: /
       - get-version
-      - prep-deploy:
-          version: ${BUILD_VERSION}
+      - prep-deploy
       - run:
           name: 🔖 Checking if latest
           command: if $(python /build/scripts/is_latest.py); then cp -r /build/docs/${BUILD_VERSION} /build/docs/latest; fi

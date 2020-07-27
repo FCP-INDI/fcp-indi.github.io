@@ -125,8 +125,11 @@ except RateLimitExceededException:
     gh_releaseNotes = {
         t: {
             "name": t,
-            "body": "See https://github.com/FCP-INDI/C-PAC/releases/tag/{} for "
-                    "release notes.".format(t),
+            "body": "".join([
+                "See https://github.com/FCP-INDI/C-PAC/releases/tag/",
+                t,
+                " for release notes."
+            ]),
             "published_at": None
         } for t in gh_tags
     }
@@ -148,11 +151,8 @@ def _unireplace(release_note, unireplace):
     return(
         release_note,
             "\n\n".join([
-            ".. |u{e}| unicode:: {u}".format(
-                e=u,
-                u=v
-            )
-        for u, v in unireplace.items()])
+            ".. |u{}| unicode:: {}".format(u, v)
+        for u, v in list(unireplace.items())])
     )
 
 this_dir = os.path.dirname(os.path.abspath(__file__))

@@ -114,7 +114,7 @@ try:
         try:
             gh_releases.append(gh_cpac.get_release(t).raw_data)
         except (AttributeError, UnknownObjectException):
-            print(f"No notes for {t}")
+            print("No notes for {}".format(t))
     gh_releaseNotes = {r['tag_name']: {
         'name': r['name'],
         'body': r['body'],
@@ -125,8 +125,11 @@ except RateLimitExceededException:
     gh_releaseNotes = {
         t: {
             "name": t,
-            "body": f"See https://github.com/FCP-INDI/C-PAC/releases/tag/{t} for "
-                    "release notes.",
+            "body": "".join([
+                "See https://github.com/FCP-INDI/C-PAC/releases/tag/",
+                t,
+                " for release notes."
+            ]),
             "published_at": None
         } for t in gh_tags
     }
@@ -141,14 +144,14 @@ def _unireplace(release_note, unireplace):
         e2 = str(e[2:])
         release_note = release_note.replace(
             e,
-            f" |u{e2}| "
+            " |u{}| ".format(e2)
         )
         unireplace[e2] = e
         return(_unireplace(release_note, unireplace))
     return(
         release_note,
             "\n\n".join([
-            f".. |u{u}| unicode:: {v}"
+            ".. |u{}| unicode:: {}".format(u, v)
         for u, v in list(unireplace.items())])
     )
 

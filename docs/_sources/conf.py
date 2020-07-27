@@ -13,6 +13,8 @@
 
 import m2r
 import os
+import re
+import semver
 import sys
 
 from CPAC import __version__
@@ -20,6 +22,76 @@ from dateutil import parser as dparser
 from github import Github
 from github.GithubException import RateLimitExceededException, \
     UnknownObjectException
+
+# "Dealing with Invalid Versions" from
+# https://python-semver.readthedocs.io/en/latest/usage.html
+
+
+def coerce(version):
+    """
+    Convert an incomplete version string into a semver-compatible VersionInfo
+    object
+
+    * Tries to detect a "basic" version string (``major.minor.patch``).
+    * If not enough components can be found, missing components are
+        set to zero to obtain a valid semver version.
+
+    :param str version: the version string to convert
+    :return: a tuple with a :class:`VersionInfo` instance (or ``None``
+        if it's not a version) and the rest of the string which doesn't
+        belong to a basic version.
+    :rtype: tuple(:class:`VersionInfo` | None, str)
+    """
+    BASEVERSION = re.compile(
+        r"""[vV]?
+            (?P<major>0|[1-9]\d*)
+            (\.
+            (?P<minor>0|[1-9]\d*)
+            (\.
+                (?P<patch>0|[1-9]\d*)
+            )?
+            )?
+        """,
+        re.VERBOSE,
+    )
+    
+    match = BASEVERSION.search(version)
+    if not match:
+        return (None, version)
+
+    ver = {
+        key: 0 if value is None else value for key, value in match.groupdict().items()
+    }
+    ver = semver.VersionInfo(**ver)
+    rest = match.string[match.end() :]  # noqa:E203
+    return ver, rest
+    
+    
+def compare_versions(new, old):
+    """
+    Function to compare two versions.
+    
+    Parameters
+    ----------
+    new: str
+    
+    old: str
+    
+    Returns
+    -------
+    bool
+        Is the "new" at least as new as "old"?
+    """
+    comparisons = list(zip(coerce(new), coerce(old)))
+    if any([v is None for v in comparisons[0]]):
+        return(False)
+    outright = semver.compare(str(comparisons[0][0]), str(comparisons[0][1]))
+    return (
+        bool(outright == 1) or bool(
+            (outright == 0) and comparisons[1][0] >= comparisons[1][1]
+        )
+    )
+    
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -74,7 +146,7 @@ version = __version__
 
 # Get tags from GitHub
 # Set GITHUBTOKEN to your API token in your environment to increase rate limit.
-g = Github(os.environ.get("GITHUBTOKEN"))
+g = Github(os.environ.get('GITHUBTOKEN'))
 
 def _gh_rate_limit():
     print("""Release notes not updated due to GitHub API rate limit.
@@ -100,12 +172,23 @@ def _gh_rate_limit():
 """)
 
 try:
-    gh_cpac = g.get_user("FCP-INDI").get_repo("C-PAC")
+    gh_cpac = g.get_user('FCP-INDI').get_repo('C-PAC')
     gh_tags = [t.name for t in gh_cpac.get_tags()]
 except RateLimitExceededException:
     _gh_rate_limit()
     gh_tags = []
 gh_tags.sort(reverse=True)
+
+build_version_path = os.path.abspath(os.path.join(
+    __file__, os.pardir, os.pardir, os.pardir, 'build_version.txt'
+))
+# don't build release notes for newer releases
+if os.path.exists(build_version_path):
+    with open(build_version_path, 'r') as bvf:
+        build_version = bvf.read().strip()
+    gh_tags = [gh_tag for gh_tag in gh_tags if compare_versions(
+        build_version, gh_tag
+    )]
 
 # Try to get release notes from GitHub
 try:
@@ -114,7 +197,7 @@ try:
         try:
             gh_releases.append(gh_cpac.get_release(t).raw_data)
         except (AttributeError, UnknownObjectException):
-            print(f"No notes for {t}")
+            print(f'No notes for {t}')
     gh_releaseNotes = {r['tag_name']: {
         'name': r['name'],
         'body': r['body'],
@@ -124,10 +207,13 @@ except RateLimitExceededException:
     _gh_rate_limit()
     gh_releaseNotes = {
         t: {
-            "name": t,
-            "body": f"See https://github.com/FCP-INDI/C-PAC/releases/tag/{t} for "
-                    "release notes.",
-            "published_at": None
+            'name': t,
+            'body': ''.join([
+                'See https://github.com/FCP-INDI/C-PAC/releases/tag/',
+                t,
+                ' for release notes.'
+            ]),
+            'published_at': None
         } for t in gh_tags
     }
 
@@ -141,66 +227,66 @@ def _unireplace(release_note, unireplace):
         e2 = str(e[2:])
         release_note = release_note.replace(
             e,
-            f" |u{e2}| "
+            f' |u{e2}| '
         )
         unireplace[e2] = e
         return(_unireplace(release_note, unireplace))
     return(
         release_note,
-            "\n\n".join([
-            f".. |u{u}| unicode:: {v}"
+            '\n\n'.join([
+            f'.. |u{u}| unicode:: {v}'
         for u, v in list(unireplace.items())])
     )
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
-release_notes_dir = os.path.join(this_dir, "user", "release_notes")
+release_notes_dir = os.path.join(this_dir, 'user', 'release_notes')
 if not os.path.exists(release_notes_dir):
     os.makedirs(release_notes_dir)
-latest_path = os.path.join(release_notes_dir, "latest.rst")
+latest_path = os.path.join(release_notes_dir, 'latest.rst')
 # all_release_notes = ""
 for t in gh_tags:
     if t in gh_releaseNotes:
-        tag_header = "{}{}{}".format(
-            "Latest Release: " if t==gh_tags[0] else "",
+        tag_header = '{}{}{}'.format(
+            'Latest Release: ' if t==gh_tags[0] else '',
             (
                 gh_releaseNotes[t]['name'][4:] if (
-                    gh_releaseNotes[t]['name'].startswith("CPAC")
+                    gh_releaseNotes[t]['name'].startswith('CPAC')
                 ) else gh_releaseNotes[t]['name'][5:] if (
-                    gh_releaseNotes[t]['name'].startswith("C-PAC")
+                    gh_releaseNotes[t]['name'].startswith('C-PAC')
                 ) else gh_releaseNotes[t]['name']
             ).strip(),
-            " ({})".format(
+            ' ({})'.format(
                 dparser.parse(gh_releaseNotes[t]['published_at']).date(
-                ).strftime("%b %w, %Y")
-            ) if gh_releaseNotes[t]['published_at'] else ""
+                ).strftime('%b %d, %Y')
+            ) if gh_releaseNotes[t]['published_at'] else ''
         )
-        release_note = "\n".join(_unireplace(
+        release_note = '\n'.join(_unireplace(
             """{}
 {}
 {}
 """.format(
                 tag_header,
-                "^"*len(tag_header),
+                '^'*len(tag_header),
                 m2r.convert(gh_releaseNotes[t]['body'].encode(
-                    "ascii",
-                    errors="backslashreplace"
-                ).decode("utf-8"))
+                    'ascii',
+                    errors='backslashreplace'
+                ).decode('utf-8'))
             ),
             {}
         ))
 
-        release_notes_path = os.path.join(release_notes_dir, "{}.rst".format(t))
+        release_notes_path = os.path.join(release_notes_dir, f'{t}.rst')
         if gh_releaseNotes[t]['published_at'] and not os.path.exists(
             release_notes_path
         ) and not os.path.exists(
-            os.path.join(release_notes_dir, "v{}.rst".format(t))
+            os.path.join(release_notes_dir, f'v{t}.rst')
         ):
             with open(release_notes_path, 'w+') as f:
                 f.write(release_note)
         else:
             print(release_notes_path)
 
-        if tag_header.startswith("Latest") and not os.path.exists(latest_path):
+        if tag_header.startswith('Latest') and not os.path.exists(latest_path):
             with open(latest_path, 'w+') as f:
                 f.write(
                     """
@@ -216,8 +302,8 @@ for t in gh_tags:
 
 rnd = [
     d for d in os.listdir(release_notes_dir) if d not in [
-        "index.rst",
-        "latest.rst"
+        'index.rst',
+        'latest.rst'
     ]
 ]
 rnd.sort(key=sort_tag, reverse=True)
@@ -231,18 +317,18 @@ all_release_notes = """
    {}
 
 """.format(
-    "\n".join([
-        ".. include:: /user/release_notes/{}".format(fp) for fp in rnd
+    '\n'.join([
+        f'.. include:: /user/release_notes/{fp}' for fp in rnd
     ]),
-    "\n   ".join([
-    "/user/release_notes/{}".format(d) for d in rnd
+    '\n   '.join([
+    f'/user/release_notes/{d}' for d in rnd
 ]))
 with open(os.path.join(release_notes_dir, 'index.rst'), 'w+') as f:
     f.write(all_release_notes.strip())
 
 
 # The full version, including alpha/beta/rc tags.
-release = '{} Beta'.format(__version__)
+release = f'{__version__} Beta'
 
 # The language for content autogenerated by Sphinx. Refer to documentation
 # for a list of supported languages.
@@ -256,7 +342,7 @@ release = '{} Beta'.format(__version__)
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ["futuredocs/*"]
+exclude_patterns = ['futuredocs/*']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
@@ -289,23 +375,23 @@ html_theme = 'classic'
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    "relbarbgcolor": "#0067a0",
-    "sidebarbgcolor": "#f0f0f0",
-    "sidebartextcolor": "#000000",
-    "sidebarlinkcolor": "#0067a0",
-    "headbgcolor": "#919d9d",
-    "headtextcolor": "#e4e4e4"
+    'relbarbgcolor': '#0067a0',
+    'sidebarbgcolor': '#f0f0f0',
+    'sidebartextcolor': '#000000',
+    'sidebarlinkcolor': '#0067a0',
+    'headbgcolor': '#919d9d',
+    'headtextcolor': '#e4e4e4'
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = ["../Themes"]
+html_theme_path = ['../Themes']
 
 html_css_files = [
     'custom.css',
 ]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
-# "<project> v<release> documentation".
+# '<project> v<release> documentation'.
 #html_title = None
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
@@ -313,16 +399,16 @@ html_css_files = [
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "_static/cpac_logo_vertical.png"
+html_logo = '_static/cpac_logo_vertical.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = "favicon.ico"
+html_favicon = 'favicon.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
+# so a file named 'default.css' will overwrite the builtin 'default.css'.
 html_static_path = ['_static']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
@@ -358,10 +444,10 @@ html_sidebars = {
 # If true, links to the reST sources are added to the pages.
 #html_show_sourcelink = True
 
-# If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
+# If true, 'Created using Sphinx' is shown in the HTML footer. Default is True.
 #html_show_sphinx = True
 
-# If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
+# If true, '(C) Copyright ...' is shown in the HTML footer. Default is True.
 #html_show_copyright = True
 
 # If true, an OpenSearch description file will be output, and all pages will
@@ -369,12 +455,12 @@ html_sidebars = {
 # base URL from which the finished HTML is served.
 #html_use_opensearch = ''
 
-# This is the file name suffix for HTML files (e.g. ".xhtml").
-html_file_suffix = ".html"
+# This is the file name suffix for HTML files (e.g. '.xhtml').
+html_file_suffix = '.html'
 
 # Suffix for generated links to HTML files
-html_link_suffix = ""
-link_suffix = ""
+html_link_suffix = ''
+link_suffix = ''
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'C-PACdoc'
@@ -404,7 +490,7 @@ latex_documents = [
 # the title page.
 #latex_logo = None
 
-# For "manual" documents, if this is true, then toplevel headings are parts,
+# For 'manual' documents, if this is true, then toplevel headings are parts,
 # not chapters.
 #latex_use_parts = False
 
@@ -461,3 +547,4 @@ rst_epilog = """
 """.format(
     versions=", ".join(gh_tags[:5])
 )
+    

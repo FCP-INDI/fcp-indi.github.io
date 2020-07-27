@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>CPAC.seg_preproc.seg_preproc &#8212; C-PAC 1.6.2.a Beta documentation</title>
+    <title>CPAC.seg_preproc.seg_preproc &#8212; C-PAC 1.7.0 Beta documentation</title>
     <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.6.2.a Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li> 
       </ul>
     </div>  
@@ -60,7 +60,9 @@
     <span class="n">pick_wm_class_1</span><span class="p">,</span>
     <span class="n">pick_wm_class_2</span><span class="p">,</span>
     <span class="n">erosion</span><span class="p">,</span>
-    <span class="n">mask_erosion</span><span class="p">)</span>
+    <span class="n">mask_erosion</span><span class="p">,</span>
+    <span class="n">hardcoded_antsJointLabelFusion</span><span class="p">,</span>
+    <span class="n">pick_tissue_from_labels_file</span><span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="nn">pe</span>
 <span class="kn">import</span> <span class="nn">scipy.ndimage</span> <span class="k">as</span> <span class="nn">nd</span>
@@ -780,7 +782,7 @@
 
     <span class="k">return</span> <span class="n">preproc</span></div>
 
-<span class="k">def</span> <span class="nf">create_seg_preproc_template_based</span><span class="p">(</span><span class="n">use_ants</span><span class="p">,</span>
+<div class="viewcode-block" id="create_seg_preproc_template_based"><a class="viewcode-back" href="../../../developer/workflows/seg_preproc#CPAC.seg_preproc.create_seg_preproc_template_based">[docs]</a><span class="k">def</span> <span class="nf">create_seg_preproc_template_based</span><span class="p">(</span><span class="n">use_ants</span><span class="p">,</span>
                                     <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;seg_preproc_templated_based&#39;</span><span class="p">):</span>
 
     <span class="sd">&quot;&quot;&quot;Generate the subject&#39;s cerebral spinal fluids,</span>
@@ -937,7 +939,7 @@
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gm_template2t1</span><span class="p">,</span> <span class="s1">&#39;outputspec.segment_mask_temp2t1&#39;</span><span class="p">,</span>
                     <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;gm_mask&#39;</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">preproc</span>
+    <span class="k">return</span> <span class="n">preproc</span></div>
 
 
 <span class="k">def</span> <span class="nf">tissue_mask_template_to_t1</span><span class="p">(</span><span class="n">wf_name</span><span class="p">,</span>
@@ -1007,6 +1009,392 @@
         <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span> <span class="p">(</span><span class="n">tissueprior_mni_to_t1</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;segment_mask_temp2t1&#39;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">preproc</span>
+
+
+<div class="viewcode-block" id="create_seg_preproc_antsJointLabel_method"><a class="viewcode-back" href="../../../developer/workflows/seg_preproc#CPAC.seg_preproc.create_seg_preproc_antsJointLabel_method">[docs]</a><span class="k">def</span> <span class="nf">create_seg_preproc_antsJointLabel_method</span><span class="p">(</span><span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;seg_preproc_templated_based&#39;</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Generate the subject&#39;s cerebral spinal fluids,</span>
+<span class="sd">    white matter and gray matter mask based on provided template, if selected to do so.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    wf_name : string</span>
+<span class="sd">        name of the workflow</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    seg_preproc_templated_based : workflow</span>
+<span class="sd">        Workflow Object for Segmentation Workflow</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    Workflow Inputs: ::</span>
+
+<span class="sd">        inputspec.brain : string (existing nifti file)</span>
+<span class="sd">            Anatomical image(without skull)</span>
+<span class="sd">               </span>
+<span class="sd">        inputspec.template_brain : string (existing nifti file)</span>
+<span class="sd">            Template anatomical image(without skull)</span>
+
+<span class="sd">        inputspec.template_segmentation : string (existing nifti file)</span>
+<span class="sd">            Template segmentation image(without skull)</span>
+
+<span class="sd">    Workflow Outputs: ::</span>
+
+<span class="sd">        outputspec.csf_mask : string (nifti file)</span>
+<span class="sd">            outputs CSF mask</span>
+
+<span class="sd">        outputspec.gm_mask : string (nifti file)</span>
+<span class="sd">            outputs gray matter mask</span>
+
+<span class="sd">        outputspec.wm_mask : string (nifti file)</span>
+<span class="sd">            outputs White Matter mask</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">preproc</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="n">wf_name</span><span class="p">)</span>
+    <span class="n">inputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;anatomical_brain&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;anatomical_brain_mask&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;template_brain_list&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;template_segmentation_list&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;csf_label&#39;</span><span class="p">,</span> 
+                                                       <span class="s1">&#39;left_gm_label&#39;</span><span class="p">,</span> 
+                                                       <span class="s1">&#39;left_wm_label&#39;</span><span class="p">,</span> 
+                                                       <span class="s1">&#39;right_gm_label&#39;</span><span class="p">,</span> 
+                                                       <span class="s1">&#39;right_wm_label&#39;</span><span class="p">]),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
+
+
+    <span class="n">outputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;csf_mask&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;gm_mask&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;wm_mask&#39;</span><span class="p">]),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
+
+
+    <span class="n">seg_preproc_antsJointLabel</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;anatomical_brain&#39;</span><span class="p">,</span> <span class="s1">&#39;anatomical_brain_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;template_brain_list&#39;</span><span class="p">,</span> <span class="s1">&#39;template_segmentation_list&#39;</span><span class="p">],</span> 
+                                                        <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;multiatlas_Intensity&#39;</span><span class="p">,</span> <span class="s1">&#39;multiatlas_Labels&#39;</span><span class="p">],</span>
+                                                        <span class="n">function</span><span class="o">=</span><span class="n">hardcoded_antsJointLabelFusion</span><span class="p">),</span> 
+                                                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">_antsJointLabel&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;anatomical_brain&#39;</span><span class="p">,</span>
+                    <span class="n">seg_preproc_antsJointLabel</span><span class="p">,</span> <span class="s1">&#39;anatomical_brain&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;anatomical_brain_mask&#39;</span><span class="p">,</span>
+                    <span class="n">seg_preproc_antsJointLabel</span><span class="p">,</span> <span class="s1">&#39;anatomical_brain_mask&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;template_brain_list&#39;</span><span class="p">,</span>
+                    <span class="n">seg_preproc_antsJointLabel</span><span class="p">,</span> <span class="s1">&#39;template_brain_list&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;template_segmentation_list&#39;</span><span class="p">,</span>
+                    <span class="n">seg_preproc_antsJointLabel</span><span class="p">,</span> <span class="s1">&#39;template_segmentation_list&#39;</span><span class="p">)</span>                 
+    
+    <span class="n">pick_tissue</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;multiatlas_Labels&#39;</span><span class="p">,</span> <span class="s1">&#39;csf_label&#39;</span><span class="p">,</span> <span class="s1">&#39;left_gm_label&#39;</span><span class="p">,</span> <span class="s1">&#39;left_wm_label&#39;</span><span class="p">,</span> <span class="s1">&#39;right_gm_label&#39;</span><span class="p">,</span> <span class="s1">&#39;right_wm_label&#39;</span><span class="p">],</span> 
+                                        <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;csf_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;gm_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;wm_mask&#39;</span><span class="p">],</span>
+                                        <span class="n">function</span><span class="o">=</span><span class="n">pick_tissue_from_labels_file</span><span class="p">),</span> 
+                                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">_tissue_mask&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
+    
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">seg_preproc_antsJointLabel</span><span class="p">,</span> <span class="s1">&#39;multiatlas_Labels&#39;</span><span class="p">,</span>
+                    <span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;multiatlas_Labels&#39;</span><span class="p">)</span> 
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;csf_label&#39;</span><span class="p">,</span>
+                    <span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;csf_label&#39;</span><span class="p">)</span> 
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;left_gm_label&#39;</span><span class="p">,</span>
+                    <span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;left_gm_label&#39;</span><span class="p">)</span> 
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;left_wm_label&#39;</span><span class="p">,</span>
+                    <span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;left_wm_label&#39;</span><span class="p">)</span>                    
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;right_gm_label&#39;</span><span class="p">,</span>
+                    <span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;right_gm_label&#39;</span><span class="p">)</span> 
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;right_wm_label&#39;</span><span class="p">,</span>
+                    <span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;right_wm_label&#39;</span><span class="p">)</span> 
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;csf_mask&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;csf_mask&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;gm_mask&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;gm_mask&#39;</span><span class="p">)</span>   
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;wm_mask&#39;</span><span class="p">,</span>
+                    <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;wm_mask&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">preproc</span></div>
+
+
+<span class="k">def</span> <span class="nf">connect_anat_segmentation</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="n">strat_list</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">strat_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Segmentation Preprocessing Workflow</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">        workflow : workflow</span>
+<span class="sd">            main preprocessing workflow</span>
+<span class="sd">        strat_list : list</span>
+<span class="sd">            list of strategies</span>
+<span class="sd">        c : configuration</span>
+<span class="sd">            pipeline configuration</span>
+<span class="sd">        strat_name : str</span>
+<span class="sd">            name of strategy</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        workflow : workflow</span>
+<span class="sd">            updated main preprocessing workflow</span>
+<span class="sd">        strat_list : list</span>
+<span class="sd">            list of updated strategies</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="kn">from</span> <span class="nn">CPAC.seg_preproc.seg_preproc</span> <span class="k">import</span> <span class="p">(</span>
+        <span class="n">create_seg_preproc</span><span class="p">,</span>
+        <span class="n">create_seg_preproc_template_based</span>
+    <span class="p">)</span>
+
+    <span class="n">new_strat_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="mi">1</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">runSegmentationPreprocessing</span><span class="p">:</span>
+
+        <span class="k">for</span> <span class="n">num_strat</span><span class="p">,</span> <span class="n">strat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">strat_list</span><span class="p">):</span>
+
+            <span class="n">nodes</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">get_nodes_names</span><span class="p">()</span>
+
+            <span class="n">seg_preproc</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">o</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">seg_use_threshold</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;FSL-FAST Thresholding&quot;</span><span class="p">,</span> <span class="s2">&quot;Customized Thresholding&quot;</span><span class="p">]):</span>
+                <span class="n">err</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">[!] C-PAC says: Your segmentation thresholding options &#39;</span> \
+                    <span class="s1">&#39;setting does not include either </span><span class="se">\&#39;</span><span class="s1">FSL-FAST Thresholding</span><span class="se">\&#39;</span><span class="s1"> or </span><span class="se">\&#39;</span><span class="s1">Customized Thresholding</span><span class="se">\&#39;</span><span class="s1">.</span><span class="se">\n\n</span><span class="s1">&#39;</span> \
+                    <span class="s1">&#39;Options you provided:</span><span class="se">\n</span><span class="s1">seg_use_threshold: </span><span class="si">{0}</span><span class="s1">&#39;</span> \
+                    <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">seg_use_threshold</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">strat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;registration_method&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;FSL&#39;</span><span class="p">:</span>
+                <span class="n">use_ants</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">elif</span> <span class="n">strat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;registration_method&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;ANTS&#39;</span><span class="p">:</span>
+                <span class="n">use_ants</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="k">if</span> <span class="n">strat_name</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">seg_preproc_wf_name</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;seg_preproc_</span><span class="si">{strat_name}</span><span class="s1">_</span><span class="si">{num_strat}</span><span class="s1">&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">seg_preproc_wf_name</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;seg_preproc_</span><span class="si">{num_strat}</span><span class="s1">&#39;</span>
+
+            <span class="n">seg_preproc</span> <span class="o">=</span> <span class="n">create_seg_preproc</span><span class="p">(</span><span class="n">use_ants</span><span class="o">=</span><span class="n">use_ants</span><span class="p">,</span>
+                                             <span class="n">use_priors</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">seg_use_priors</span><span class="p">,</span>
+                                             <span class="n">use_threshold</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">seg_use_threshold</span><span class="p">,</span>
+                                             <span class="n">csf_use_erosion</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">seg_csf_use_erosion</span><span class="p">,</span>
+                                             <span class="n">wm_use_erosion</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">seg_wm_use_erosion</span><span class="p">,</span>
+                                             <span class="n">gm_use_erosion</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">seg_gm_use_erosion</span><span class="p">,</span>
+                                             <span class="n">wf_name</span><span class="o">=</span><span class="n">seg_preproc_wf_name</span><span class="p">)</span>
+
+            <span class="n">seg_preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">csf_threshold</span><span class="o">.</span><span class="n">csf_threshold</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">seg_CSF_threshold_value</span>
+            <span class="n">seg_preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">wm_threshold</span><span class="o">.</span><span class="n">wm_threshold</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">seg_WM_threshold_value</span>
+            <span class="n">seg_preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">gm_threshold</span><span class="o">.</span><span class="n">gm_threshold</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">seg_GM_threshold_value</span>
+
+            <span class="n">seg_preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">csf_erosion_prop</span><span class="o">.</span><span class="n">csf_erosion_prop</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">csf_erosion_prop</span>
+            <span class="n">seg_preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">wm_erosion_prop</span><span class="o">.</span><span class="n">wm_erosion_prop</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">wm_erosion_prop</span>
+            <span class="n">seg_preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">gm_erosion_prop</span><span class="o">.</span><span class="n">gm_erosion_prop</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">gm_erosion_prop</span>
+
+            <span class="n">seg_preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">csf_mask_erosion_mm</span><span class="o">.</span><span class="n">csf_mask_erosion_mm</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">csf_mask_erosion_mm</span>
+            <span class="n">seg_preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">wm_mask_erosion_mm</span><span class="o">.</span><span class="n">wm_mask_erosion_mm</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">wm_mask_erosion_mm</span>
+            <span class="n">seg_preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">gm_mask_erosion_mm</span><span class="o">.</span><span class="n">gm_mask_erosion_mm</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">gm_mask_erosion_mm</span>
+
+            <span class="n">seg_preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">csf_erosion_mm</span><span class="o">.</span><span class="n">csf_erosion_mm</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">csf_erosion_mm</span>
+            <span class="n">seg_preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">wm_erosion_mm</span><span class="o">.</span><span class="n">wm_erosion_mm</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">wm_erosion_mm</span>
+            <span class="n">seg_preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">gm_erosion_mm</span><span class="o">.</span><span class="n">gm_erosion_mm</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">gm_erosion_mm</span>
+
+            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;anatomical_brain_mask&#39;</span><span class="p">]</span>
+            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">seg_preproc</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain_mask&#39;</span><span class="p">)</span>
+
+            <span class="c1"># TODO ASH review</span>
+            <span class="k">if</span> <span class="n">seg_preproc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;anatomical_brain&#39;</span><span class="p">]</span>
+            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                             <span class="n">seg_preproc</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">strat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;registration_method&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;FSL&#39;</span><span class="p">:</span>
+                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;mni_to_anatomical_linear_xfm&#39;</span><span class="p">]</span>
+                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                                 <span class="n">seg_preproc</span><span class="p">,</span>
+                                 <span class="s1">&#39;inputspec.standard2highres_mat&#39;</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">strat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;registration_method&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;ANTS&#39;</span><span class="p">:</span>
+                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;ants_initial_xfm&#39;</span><span class="p">]</span>
+                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                                 <span class="n">seg_preproc</span><span class="p">,</span>
+                                 <span class="s1">&#39;inputspec.standard2highres_init&#39;</span><span class="p">)</span>
+
+                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;ants_rigid_xfm&#39;</span><span class="p">]</span>
+                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                                 <span class="n">seg_preproc</span><span class="p">,</span>
+                                 <span class="s1">&#39;inputspec.standard2highres_rig&#39;</span><span class="p">)</span>
+
+                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;ants_affine_xfm&#39;</span><span class="p">]</span>
+                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                                 <span class="n">seg_preproc</span><span class="p">,</span>
+                                 <span class="s1">&#39;inputspec.standard2highres_mat&#39;</span><span class="p">)</span>
+
+            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">PRIORS_CSF</span><span class="p">,</span> <span class="s1">&#39;local_path&#39;</span><span class="p">,</span>
+                                <span class="n">seg_preproc</span><span class="p">,</span> <span class="s1">&#39;inputspec.PRIOR_CSF&#39;</span><span class="p">)</span>
+
+            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">PRIORS_GRAY</span><span class="p">,</span> <span class="s1">&#39;local_path&#39;</span><span class="p">,</span>
+                                <span class="n">seg_preproc</span><span class="p">,</span> <span class="s1">&#39;inputspec.PRIOR_GRAY&#39;</span><span class="p">)</span>
+
+            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">PRIORS_WHITE</span><span class="p">,</span> <span class="s1">&#39;local_path&#39;</span><span class="p">,</span>
+                                <span class="n">seg_preproc</span><span class="p">,</span> <span class="s1">&#39;inputspec.PRIOR_WHITE&#39;</span><span class="p">)</span>
+
+            <span class="c1"># TODO ASH review with forking function</span>
+            <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">runSegmentationPreprocessing</span><span class="p">:</span>
+                <span class="n">strat</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
+                <span class="n">new_strat_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">strat</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">brain_use_erosion</span><span class="p">:</span>
+                <span class="n">ero_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import scipy.ndimage as nd&#39;</span> <span class="p">,</span> <span class="s1">&#39;import numpy as np&#39;</span><span class="p">,</span> <span class="s1">&#39;import nibabel as nb&#39;</span><span class="p">,</span> <span class="s1">&#39;import os&#39;</span><span class="p">]</span>
+                <span class="n">eroded_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;roi_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;skullstrip_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;mask_erosion_mm&#39;</span><span class="p">,</span> <span class="s1">&#39;mask_erosion_prop&#39;</span><span class="p">],</span>
+                                                    <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;output_roi_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;eroded_skullstrip_mask&#39;</span><span class="p">],</span>
+                                                    <span class="n">function</span> <span class="o">=</span> <span class="n">mask_erosion</span><span class="p">,</span>
+                                                    <span class="n">imports</span> <span class="o">=</span> <span class="n">ero_imports</span><span class="p">),</span>
+                                                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;erode_skullstrip_brain_mask&#39;</span><span class="p">)</span>
+                <span class="n">eroded_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">mask_erosion_mm</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">brain_mask_erosion_mm</span>
+                
+                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;anatomical_brain_mask&#39;</span><span class="p">]</span>
+                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> 
+                                    <span class="n">eroded_mask</span><span class="p">,</span> <span class="s1">&#39;skullstrip_mask&#39;</span><span class="p">)</span>
+                
+                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">seg_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.csf_probability_map&#39;</span><span class="p">,</span> 
+                                    <span class="n">eroded_mask</span><span class="p">,</span> <span class="s1">&#39;roi_mask&#39;</span><span class="p">)</span>
+
+                <span class="n">strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span><span class="s1">&#39;anatomical_eroded_brain_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">eroded_mask</span><span class="p">,</span> <span class="s1">&#39;eroded_skullstrip_mask&#39;</span><span class="p">)})</span>
+
+            <span class="n">strat</span><span class="o">.</span><span class="n">append_name</span><span class="p">(</span><span class="n">seg_preproc</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
+                <span class="s1">&#39;anatomical_gm_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">seg_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.gm_mask&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;anatomical_csf_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">seg_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.csf_mask&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;anatomical_wm_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">seg_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.wm_mask&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;seg_probability_maps&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">seg_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.probability_maps&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;seg_mixeltype&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">seg_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.mixeltype&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;seg_partial_volume_map&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">seg_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.partial_volume_map&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;seg_partial_volume_files&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">seg_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.partial_volume_files&#39;</span><span class="p">)</span>
+            <span class="p">})</span>
+
+    <span class="n">strat_list</span> <span class="o">+=</span> <span class="n">new_strat_list</span>
+    
+    <span class="k">if</span> <span class="mi">1</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">ANTs_prior_based_segmentation</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="s1">&#39;T1_template&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">template_based_segmentation</span> <span class="ow">or</span> <span class="s1">&#39;EPI_template&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">template_based_segmentation</span> <span class="ow">or</span> <span class="mi">1</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">runSegmentationPreprocessing</span><span class="p">:</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">[!] C-PAC says: &#39;</span>\
+                    <span class="s1">&#39;If you would like to set ANTs Prior-based Segmentation as your segmentation option,&#39;</span>\
+                    <span class="s1">&#39;please set Template based segmentation as </span><span class="se">\&#39;</span><span class="s1">None</span><span class="se">\&#39;</span><span class="s1"> and runSegmentationPreprocessing as </span><span class="se">\&#39;</span><span class="s1">0</span><span class="se">\&#39;</span><span class="s1">.</span><span class="se">\n\n</span><span class="s1">&#39;</span> \
+                    <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">num_strat</span><span class="p">,</span> <span class="n">strat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">strat_list</span><span class="p">):</span>
+
+            <span class="n">seg_preproc_ants_prior_based</span> <span class="o">=</span> <span class="n">create_seg_preproc_antsJointLabel_method</span><span class="p">(</span><span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;seg_preproc_ants_prior_</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_strat</span><span class="p">))</span>
+
+            <span class="c1"># TODO ASH review</span>
+            <span class="k">if</span> <span class="n">seg_preproc_ants_prior_based</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;anatomical_brain&#39;</span><span class="p">]</span>
+            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                             <span class="n">seg_preproc_ants_prior_based</span><span class="p">,</span> <span class="s1">&#39;inputspec.anatomical_brain&#39;</span><span class="p">)</span>
+
+            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;anatomical_brain_mask&#39;</span><span class="p">]</span>
+            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                             <span class="n">seg_preproc_ants_prior_based</span><span class="p">,</span> <span class="s1">&#39;inputspec.anatomical_brain_mask&#39;</span><span class="p">)</span>
+                             
+            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">ANTs_prior_seg_template_brain_list</span><span class="p">,</span> <span class="s1">&#39;local_path&#39;</span><span class="p">,</span>
+                             <span class="n">seg_preproc_ants_prior_based</span><span class="p">,</span> <span class="s1">&#39;inputspec.template_brain_list&#39;</span><span class="p">)</span>
+            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">ANTs_prior_seg_template_segmentation_list</span><span class="p">,</span> <span class="s1">&#39;local_path&#39;</span><span class="p">,</span>
+                             <span class="n">seg_preproc_ants_prior_based</span><span class="p">,</span> <span class="s1">&#39;inputspec.template_segmentation_list&#39;</span><span class="p">)</span>
+            <span class="n">seg_preproc_ants_prior_based</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">csf_label</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">ANTs_prior_seg_CSF_label</span>
+            <span class="n">seg_preproc_ants_prior_based</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">left_gm_label</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">ANTs_prior_seg_left_GM_label</span>
+            <span class="n">seg_preproc_ants_prior_based</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">right_gm_label</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">ANTs_prior_seg_right_GM_label</span>
+            <span class="n">seg_preproc_ants_prior_based</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">left_wm_label</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">ANTs_prior_seg_left_WM_label</span>
+            <span class="n">seg_preproc_ants_prior_based</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">right_wm_label</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">ANTs_prior_seg_right_WM_label</span>
+
+            <span class="c1"># TODO ASH review with forking function</span>
+            <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">ANTs_prior_based_segmentation</span><span class="p">:</span>
+                <span class="n">strat</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
+                <span class="n">new_strat_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">strat</span><span class="p">)</span>
+
+            <span class="n">strat</span><span class="o">.</span><span class="n">append_name</span><span class="p">(</span><span class="n">seg_preproc_ants_prior_based</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
+                <span class="s1">&#39;anatomical_gm_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">seg_preproc_ants_prior_based</span><span class="p">,</span> <span class="s1">&#39;outputspec.gm_mask&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;anatomical_csf_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">seg_preproc_ants_prior_based</span><span class="p">,</span> <span class="s1">&#39;outputspec.csf_mask&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;anatomical_wm_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">seg_preproc_ants_prior_based</span><span class="p">,</span> <span class="s1">&#39;outputspec.wm_mask&#39;</span><span class="p">)</span>
+            <span class="p">})</span>
+
+    <span class="n">strat_list</span> <span class="o">+=</span> <span class="n">new_strat_list</span>
+
+    <span class="k">if</span> <span class="s1">&#39;T1_template&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">template_based_segmentation</span><span class="p">:</span>
+
+        <span class="k">for</span> <span class="n">num_strat</span><span class="p">,</span> <span class="n">strat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">strat_list</span><span class="p">):</span>
+
+            <span class="n">nodes</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">get_nodes_names</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">o</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">template_based_segmentation</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;EPI_template&#39;</span><span class="p">,</span> <span class="s1">&#39;T1_template&#39;</span><span class="p">,</span> <span class="s1">&#39;None&#39;</span><span class="p">]):</span>
+                <span class="n">err</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">[!] C-PAC says: Your template based segmentation &#39;</span> \
+                    <span class="s1">&#39;setting does not include either </span><span class="se">\&#39;</span><span class="s1">EPI_template</span><span class="se">\&#39;</span><span class="s1"> or </span><span class="se">\&#39;</span><span class="s1">T1_template</span><span class="se">\&#39;</span><span class="s1">.</span><span class="se">\n\n</span><span class="s1">&#39;</span> \
+                    <span class="s1">&#39;Options you provided:</span><span class="se">\n</span><span class="s1">template_based_segmentation: </span><span class="si">{0}</span><span class="s1">&#39;</span> \
+                    <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">template_based_segmentation</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">strat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;registration_method&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;FSL&#39;</span><span class="p">:</span>
+                <span class="n">use_ants</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">elif</span> <span class="n">strat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;registration_method&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;ANTS&#39;</span><span class="p">:</span>
+                <span class="n">use_ants</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="n">seg_preproc_template_based</span> <span class="o">=</span> <span class="n">create_seg_preproc_template_based</span><span class="p">(</span><span class="n">use_ants</span><span class="o">=</span><span class="n">use_ants</span><span class="p">,</span>
+                                                             <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;seg_preproc_t1_template_</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_strat</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">seg_preproc_template_based</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;anatomical_brain&#39;</span><span class="p">]</span>
+            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                             <span class="n">seg_preproc_template_based</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">strat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;registration_method&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;FSL&#39;</span><span class="p">:</span>
+                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;mni_to_anatomical_linear_xfm&#39;</span><span class="p">]</span>
+                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                                 <span class="n">seg_preproc_template_based</span><span class="p">,</span>
+                                 <span class="s1">&#39;inputspec.standard2highres_mat&#39;</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">strat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;registration_method&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;ANTS&#39;</span><span class="p">:</span>
+                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;ants_initial_xfm&#39;</span><span class="p">]</span>
+                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                                 <span class="n">seg_preproc_template_based</span><span class="p">,</span>
+                                 <span class="s1">&#39;inputspec.standard2highres_init&#39;</span><span class="p">)</span>
+
+                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;ants_rigid_xfm&#39;</span><span class="p">]</span>
+                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                                 <span class="n">seg_preproc_template_based</span><span class="p">,</span>
+                                 <span class="s1">&#39;inputspec.standard2highres_rig&#39;</span><span class="p">)</span>
+
+                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;ants_affine_xfm&#39;</span><span class="p">]</span>
+                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                                 <span class="n">seg_preproc_template_based</span><span class="p">,</span>
+                                 <span class="s1">&#39;inputspec.standard2highres_mat&#39;</span><span class="p">)</span>
+
+            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">template_based_segmentation_CSF</span><span class="p">,</span> <span class="s1">&#39;local_path&#39;</span><span class="p">,</span>
+                                <span class="n">seg_preproc_template_based</span><span class="p">,</span> <span class="s1">&#39;inputspec.CSF_template&#39;</span><span class="p">)</span>
+
+            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">template_based_segmentation_GRAY</span><span class="p">,</span> <span class="s1">&#39;local_path&#39;</span><span class="p">,</span>
+                                <span class="n">seg_preproc_template_based</span><span class="p">,</span> <span class="s1">&#39;inputspec.GRAY_template&#39;</span><span class="p">)</span>
+
+            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">template_based_segmentation_WHITE</span><span class="p">,</span> <span class="s1">&#39;local_path&#39;</span><span class="p">,</span>
+                                <span class="n">seg_preproc_template_based</span><span class="p">,</span> <span class="s1">&#39;inputspec.WHITE_template&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="s1">&#39;None&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">template_based_segmentation</span><span class="p">:</span>
+                <span class="n">strat</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
+                <span class="n">new_strat_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">strat</span><span class="p">)</span>
+
+            <span class="n">strat</span><span class="o">.</span><span class="n">append_name</span><span class="p">(</span><span class="n">seg_preproc_template_based</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
+                <span class="s1">&#39;anatomical_gm_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">seg_preproc_template_based</span><span class="p">,</span> <span class="s1">&#39;outputspec.gm_mask&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;anatomical_csf_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">seg_preproc_template_based</span><span class="p">,</span> <span class="s1">&#39;outputspec.csf_mask&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;anatomical_wm_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">seg_preproc_template_based</span><span class="p">,</span> <span class="s1">&#39;outputspec.wm_mask&#39;</span><span class="p">)</span>
+            <span class="p">})</span>
+
+    <span class="n">strat_list</span> <span class="o">+=</span> <span class="n">new_strat_list</span>
+
+    <span class="k">return</span> <span class="n">workflow</span><span class="p">,</span> <span class="n">strat_list</span>
 </pre></div>
 
           </div>
@@ -1049,7 +1437,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.6.2.a Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li> 
       </ul>
     </div>

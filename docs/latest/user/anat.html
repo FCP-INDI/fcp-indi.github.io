@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Anatomical Preprocessing &#8212; C-PAC 1.6.2.a Beta documentation</title>
+    <title>Anatomical Preprocessing &#8212; C-PAC 1.7.0 Beta documentation</title>
     <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="preprocessing" title="Pre-Processing Steps"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.6.2.a Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index" >Welcome to C-PAC’s user guide!</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="preprocessing" accesskey="U">Pre-Processing Steps</a> &#187;</li> 
       </ul>
@@ -51,7 +51,7 @@
             
   <div class="section" id="anatomical-preprocessing">
 <h1>Anatomical Preprocessing<a class="headerlink" href="#anatomical-preprocessing" title="Permalink to this headline">¶</a></h1>
-<div class="flowchart-container"><object data="../_static/flowcharts/anatomical.svg" type="image/svg+xml"></object></div><div class="section" id="initial-preprocessing">
+<div class="flowchart-container"><object data="../../_static/flowcharts/anatomical.svg" type="image/svg+xml"></object></div><div class="section" id="initial-preprocessing">
 <h2>Initial Preprocessing<a class="headerlink" href="#initial-preprocessing" title="Permalink to this headline">¶</a></h2>
 <p>Initial preprocessing offers methods like <a class="reference external" href="https://www.iro.umontreal.ca/~mignotte/IFT6150/Articles/Buades-NonLocal.pdf">non-local means filtering</a> and <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3071855/">N4 bias field correction</a> to preprocess anatomical images.</p>
 <p>C-PAC provides options for configuring initial preprocessing - users can select:</p>
@@ -306,7 +306,7 @@ ANTs_para_T1_registration:
 </div>
 <div class="section" id="anatomical-tissue-segmentation">
 <h2>Anatomical Tissue Segmentation<a class="headerlink" href="#anatomical-tissue-segmentation" title="Permalink to this headline">¶</a></h2>
-<div class="flowchart-container"><object data="../_static/flowcharts/segmentation.svg" type="image/svg+xml"></object></div><p>C-PAC uses <a class="reference external" href="http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FAST">FSL/FAST</a> to automatically segment brain images into white matter, gray matter, and CSF. This is done using probability maps that contain information about the likelihood that a given voxel will be of a particular tissue type. Users specify a probability threshold such that voxels meeting a minimum probability of being a particular tissue will be classified as such. This results in masks containing voxels of only a single tissue type.</p>
+<div class="flowchart-container"><object data="../../_static/flowcharts/segmentation.svg" type="image/svg+xml"></object></div><p>C-PAC uses <a class="reference external" href="http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FAST">FSL/FAST</a> to automatically segment brain images into white matter, gray matter, and CSF. This is done using probability maps that contain information about the likelihood that a given voxel will be of a particular tissue type. Users specify a probability threshold such that voxels meeting a minimum probability of being a particular tissue will be classified as such. This results in masks containing voxels of only a single tissue type.</p>
 <div class="figure">
 <img alt="../_images/segmentation.png" src="../_images/segmentation.png" />
 </div>
@@ -329,6 +329,7 @@ fslmaths avg152T1_${tissue}.nii.gz -thr $threshold -bin avg152T1_${tissue}_2mm_b
 </pre></div>
 </div>
 <p>In addition, C-PAC offers template-based segmentation options that facilitate nonhuman data processing. Optimal for use with functional-only pipelines commonly used for rodent data, users can now employ a template-based tissue segmentation approach that applies inverse registration transforms to template-space tissue priors.</p>
+<p>C-PAC offers ANTs prior-based tissue segmentation, which is optimal for non-human primate segmentations. Users could provide atlas and atlas segmentation images to perform ANTs Prior-based Segmentation.</p>
 <div class="section" id="configuring-cpac-to-run-anatomical-tissue-segmentation">
 <h3>Configuring CPAC to Run Anatomical Tissue Segmentation<a class="headerlink" href="#configuring-cpac-to-run-anatomical-tissue-segmentation" title="Permalink to this headline">¶</a></h3>
 <div class="figure">
@@ -357,9 +358,22 @@ fslmaths avg152T1_${tissue}.nii.gz -thr $threshold -bin avg152T1_${tissue}_2mm_b
 <li><strong>Gray Matter Binary Mask - [path]:</strong> Full path to a binarized Gray Matter mask.</li>
 <li><strong>CSF Prior Binary Mask - [path]:</strong> Full path to a binarized CSF mask.</li>
 </ol>
+<div class="figure">
+<img alt="../_images/seg_gui_3.png" src="../_images/seg_gui_3.png" />
 </div>
-<div class="section" id="id1">
-<h3>Configuration Without the GUI<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li><strong>ANTs Prior-Based Segmentation - [On, Off]:</strong> ANTs Prior-based Segmentation workflow that has shown optimal results for non-human primate data. Generate white matter, gray matter, CSF masks based on antsJointLabelFusion.</li>
+<li><strong>The atlas image - [path]:</strong> The atlas image assumed to be used in ANTs Prior-based Segmentation. Clicking on the <em>+</em> icon to the right of the box here will bring up a dialog where you can define multiple paths to NifTIs containing the atlas image.  You may add multiple images to the box.</li>
+<li><strong>The atlas segmentation images - [path]:</strong> The number of specified segmentations should be identical to the number of atlas brain images. Clicking on the <em>+</em> icon to the right of the box here will bring up a dialog where you can define multiple paths to NifTIs containing the atlas segmentation image.  You may add multiple images to the box.</li>
+<li><strong>CSF Label Value - [integer]:</strong> Label value corresponding to CSF in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT">Freesurfer Color Lookup Table.</a></li>
+<li><strong>Left Gray Matter Label Value - [integer]:</strong> Label value corresponding to Left Gray Matter in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT">Freesurfer Color Lookup Table.</a></li>
+<li><strong>Right Gray Matter Label Value - [integer]:</strong> Label value corresponding to Right Gray Matter in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT">Freesurfer Color Lookup Table.</a></li>
+<li><strong>Left White Matter Label Value - [integer]:</strong> Label value corresponding to Left White Matter in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT">Freesurfer Color Lookup Table.</a></li>
+<li><strong>Right White Matter Label Value - [integer]:</strong> Label value corresponding to Right White Matter in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT">Freesurfer Color Lookup Table.</a></li>
+</ol>
+</div>
+<div class="section" id="id5">
+<h3>Configuration Without the GUI<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <p>The following key/value pairs must be defined in your <a class="reference internal" href="pipeline_config"><span class="doc">pipeline configuration YAML</span></a> for C-PAC to run anatomical tissue segmentation:</p>
 <p>The box below contains an example of what these parameters might look like when defined in the YAML:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>runSegmentationPreprocessing : [1]
@@ -378,6 +392,18 @@ template_based_segmentation : [&#39;None&#39;]
 template_based_segmentation_WHITE :  $FSLDIR/data/standard/tissuepriors/2mm/avg152T1_white_bin.nii.gz
 template_based_segmentation_GRAY :  $FSLDIR/data/standard/tissuepriors/2mm/avg152T1_gray_bin.nii.gz
 template_based_segmentation_CSF :  $FSLDIR/data/standard/tissuepriors/2mm/avg152T1_csf_bin.nii.gz
+ANTs_prior_based_segmentation: [0]
+ANTs_prior_seg_template_brain_list :
+    - s3://fcp-indi/resources/cpac/resources/MacaqueYerkes19_T1w_0.5mm/T1w_brain.nii.gz
+    - s3://fcp-indi/resources/cpac/resources/J_Macaque_11mo_atlas_nACQ_194x252x160space_0.5mm/T1w_brain.nii.gz
+ANTs_prior_seg_template_segmentation_list:
+    - s3://fcp-indi/resources/cpac/resources/MacaqueYerkes19_T1w_0.5mm/Segmentation.nii.gz
+    - s3://fcp-indi/resources/cpac/resources/J_Macaque_11mo_atlas_nACQ_194x252x160space_0.5mm/Segmentation.nii.gz
+ANTs_prior_seg_CSF_label: 24
+ANTs_prior_seg_left_GM_label: 3
+ANTs_prior_seg_right_GM_label: 42
+ANTs_prior_seg_left_WM_label: 2
+ANTs_prior_seg_right_WM_label: 41
 </pre></div>
 </div>
 </div>
@@ -432,13 +458,14 @@ template_based_segmentation_CSF :  $FSLDIR/data/standard/tissuepriors/2mm/avg152
 </li>
 <li class="toctree-l5"><a class="reference internal" href="#anatomical-tissue-segmentation">Anatomical Tissue Segmentation</a><ul>
 <li class="toctree-l6"><a class="reference internal" href="#configuring-cpac-to-run-anatomical-tissue-segmentation">Configuring CPAC to Run Anatomical Tissue Segmentation</a></li>
-<li class="toctree-l6"><a class="reference internal" href="#id1">Configuration Without the GUI</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#id5">Configuration Without the GUI</a></li>
 </ul>
 </li>
 <li class="toctree-l5"><a class="reference internal" href="#references">References</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="func">Functional Preprocessing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="longitudinal">Longitudinal Preprocessing</a></li>
 <li class="toctree-l4"><a class="reference internal" href="nuisance">Nuisance Corrections</a></li>
 <li class="toctree-l4"><a class="reference internal" href="aroma_ica">ICA Denoising</a></li>
 <li class="toctree-l4"><a class="reference internal" href="tse">Timeseries Extraction</a></li>
@@ -493,7 +520,7 @@ template_based_segmentation_CSF :  $FSLDIR/data/standard/tissuepriors/2mm/avg152
         <li class="right" >
           <a href="preprocessing" title="Pre-Processing Steps"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.6.2.a Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index" >Welcome to C-PAC’s user guide!</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="preprocessing" >Pre-Processing Steps</a> &#187;</li> 
       </ul>

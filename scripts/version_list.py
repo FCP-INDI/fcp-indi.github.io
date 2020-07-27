@@ -7,7 +7,7 @@ def rewrite_versions(docs_path='/build/docs'):
     Collects built versions and outputs a text file that lists 'latest', 
     latest version number, 'nightly', descending prior verions.
     """
-    versions_txt_path = os.path.join(docs_path, 'versions.txt')
+    versions_txt_path = f'{docs_path}/versions.txt'
     with open(versions_txt_path, 'w') as vtp:
         vtp.write('\n'.join(sort_versions(os.listdir(docs_path))))
     

@@ -257,7 +257,7 @@ for t in gh_tags:
             ).strip(),
             " ({})".format(
                 dparser.parse(gh_releaseNotes[t]['published_at']).date(
-                ).strftime("%b %w, %Y")
+                ).strftime("%b %d, %Y")
             ) if gh_releaseNotes[t]['published_at'] else ""
         )
         release_note = "\n".join(_unireplace(

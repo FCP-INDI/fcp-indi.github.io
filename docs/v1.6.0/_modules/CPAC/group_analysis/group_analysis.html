@@ -1,0 +1,613 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>CPAC.group_analysis.group_analysis &#8212; C-PAC 1.6.0 Beta documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6.0 Beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex" />
+    <link rel="search" title="Search" href="../../../search" />
+    <link rel="top" title="C-PAC 1.6.0 Beta documentation" href="../../../index" />
+    <link rel="up" title="Module code" href="../../index" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.6.0 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for CPAC.group_analysis.group_analysis</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="nn">pe</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="k">as</span> <span class="nn">fsl</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
+<span class="kn">from</span> <span class="nn">CPAC.easy_thresh</span> <span class="kn">import</span> <span class="n">easy_thresh</span>
+
+
+<div class="viewcode-block" id="get_operation"><a class="viewcode-back" href="../../../developer/workflows/group_analysis#CPAC.group_analysis.get_operation">[docs]</a><span class="k">def</span> <span class="nf">get_operation</span><span class="p">(</span><span class="n">in_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Method to create operation string</span>
+<span class="sd">    for fslmaths</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    in_file : file</span>
+<span class="sd">       input volume</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    op_string : string</span>
+<span class="sd">        operation string for fslmaths</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    IOError</span>
+<span class="sd">      If unable to load the input volume</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">nibabel</span> <span class="kn">import</span> <span class="n">load</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">in_file</span><span class="p">)</span>
+        <span class="n">hdr</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">get_header</span><span class="p">()</span>
+        <span class="n">n_vol</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">hdr</span><span class="o">.</span><span class="n">get_data_shape</span><span class="p">()[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">op_string</span> <span class="o">=</span> <span class="s1">&#39;-abs -bin -Tmean -mul </span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n_vol</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">op_string</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Unable to load the input nifti image&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">label_zstat_files</span><span class="p">(</span><span class="n">zstat_list</span><span class="p">,</span> <span class="n">con_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take in the z-stat file outputs of FSL FLAME and rename them after the</span>
+<span class="sd">    contrast labels of the contrasts provided.&quot;&quot;&quot;</span>
+
+    <span class="n">cons</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">new_zstat_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">con_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">con_file_lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">con_file_lines</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;ContrastName&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="n">con_label</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">con_label</span> <span class="o">=</span> <span class="n">con_label</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">cons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">con_label</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">zstat_file</span><span class="p">,</span> <span class="n">con_name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">zstat_list</span><span class="p">,</span> <span class="n">cons</span><span class="p">):</span>
+        <span class="c1"># filename = os.path.basename(zstat_file)</span>
+        <span class="n">new_name</span> <span class="o">=</span> <span class="s2">&quot;zstat_</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">con_name</span><span class="p">)</span>
+        <span class="c1"># new_zstat_list.append(zstat_file.replace(filename, new_name))</span>
+        <span class="n">new_zstat_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_name</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">new_zstat_list</span>
+
+
+<div class="viewcode-block" id="create_fsl_flame_wf"><a class="viewcode-back" href="../../../developer/workflows/group_analysis#CPAC.group_analysis.create_fsl_flame_wf">[docs]</a><span class="k">def</span> <span class="nf">create_fsl_flame_wf</span><span class="p">(</span><span class="n">ftest</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;groupAnalysis&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    FSL `FEAT &lt;http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT&gt;`_</span>
+<span class="sd">    BASED Group Analysis</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ftest : boolean, optional(default=False)</span>
+<span class="sd">        Ftest help investigate several contrasts at the same time</span>
+<span class="sd">        for example to see whether any of them (or any combination of them) is </span>
+<span class="sd">        significantly non-zero. Also, the F-test allows you to compare the </span>
+<span class="sd">        contribution of each contrast to the model and decide on significant </span>
+<span class="sd">        and non-significant ones</span>
+<span class="sd"> </span>
+<span class="sd">    wf_name : string </span>
+<span class="sd">        Workflow name</span>
+<span class="sd">    </span>
+<span class="sd">    Returns </span>
+<span class="sd">    -------</span>
+<span class="sd">    grp_analysis : workflow object</span>
+<span class="sd">        Group Analysis workflow object</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    `Source &lt;https://github.com/openconnectome/C-PAC/blob/master/CPAC/group_analysis/group_analysis_preproc.py&gt;`_</span>
+<span class="sd"> </span>
+<span class="sd">    Workflow Inputs::</span>
+<span class="sd">        </span>
+<span class="sd">        inputspec.mat_file : string (existing file)</span>
+<span class="sd">           Mat file containing  matrix for design </span>
+<span class="sd">        </span>
+<span class="sd">        inputspec.con_file : string (existing file)</span>
+<span class="sd">           Contrast file containing contrast vectors </span>
+<span class="sd">        </span>
+<span class="sd">        inputspec.grp_file : string (existing file)</span>
+<span class="sd">           file containing matrix specifying the groups the covariance is split into</span>
+<span class="sd">        </span>
+<span class="sd">        inputspec.zmap_files : string (existing nifti file)</span>
+<span class="sd">           derivative or the zmap file for which the group analysis is to be run</span>
+<span class="sd">        </span>
+<span class="sd">        inputspec.z_threshold : float</span>
+<span class="sd">            Z Statistic threshold value for cluster thresholding. It is used to </span>
+<span class="sd">            determine what level of activation would be statistically significant. </span>
+<span class="sd">            Increasing this will result in higher estimates of required effect.</span>
+<span class="sd">        </span>
+<span class="sd">        inputspec.p_threshold : float</span>
+<span class="sd">            Probability threshold for cluster thresholding.</span>
+<span class="sd">            </span>
+<span class="sd">        inputspec.fts_file : string (existing file)</span>
+<span class="sd">           file containing matrix specifying f-contrasts</span>
+<span class="sd">           </span>
+<span class="sd">        inputspec.paramerters : string (tuple)</span>
+<span class="sd">            tuple containing which MNI and FSLDIR path information</span>
+<span class="sd">                      </span>
+<span class="sd">    Workflow Outputs::</span>
+<span class="sd">    </span>
+<span class="sd">        outputspec.merged : string (nifti file)</span>
+<span class="sd">            4D volume file after merging all the derivative </span>
+<span class="sd">            files from each specified subject.</span>
+<span class="sd">            </span>
+<span class="sd">        outputspec.zstats : list (nifti files)</span>
+<span class="sd">            Z statistic image for each t contrast</span>
+<span class="sd">            </span>
+<span class="sd">        outputspec.zfstats : list (nifti files)</span>
+<span class="sd">            Z statistic image for each f contrast</span>
+<span class="sd">        </span>
+<span class="sd">        outputspec.fstats : list (nifti files)</span>
+<span class="sd">            F statistic for each contrast  </span>
+<span class="sd">        </span>
+<span class="sd">        outputspec.cluster_threshold : list (nifti files)</span>
+<span class="sd">           the thresholded Z statistic image for each t contrast</span>
+<span class="sd">        </span>
+<span class="sd">        outputspec.cluster_index : list (nifti files)</span>
+<span class="sd">            image of clusters for each t contrast; the values </span>
+<span class="sd">            in the clusters are the index numbers as used </span>
+<span class="sd">            in the cluster list.</span>
+<span class="sd">        </span>
+<span class="sd">        outputspec.cluster_localmax_txt : list (text files)</span>
+<span class="sd">            local maxima text file for each t contrast, </span>
+<span class="sd">            defines the coordinates of maximum value in the cluster</span>
+<span class="sd">        </span>
+<span class="sd">        outputspec.overlay_threshold : list (nifti files)</span>
+<span class="sd">            3D color rendered stats overlay image for t contrast</span>
+<span class="sd">            After reloading this image, use the Statistics Color </span>
+<span class="sd">            Rendering GUI to reload the color look-up-table</span>
+<span class="sd">        </span>
+<span class="sd">        outputspec.overlay_rendered_image : list (nifti files)</span>
+<span class="sd">           2D color rendered stats overlay picture for each t contrast</span>
+<span class="sd">            </span>
+<span class="sd">        outputspec.cluster_threshold_zf : list (nifti files)</span>
+<span class="sd">           the thresholded Z statistic image for each f contrast</span>
+<span class="sd">        </span>
+<span class="sd">        outputspec.cluster_index_zf : list (nifti files)</span>
+<span class="sd">            image of clusters for each f contrast; the values </span>
+<span class="sd">            in the clusters are the index numbers as used </span>
+<span class="sd">            in the cluster list.</span>
+<span class="sd">            </span>
+<span class="sd">        outputspec.cluster_localmax_txt_zf : list (text files)</span>
+<span class="sd">            local maxima text file for each f contrast, </span>
+<span class="sd">            defines the coordinates of maximum value in the cluster</span>
+<span class="sd">        </span>
+<span class="sd">        outputspec.overlay_threshold_zf : list (nifti files)</span>
+<span class="sd">            3D color rendered stats overlay image for f contrast</span>
+<span class="sd">            After reloading this image, use the Statistics Color </span>
+<span class="sd">            Rendering GUI to reload the color look-up-table</span>
+<span class="sd">        </span>
+<span class="sd">        outputspec.overlay_rendered_image_zf : list (nifti files)</span>
+<span class="sd">           2D color rendered stats overlay picture for each f contrast</span>
+<span class="sd">    </span>
+<span class="sd">    Order of commands:</span>
+
+<span class="sd">    - Merge all the Z-map 3D images into 4D image file.  For details see `fslmerge &lt;http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Fslutils&gt;`_::</span>
+<span class="sd">    </span>
+<span class="sd">        fslmerge -t sub01/sca/seed1/sca_Z_FWHM_merged.nii </span>
+<span class="sd">                    sub02/sca/seed1/sca_Z_FWHM.nii.gz ....  </span>
+<span class="sd">                    merge.nii.gz</span>
+<span class="sd">                    </span>
+<span class="sd">        arguments </span>
+<span class="sd">            -t : concatenate images in time</span>
+<span class="sd">            </span>
+<span class="sd">    - Create mask specific for analysis. For details see `fslmaths &lt;http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Fslutils&gt;`_::</span>
+<span class="sd">    </span>
+<span class="sd">        fslmaths merged.nii.gz </span>
+<span class="sd">                -abs -Tmin -bin mean_mask.nii.gz</span>
+<span class="sd">        </span>
+<span class="sd">        arguments </span>
+<span class="sd">             -Tmin  : min across time</span>
+<span class="sd">             -abs   : absolute value</span>
+<span class="sd">             -bin   : use (current image&gt;0) to binarise</span>
+<span class="sd">    </span>
+<span class="sd">    - FSL FLAMEO to perform higher level analysis.  For details see `flameo &lt;http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT&gt;`_::</span>
+<span class="sd">        </span>
+<span class="sd">        flameo --copefile = merged.nii.gz --covsplitfile = anova_with_meanFD.grp --designfile = anova_with_meanFD.mat </span>
+<span class="sd">               --fcontrastsfile = anova_with_meanFD.fts --ld=stats --maskfile = mean_mask.nii.gz --runmode=ols </span>
+<span class="sd">               --tcontrastsfile = anova_with_meanFD.con</span>
+<span class="sd">           </span>
+<span class="sd">        arguments</span>
+<span class="sd">            --copefile        : cope regressor data file</span>
+<span class="sd">            --designfile      : design matrix file</span>
+<span class="sd">            --maskfile        : mask file</span>
+<span class="sd">            --tcontrastsfile  : file containing an ASCII matrix specifying the t contrasts</span>
+<span class="sd">            --fcontrastsfile  : file containing an ASCII matrix specifying the f contrasts</span>
+<span class="sd">            --runmode         : Interference to perform (mixed effects - OLS)</span>
+<span class="sd">            </span>
+<span class="sd">    - Run FSL Easy thresh </span>
+<span class="sd">        </span>
+<span class="sd">      Easy thresh is a simple script for carrying out cluster-based thresholding and colour activation overlaying::</span>
+<span class="sd">        </span>
+<span class="sd">        easythresh &lt;raw_zstat&gt; &lt;brain_mask&gt; &lt;z_thresh&gt; &lt;prob_thresh&gt; &lt;background_image&gt; &lt;output_root&gt; [--mm]</span>
+<span class="sd">      </span>
+<span class="sd">      A seperate workflow called easythresh is called to run easythresh steps.</span>
+<span class="sd">      </span>
+<span class="sd">    High Level Workflow Graph:</span>
+<span class="sd">    </span>
+<span class="sd">    .. image:: ../images/group_analysis.dot.png</span>
+<span class="sd">       :width: 800</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    Detailed Workflow Graph:</span>
+<span class="sd">    </span>
+<span class="sd">    .. image:: ../images/group_analysis_detailed.dot.png</span>
+<span class="sd">       :width: 800</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; from group_analysis_preproc import create_group_analysis</span>
+<span class="sd">    &gt;&gt;&gt; preproc = create_group_analysis()</span>
+<span class="sd">    &gt;&gt;&gt; preproc.inputs.inputspec.mat_file = &#39;../group_models/anova_with_meanFD/anova_with_meanFD.mat&#39;</span>
+<span class="sd">    &gt;&gt;&gt; preproc.inputs.inputspec.con_file = &#39;../group_models/anova_with_meanFD/anova_with_meanFD.con&#39;</span>
+<span class="sd">    &gt;&gt;&gt; preproc.inputs.inputspec.grp_file = &#39;../group_models/anova_with_meanFD/anova_with_meanFD.grp&#39;</span>
+<span class="sd">    &gt;&gt;&gt; preproc.inputs.inputspec.zmap_files = [&#39;subjects/sub01/seeds_rest_Dickstein_DLPFC/sca_Z_FWHM.nii.gz&#39;, </span>
+<span class="sd">                                               &#39;subjects/sub02/seeds_rest_Dickstein_DLPFC/sca_Z_FWHM.nii.gz&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; preproc.inputs.inputspec.z_threshold = 2.3</span>
+<span class="sd">    &gt;&gt;&gt; preproc.inputs.inputspec.p_threshold = 0.05</span>
+<span class="sd">    &gt;&gt;&gt; preproc.inputs.inputspec.parameters = (&#39;/usr/local/fsl/&#39;, &#39;MNI152&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; preproc.run()  -- SKIP doctest</span>
+<span class="sd">            </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">grp_analysis</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">wf_name</span><span class="p">)</span>
+
+    <span class="n">inputnode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;merged_file&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;merge_mask&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;mat_file&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;con_file&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;grp_file&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;fts_file&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;z_threshold&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;p_threshold&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;parameters&#39;</span><span class="p">]),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
+
+    <span class="n">outputnode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;merged&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;zstats&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;zfstats&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;fstats&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;cluster_threshold&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;cluster_index&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;cluster_localmax_txt&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;overlay_threshold&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;rendered_image&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;cluster_localmax_txt_zf&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;cluster_threshold_zf&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;cluster_index_zf&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;overlay_threshold_zf&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;rendered_image_zf&#39;</span><span class="p">]),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
+
+
+
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    merge_to_4d = pe.Node(interface=fsl.Merge(),</span>
+<span class="sd">                          name=&#39;merge_to_4d&#39;)</span>
+<span class="sd">    merge_to_4d.inputs.dimension = &#39;t&#39;</span>
+
+<span class="sd">    ### create analysis specific mask</span>
+<span class="sd">    #-Tmin: min across time</span>
+<span class="sd">    # -abs: absolute value</span>
+<span class="sd">    #-bin: use (current image&gt;0) to binarise</span>
+<span class="sd">    merge_mask = pe.Node(interface=fsl.ImageMaths(),</span>
+<span class="sd">                         name=&#39;merge_mask&#39;)</span>
+<span class="sd">    merge_mask.inputs.op_string = &#39;-abs -Tmin -bin&#39;</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">fsl_flameo</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLAMEO</span><span class="p">(),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fsl_flameo&#39;</span><span class="p">)</span>
+    <span class="n">fsl_flameo</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">run_mode</span> <span class="o">=</span> <span class="s1">&#39;ols&#39;</span>
+
+    <span class="c1"># rename the FLAME zstat outputs after the contrast string labels for</span>
+    <span class="c1"># easier interpretation</span>
+    <span class="n">label_zstat_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;import os&quot;</span><span class="p">]</span>
+    <span class="n">label_zstat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;zstat_list&#39;</span><span class="p">,</span>
+                                                     <span class="s1">&#39;con_file&#39;</span><span class="p">],</span>
+                                        <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;new_zstat_list&#39;</span><span class="p">],</span>
+                                        <span class="n">function</span><span class="o">=</span><span class="n">label_zstat_files</span><span class="p">,</span>
+                                        <span class="n">imports</span><span class="o">=</span><span class="n">label_zstat_imports</span><span class="p">),</span>
+                          <span class="n">name</span><span class="o">=</span><span class="s1">&#39;label_zstat&#39;</span><span class="p">)</span>
+
+    <span class="n">rename_zstats</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">Rename</span><span class="p">(),</span>
+                               <span class="n">name</span><span class="o">=</span><span class="s1">&#39;rename_zstats&#39;</span><span class="p">,</span>
+                               <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">,</span>
+                                          <span class="s1">&#39;format_string&#39;</span><span class="p">])</span>
+    <span class="n">rename_zstats</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">keep_ext</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># create analysis specific mask</span>
+    <span class="c1"># fslmaths merged.nii.gz -abs -bin -Tmean -mul volume out.nii.gz</span>
+    <span class="c1"># -Tmean: mean across time</span>
+    <span class="c1"># create group_reg file</span>
+    <span class="c1"># this file can provide an idea of how well the subjects </span>
+    <span class="c1"># in our analysis overlay with each other and the MNI brain.</span>
+    <span class="c1"># e.g., maybe there is one subject with limited coverage.</span>
+    <span class="c1"># not attached to sink currently </span>
+    <span class="n">merge_mean_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(),</span>
+                              <span class="n">name</span><span class="o">=</span><span class="s1">&#39;merge_mean_mask&#39;</span><span class="p">)</span>
+
+    <span class="c1"># function node to get the operation string for fslmaths command</span>
+    <span class="n">get_opstring</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">],</span>
+                                         <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
+                                         <span class="n">function</span><span class="o">=</span><span class="n">get_operation</span><span class="p">),</span>
+                       <span class="n">name</span><span class="o">=</span><span class="s1">&#39;get_opstring&#39;</span><span class="p">)</span>
+
+    <span class="c1"># connections</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    grp_analysis.connect(inputnode, &#39;zmap_files&#39;,</span>
+<span class="sd">                         merge_to_4d, &#39;in_files&#39;)</span>
+<span class="sd">    grp_analysis.connect(merge_to_4d, &#39;merged_file&#39;,</span>
+<span class="sd">                         merge_mask, &#39;in_file&#39;)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;merged_file&#39;</span><span class="p">,</span>
+                         <span class="n">fsl_flameo</span><span class="p">,</span> <span class="s1">&#39;cope_file&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;merge_mask&#39;</span><span class="p">,</span>
+                         <span class="n">fsl_flameo</span><span class="p">,</span> <span class="s1">&#39;mask_file&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;mat_file&#39;</span><span class="p">,</span>
+                         <span class="n">fsl_flameo</span><span class="p">,</span> <span class="s1">&#39;design_file&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;con_file&#39;</span><span class="p">,</span>
+                         <span class="n">fsl_flameo</span><span class="p">,</span> <span class="s1">&#39;t_con_file&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;grp_file&#39;</span><span class="p">,</span>
+                         <span class="n">fsl_flameo</span><span class="p">,</span> <span class="s1">&#39;cov_split_file&#39;</span><span class="p">)</span>
+
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">fsl_flameo</span><span class="p">,</span> <span class="s1">&#39;zstats&#39;</span><span class="p">,</span> <span class="n">label_zstat</span><span class="p">,</span> <span class="s1">&#39;zstat_list&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;con_file&#39;</span><span class="p">,</span> <span class="n">label_zstat</span><span class="p">,</span> <span class="s1">&#39;con_file&#39;</span><span class="p">)</span>
+
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">fsl_flameo</span><span class="p">,</span> <span class="s1">&#39;zstats&#39;</span><span class="p">,</span> <span class="n">rename_zstats</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">label_zstat</span><span class="p">,</span> <span class="s1">&#39;new_zstat_list&#39;</span><span class="p">,</span>
+                         <span class="n">rename_zstats</span><span class="p">,</span> <span class="s1">&#39;format_string&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">ftest</span><span class="p">:</span>
+        <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;fts_file&#39;</span><span class="p">,</span> <span class="n">fsl_flameo</span><span class="p">,</span> <span class="s1">&#39;f_con_file&#39;</span><span class="p">)</span>
+
+        <span class="n">easy_thresh_zf</span> <span class="o">=</span> <span class="n">easy_thresh</span><span class="p">(</span><span class="s1">&#39;easy_thresh_zf&#39;</span><span class="p">)</span>
+
+        <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">fsl_flameo</span><span class="p">,</span> <span class="s1">&#39;zfstats&#39;</span><span class="p">,</span>
+                             <span class="n">easy_thresh_zf</span><span class="p">,</span> <span class="s1">&#39;inputspec.z_stats&#39;</span><span class="p">)</span>
+        <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;merge_mask&#39;</span><span class="p">,</span>
+                             <span class="n">easy_thresh_zf</span><span class="p">,</span> <span class="s1">&#39;inputspec.merge_mask&#39;</span><span class="p">)</span>
+        <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;z_threshold&#39;</span><span class="p">,</span>
+                             <span class="n">easy_thresh_zf</span><span class="p">,</span> <span class="s1">&#39;inputspec.z_threshold&#39;</span><span class="p">)</span>
+        <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;p_threshold&#39;</span><span class="p">,</span>
+                             <span class="n">easy_thresh_zf</span><span class="p">,</span> <span class="s1">&#39;inputspec.p_threshold&#39;</span><span class="p">)</span>
+        <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;parameters&#39;</span><span class="p">,</span>
+                             <span class="n">easy_thresh_zf</span><span class="p">,</span> <span class="s1">&#39;inputspec.parameters&#39;</span><span class="p">)</span>
+        <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">easy_thresh_zf</span><span class="p">,</span> <span class="s1">&#39;outputspec.cluster_threshold&#39;</span><span class="p">,</span>
+                             <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;cluster_threshold_zf&#39;</span><span class="p">)</span>
+        <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">easy_thresh_zf</span><span class="p">,</span> <span class="s1">&#39;outputspec.cluster_index&#39;</span><span class="p">,</span>
+                             <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;cluster_index_zf&#39;</span><span class="p">)</span>
+        <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">easy_thresh_zf</span><span class="p">,</span> <span class="s1">&#39;outputspec.cluster_localmax_txt&#39;</span><span class="p">,</span>
+                             <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;cluster_localmax_txt_zf&#39;</span><span class="p">)</span>
+        <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">easy_thresh_zf</span><span class="p">,</span> <span class="s1">&#39;outputspec.overlay_threshold&#39;</span><span class="p">,</span>
+                             <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;overlay_threshold_zf&#39;</span><span class="p">)</span>
+        <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">easy_thresh_zf</span><span class="p">,</span> <span class="s1">&#39;outputspec.rendered_image&#39;</span><span class="p">,</span>
+                             <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;rendered_image_zf&#39;</span><span class="p">)</span>
+
+    <span class="c1"># calling easythresh for zstats files</span>
+    <span class="n">easy_thresh_z</span> <span class="o">=</span> <span class="n">easy_thresh</span><span class="p">(</span><span class="s1">&#39;easy_thresh_z&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">rename_zstats</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                         <span class="n">easy_thresh_z</span><span class="p">,</span> <span class="s1">&#39;inputspec.z_stats&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;merge_mask&#39;</span><span class="p">,</span>
+                         <span class="n">easy_thresh_z</span><span class="p">,</span> <span class="s1">&#39;inputspec.merge_mask&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;z_threshold&#39;</span><span class="p">,</span>
+                         <span class="n">easy_thresh_z</span><span class="p">,</span> <span class="s1">&#39;inputspec.z_threshold&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;p_threshold&#39;</span><span class="p">,</span>
+                         <span class="n">easy_thresh_z</span><span class="p">,</span> <span class="s1">&#39;inputspec.p_threshold&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;parameters&#39;</span><span class="p">,</span>
+                         <span class="n">easy_thresh_z</span><span class="p">,</span> <span class="s1">&#39;inputspec.parameters&#39;</span><span class="p">)</span>
+
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;merged_file&#39;</span><span class="p">,</span>
+                         <span class="n">get_opstring</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;merged_file&#39;</span><span class="p">,</span>
+                         <span class="n">merge_mean_mask</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">get_opstring</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                         <span class="n">merge_mean_mask</span><span class="p">,</span> <span class="s1">&#39;op_string&#39;</span><span class="p">)</span>
+
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">fsl_flameo</span><span class="p">,</span> <span class="s1">&#39;zfstats&#39;</span><span class="p">,</span>
+                         <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;zfstats&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">fsl_flameo</span><span class="p">,</span> <span class="s1">&#39;fstats&#39;</span><span class="p">,</span>
+                         <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;fstats&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;merged_file&#39;</span><span class="p">,</span>
+                         <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;merged&#39;</span><span class="p">)</span>
+
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">rename_zstats</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;zstats&#39;</span><span class="p">)</span>
+
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">easy_thresh_z</span><span class="p">,</span> <span class="s1">&#39;outputspec.cluster_threshold&#39;</span><span class="p">,</span>
+                         <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;cluster_threshold&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">easy_thresh_z</span><span class="p">,</span> <span class="s1">&#39;outputspec.cluster_index&#39;</span><span class="p">,</span>
+                         <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;cluster_index&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">easy_thresh_z</span><span class="p">,</span> <span class="s1">&#39;outputspec.cluster_localmax_txt&#39;</span><span class="p">,</span>
+                         <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;cluster_localmax_txt&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">easy_thresh_z</span><span class="p">,</span> <span class="s1">&#39;outputspec.overlay_threshold&#39;</span><span class="p">,</span>
+                         <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;overlay_threshold&#39;</span><span class="p">)</span>
+    <span class="n">grp_analysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">easy_thresh_z</span><span class="p">,</span> <span class="s1">&#39;outputspec.rendered_image&#39;</span><span class="p">,</span>
+                         <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;rendered_image&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">grp_analysis</span></div>
+
+
+<span class="k">def</span> <span class="nf">run_feat_pipeline</span><span class="p">(</span><span class="n">group_config</span><span class="p">,</span> <span class="n">merge_file</span><span class="p">,</span> <span class="n">merge_mask</span><span class="p">,</span> <span class="n">f_test</span><span class="p">,</span> 
+                      <span class="n">mat_file</span><span class="p">,</span> <span class="n">con_file</span><span class="p">,</span> <span class="n">grp_file</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">work_dir</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">,</span> 
+                      <span class="n">model_name</span><span class="p">,</span> <span class="n">fts_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    needed:</span>
+<span class="sd">      - z thresh, p thresh</span>
+<span class="sd">      - out dir</span>
+<span class="sd">      - work, crash, log etc.</span>
+<span class="sd">      - </span>
+
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="kn">import</span> <span class="nn">nipype.interfaces.io</span> <span class="k">as</span> <span class="nn">nio</span>
+
+    <span class="c1"># get thresholds</span>
+    <span class="n">z_threshold</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">group_config</span><span class="o">.</span><span class="n">z_threshold</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">p_threshold</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">group_config</span><span class="o">.</span><span class="n">p_threshold</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="c1"># workflow time</span>
+    <span class="n">wf_name</span> <span class="o">=</span> <span class="s2">&quot;fsl-feat_&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span>
+    <span class="n">wf</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">wf_name</span><span class="p">)</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">=</span> <span class="n">work_dir</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;execution&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;hash_method&#39;</span><span class="p">:</span> <span class="s1">&#39;timestamp&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;crashdump_dir&#39;</span><span class="p">:</span> <span class="n">log_dir</span><span class="p">}</span>
+
+    <span class="n">gpa_wf</span> <span class="o">=</span> <span class="n">create_fsl_flame_wf</span><span class="p">(</span><span class="n">f_test</span><span class="p">,</span> <span class="s2">&quot;fsl-flame&quot;</span><span class="p">)</span>
+
+    <span class="n">gpa_wf</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">merged_file</span> <span class="o">=</span> <span class="n">merge_file</span>
+    <span class="n">gpa_wf</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">merge_mask</span> <span class="o">=</span> <span class="n">merge_mask</span>
+
+    <span class="n">gpa_wf</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">z_threshold</span> <span class="o">=</span> <span class="n">z_threshold</span>
+    <span class="n">gpa_wf</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">p_threshold</span> <span class="o">=</span> <span class="n">p_threshold</span>
+    <span class="n">gpa_wf</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="p">(</span><span class="n">group_config</span><span class="o">.</span><span class="n">FSLDIR</span><span class="p">,</span> <span class="s1">&#39;MNI152&#39;</span><span class="p">)</span>
+
+    <span class="n">gpa_wf</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">mat_file</span> <span class="o">=</span> <span class="n">mat_file</span>
+    <span class="n">gpa_wf</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">con_file</span> <span class="o">=</span> <span class="n">con_file</span>
+    <span class="n">gpa_wf</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">grp_file</span> <span class="o">=</span> <span class="n">grp_file</span>
+
+    <span class="k">if</span> <span class="n">f_test</span><span class="p">:</span>
+        <span class="n">gpa_wf</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">fts_file</span> <span class="o">=</span> <span class="n">fts_file</span>
+
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">nio</span><span class="o">.</span><span class="n">DataSink</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;gpa_sink&#39;</span><span class="p">)</span>
+
+    <span class="n">ds</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">base_directory</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
+    <span class="n">ds</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">container</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="n">ds</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">regexp_substitutions</span> <span class="o">=</span> <span class="p">[(</span><span class="sa">r</span><span class="s1">&#39;(?&lt;=rendered)(.)*[/]&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">),</span>
+                                      <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(?&lt;=model_files)(.)*[/]&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">),</span>
+                                      <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(?&lt;=merged)(.)*[/]&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">),</span>
+                                      <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(?&lt;=stats/clusterMap)(.)*[/]&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">),</span>
+                                      <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(?&lt;=stats/unthreshold)(.)*[/]&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">),</span>
+                                      <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(?&lt;=stats/threshold)(.)*[/]&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">),</span>
+                                      <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;_cluster(.)*[/]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+                                      <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;_slicer(.)*[/]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+                                      <span class="p">(</span><span class="sa">r</span><span class="s1">&#39;_overlay(.)*[/]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)]</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gpa_wf</span><span class="p">,</span> <span class="s1">&#39;outputspec.merged&#39;</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="s1">&#39;merged&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gpa_wf</span><span class="p">,</span> <span class="s1">&#39;outputspec.zstats&#39;</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="s1">&#39;stats.unthreshold&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gpa_wf</span><span class="p">,</span> <span class="s1">&#39;outputspec.zfstats&#39;</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="s1">&#39;stats.unthreshold.@01&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gpa_wf</span><span class="p">,</span> <span class="s1">&#39;outputspec.fstats&#39;</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="s1">&#39;stats.unthreshold.@02&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gpa_wf</span><span class="p">,</span> <span class="s1">&#39;outputspec.cluster_threshold_zf&#39;</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="s1">&#39;stats.threshold&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gpa_wf</span><span class="p">,</span> <span class="s1">&#39;outputspec.cluster_index_zf&#39;</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="s1">&#39;stats.clusterMap&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gpa_wf</span><span class="p">,</span> <span class="s1">&#39;outputspec.cluster_localmax_txt_zf&#39;</span><span class="p">,</span> 
+               <span class="n">ds</span><span class="p">,</span> <span class="s1">&#39;stats.clusterMap.@01&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gpa_wf</span><span class="p">,</span> <span class="s1">&#39;outputspec.overlay_threshold_zf&#39;</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="s1">&#39;rendered&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gpa_wf</span><span class="p">,</span> <span class="s1">&#39;outputspec.rendered_image_zf&#39;</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="s1">&#39;rendered.@01&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gpa_wf</span><span class="p">,</span> <span class="s1">&#39;outputspec.cluster_threshold&#39;</span><span class="p">,</span> 
+               <span class="n">ds</span><span class="p">,</span> <span class="s1">&#39;stats.threshold.@01&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gpa_wf</span><span class="p">,</span> <span class="s1">&#39;outputspec.cluster_index&#39;</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="s1">&#39;stats.clusterMap.@02&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gpa_wf</span><span class="p">,</span> <span class="s1">&#39;outputspec.cluster_localmax_txt&#39;</span><span class="p">,</span> 
+               <span class="n">ds</span><span class="p">,</span> <span class="s1">&#39;stats.clusterMap.@03&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gpa_wf</span><span class="p">,</span> <span class="s1">&#39;outputspec.overlay_threshold&#39;</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="s1">&#39;rendered.@02&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">gpa_wf</span><span class="p">,</span> <span class="s1">&#39;outputspec.rendered_image&#39;</span><span class="p">,</span> <span class="n">ds</span><span class="p">,</span> <span class="s1">&#39;rendered.@03&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Run the actual group analysis workflow</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index">
+              <img class="logo" src="../../../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index">Table Of Contents</a></h3>
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user/index">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index">Welcome to CPAC&#8217;s developer documentation!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.6.0 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+    <script defer src="https://fcp-indi.github.io/scripts/versionList.js"></script>
+
+  </body>
+</html>

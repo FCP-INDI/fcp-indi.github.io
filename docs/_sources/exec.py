@@ -1,12 +1,13 @@
 import os
 import sys
-from os.path import basename
 from io import StringIO
 from docutils.parsers.rst import Directive
 from docutils import nodes
 
+
 class ExecDirective(Directive):
-    """Execute the specified python code and insert the output into the document"""
+    """Execute the specified python code and insert the output into the document
+    """
     has_content = True
 
     def run(self):
@@ -15,10 +16,10 @@ class ExecDirective(Directive):
 
         try:
             os.makedirs(os.path.join(
-               os.path.dirname(self.state.document.settings.env.doctreedir),
+                os.path.dirname(self.state.document.settings.env.doctreedir),
                 os.path.dirname(self.state.document.settings.env.docname)
             ))
-        except:
+        except Exception:
             pass
 
         os.chdir(os.path.join(
@@ -44,6 +45,7 @@ class ExecDirective(Directive):
         finally:
             sys.stdout = oldStdout
             os.chdir(oldCwd)
+
 
 def setup(app):
     app.add_directive('exec', ExecDirective)

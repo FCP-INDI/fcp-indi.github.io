@@ -1,0 +1,429 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>CPAC.median_angle.median_angle &#8212; C-PAC 1.6.1.a Beta documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.6.1.a Beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex" />
+    <link rel="search" title="Search" href="../../../search" />
+    <link rel="top" title="C-PAC 1.6.1.a Beta documentation" href="../../../index" />
+    <link rel="up" title="Module code" href="../../index" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.6.1.a Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for CPAC.median_angle.median_angle</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="nn">pe</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
+
+
+
+<div class="viewcode-block" id="median_angle_correct"><a class="viewcode-back" href="../../../developer/workflows/median_angle#CPAC.median_angle.median_angle_correct">[docs]</a><span class="k">def</span> <span class="nf">median_angle_correct</span><span class="p">(</span><span class="n">target_angle_deg</span><span class="p">,</span> <span class="n">realigned_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs median angle correction on fMRI data.  Median angle correction algorithm</span>
+<span class="sd">    based on [1]_.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target_angle_deg : float</span>
+<span class="sd">        Target median angle to adjust the time-series data.</span>
+<span class="sd">    realigned_file : string</span>
+<span class="sd">        Path of a realigned nifti file.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    corrected_file : string</span>
+<span class="sd">        Path of corrected file (nifti file).</span>
+<span class="sd">    angles_file : string</span>
+<span class="sd">        Path of numpy file (.npy file) containing the angles (in radians) of all voxels with </span>
+<span class="sd">        the 5 largest principal components.</span>
+<span class="sd">    </span>
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] H. He and T. T. Liu, &quot;A geometric view of global signal confounds in resting-state functional MRI,&quot; NeuroImage, Sep. 2011.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nb</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="kn">from</span> <span class="nn">scipy.stats.stats</span> <span class="kn">import</span> <span class="n">pearsonr</span>
+
+    <span class="k">def</span> <span class="nf">shiftCols</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">dtheta</span><span class="p">):</span>
+        <span class="n">pcxA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pc</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">A</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pc</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span> <span class="n">pcxA</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:])</span>
+
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">A</span><span class="p">))</span>
+        <span class="n">theta_new</span> <span class="o">=</span> <span class="n">theta</span> <span class="o">+</span> <span class="n">dtheta</span>
+
+        <span class="n">x</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">v_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pc</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span>\
+             <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta_new</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:])</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta_new</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">v_new</span>
+
+    <span class="k">def</span> <span class="nf">writeToFile</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nii</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+        <span class="n">img_whole_y</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">Nifti1Image</span><span class="p">(</span><span class="n">data</span><span class="p">,</span>\
+            <span class="n">header</span><span class="o">=</span><span class="n">nii</span><span class="o">.</span><span class="n">get_header</span><span class="p">(),</span> <span class="n">affine</span><span class="o">=</span><span class="n">nii</span><span class="o">.</span><span class="n">get_affine</span><span class="p">())</span>
+        <span class="n">img_whole_y</span><span class="o">.</span><span class="n">to_filename</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+
+    <span class="n">nii</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">realigned_file</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">nii</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">Yc</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">Yn</span> <span class="o">=</span> <span class="n">Yc</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">Yc</span> <span class="o">*</span> <span class="n">Yc</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span> <span class="p">(</span><span class="n">Yc</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">U</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Vh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">Yn</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">G</span> <span class="o">=</span> <span class="n">Yc</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1">#Correlation of Global and U</span>
+    <span class="n">corr_gu</span> <span class="o">=</span> <span class="n">pearsonr</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">U</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">PC1</span> <span class="o">=</span> <span class="n">U</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">corr_gu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="o">-</span><span class="n">U</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">median_angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">PC1</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">Yn</span><span class="p">)))</span>
+    <span class="n">angle_shift</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">180</span><span class="p">)</span> <span class="o">*</span> <span class="n">target_angle_deg</span> <span class="o">-</span> <span class="n">median_angle</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">angle_shift</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="c1">#Shifting all vectors</span>
+        <span class="n">Ynf</span> <span class="o">=</span> <span class="n">shiftCols</span><span class="p">(</span><span class="n">PC1</span><span class="p">,</span> <span class="n">Yn</span><span class="p">,</span> <span class="n">angle_shift</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1">#&#39;Median Angle &gt;= Target Angle, skipping correction&#39;</span>
+        <span class="n">Ynf</span> <span class="o">=</span> <span class="n">Yn</span>
+
+    <span class="n">corrected_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;median_angle_corrected.nii.gz&#39;</span><span class="p">)</span>
+    <span class="n">angles_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;angles_U5_Yn.npy&#39;</span><span class="p">)</span>
+
+    <span class="n">angles_U5_Yn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">Yn</span><span class="p">))</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">angles_file</span><span class="p">,</span> <span class="n">angles_U5_Yn</span><span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">Ynf</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">writeToFile</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">nii</span><span class="p">,</span> <span class="n">corrected_file</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">corrected_file</span><span class="p">,</span> <span class="n">angles_file</span></div>
+
+<div class="viewcode-block" id="calc_median_angle_params"><a class="viewcode-back" href="../../../developer/workflows/median_angle#CPAC.median_angle.calc_median_angle_params">[docs]</a><span class="k">def</span> <span class="nf">calc_median_angle_params</span><span class="p">(</span><span class="n">subject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates median angle parameters of a subject</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    subject : string</span>
+<span class="sd">        Path of a subject&#39;s nifti file.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    mean_bold : float</span>
+<span class="sd">        Mean bold amplitude of a subject. </span>
+<span class="sd">    median_angle : float</span>
+<span class="sd">        Median angle of a subject.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    <span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nb</span>
+    
+    <span class="n">data</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">subject</span><span class="p">)</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float64&#39;</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+    
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+    
+    <span class="n">Yc</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">Yn</span> <span class="o">=</span> <span class="n">Yc</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">Yc</span><span class="o">*</span><span class="n">Yc</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span> <span class="p">(</span><span class="n">Yc</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">U</span><span class="p">,</span><span class="n">S</span><span class="p">,</span><span class="n">Vh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">Yn</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    
+    <span class="n">glb</span> <span class="o">=</span> <span class="p">(</span><span class="n">Yn</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">Yn</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)))</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="kn">from</span> <span class="nn">scipy.stats.stats</span> <span class="kn">import</span> <span class="n">pearsonr</span>
+    <span class="n">corr</span> <span class="o">=</span> <span class="n">pearsonr</span><span class="p">(</span><span class="n">U</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span><span class="n">glb</span><span class="p">)</span> 
+
+    <span class="n">PC1</span> <span class="o">=</span> <span class="n">U</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">corr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="o">-</span><span class="n">U</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">median_angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">PC1</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">Yn</span><span class="p">)))</span>
+    <span class="n">median_angle</span> <span class="o">*=</span> <span class="mf">180.0</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+    <span class="n">Yp</span> <span class="o">=</span> <span class="n">Yc</span>
+    <span class="n">mean_bold</span> <span class="o">=</span> <span class="n">Yp</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+    
+    <span class="k">return</span> <span class="n">mean_bold</span><span class="p">,</span> <span class="n">median_angle</span></div>
+
+<div class="viewcode-block" id="calc_target_angle"><a class="viewcode-back" href="../../../developer/workflows/median_angle#CPAC.median_angle.calc_target_angle">[docs]</a><span class="k">def</span> <span class="nf">calc_target_angle</span><span class="p">(</span><span class="n">mean_bolds</span><span class="p">,</span> <span class="n">median_angles</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates a target angle based on median angle parameters of</span>
+<span class="sd">    the group.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mean_bolds : list (floats)</span>
+<span class="sd">        List of mean bold amplitudes of the group</span>
+<span class="sd">    median_angles : list (floats)</span>
+<span class="sd">        List of median angles of the group</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    target_angle : float</span>
+<span class="sd">        Calculated target angle of the given group</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+    
+    <span class="k">if</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mean_bolds</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">median_angles</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Length of parameters do not match&#39;</span><span class="p">)</span>
+
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">mean_bolds</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">X</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mean_bolds</span><span class="p">)</span>
+    
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">median_angles</span><span class="p">)</span>
+    
+    <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">))</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+    <span class="n">target_bold</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="n">target_angle</span> <span class="o">=</span> <span class="n">target_bold</span><span class="o">*</span><span class="n">B</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">B</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">target_angle</span></div>
+
+<div class="viewcode-block" id="create_median_angle_correction"><a class="viewcode-back" href="../../../developer/workflows/median_angle#CPAC.median_angle.create_median_angle_correction">[docs]</a><span class="k">def</span> <span class="nf">create_median_angle_correction</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;median_angle_correction&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Median Angle Correction</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : string, optional</span>
+<span class="sd">        Name of the workflow.</span>
+<span class="sd">            </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    median_angle_correction : nipype.pipeline.engine.Workflow</span>
+<span class="sd">        Median Angle Correction workflow.</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    </span>
+<span class="sd">    Workflow Inputs::</span>
+<span class="sd">    </span>
+<span class="sd">        inputspec.subject : string (nifti file)</span>
+<span class="sd">            Realigned nifti file of a subject</span>
+<span class="sd">        inputspec.target_angle : integer</span>
+<span class="sd">            Target angle in degrees to correct the median angle to</span>
+<span class="sd">            </span>
+<span class="sd">    Workflow Outputs::</span>
+<span class="sd">    </span>
+<span class="sd">        outputspec.subject : string (nifti file)</span>
+<span class="sd">            Median angle corrected nifti file of the given subject</span>
+<span class="sd">        outputspec.pc_angles : string (.npy file)</span>
+<span class="sd">            Numpy file (.npy file) containing the angles (in radians) of all voxels with </span>
+<span class="sd">            the 5 largest principal components.</span>
+
+<span class="sd">    Median Angle Correction Procedure:</span>
+<span class="sd">    </span>
+<span class="sd">    1. Compute the median angle with respect to the first principal component of the subject</span>
+<span class="sd">    2. Shift the angle of every voxel so that the new median angle equals the target angle</span>
+
+<span class="sd">    Workflow Graph:</span>
+<span class="sd">    </span>
+<span class="sd">    .. image:: ../images/median_angle_correction.dot.png</span>
+<span class="sd">        :width: 500</span>
+<span class="sd">    </span>
+<span class="sd">    Detailed Workflow Graph:</span>
+<span class="sd">    </span>
+<span class="sd">    .. image:: ../images/median_angle_correction_detailed.dot.png</span>
+<span class="sd">        :width: 500    </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">median_angle_correction</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    
+    <span class="n">inputspec</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;subject&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;target_angle&#39;</span><span class="p">]),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
+    <span class="n">outputspec</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;subject&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;pc_angles&#39;</span><span class="p">]),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
+    
+    <span class="n">mac</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;target_angle_deg&#39;</span><span class="p">,</span>
+                                             <span class="s1">&#39;realigned_file&#39;</span><span class="p">],</span>
+                                <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;corrected_file&#39;</span><span class="p">,</span>
+                                              <span class="s1">&#39;angles_file&#39;</span><span class="p">],</span>
+                                <span class="n">function</span><span class="o">=</span><span class="n">median_angle_correct</span><span class="p">),</span>
+                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;median_angle_correct&#39;</span><span class="p">)</span>
+    
+    <span class="n">median_angle_correction</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;subject&#39;</span><span class="p">,</span>
+                                    <span class="n">mac</span><span class="p">,</span> <span class="s1">&#39;realigned_file&#39;</span><span class="p">)</span>
+    <span class="n">median_angle_correction</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;target_angle&#39;</span><span class="p">,</span>
+                                    <span class="n">mac</span><span class="p">,</span> <span class="s1">&#39;target_angle_deg&#39;</span><span class="p">)</span>
+    <span class="n">median_angle_correction</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">mac</span><span class="p">,</span> <span class="s1">&#39;corrected_file&#39;</span><span class="p">,</span>
+                                    <span class="n">outputspec</span><span class="p">,</span> <span class="s1">&#39;subject&#39;</span><span class="p">)</span>
+    <span class="n">median_angle_correction</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">mac</span><span class="p">,</span> <span class="s1">&#39;angles_file&#39;</span><span class="p">,</span>
+                                    <span class="n">outputspec</span><span class="p">,</span> <span class="s1">&#39;pc_angles&#39;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">median_angle_correction</span></div>
+
+<div class="viewcode-block" id="create_target_angle"><a class="viewcode-back" href="../../../developer/workflows/median_angle#CPAC.median_angle.create_target_angle">[docs]</a><span class="k">def</span> <span class="nf">create_target_angle</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;target_angle&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Target Angle Calculation</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : string, optional</span>
+<span class="sd">        Name of the workflow.</span>
+<span class="sd">            </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    target_angle : nipype.pipeline.engine.Workflow</span>
+<span class="sd">        Target angle workflow.</span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    </span>
+<span class="sd">    Workflow Inputs::</span>
+<span class="sd">    </span>
+<span class="sd">        inputspec.subjects : list (nifti files)</span>
+<span class="sd">            List of subject paths.</span>
+<span class="sd">    </span>
+<span class="sd">    Workflow Outputs::</span>
+<span class="sd">    </span>
+<span class="sd">        outputspec.target_angle : float</span>
+<span class="sd">            Target angle over the provided group of subjects.</span>
+<span class="sd">            </span>
+<span class="sd">    Target Angle procedure:</span>
+<span class="sd">    </span>
+<span class="sd">    1. Compute the median angle and mean bold amplitude of each subject in the group.</span>
+<span class="sd">    2. Fit a linear model with median angle as the dependent variable.</span>
+<span class="sd">    3. Calculate the corresponding median_angle on the fitted model for the subject </span>
+<span class="sd">       with the smallest mean bold amplitude of the group.</span>
+<span class="sd">    </span>
+<span class="sd">    Workflow Graph:</span>
+<span class="sd">    </span>
+<span class="sd">    .. image:: ../images/target_angle.dot.png</span>
+<span class="sd">        :width: 500</span>
+<span class="sd">    </span>
+<span class="sd">    Detailed Workflow Graph:</span>
+<span class="sd">    </span>
+<span class="sd">    .. image:: ../images/target_angle_detailed.dot.png</span>
+<span class="sd">        :width: 500</span>
+<span class="sd">        </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">target_angle</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    
+    <span class="n">inputspec</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;subjects&#39;</span><span class="p">]),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
+    <span class="n">outputspec</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;target_angle&#39;</span><span class="p">]),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
+    
+    <span class="n">cmap</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;subject&#39;</span><span class="p">],</span>
+                                    <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mean_bold&#39;</span><span class="p">,</span>
+                                                  <span class="s1">&#39;median_angle&#39;</span><span class="p">],</span>
+                                    <span class="n">function</span><span class="o">=</span><span class="n">calc_median_angle_params</span><span class="p">),</span>
+                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;median_angle_params&#39;</span><span class="p">,</span>
+                      <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;subject&#39;</span><span class="p">])</span>
+    
+    <span class="n">cta</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mean_bolds&#39;</span><span class="p">,</span>
+                                             <span class="s1">&#39;median_angles&#39;</span><span class="p">],</span>
+                                <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;target_angle&#39;</span><span class="p">],</span>
+                                <span class="n">function</span><span class="o">=</span><span class="n">calc_target_angle</span><span class="p">),</span>
+                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;target_angle&#39;</span><span class="p">)</span>
+    
+    <span class="n">target_angle</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;subjects&#39;</span><span class="p">,</span>
+                         <span class="n">cmap</span><span class="p">,</span> <span class="s1">&#39;subject&#39;</span><span class="p">)</span>
+    <span class="n">target_angle</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">cmap</span><span class="p">,</span> <span class="s1">&#39;mean_bold&#39;</span><span class="p">,</span>
+                         <span class="n">cta</span><span class="p">,</span> <span class="s1">&#39;mean_bolds&#39;</span><span class="p">)</span>
+    <span class="n">target_angle</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">cmap</span><span class="p">,</span> <span class="s1">&#39;median_angle&#39;</span><span class="p">,</span>
+                         <span class="n">cta</span><span class="p">,</span> <span class="s1">&#39;median_angles&#39;</span><span class="p">)</span>
+    <span class="n">target_angle</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">cta</span><span class="p">,</span> <span class="s1">&#39;target_angle&#39;</span><span class="p">,</span>
+                         <span class="n">outputspec</span><span class="p">,</span> <span class="s1">&#39;target_angle&#39;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">target_angle</span></div>
+    
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index">
+              <img class="logo" src="../../../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index">Table Of Contents</a></h3>
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user/index">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index">Welcome to CPAC&#8217;s developer documentation!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.6.1.a Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, C-PAC Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+    <script defer src="https://fcp-indi.github.io/scripts/versionList.js"></script>
+
+  </body>
+</html>

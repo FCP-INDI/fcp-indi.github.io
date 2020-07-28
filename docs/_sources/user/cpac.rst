@@ -1,4 +1,4 @@
-.rstcpac (Python package)
+cpac (Python package)
 ---------------------
 
 `cpac <https://pypi.org/project/cpac/>`_ is available so that you can easily run analyses without needing interact with the container platform that allows you to run C-PAC without installing all of the underlying software.

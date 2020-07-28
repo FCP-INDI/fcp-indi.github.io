@@ -42,11 +42,11 @@ A Note About the \*nix Command Line
 
 Overview
 --------
-If you are using Ubuntu (version 12/14) you can download  and run `cpac_install.sh <https://github.com/FCP-INDI/C-PAC/blob/master/scripts/cpac_install.sh?raw=true>`__ with the following terminal commands as root:
+If you are using Ubuntu (version 12/14) you can download  and run `cpac_install.sh <https://github.com/FCP-INDI/C-PAC/blob/v1.6.0/scripts/cpac_install.sh?raw=true>`__ with the following terminal commands as root:
 
 .. code-block:: console
 
-    wget https://github.com/FCP-INDI/C-PAC/blob/master/scripts/cpac_install.sh?raw=true
+    wget https://github.com/FCP-INDI/C-PAC/blob/v1.6.0/scripts/cpac_install.sh?raw=true
     mv cpac_install.sh?raw=true cpac_install.sh
     chmod +x cpac_install.sh
     sudo ./cpac_install.sh -r

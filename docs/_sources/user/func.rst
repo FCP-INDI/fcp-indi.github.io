@@ -47,10 +47,10 @@ You can also specify slice timing parameters within the subject list.  If you wi
 
 .. line-block::
   **If all subjects within a site have the same acquisition order:**
-  Use the template :file:`scan_parameters.csv` file available for download `here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/scan_parameters.csv>`__.
+  Use the template :file:`scan_parameters.csv` file available for download `here <https://raw.github.com/FCP-INDI/C-PAC/v1.5.0/configs/scan_parameters.csv>`__.
 
   **If subjects within a site have different acquisition orders:**
-  Use the template :file:`scan_parameters_multiscan.csv` file available for download `here <https://raw.github.com/FCP-INDI/C-PAC/master/configs/scan_parameters_multiscan.csv>`__.
+  Use the template :file:`scan_parameters_multiscan.csv` file available for download `here <https://raw.github.com/FCP-INDI/C-PAC/v1.5.0/configs/scan_parameters_multiscan.csv>`__.
 
 Slice Timing information should be entered into these files as follows:
 

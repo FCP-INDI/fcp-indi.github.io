@@ -64,7 +64,7 @@ Pipeline configuration files, like the data settings and data configuration file
     # Directory where CPAC should place processed data.
     outputDirectory :  /home/runs/pipeline01/output
 
-An example of a pipeline configuration YAML file can be found `here <https://raw.githubusercontent.com/FCP-INDI/C-PAC/master/CPAC/resources/configs/pipeline_config_template.yml>`_.  Tables explaining the keys and their potential values can be found on the individual pages for each of the outputs C-PAC is capable of producing.  All pipeline configuration files should have the keys in the :doc:`Output Settings </user/output_config>` table defined.
+An example of a pipeline configuration YAML file can be found `here <https://raw.githubusercontent.com/FCP-INDI/C-PAC/v1.5.0/CPAC/resources/configs/pipeline_config_template.yml>`_.  Tables explaining the keys and their potential values can be found on the individual pages for each of the outputs C-PAC is capable of producing.  All pipeline configuration files should have the keys in the :doc:`Output Settings </user/output_config>` table defined.
 
 Why a list?
 '''''''''''

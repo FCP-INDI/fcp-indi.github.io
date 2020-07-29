@@ -1,6 +1,4 @@
-"""Python 2 version
-
-This script takes a version string as a commandline argument and updates
+"""This script takes a version string as a commandline argument and updates
 the links in `docs/{version}` that point to code in the `master` branch of
 FCP-INDI/C-PAC to code in the tagged version.
 
@@ -12,20 +10,7 @@ python link_to_set_version.py $VERSION
 import os
 import sys
 
-from fnmatch import filter as fnfilter
-
-
-def glob(pattern, recursive=True):
-    split_pattern = pattern.split('/')
-    filepath = '/'.join(split_pattern[0:-1])
-    pattern = split_pattern[-1]
-    del split_pattern
-
-    matches = []
-    for root, dirnames, filenames in os.walk(filepath):
-        for filename in fnfilter(filenames, pattern):
-            matches.append(os.path.join(root, filename))
-    return matches
+from glob import glob
 
 
 def set_version(version):

@@ -55,29 +55,30 @@ def coerce(version):
         """,
         re.VERBOSE,
     )
-    
+
     match = BASEVERSION.search(version)
     if not match:
         return (None, version)
 
     ver = {
-        key: 0 if value is None else value for key, value in match.groupdict().items()
+        key: 0 if value is None else value for key, value
+        in match.groupdict().items()
     }
     ver = semver.VersionInfo(**ver)
     rest = match.string[match.end() :]  # noqa:E203
     return ver, rest
-    
-    
+
+
 def compare_versions(new, old):
     """
     Function to compare two versions.
-    
+
     Parameters
     ----------
     new: str
-    
+
     old: str
-    
+
     Returns
     -------
     bool
@@ -92,7 +93,7 @@ def compare_versions(new, old):
             (outright == 0) and comparisons[1][0] >= comparisons[1][1]
         )
     )
-    
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -149,6 +150,7 @@ version = __version__
 # Set GITHUBTOKEN to your API token in your environment to increase rate limit.
 g = Github(os.environ.get('GITHUBTOKEN'))
 
+
 def _gh_rate_limit():
     print("""Release notes not updated due to GitHub API rate limit.
 
@@ -171,6 +173,7 @@ def _gh_rate_limit():
         .~~MM~MM~MM~MM~~.
      ~~~~MM:~MM~~~MM~:MM~~~~
 """)
+
 
 try:
     gh_cpac = g.get_user('FCP-INDI').get_repo('C-PAC')
@@ -241,6 +244,7 @@ def _unireplace(release_note, unireplace):
             for u, v in list(unireplace.items())
         ])
     )
+
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 release_notes_dir = os.path.join(this_dir, 'user', 'release_notes')
@@ -325,8 +329,9 @@ all_release_notes = """
         f'.. include:: /user/release_notes/{fp}' for fp in rnd
     ]),
     '\n   '.join([
-    f'/user/release_notes/{d}' for d in rnd
-]))
+        f'/user/release_notes/{d}' for d in rnd
+    ])
+)
 with open(os.path.join(release_notes_dir, 'index.rst'), 'w+') as f:
     f.write(all_release_notes.strip())
 

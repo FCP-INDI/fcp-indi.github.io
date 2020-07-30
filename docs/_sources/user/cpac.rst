@@ -48,7 +48,7 @@ You can also provide a link to an AWS S3 bucket containing a BIDS directory as t
 
     cpac run s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /Users/You/some_folder_for_outputs participant
 
-In addition to the default pipeline, C-PAC comes packaged with a growing library of pre-configured pipelines that are ready to use. To run C-PAC with one of the pre-packaged pre-configured pipelines, simply invoke the ``--preconfig`` flag, shown below. See the full selection of pre-configured pipelines :doc:`here </preconfig>`.
+In addition to the default pipeline, C-PAC comes packaged with a growing library of pre-configured pipelines that are ready to use. To run C-PAC with one of the pre-packaged pre-configured pipelines, simply invoke the ``--preconfig`` flag, shown below. See the full selection of pre-configured pipelines :doc:`here </user/preconfig>`.
 
 .. code-block:: console
 

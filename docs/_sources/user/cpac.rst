@@ -3,7 +3,9 @@ cpac (Python package)
 
 `cpac <https://pypi.org/project/cpac/>`_ is available so that you can easily run analyses without needing interact with the container platform that allows you to run C-PAC without installing all of the underlying software.
 
-Currently the cpac supports Singularity (version ≥ 2.5 ≤ 3.0) and Docker.
+.. note::
+
+    Currently the cpac wrapper supports Singularity (version ≥ 2.5 < 3.0) [*]_ and Docker.
 
 cpac requires Python 3.6 or greater. To get cpac, simply
 
@@ -17,7 +19,7 @@ As a quick example, in order to run C-PAC in participant mode, for one participa
 
     cpac run /Users/You/local_bids_data /Users/You/some_folder_for_outputs participant
 
-By default, the cpac will try Docker first and fall back to Singularity if Docker fails. If both fail, an exception is raised.
+By default, cpac (the wrapper) will try Docker first and fall back to Singularity if Docker fails. If both fail, an exception is raised.
 
 You can specify a platform with the ``--platform docker`` or ``--platform singularity``. If you specify a platform without specifying an image, these are the defaults, using the first successfully found image:
 
@@ -85,3 +87,7 @@ Note that any of the optional arguments above will over-ride any pipeline settin
 * The ``participant_label`` and ``participant_ndx`` arguments allow the user to specify which of the many datasets should be processed, which is useful when parallelizing the run of multiple participants.
 
 * If you want to pass runtime options to your container plaform (Docker or Singularity), you can pass them with ``-o`` or ``--container_options``.
+
+.. rubric:: Footnotes
+
+.. [*] The version restrictions for Singularity are specific to cpac the convenience wrapper. C-PAC itself should :doc:`run on Singularity <singularity>` 2 or 3.

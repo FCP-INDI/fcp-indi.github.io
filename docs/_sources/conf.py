@@ -55,29 +55,30 @@ def coerce(version):
         """,
         re.VERBOSE,
     )
-    
+
     match = BASEVERSION.search(version)
     if not match:
         return (None, version)
 
     ver = {
-        key: 0 if value is None else value for key, value in match.groupdict().items()
+        key: 0 if value is None else value for key, value
+        in match.groupdict().items()
     }
     ver = semver.VersionInfo(**ver)
     rest = match.string[match.end() :]  # noqa:E203
     return ver, rest
-    
-    
+
+
 def compare_versions(new, old):
     """
     Function to compare two versions.
-    
+
     Parameters
     ----------
     new: str
-    
+
     old: str
-    
+
     Returns
     -------
     bool
@@ -92,7 +93,7 @@ def compare_versions(new, old):
             (outright == 0) and comparisons[1][0] >= comparisons[1][1]
         )
     )
-    
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the

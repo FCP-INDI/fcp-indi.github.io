@@ -1,9 +1,9 @@
 from CPAC import nuisance
 
-nstring = nuisance.create_nuisance_workflow.__doc__[
-    nuisance.create_nuisance_workflow.__doc__.find(
+nstring = nuisance.create_regressor_workflow.__doc__[
+    nuisance.create_regressor_workflow.__doc__.find(
         "selector = "
-    ) + len("selector = ") + 1:nuisance.create_nuisance_workflow.__doc__.find(
+    ) + len("selector = ") + 1:nuisance.create_regressor_workflow.__doc__.find(
         "Workflow Outputs"
     )
 ].rstrip()[:-1].lstrip('\n')

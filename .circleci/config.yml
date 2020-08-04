@@ -4,7 +4,7 @@ commands:
     steps:
       - run:
           name: 🔧 Setting version
-          command: if [ -f /build/build_version.txt ]; then echo "export BUILD_VERSION=$(cat /build/build_version.txt)" >> $BASH_ENV; else echo "export BUILD_VERSION=nightly" >> $BASH_ENV; fi
+          command: if [[ $CIRCLE_TAG =~ v(.+)(-source) ]]; then echo "export BUILD_VERSION=v${BASH_REMATCH[1]}" >> $BASH_ENV; else echo "export BUILD_VERSION=nightly" >> $BASH_ENV; fi
   install-build-dependencies:
     parameters:
       version:
@@ -74,7 +74,6 @@ commands:
             git rm -fr docs/.doctrees || rm -fr docs/.doctrees || true
             git rm -fr docs/**/.doctrees || rm -fr docs/**/.doctrees || true
             git rm -fr bin || rm -fr bin || true
-            git rm -fr build_version.txt || rm -fr build_version.txt || true
             git rm -fr C-PAC || rm -fr C-PAC || true
             git rm -fr cpac || rm -fr cpac || true
             git rm -fr scripts/__pycache__ || rm -fr scripts/__pycache__ || true
@@ -92,7 +91,6 @@ commands:
           root: /
           paths: 
             - build/404.html
-            - build/build_version.txt
             - build/docs
             - build/index.html
             - build/scripts
@@ -121,9 +119,6 @@ jobs:
       - image: python:3.7
     steps:
       - checkout
-      - run:
-          name: 🔬 Checking for tag file
-          command: test -f ./build_version.txt
       - get-version
       - install-build-dependencies:
           version: ${BUILD_VERSION}
@@ -170,24 +165,24 @@ workflows:
       - build-nightly:
           filters:
             branches:
-              only:
-                - source
+              only: source
       - build-version:
           filters:
+            tags:
+              only: /^v.*(-source)$/
             branches:
-              only:
-                - build-version
+              ignore: /.*/
       - deploy-nightly:
           filters:
             branches:
-              only:
-                - source
+              only: source
           requires:
             - build-nightly
       - deploy-version:
           filters:
+            tags:
+              only: /^v.*(-source)$/
             branches:
-              only:
-                - build-version
+              ignore: /.*/
           requires:
             - build-version

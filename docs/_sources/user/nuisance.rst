@@ -98,6 +98,16 @@ Median angle correction is another global signal correction approach. It is assu
 
 Principal component analysis (PCA) is used to decompose the resting-state data. Median angle is computed by taking the inverse cosine of each voxel’s time series vector's projection onto the first principal component (i.e. the global mean signal) and then calculating the median over the angles from all the vectors. If an inverse relation is found between the median angle and the mean BOLD signal amplitude, then an additive signal confound is present. As resting-state data sets with high median angles and low mean BOLD magnitudes are likely to be the least contaminated by an additive global confound (He and Liu, 2011), the inverse relation between median angle and mean BOLD magnitude is used to correct for differences in the additive confound. Specifically, the angular distributions of datasets with small median angles can be shifted to attain a larger target median angle to effectively minimize the effects of the global signal confound. The calculation of target angle for median angle correction is described in He and Liu (2011).
 
+Custom Regressors
+^^^^^^^^^^^^^^^^^
+You can provide your own custom regressor signals beyond those provided by C-PAC (e.g., task encodings or quasi-periodic pattern waveforms).
+
+Each custom regressor must be either a CSV or NIFTI file that contains a single column of the same length as the functional signal with ``1``\s indicating volumes to keep and ``0``\s indicating volumes to censor.
+
+The custom regressor specification also takes a boolean ``convolve`` (default = ``false``).
+
+An example with one custom regressor is included in :ref:`nuisance-no-gui`, below.
+
 Configuring Nuisance Signal Regression Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. figure:: /_images/nuisance.png
@@ -107,6 +117,8 @@ Configuring Nuisance Signal Regression Options
 #. **Lateral Ventricles Mask (Standard Space) - [path, None]:** A binary mask of the lateral ventricles. If choosing None, no lateral ventricles mask will be applied.
 
 #. **Select Regressors: - [checkbox: compcor, wm, csf, global, pc1, motion, linear, quadratic]:**  Clicking on the *+* icon to the right of the box here will bring up a dialog where you can check off which nuisance variables you would like to include.  You may generate multiple sets of nuisance regression strategies in this way.  When you are done defining nuisance regression strategies, check the box next to each strategy you would like to run.
+
+.. _nuisance-no-gui:
 
 Configuration Without the GUI
 """""""""""""""""""""""""""""

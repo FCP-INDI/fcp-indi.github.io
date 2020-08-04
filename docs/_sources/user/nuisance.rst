@@ -120,7 +120,7 @@ The following key/value pairs must be defined in your :doc:`pipeline configurati
 
 The following box contains the full specification for regressors:
 
-.. program-output:: python /build/docs/user/_sources/nuisance_regressors_docstring.py
+.. program-output:: python /build/docs/_sources/user/nuisance_regressors_docstring.py
 
 The box below contains an example of what these parameters might look like when defined in the YAML.
 

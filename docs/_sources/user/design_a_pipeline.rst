@@ -1,6 +1,10 @@
 Design A Pipeline
 -----------------
 
+.. topic:: Neuroparc v1.0: Baseline
+
+  .. include:: /user/ndmg_atlases.rst
+
 C-PAC offers a graphical interface you can use to quickly and easily modify the default pipeline or create your own from scratch:
 
 `https://fcp-indi.github.io/C-PAC_GUI/versions/latest/browser/#/ <https://fcp-indi.github.io/C-PAC_GUI/versions/latest/browser/#/>`_

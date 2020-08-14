@@ -8,7 +8,7 @@ Computer Settings
 
 #. **Maximum Memory Per Participant (GB) - [number]:**  The maximum amount of memory each participant's workflow can allocate. Use this to place an upper bound of memory usage. **Warning: 'Memory Per Participant' multiplied by 'Number of Participants to Run Simultaneously' must not be more than the total amount of RAM. Conversely, using too little RAM can impede the speed of a pipeline run. It is recommended that you set this to a value that when multiplied by 'Number of Participants to Run Simultaneously' is as much RAM you can safely allocate.**
 
-#. **Maximum Cores Per Participant - [integer]:** Number of cores (on a single machine) or slots on a node (cluster/grid) per subject. Slots are cores on a cluster/grid node. 'Number of Cores Per Subject' multiplied by 'Number of Subjects to Run Simultaneously' multiplied by 'Number of Cores for Anatomical Registration (ANTS)' must not be greater than the total number of cores.
+#. **Maximum Cores Per Participant - [integer]:** Number of cores (on a single machine) or slots on a node (cluster/grid) per subject. Slots are cores on a cluster/grid node. 'Number of Cores Per Subject' multiplied by 'Number of Subjects to Run Simultaneously' must not be greater than the total number of cores. Dedicating more than one core/CPU per participant will direct C-PAC to parallelize the motion correction and time series registration transform application steps, for a speed increase.
 
 #. **Number of Participants to Run Simultaneously - [integer]:** This number depends on computing resources.
 

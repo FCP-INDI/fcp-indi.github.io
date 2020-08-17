@@ -9,18 +9,16 @@ Please, always base changes on the `source` branch. `master` branch will be over
 Pushes to `source` will rebuild docs at https://fcp-indi.github.io/docs/nightly
 
 #### C-PAC release tags
-Pushes to `build-version` will look for a C-PAC version tag (e.g, `v1.7.0`) in a file called `build_version.txt` at the root of the repo.
+Tags in the format `v.*-source` will build docs for the given version.
 
-If that file exists and includes only an existing tag, docs should build for the given version.
-
-If `build_version.txt` does not exist or the included tag doesn't exist in https://github.com/FCP-INDI/C-PAC/tags, the build should fail.
+If a matching version tag doesn't exist in https://github.com/FCP-INDI/C-PAC/tags, the build should fail.
 
 Steps to build a release:
 1. Checkout a commit from the `source` from a time appropriate for documentation for the branch being built/rebuilt.
-2. Name your branch (`git switch -c` or `git checkout -b`) either `build-version` or something more specific
-3. Add a text file `build_version.txt` at the root of the repository in your new branch. This text file should include the version tag for the version of C-PAC and nothing else.
-4. Make any changes you need for the specific version.
-5. (Force) push to the remote branch `build-version`.
+2. If you need to make changes, create a branch (`git switch -c` or `git checkout -b`).
+3. Make any changes you need for the specific version.
+4. Tag the commit that's ready to build (`git tag v`version`-source`)
+5. (Force) push to the remote tag (`git push origin v`version`-source`).
 6. CircleCI should deploy the versioned documentation. If the version tag is the newest, it should also overwrite `latest` with these documents. 
 
 ## Guidelines

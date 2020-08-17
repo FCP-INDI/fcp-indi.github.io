@@ -2,4 +2,4 @@ On July 20, 2020, Neuroparc released v1.0. In moving from v0 to v1, the paths to
 
 .. csv-table:: All paths begin with ``/ndmg_atlases/label/Human/``
   :header: "Neuroparc v0","Neuroparc v1"
-  :file: ndmg_atlases.csv
+  :url: https://raw.githubusercontent.com/FCP-INDI/C-PAC/c89ec698b0dda897fc1e1304810e3c74d8033476/CPAC/resources/templates/ndmg_atlases.csv

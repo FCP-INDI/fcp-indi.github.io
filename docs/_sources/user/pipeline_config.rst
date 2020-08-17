@@ -8,6 +8,12 @@ There are two ways of setting up a pipeline configuration for C-PAC:
 * Using the pipeline configuration interface in the C-PAC GUI
 * Using a text editor (useful for remote servers where using the C-PAC GUI is not possible or impractical)
 
+.. _ndmg_atlases:
+
+.. topic:: Neuroparc v1.0: Baseline
+
+  .. include:: /user/ndmg_atlases.rst
+
 Definitions
 '''''''''''
 * Workflow - A workflow accomplishes a particular processing task (e.g. functional preprocessing, scrubbing, nuisance correction). Each workflow can be turned on or off in the pipeline configuration.  Sometimes a workflow can be set to both on and off, allowing for pipelines to branch.

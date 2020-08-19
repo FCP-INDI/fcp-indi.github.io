@@ -183,13 +183,9 @@ except RateLimitExceededException:
     gh_tags = []
 gh_tags.sort(reverse=True)
 
-build_version_path = os.path.abspath(os.path.join(
-    __file__, os.pardir, os.pardir, os.pardir, 'build_version.txt'
-))
 # don't build release notes for newer releases
-if os.path.exists(build_version_path):
-    with open(build_version_path, 'r') as bvf:
-        build_version = bvf.read().strip()
+build_version = os.environ.get('CIRCLE_TAG', '').rstrip('-source')
+if len(build_version):
     gh_tags = [gh_tag for gh_tag in gh_tags if compare_versions(
         build_version, gh_tag
     )]

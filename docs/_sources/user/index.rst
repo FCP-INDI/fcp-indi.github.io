@@ -39,6 +39,12 @@ For more information and additional tutorials, check out our `YouTube channel <h
 * `Open science resources for 'Big Data' Analyses of the human connectome <http://www.slideshare.net/CameronCraddock/open-science-resources-for-big-data-analyses-of-the-human-connectome>`_
 * `Computational approaches for mapping the human connectome <http://www.slideshare.net/CameronCraddock/computational-approaches-for-mapping-the-human-connectome>`_
 
+.. _ndmg_atlases:
+
+.. topic:: Neuroparc v1.0: Baseline
+
+  .. include:: /user/ndmg_atlases.rst
+
 .. include:: /user/release_notes/latest.rst
 
 The C-PAC Team

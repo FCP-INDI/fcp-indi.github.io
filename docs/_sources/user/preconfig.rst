@@ -1,6 +1,12 @@
 ﻿Pre-configured Pipelines
 ------------------------
 
+.. _ndmg_atlases:
+
+.. topic:: Neuroparc v1.0: Baseline
+
+  .. include:: /user/ndmg_atlases.rst
+
 default: The Default Pipeline
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

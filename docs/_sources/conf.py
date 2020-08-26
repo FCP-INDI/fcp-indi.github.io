@@ -23,6 +23,13 @@ from dateutil import parser as dparser
 from github import Github
 from github.GithubException import RateLimitExceededException, \
     UnknownObjectException
+from pybtex.plugin import register_plugin
+
+sys.path.append(os.path.dirname(__file__))
+
+from references import CPAC_DocsStyle
+
+register_plugin('pybtex.style.formatting', 'cpac_docs_style', CPAC_DocsStyle)
 
 # "Dealing with Invalid Versions" from
 # https://python-semver.readthedocs.io/en/latest/usage.html
@@ -110,6 +117,7 @@ sys.path.insert(0, os.path.abspath('.'))
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinxcontrib.bibtex',
     'sphinxcontrib.fulltoc',
     'sphinx.ext.ifconfig',
     'sphinx.ext.intersphinx',

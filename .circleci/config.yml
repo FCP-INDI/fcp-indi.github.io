@@ -15,7 +15,7 @@ commands:
           command: |
             sudo apt-get update && sudo apt-get -y install git python3-dev graphviz graphviz-dev libgraphviz-dev pkg-config python3-sphinx
             pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/<< parameters.version >>/requirements.txt
-            pip install --user git+https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git@<< parameters.version >> sphinx m2r numpydoc PyGithub sphinxcontrib-fulltoc sphinxcontrib-programoutput semver torch
+            pip install --user git+https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git@<< parameters.version >> sphinx m2r numpydoc PyGithub sphinxcontrib-bibtex sphinxcontrib-fulltoc sphinxcontrib-programoutput semver torch
             git clone https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git /home/circleci/build/C-PAC
             cd /home/circleci/build/C-PAC
             git checkout << parameters.version >>
@@ -108,13 +108,12 @@ jobs:
           path: /home/circleci/build
       - install-build-dependencies:
           version: develop
-      - run-cpac-commands
+      # - run-cpac-commands
       - run:
           name: 🏗️ Building nightly branch docs
           command: ./bin/build nightly
       - store-commit-message
       - persist-new-build
-
   build-version:
     working_directory: /home/circleci/build
     docker:
@@ -125,13 +124,12 @@ jobs:
       - get-version
       - install-build-dependencies:
           version: ${BUILD_VERSION}
-      - run-cpac-commands
+      # - run-cpac-commands
       - run:
           name: 🏗️ Building version branch docs
           command: ./bin/build ${BUILD_VERSION}
       - store-commit-message
       - persist-new-build
-
   deploy-nightly:
     working_directory: /home/circleci/
     docker:
@@ -141,7 +139,6 @@ jobs:
           at: /home/circleci/
       - prep-deploy
       - deploy
-
   deploy-version:
     working_directory: /home/circleci/
     docker:

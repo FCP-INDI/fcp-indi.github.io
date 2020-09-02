@@ -8,13 +8,13 @@
 Initial Preprocessing
 ^^^^^^^^^^^^^^^^^^^^^
 
-Initial preprocessing offers methods like `non-local means filtering <https://www.iro.umontreal.ca/~mignotte/IFT6150/Articles/Buades-NonLocal.pdf>`_ and `N4 bias field correction <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3071855/>`_ to preprocess anatomical images.
+Initial preprocessing offers methods like `non-local means filtering <https://www.iro.umontreal.ca/~mignotte/IFT6150/Articles/Buades-NonLocal.pdf>`_ , `N4 bias field correction <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3071855/>`_ and `Surface Reconstruction <https://pdfs.semanticscholar.org/0554/11f28a5e28c46c3f0079d397783afc721021.pdf>`_ to preprocess anatomical images.
 
 C-PAC provides options for configuring initial preprocessing - users can select:
 
 * `ANT's DenoiseImage <https://manpages.debian.org/experimental/ants/DenoiseImage.1.en.html>`_
 * `ANT's N4BiasFieldCorrection <http://manpages.ubuntu.com/manpages/trusty/man1/N4BiasFieldCorrection.1.html>`_
-
+* `FreeSurfer cortical reconstruction <https://surfer.nmr.mgh.harvard.edu/fswiki/recon-all>`_
 
 Configuring CPAC to run initial preprocessing:
 """"""""""""""""""""""""""""""""""""""""""""""
@@ -25,6 +25,7 @@ Configuring CPAC to run initial preprocessing:
 
 #. **N4 Bias Field Correction - [On,Off]:** ANTs N4BiasFieldCorrection - a variant of the popular N3 (nonparametric nonuniform normalization) retrospective bias correction algorithm. Default is Off.
 
+#. **Surface Reconstruction - [On,Off]:** FreeSurfer Cortical Surface Reconstruction - generate surface meshes from FreeSurfer. Default is Off.
 
 Skull-Stripping
 ^^^^^^^^^^^^^^^
@@ -36,6 +37,7 @@ C-PAC provides options for configuring skull-stripping - users can select:
 * FSL: `BET <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/BET/UserGuide>`_. Further parameters for each of these tools are configurable.
 * niworkflows-ants: `niworkflows's antsBrainExtraction <https://github.com/poldracklab/niworkflows/blob/master/niworkflows/anat/ants.py>`_
 * U-Net: U-Net is a Fully Convolutional Network (FCN) for image segmentation. Users can now select this option for brain extraction, especially optimal for non-human primate data.
+* FreeSurfer: `recon-all <https://surfer.nmr.mgh.harvard.edu/fswiki/recon-all>`_ -autorecon1 performs surface-based skull-stripping.
 * Providing their own brain mask for extraction
 
 Configuring CPAC to run Skull-Stripping:
@@ -47,7 +49,7 @@ Configuring CPAC to run Skull-Stripping:
 
 #. **Already skull-stripped - [On,Off]:** If inputs are already skull stripped (i.e. the structural input data is brain-only) then you can toggle this option to off.
 
-#. **Which tool for skull-stripping - [FSL, AFNI, niworkflows-ants]:** Choose if you’d like to use FSL BET, AFNI 3dSkullStrip, or run all options in parallel.
+#. **Which tool for skull-stripping - [FSL, AFNI, niworkflows-ants, U-Net, FreeSurfer]:** Choose if you’d like to use FSL BET, AFNI 3dSkullStrip, niworkflows-ants, U-Net, FreeSurfer or run all options in parallel.
 
 Configuring AFNI 3dSkullStrip options:
 """"""""""""""""""""""""""""""""""""""
@@ -335,15 +337,15 @@ Configuring CPAC to Run Anatomical Tissue Segmentation
 
 #. **The atlas segmentation images - [path]:** The number of specified segmentations should be identical to the number of atlas brain images. Clicking on the *+* icon to the right of the box here will bring up a dialog where you can define multiple paths to NifTIs containing the atlas segmentation image.  You may add multiple images to the box.  
 
-#. **CSF Label Value - [integer]:** Label value corresponding to CSF in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from `Freesurfer Color Lookup Table. <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT>`_
+#. **CSF Label Value - [integer]:** Label value corresponding to CSF in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from `FreeSurfer Color Lookup Table. <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT>`_
 
-#. **Left Gray Matter Label Value - [integer]:** Label value corresponding to Left Gray Matter in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from `Freesurfer Color Lookup Table. <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT>`_
+#. **Left Gray Matter Label Value - [integer]:** Label value corresponding to Left Gray Matter in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from `FreeSurfer Color Lookup Table. <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT>`_
 
-#. **Right Gray Matter Label Value - [integer]:** Label value corresponding to Right Gray Matter in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from `Freesurfer Color Lookup Table. <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT>`_
+#. **Right Gray Matter Label Value - [integer]:** Label value corresponding to Right Gray Matter in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from `FreeSurfer Color Lookup Table. <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT>`_
 
-#. **Left White Matter Label Value - [integer]:** Label value corresponding to Left White Matter in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from `Freesurfer Color Lookup Table. <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT>`_
+#. **Left White Matter Label Value - [integer]:** Label value corresponding to Left White Matter in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from `FreeSurfer Color Lookup Table. <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT>`_
 
-#. **Right White Matter Label Value - [integer]:** Label value corresponding to Right White Matter in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from `Freesurfer Color Lookup Table. <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT>`_
+#. **Right White Matter Label Value - [integer]:** Label value corresponding to Right White Matter in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from `FreeSurfer Color Lookup Table. <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT>`_
 
 
 Configuration Without the GUI

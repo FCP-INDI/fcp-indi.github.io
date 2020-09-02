@@ -192,6 +192,8 @@ Functional to Anatomical Registration
 
 #. **Functional Volume to Use as Input (Selected Functional Volume only) - [integer]:** Only for when 'Use as Functional-to-Anatomical Registration Input' is set to 'Selected Functional Volume'. Input the index of which volume from the functional 4D timeseries input file you wish to use as the input for functional-to-anatomical registration.
 
+#. **BB Registration White Matter Source - [FSL: FAST, FreeSurfer: recon-all]:** Choose whether to use the `FSL(FAST) <https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FAST>`_ generated White Matter as the Boundary-Based Registration White Matter Source or `FreeSurfer(recon-all) <https://surfer.nmr.mgh.harvard.edu/fswiki/recon-all>`_ generated White Matter.
+
 #. **Functional Masking - [AFNI, FSL, FSL_AFNI, Anatomical_Refined]:** Choose which tool to be used in functional masking - AFNI (3dAutoMask), FSL (BET), FSL_AFNI (BET+3dAutoMask) or Anatomical_Refined (generate functional mask by registering anatomical mask to functional space). Default is AFNI.
 
 Configuring FSL BET options:
@@ -247,6 +249,7 @@ The box below contains an example of what these parameters might look like when 
     boundaryBasedRegistrationSchedule : /usr/share/fsl/5.0/etc/flirtsch/bbr.sch
     func_reg_input :  ['Mean Functional']
     func_reg_input_volume :  0
+    BBR_WM_source : ['FSL']
     functionalMasking: ['AFNI']
 
 Functional to Template Registration

@@ -77,26 +77,26 @@ commands:
             git rm -fr C-PAC || rm -fr C-PAC || true
             git rm -fr cpac || rm -fr cpac || true
             git rm -fr scripts/__pycache__ || rm -fr scripts/__pycache__ || true
-            git commit -m "$(cat /root/GITMESSAGE.txt)" --allow-empty
+            git commit -m "$(cat /home/circleci/GITMESSAGE.txt)" --allow-empty
             git push origin HEAD:master -f
             cd -
   store-commit-message:
     steps:
       - run:
           name: 📑 Storing commit message
-          command: git log origin/source -1 --oneline --pretty=%s > /root/GITMESSAGE.txt
+          command: git log origin/source -1 --oneline --pretty=%s > /home/circleci/GITMESSAGE.txt
   persist-new-build:
     steps:
       - persist_to_workspace:
           root: /home/circleci/
-          paths: 
+          paths:
             - build/404.html
             - build/docs
             - build/index.html
             - build/scripts
-            - root/.ssh
-            - root/GITMESSAGE.txt
-              
+            - .ssh
+            - GITMESSAGE.txt
+
 jobs:
   build-nightly:
     working_directory: /home/circleci/build
@@ -113,7 +113,7 @@ jobs:
           command: ./bin/build nightly
       - store-commit-message
       - persist-new-build
-            
+
   build-version:
     working_directory: /home/circleci/build
     docker:
@@ -130,7 +130,7 @@ jobs:
           command: ./bin/build ${BUILD_VERSION}
       - store-commit-message
       - persist-new-build
-          
+
   deploy-nightly:
     working_directory: /home/circleci/
     docker:
@@ -140,7 +140,7 @@ jobs:
           at: /home/circleci/
       - prep-deploy
       - deploy
-      
+
   deploy-version:
     working_directory: /home/circleci/
     docker:

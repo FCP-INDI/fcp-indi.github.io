@@ -8,10 +8,11 @@
 Initial Preprocessing
 ^^^^^^^^^^^^^^^^^^^^^
 
-Initial preprocessing offers methods like `non-local means filtering <https://www.iro.umontreal.ca/~mignotte/IFT6150/Articles/Buades-NonLocal.pdf>`_ and `N4 bias field correction <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3071855/>`_ to preprocess anatomical images.
+Initial preprocessing offers methods like `ACPC Alignment <https://doi.org/10.1016/j.neuroimage.2013.04.127>`_ , `non-local means filtering <https://www.iro.umontreal.ca/~mignotte/IFT6150/Articles/Buades-NonLocal.pdf>`_ and `N4 bias field correction <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3071855/>`_ to preprocess anatomical images.
 
 C-PAC provides options for configuring initial preprocessing - users can select:
 
+* `ACPC Alignment <https://github.com/Washington-University/HCPpipelines/blob/master/PreFreeSurfer/scripts/ACPCAlignment.sh>`_
 * `ANT's DenoiseImage <https://manpages.debian.org/experimental/ants/DenoiseImage.1.en.html>`_
 * `ANT's N4BiasFieldCorrection <http://manpages.ubuntu.com/manpages/trusty/man1/N4BiasFieldCorrection.1.html>`_
 
@@ -21,9 +22,21 @@ Configuring CPAC to run initial preprocessing:
 
 .. figure:: /_images/anat_init_options.png
 
+#. **ACPC Alignment - [On,Off]:** Anterior Commissure - Posterior Comissure (ACPC) alignment. Default is Off. If choose 'on', clicking on the setting icon will bring up a dialog where you can set ACPC alignment parameters.
+
 #. **Non-Local Means Filtering - [On,Off]:** ANTs DenoiseImage. Default is Off.
 
 #. **N4 Bias Field Correction - [On,Off]:** ANTs N4BiasFieldCorrection - a variant of the popular N3 (nonparametric nonuniform normalization) retrospective bias correction algorithm. Default is Off.
+
+Configuring ACPC Alignment options:
+""""""""""""""""""""""""""""""""""""""
+**Note:** These options are pre-set for ACPC Alignment's default values. These do not need to be modified unless you are looking to optimize the results of ACPC alignment for your particular dataset.
+
+.. figure:: /_images/acpc_gui.png
+
+#. **ACPC Brain Size - [150]:** ACPC size of brain in z-dimension in mm. Default: 150mm for human data, 70mm for macaque data.
+#. **ACPC Aligned Skull Template - [path]:** Skull template to be used for ACPC alignment. It is not necessary to change this path unless you intend to use a non-standard template.
+#. **ACPC Aligned Brain Template - [path]:** Brain template to be used for ACPC alignment. For human data, it can be 'None'. It is not necessary to change this path unless you intend to use a non-standard template.
 
 
 Skull-Stripping

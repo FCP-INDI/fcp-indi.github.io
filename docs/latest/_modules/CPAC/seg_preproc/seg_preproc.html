@@ -1,23 +1,21 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CPAC.seg_preproc.seg_preproc &#8212; C-PAC 1.7.0 Beta documentation</title>
     <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
     
-    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
     
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../../genindex" />
     <link rel="search" title="Search" href="../../../search" /> 
   </head><body>
@@ -31,7 +29,8 @@
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CPAC.seg_preproc.seg_preproc</a></li> 
       </ul>
     </div>  
 
@@ -43,15 +42,15 @@
   <h1>Source code for CPAC.seg_preproc.seg_preproc</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">import</span> <span class="n">Function</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.utility</span> <span class="kn">import</span> <span class="n">Function</span>
 <span class="kn">import</span> <span class="nn">nipype.algorithms.rapidart</span> <span class="k">as</span> <span class="nn">ra</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.afni</span> <span class="k">as</span> <span class="nn">afni</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="k">as</span> <span class="nn">fsl</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.io</span> <span class="k">as</span> <span class="nn">nio</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.ants</span> <span class="k">as</span> <span class="nn">ants</span>
-<span class="kn">from</span> <span class="nn">nipype.interfaces.ants</span> <span class="k">import</span> <span class="n">WarpImageMultiTransform</span>
-<span class="kn">from</span> <span class="nn">CPAC.seg_preproc.utils</span> <span class="k">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.ants</span> <span class="kn">import</span> <span class="n">WarpImageMultiTransform</span>
+<span class="kn">from</span> <span class="nn">CPAC.seg_preproc.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">check_if_file_is_empty</span><span class="p">,</span>
     <span class="n">pick_wm_prob_0</span><span class="p">,</span>
     <span class="n">pick_wm_prob_1</span><span class="p">,</span>
@@ -67,7 +66,7 @@
 <span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="nn">pe</span>
 <span class="kn">import</span> <span class="nn">scipy.ndimage</span> <span class="k">as</span> <span class="nn">nd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">CPAC.registration.utils</span> <span class="k">import</span> <span class="n">check_transforms</span><span class="p">,</span> <span class="n">generate_inverse_transform_flags</span>
+<span class="kn">from</span> <span class="nn">CPAC.registration.utils</span> <span class="kn">import</span> <span class="n">check_transforms</span><span class="p">,</span> <span class="n">generate_inverse_transform_flags</span>
 
 
 <div class="viewcode-block" id="create_seg_preproc"><a class="viewcode-back" href="../../../developer/workflows/seg_preproc#CPAC.seg_preproc.create_seg_preproc">[docs]</a><span class="k">def</span> <span class="nf">create_seg_preproc</span><span class="p">(</span><span class="n">use_ants</span><span class="p">,</span>
@@ -1139,7 +1138,7 @@
 <span class="sd">            list of updated strategies</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="kn">from</span> <span class="nn">CPAC.seg_preproc.seg_preproc</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="kn">from</span> <span class="nn">CPAC.seg_preproc.seg_preproc</span> <span class="kn">import</span> <span class="p">(</span>
         <span class="n">create_seg_preproc</span><span class="p">,</span>
         <span class="n">create_seg_preproc_template_based</span>
     <span class="p">)</span>
@@ -1167,9 +1166,9 @@
                 <span class="n">use_ants</span> <span class="o">=</span> <span class="kc">True</span>
 
             <span class="k">if</span> <span class="n">strat_name</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">seg_preproc_wf_name</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;seg_preproc_</span><span class="si">{strat_name}</span><span class="s1">_</span><span class="si">{num_strat}</span><span class="s1">&#39;</span>
+                <span class="n">seg_preproc_wf_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;seg_preproc_</span><span class="si">{</span><span class="n">strat_name</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">seg_preproc_wf_name</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;seg_preproc_</span><span class="si">{num_strat}</span><span class="s1">&#39;</span>
+                <span class="n">seg_preproc_wf_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;seg_preproc_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
 
             <span class="n">seg_preproc</span> <span class="o">=</span> <span class="n">create_seg_preproc</span><span class="p">(</span><span class="n">use_ants</span><span class="o">=</span><span class="n">use_ants</span><span class="p">,</span>
                                              <span class="n">use_priors</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">seg_use_priors</span><span class="p">,</span>
@@ -1397,6 +1396,7 @@
     <span class="k">return</span> <span class="n">workflow</span><span class="p">,</span> <span class="n">strat_list</span>
 </pre></div>
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
@@ -1413,17 +1413,15 @@
 </ul>
 
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../../search" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1438,13 +1436,14 @@
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CPAC.seg_preproc.seg_preproc</a></li> 
       </ul>
     </div>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

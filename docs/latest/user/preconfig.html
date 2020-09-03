@@ -1,23 +1,21 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pre-configured Pipelines &#8212; C-PAC 1.7.0 Beta documentation</title>
     <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
     
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
     
-    <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex" />
     <link rel="search" title="Search" href="../search" /> 
   </head><body>
@@ -30,7 +28,8 @@
         <li class="right" >
           <a href="../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Pre-configured Pipelines</a></li> 
       </ul>
     </div>  
 
@@ -51,16 +50,16 @@
 <p>Functional preprocessing begins with resampling the data to RPI orientation, and slice timing correction. Next, motion correction is performed using a two-stage approach in which the images are first coregistered to the mean fMRI and then a new mean is calculated and used as the target for a second coregistration (AFNI 3dvolreg [2]). A 7 degree of freedom linear transform between the mean fMRI and the structural image is calculated using FSL’s implementation of boundary-based registration [7]. Nuisance variable regression (NVR) is performed on motion corrected data using a 2nd order polynomial, a 24-regressor model of motion [8], 5 nuisance signals, identified via principal components analysis of signals obtained from white matter (CompCor, [9]), and mean CSF signal. WM and CSF signals were extracted using the previously described masks after transforming the fMRI data to match them in 2mm space using the inverse of the linear fMRI-sMRI transform. The NVR procedure is performed twice, with and without the inclusion of the global signal as a nuisance regressor. The residuals of the NVR procedure are processed with and without bandpass filtering (0.01Hz &lt; f &lt; 0.1Hz), written into MNI space at 3mm resolution and subsequently smoothed using a 6mm FWHM kernel.</p>
 <p>Several different individual level analysis are performed on the fMRI data including:</p>
 <ul class="simple">
-<li><strong>Amplitude of low frequency fluctuations (alff) [10]:</strong> the variance of each voxel is calculated after bandpass filtering in original space and subsequently written into MNI space at 2mm resolution and spatially smoothed using a 6mm FWHM kernel.</li>
-<li><strong>Fractional amplitude of low frequency fluctuations (falff) [11]:</strong> Similar to alff except that the variance of the bandpassed signal is divided by the total variance (variance of non-bandpassed signal).</li>
-<li><strong>Regional homogeneity (ReHo) [12]:</strong> a simultaneous Kendall rank correlation is calculated between each voxel’s time course and the time courses of the 27 voxels that are face, edge, and corner touching the voxel. ReHo is calculated in original space and subsequently written into MNI space at 2mm resolution and spatially smoothed using a 6mm FWHM kernel.</li>
-<li><strong>Voxel mirrored homotopic connectivity (VMHC) [13]:</strong> an non-linear transform is calculated between the skull-on anatomical data and a symmetric brain template in 2mm space. Using this transform, processed fMRI data are written in to symmetric MNI space at 2mm and the correlation between each voxel and its analog in the contralateral hemisphere is calculated. The Fisher transform is applied to the resulting values, which are then spatially smoothed using a 6mm FWHM kernel.</li>
-<li><strong>Weighted and binarized degree centrality (DC) [14]:</strong> fMRI data is written into MNI space at 2mm resolution and spatially smoothed using a 6mm FWHM kernel. The voxel x voxel similarity matrix is calculated by the correlation between every pair of voxel time courses and then thresholded so that only the top 5% of correlations remain. For each voxel, binarized DC is the number of connections that remain for the voxel after thresholding and weighted DC is the average correlation coefficient across the remaining connections.</li>
-<li><strong>Eigenvector centrality (EC) [15]:</strong> fMRI data is written into MNI space at 2mm resolution and spatially smoothed using a 6mm FWHM kernel. The voxel x voxel similarity matrix is calculated by the correlation between every pair of voxel time courses and then thresholded so that only the top 5% of correlations remain. Weighted EC is calculated from the eigenvector corresponding to the largest eigenvalue from an eigenvector decomposition of the resulting similarity. Binarized EC is the first eigenvector of the similarity matrix after setting the non-zero values in the resulting matrix are set to 1.</li>
-<li><strong>Local functional connectivity density (lFCD) [16]:</strong> fMRI data is written into MNI space at 2mm resolution and spatially smoothed using a 6mm FWHM kernel. For each voxel, lFCD corresponds to the number of contiguous voxels that are correlated with the voxel above 0.6 (r&gt;0.6). This is similar to degree centrality, except it only includes the voxels that are directly connected to the seed voxel.</li>
-<li><strong>10 intrinsic connectivity networks (ICNs) from dual regression [17]:</strong> a template including 10 ICNs from a meta-analysis of resting state and task fMRI data [18] is spatially regressed against the processed fMRI data in MNI space. The resulting time courses are entered into a multiple regression with the voxel data in original space to calculate individual representations of the 10 ICNs. The resulting networks are written into MNI space at 2mm and then spatially smoothed using a 6mm FWHM kernel.</li>
-<li><strong>Seed correlation analysis (SCA):</strong> preprocessed fMRI data is to match template that includes 160 regions of interest defined from a meta-analysis of different task results [19]. A time series is calculated for each region from the mean of all intra-ROI voxel time series. A separate functional connectivity map is calculated per ROI by correlating its time course with the time courses of every other voxel in the brain. Resulting values are Fisher transformed, written into MNI space at 2mm resolution, and then spatially smoothed using a 6mm FWHM kernel.</li>
-<li><strong>Time series extraction:</strong> similar the procedure used for time series analysis, the preprocessed functional data is written into MNI space at 2mm and then time series for the various atlases are extracted by averaging within region voxel time courses. This procedure was used to generate summary time series for the automated anatomic labelling atlas [20], Eickhoff-Zilles atlas [21], Harvard-Oxford atlas [22], Talaraich and Tournoux atlas [23], 200 and 400 regions from the spatially constrained clustering voxel timeseries [24], and 160 ROIs from a meta-analysis of task results [19]. Time series for 10 ICNs were extracted using spatial regression.</li>
+<li><p><strong>Amplitude of low frequency fluctuations (alff) [10]:</strong> the variance of each voxel is calculated after bandpass filtering in original space and subsequently written into MNI space at 2mm resolution and spatially smoothed using a 6mm FWHM kernel.</p></li>
+<li><p><strong>Fractional amplitude of low frequency fluctuations (falff) [11]:</strong> Similar to alff except that the variance of the bandpassed signal is divided by the total variance (variance of non-bandpassed signal).</p></li>
+<li><p><strong>Regional homogeneity (ReHo) [12]:</strong> a simultaneous Kendall rank correlation is calculated between each voxel’s time course and the time courses of the 27 voxels that are face, edge, and corner touching the voxel. ReHo is calculated in original space and subsequently written into MNI space at 2mm resolution and spatially smoothed using a 6mm FWHM kernel.</p></li>
+<li><p><strong>Voxel mirrored homotopic connectivity (VMHC) [13]:</strong> an non-linear transform is calculated between the skull-on anatomical data and a symmetric brain template in 2mm space. Using this transform, processed fMRI data are written in to symmetric MNI space at 2mm and the correlation between each voxel and its analog in the contralateral hemisphere is calculated. The Fisher transform is applied to the resulting values, which are then spatially smoothed using a 6mm FWHM kernel.</p></li>
+<li><p><strong>Weighted and binarized degree centrality (DC) [14]:</strong> fMRI data is written into MNI space at 2mm resolution and spatially smoothed using a 6mm FWHM kernel. The voxel x voxel similarity matrix is calculated by the correlation between every pair of voxel time courses and then thresholded so that only the top 5% of correlations remain. For each voxel, binarized DC is the number of connections that remain for the voxel after thresholding and weighted DC is the average correlation coefficient across the remaining connections.</p></li>
+<li><p><strong>Eigenvector centrality (EC) [15]:</strong> fMRI data is written into MNI space at 2mm resolution and spatially smoothed using a 6mm FWHM kernel. The voxel x voxel similarity matrix is calculated by the correlation between every pair of voxel time courses and then thresholded so that only the top 5% of correlations remain. Weighted EC is calculated from the eigenvector corresponding to the largest eigenvalue from an eigenvector decomposition of the resulting similarity. Binarized EC is the first eigenvector of the similarity matrix after setting the non-zero values in the resulting matrix are set to 1.</p></li>
+<li><p><strong>Local functional connectivity density (lFCD) [16]:</strong> fMRI data is written into MNI space at 2mm resolution and spatially smoothed using a 6mm FWHM kernel. For each voxel, lFCD corresponds to the number of contiguous voxels that are correlated with the voxel above 0.6 (r&gt;0.6). This is similar to degree centrality, except it only includes the voxels that are directly connected to the seed voxel.</p></li>
+<li><p><strong>10 intrinsic connectivity networks (ICNs) from dual regression [17]:</strong> a template including 10 ICNs from a meta-analysis of resting state and task fMRI data [18] is spatially regressed against the processed fMRI data in MNI space. The resulting time courses are entered into a multiple regression with the voxel data in original space to calculate individual representations of the 10 ICNs. The resulting networks are written into MNI space at 2mm and then spatially smoothed using a 6mm FWHM kernel.</p></li>
+<li><p><strong>Seed correlation analysis (SCA):</strong> preprocessed fMRI data is to match template that includes 160 regions of interest defined from a meta-analysis of different task results [19]. A time series is calculated for each region from the mean of all intra-ROI voxel time series. A separate functional connectivity map is calculated per ROI by correlating its time course with the time courses of every other voxel in the brain. Resulting values are Fisher transformed, written into MNI space at 2mm resolution, and then spatially smoothed using a 6mm FWHM kernel.</p></li>
+<li><p><strong>Time series extraction:</strong> similar the procedure used for time series analysis, the preprocessed functional data is written into MNI space at 2mm and then time series for the various atlases are extracted by averaging within region voxel time courses. This procedure was used to generate summary time series for the automated anatomic labelling atlas [20], Eickhoff-Zilles atlas [21], Harvard-Oxford atlas [22], Talaraich and Tournoux atlas [23], 200 and 400 regions from the spatially constrained clustering voxel timeseries [24], and 160 ROIs from a meta-analysis of task results [19]. Time series for 10 ICNs were extracted using spatial regression.</p></li>
 </ul>
 </div>
 <div class="section" id="anat-only-default-with-anatomical-preprocessing-only">
@@ -68,9 +67,9 @@
 <p>Pipeline Configuration YAML: <a class="reference external" href="https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_anat-only.yml">https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_anat-only.yml</a></p>
 <p>Based on the preprocessing decisions of the default pipeline, this preconfiguration allows you to immediately kick off a run with only anatomical preprocessing selected. This includes:</p>
 <ul class="simple">
-<li>Brain extraction (via AFNI 3dSkullStrip)</li>
-<li>Tissue segmentation (via FSL FAST)</li>
-<li>Registration to template (via ANTs/ITK)</li>
+<li><p>Brain extraction (via AFNI 3dSkullStrip)</p></li>
+<li><p>Tissue segmentation (via FSL FAST)</p></li>
+<li><p>Registration to template (via ANTs/ITK)</p></li>
 </ul>
 </div>
 <div class="section" id="preproc-default-without-derivatives">
@@ -79,17 +78,17 @@
 <p>Based on the preprocessing decisions of the default pipeline, this preconfiguration allows you to preprocess all of your data, without launching into calculation of outputs and data derivatives. This includes:</p>
 <p>Anatomical:</p>
 <ul class="simple">
-<li>Brain extraction (via AFNI 3dSkullStrip)</li>
-<li>Tissue segmentation (via FSL FAST)</li>
-<li>Registration to template (via ANTs/ITK)</li>
+<li><p>Brain extraction (via AFNI 3dSkullStrip)</p></li>
+<li><p>Tissue segmentation (via FSL FAST)</p></li>
+<li><p>Registration to template (via ANTs/ITK)</p></li>
 </ul>
 <p>Functional:</p>
 <ul class="simple">
-<li>Slice-timing correction</li>
-<li>Motion estimation &amp; correction</li>
-<li>Co-registration to structural</li>
-<li>Nuisance correction &amp; filtering</li>
-<li>Registration to template (via ANTs/ITK)</li>
+<li><p>Slice-timing correction</p></li>
+<li><p>Motion estimation &amp; correction</p></li>
+<li><p>Co-registration to structural</p></li>
+<li><p>Nuisance correction &amp; filtering</p></li>
+<li><p>Registration to template (via ANTs/ITK)</p></li>
 </ul>
 </div>
 <div class="section" id="ndmg-neurodata-s-ndmg-f-pipeline">
@@ -98,9 +97,9 @@
 <p>This pipeline is the result of <a class="reference external" href="https://neurodata.io/">Neurodata’s</a> study to converge upon the intersection of pipeline configuration decisions that maximizes discriminability between participants’ data, drawing from the connectome graphs produced (labeled ‘ndmg_graph’ in the C-PAC output directory). This pipeline invokes a minimal set of preprocessing.</p>
 <p>Note, the ‘ndmg_graph’ connectome graph outputs are always produced by C-PAC. This pipeline configuration simply replicates the preprocessing methods described in the paper, linked below.</p>
 <ul class="simple">
-<li><a class="reference external" href="https://www.biorxiv.org/content/10.1101/188706v6">https://www.biorxiv.org/content/10.1101/188706v6</a></li>
-<li><a class="reference external" href="https://neurodata.io/m2g/">https://neurodata.io/m2g/</a></li>
-<li><a class="reference external" href="https://github.com/neurodata/m2g">https://github.com/neurodata/m2g</a></li>
+<li><p><a class="reference external" href="https://www.biorxiv.org/content/10.1101/188706v6">https://www.biorxiv.org/content/10.1101/188706v6</a></p></li>
+<li><p><a class="reference external" href="https://neurodata.io/m2g/">https://neurodata.io/m2g/</a></p></li>
+<li><p><a class="reference external" href="https://github.com/neurodata/m2g">https://github.com/neurodata/m2g</a></p></li>
 </ul>
 </div>
 <div class="section" id="fmriprep-options-fmriprep-options-pipeline">
@@ -108,8 +107,8 @@
 <p>Pipeline Configuration YAML: <a class="reference external" href="https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_fmriprep-options.yml">https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_fmriprep-options.yml</a></p>
 <p>This pipeline is designed to increase reproducibility with the preprocessing results of the <a class="reference external" href="https://fmriprep.readthedocs.io/en/stable/">fmriprep pipeline package</a> produced by the <a class="reference external" href="https://poldracklab.stanford.edu/">Poldrack Lab at Stanford University</a>.</p>
 <ul class="simple">
-<li><a class="reference external" href="https://github.com/poldracklab/fmriprep">https://github.com/poldracklab/fmriprep</a></li>
-<li><a class="reference external" href="https://www.nature.com/articles/s41592-018-0235-4">https://www.nature.com/articles/s41592-018-0235-4</a></li>
+<li><p><a class="reference external" href="https://github.com/poldracklab/fmriprep">https://github.com/poldracklab/fmriprep</a></p></li>
+<li><p><a class="reference external" href="https://www.nature.com/articles/s41592-018-0235-4">https://www.nature.com/articles/s41592-018-0235-4</a></p></li>
 </ul>
 </div>
 <div class="section" id="benchmark-ants-c-pac-benchmark-with-ants-registration">
@@ -127,32 +126,33 @@
 <p>Pipeline Configuration YAML: <a class="reference external" href="https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_monkey.yml">https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/resources/configs/pipeline_config_monkey.yml</a></p>
 <p>This pipeline is based on the work of Xu et al. (2019) and <a class="reference external" href="https://zenodo.org/record/3888969#.Xw31IpNKjyU">nhp-ABCD-BIDS-pipeline.</a></p>
 <ul class="simple">
-<li><a class="reference external" href="https://ww5.aievolution.com/hbm1901/index.cfm?do=abs.viewAbs&amp;abs=4924">Nanditha Rajamani, et al. “U-Net Model for Brain Extraction: Training in Humans and Transferring to Non-human Primates.” OHBM (2019)</a></li>
-<li><a class="reference external" href="https://doi.org/10.1093/cercor/bhz188">Julian S B Ramirez, Alice M Graham, Jacqueline R Thompson, Jennifer Y Zhu, Darrick Sturgeon, Jennifer L Bagley, Elina Thomas, Samantha Papadakis, Muhammed Bah, Anders Perrone, Eric Earl, Oscar Miranda-Dominguez, Eric Feczko, Eric J Fombonne, David G Amaral, Joel T Nigg, Elinor L Sullivan, Damien A Fair, Maternal Interleukin-6 Is Associated With Macaque Offspring Amygdala Development and Behavior, Cerebral Cortex, Volume 30, Issue 3, March 2020, Pages 1573–1585</a></li>
+<li><p><a class="reference external" href="https://ww5.aievolution.com/hbm1901/index.cfm?do=abs.viewAbs&amp;abs=4924">Nanditha Rajamani, et al. “U-Net Model for Brain Extraction: Training in Humans and Transferring to Non-human Primates.” OHBM (2019)</a></p></li>
+<li><p><a class="reference external" href="https://doi.org/10.1093/cercor/bhz188">Julian S B Ramirez, Alice M Graham, Jacqueline R Thompson, Jennifer Y Zhu, Darrick Sturgeon, Jennifer L Bagley, Elina Thomas, Samantha Papadakis, Muhammed Bah, Anders Perrone, Eric Earl, Oscar Miranda-Dominguez, Eric Feczko, Eric J Fombonne, David G Amaral, Joel T Nigg, Elinor L Sullivan, Damien A Fair, Maternal Interleukin-6 Is Associated With Macaque Offspring Amygdala Development and Behavior, Cerebral Cortex, Volume 30, Issue 3, March 2020, Pages 1573–1585</a></p></li>
 </ul>
 <p>Based on the preprocessing decisions of the default pipeline, this preconfiguration allows you to preprocess all of your macaque data, includes:</p>
 <p>Anatomical:</p>
 <ul class="simple">
-<li>Brain extraction (via U-Net)</li>
-<li>Tissue segmentation (via ANTs-prior based)</li>
-<li>Registration to template (via ANTs/ITK)</li>
+<li><p>Brain extraction (via U-Net)</p></li>
+<li><p>Tissue segmentation (via ANTs-prior based)</p></li>
+<li><p>Registration to template (via ANTs/ITK)</p></li>
 </ul>
 <p>Functional:</p>
 <ul class="simple">
-<li>Despike</li>
-<li>Slice-timing correction</li>
-<li>Motion estimation &amp; correction</li>
-<li>EPI N4 Bias Correction</li>
-<li>Brain Extraction (Anatomical-refined)</li>
-<li>Co-registration to structural</li>
-<li>Nuisance correction &amp; filtering</li>
-<li>Registration to template (via ANTs/ITK)</li>
-<li>spatial smoothing</li>
+<li><p>Despike</p></li>
+<li><p>Slice-timing correction</p></li>
+<li><p>Motion estimation &amp; correction</p></li>
+<li><p>EPI N4 Bias Correction</p></li>
+<li><p>Brain Extraction (Anatomical-refined)</p></li>
+<li><p>Co-registration to structural</p></li>
+<li><p>Nuisance correction &amp; filtering</p></li>
+<li><p>Registration to template (via ANTs/ITK)</p></li>
+<li><p>spatial smoothing</p></li>
 </ul>
 </div>
 </div>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
@@ -169,17 +169,15 @@
 </ul>
 
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -193,13 +191,14 @@
         <li class="right" >
           <a href="../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Pre-configured Pipelines</a></li> 
       </ul>
     </div>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.4.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

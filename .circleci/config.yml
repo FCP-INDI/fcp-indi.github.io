@@ -13,13 +13,13 @@ commands:
       - run:
           name: ↑ Installing build dependencies
           command: |
-            apt-get update && apt-get -y install git python-dev graphviz libgraphviz-dev pkg-config python3-sphinx
+            sudo apt-get update && sudo apt-get -y install git python3-dev graphviz graphviz-dev libgraphviz-dev pkg-config python3-sphinx
             pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/<< parameters.version >>/requirements.txt
             pip install --user git+https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git@<< parameters.version >> sphinx m2r numpydoc PyGithub sphinxcontrib-fulltoc sphinxcontrib-programoutput semver torch
-            git clone https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git /build/C-PAC
-            cd /build/C-PAC
+            git clone https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git /home/circleci/build/C-PAC
+            cd /home/circleci/build/C-PAC
             git checkout << parameters.version >>
-            cd /build
+            cd /home/circleci/build
             python -m venv ~/simple
             source ~/simple/bin/activate
             pip install cpac
@@ -46,7 +46,7 @@ commands:
     steps:
       - run:
           name: ↑ Installing deploy dependencies
-          command: apt-get update && apt-get -y install git rsync
+          command: sudo apt-get update && sudo apt-get -y install git rsync
       - run:
           name: 🔧 Configuring git user
           command: |
@@ -55,12 +55,12 @@ commands:
       - run:
           name: 🔀 Combining new docs with existing docs
           command: |
-            cd /build
+            cd /home/circleci/build
             git clone --single-branch --branch master git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo || git clone --single-branch --branch master git@github.com:${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git /tmp/repo
             rsync -rtv ./ /tmp/repo/ --exclude '.git'
       - run:
           name: 📑 Generating list of versions
-          command: python /build/scripts/version_list.py /tmp/repo/docs
+          command: python /home/circleci/build/scripts/version_list.py /tmp/repo/docs
   deploy:
     steps:
       - run:
@@ -77,33 +77,34 @@ commands:
             git rm -fr C-PAC || rm -fr C-PAC || true
             git rm -fr cpac || rm -fr cpac || true
             git rm -fr scripts/__pycache__ || rm -fr scripts/__pycache__ || true
-            git commit -m "$(cat /root/GITMESSAGE.txt)" --allow-empty
+            git commit -m "$(cat /home/circleci/GITMESSAGE.txt)" --allow-empty
             git push origin HEAD:master -f
             cd -
   store-commit-message:
     steps:
       - run:
           name: 📑 Storing commit message
-          command: git log origin/source -1 --oneline --pretty=%s > /root/GITMESSAGE.txt
+          command: git log origin/source -1 --oneline --pretty=%s > /home/circleci/GITMESSAGE.txt
   persist-new-build:
     steps:
       - persist_to_workspace:
-          root: /
-          paths: 
+          root: /home/circleci/
+          paths:
             - build/404.html
             - build/docs
             - build/index.html
             - build/scripts
-            - root/.ssh
-            - root/GITMESSAGE.txt
-              
+            - .ssh
+            - GITMESSAGE.txt
+
 jobs:
   build-nightly:
-    working_directory: /build
+    working_directory: /home/circleci/build
     docker:
-      - image: python:3.7
+      - image: cimg/python:3.7
     steps:
-      - checkout
+      - checkout:
+          path: /home/circleci/build
       - install-build-dependencies:
           version: develop
       - run-cpac-commands
@@ -112,13 +113,14 @@ jobs:
           command: ./bin/build nightly
       - store-commit-message
       - persist-new-build
-            
+
   build-version:
-    working_directory: /build
+    working_directory: /home/circleci/build
     docker:
-      - image: python:3.7
+      - image: cimg/python:3.7
     steps:
-      - checkout
+      - checkout:
+          path: /home/circleci/build
       - get-version
       - install-build-dependencies:
           version: ${BUILD_VERSION}
@@ -128,24 +130,24 @@ jobs:
           command: ./bin/build ${BUILD_VERSION}
       - store-commit-message
       - persist-new-build
-          
+
   deploy-nightly:
-    working_directory: /
+    working_directory: /home/circleci/
     docker:
-      - image: python:3.7
+      - image: cimg/python:3.7
     steps:
       - attach_workspace:
-          at: /
+          at: /home/circleci/
       - prep-deploy
       - deploy
-      
+
   deploy-version:
-    working_directory: /
+    working_directory: /home/circleci/
     docker:
-      - image: python:3.7
+      - image: cimg/python:3.7
     steps:
       - attach_workspace:
-          at: /
+          at: /home/circleci/
       - get-version
       - prep-deploy
       - run:
@@ -155,7 +157,7 @@ jobs:
             python scripts/link_to_set_version.py ${BUILD_VERSION}
       - run:
           name: 🔖 Checking if latest
-          command: if $(python /build/scripts/is_latest.py /tmp/repo/docs); then cd /tmp/repo && git rm -rf docs/latest && cp -r /build/docs/${BUILD_VERSION} docs/latest; fi
+          command: if $(python /home/circleci/build/scripts/is_latest.py /tmp/repo/docs); then cp -r /home/circleci/build/docs/${BUILD_VERSION} /home/circleci/build/docs/latest; fi
       - deploy
 
 workflows:

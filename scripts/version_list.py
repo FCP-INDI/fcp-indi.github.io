@@ -1,6 +1,8 @@
 import os
 import sys
 
+from copy import copy
+
 
 def rewrite_versions(docs_path='/build/docs'):
     """
@@ -13,7 +15,7 @@ def rewrite_versions(docs_path='/build/docs'):
 
 
 def sort_versions(versions):
-    v2 = versions.copy()
+    v2 = copy(versions)
     v2.sort(reverse=True)
     {v2.remove(v) for v in {
         'latest', 'nightly', '_sources', 'versions.txt'

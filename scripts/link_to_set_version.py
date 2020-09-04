@@ -19,7 +19,9 @@ def set_version(version):
         'FCP-INDI/C-PAC/blob/master',
         'FCP-INDI/C-PAC/master'
     ]
-    for filepath in glob(f'docs/{version}/**', recursive=True):
+    for filepath in glob('/'.join([
+        'docs', version, '**'
+    ]), recursive=True):
         if 'release_notes' not in filepath and os.path.isfile(filepath):
             try:
                 # Replace links to master branch with links to specified branch

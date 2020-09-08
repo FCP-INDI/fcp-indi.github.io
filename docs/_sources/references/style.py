@@ -16,6 +16,43 @@ class CPAC_DocsStyle(Style):
             sorting_style=NoSort
         )
 
+    def format_doi(self, doi):
+        return join(sep=':')[
+            words['doi'],
+            href[join(sep='/')[
+                'https://dx.doi.org', doi
+            ], doi]
+        ]
+
+    def get_article_template(self, entry):
+        template = toplevel[optional[
+            sentence[self.format_names('author')]],
+            optional[sentence[date]],
+            optional[
+                href[
+                    field('url'),
+                    self.format_title(entry, 'title')
+                ] if entry.fields.get('url') else
+                self.format_title(entry, 'title')
+            ],
+            sentence[join(sep=' ')[
+                optional[tag('em')[join(sep=', ')[
+                    self.format_title(entry, 'journal', as_sentence=False),
+                    optional_field('volume')
+                ]]],
+                optional[join(sep='')[
+                    ':' if entry.fields.get('volume') else '',
+                    optional_field("number")
+                ] if entry.fields.get('number') else ''],
+            ]],
+            optional[join(sep='')[
+                ', pp. ', optional_field('pages')
+            ] if entry.fields.get('pages') else ''],
+            optional[self.format_doi(optional_field('doi'))],
+            sentence[optional_field('note')],
+        ]
+        return template
+
     def get_book_template(self, entry):
         template = toplevel[optional[
             sentence[self.format_names('author')]],

@@ -843,7 +843,9 @@
                                                          <span class="s1">&#39;preprocessed_mask&#39;</span><span class="p">,</span>
                                                          <span class="s1">&#39;slice_time_corrected&#39;</span><span class="p">,</span>
                                                          <span class="s1">&#39;transform_matrices&#39;</span><span class="p">,</span>
-                                                         <span class="s1">&#39;center_of_mass&#39;</span><span class="p">]),</span>
+                                                         <span class="s1">&#39;center_of_mass&#39;</span><span class="p">,</span>
+                                                         <span class="s1">&#39;motion_filter_info&#39;</span><span class="p">,</span>
+                                                         <span class="s1">&#39;motion_filter_plot&#39;</span><span class="p">]),</span>
                           <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
 
     <span class="n">func_deoblique</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">Refit</span><span class="p">(),</span>
@@ -1166,22 +1168,40 @@
                             <span class="n">out_oned_matrix</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">config</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">notch_filter_motion_estimates</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;run&#39;</span><span class="p">]:</span>
                 <span class="n">notch_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;import numpy as np&#39;</span><span class="p">,</span>
-                                 <span class="s1">&#39;from scipy.signal import iirnotch, filtfilt&#39;</span><span class="p">]</span>
+                                 <span class="s1">&#39;from scipy.signal import iirnotch, lfilter, firwin, freqz&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;from matplotlib import pyplot as plt&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;from CPAC.func_preproc.utils import degrees_to_mm, mm_to_degrees&#39;</span><span class="p">]</span>
                 <span class="n">notch</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;motion_params&#39;</span><span class="p">,</span>
-                                                      <span class="s1">&#39;fc_RR_min&#39;</span><span class="p">,</span> 
-                                                      <span class="s1">&#39;fc_RR_max&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;filter_type&#39;</span><span class="p">,</span>
                                                       <span class="s1">&#39;TR&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;fc_RR_min&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;fc_RR_max&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;center_freq&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;freq_bw&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;lowpass_cutoff&#39;</span><span class="p">,</span>
                                                       <span class="s1">&#39;filter_order&#39;</span><span class="p">],</span>
-                                         <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;filtered_motion_params&#39;</span><span class="p">],</span>
+                                         <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;filtered_motion_params&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;filter_info&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;filter_plot&#39;</span><span class="p">],</span>
                                          <span class="n">function</span><span class="o">=</span><span class="n">notch_filter_motion</span><span class="p">,</span>
                                          <span class="n">imports</span><span class="o">=</span><span class="n">notch_imports</span><span class="p">),</span>
-                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;notch_filter_motion_params&#39;</span><span class="p">)</span>
+                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;filter_motion_params&#39;</span><span class="p">)</span>
 
-                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fc_RR_min</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">notch_filter_breathing_rate_min</span>
-                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fc_RR_max</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">notch_filter_breathing_rate_max</span>
-                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">filter_order</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">notch_filter_order</span>
+                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">filter_type</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;filter_type&#39;</span><span class="p">]</span>
+                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fc_RR_min</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;breathing_rate_min&#39;</span><span class="p">]</span>
+                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fc_RR_max</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;breathing_rate_max&#39;</span><span class="p">]</span>
+                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">center_freq</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;center_frequency&#39;</span><span class="p">]</span>
+                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">freq_bw</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;filter_bandwidth&#39;</span><span class="p">]</span>
+                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">lowpass_cutoff</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;lowpass_cutoff&#39;</span><span class="p">]</span>
+                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">filter_order</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;filter_order&#39;</span><span class="p">]</span>
+
+                <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;filter_info&#39;</span><span class="p">,</span>
+                                <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;motion_filter_info&#39;</span><span class="p">)</span>
+
+                <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;filter_plot&#39;</span><span class="p">,</span>
+                                <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;motion_filter_plot&#39;</span><span class="p">)</span>
 
                 <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">out_oned</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;motion_params&#39;</span><span class="p">)</span>
                 <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;TR&#39;</span><span class="p">,</span> <span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;TR&#39;</span><span class="p">)</span>
@@ -1239,22 +1259,40 @@
                         <span class="n">normalize_motion_params</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">config</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">notch_filter_motion_estimates</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;run&#39;</span><span class="p">]:</span>
                 <span class="n">notch_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;import numpy as np&#39;</span><span class="p">,</span>
-                                 <span class="s1">&#39;from scipy.signal import iirnotch, filtfilt&#39;</span><span class="p">]</span>
+                                 <span class="s1">&#39;from scipy.signal import iirnotch, lfilter, firwin, freqz&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;from matplotlib import pyplot as plt&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;from CPAC.func_preproc.utils import degrees_to_mm, mm_to_degrees&#39;</span><span class="p">]</span>
                 <span class="n">notch</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;motion_params&#39;</span><span class="p">,</span>
-                                                      <span class="s1">&#39;fc_RR_min&#39;</span><span class="p">,</span> 
-                                                      <span class="s1">&#39;fc_RR_max&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;filter_type&#39;</span><span class="p">,</span>
                                                       <span class="s1">&#39;TR&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;fc_RR_min&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;fc_RR_max&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;center_freq&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;freq_bw&#39;</span><span class="p">,</span>
+                                                      <span class="s1">&#39;lowpass_cutoff&#39;</span><span class="p">,</span>
                                                       <span class="s1">&#39;filter_order&#39;</span><span class="p">],</span>
-                                         <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;filtered_motion_params&#39;</span><span class="p">],</span>
+                                         <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;filtered_motion_params&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;filter_info&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;filter_plot&#39;</span><span class="p">],</span>
                                          <span class="n">function</span><span class="o">=</span><span class="n">notch_filter_motion</span><span class="p">,</span>
                                          <span class="n">imports</span><span class="o">=</span><span class="n">notch_imports</span><span class="p">),</span>
-                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;notch_filter_motion_params&#39;</span><span class="p">)</span>
+                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;filter_motion_params&#39;</span><span class="p">)</span>
 
-                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fc_RR_min</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">notch_filter_breathing_rate_min</span>
-                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fc_RR_max</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">notch_filter_breathing_rate_max</span>
-                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">filter_order</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">notch_filter_order</span>
+                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">filter_type</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;filter_type&#39;</span><span class="p">]</span>
+                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fc_RR_min</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;breathing_rate_min&#39;</span><span class="p">]</span>
+                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fc_RR_max</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;breathing_rate_max&#39;</span><span class="p">]</span>
+                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">center_freq</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;center_frequency&#39;</span><span class="p">]</span>
+                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">freq_bw</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;filter_bandwidth&#39;</span><span class="p">]</span>
+                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">lowpass_cutoff</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;lowpass_cutoff&#39;</span><span class="p">]</span>
+                <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">filter_order</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;filter_order&#39;</span><span class="p">]</span>
+
+                <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;filter_info&#39;</span><span class="p">,</span>
+                                <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;motion_filter_info&#39;</span><span class="p">)</span>
+
+                <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;filter_plot&#39;</span><span class="p">,</span>
+                                <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;motion_filter_plot&#39;</span><span class="p">)</span>
 
                 <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">normalize_motion_params</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
                                 <span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;motion_params&#39;</span><span class="p">)</span>
@@ -1814,7 +1852,9 @@
                 <span class="s1">&#39;functional_preprocessed_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.preprocessed_mask&#39;</span><span class="p">),</span>                              
                 <span class="s1">&#39;functional_preprocessed&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.preprocessed&#39;</span><span class="p">),</span>
                 <span class="s1">&#39;functional_brain_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.mask&#39;</span><span class="p">),</span>
-                <span class="s1">&#39;motion_correct&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_correct&#39;</span><span class="p">),</span>                                
+                <span class="s1">&#39;motion_correct&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_correct&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;motion_estimate_filter_info_design&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_filter_info&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;motion_estimate_filter_info_plot&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_filter_plot&#39;</span><span class="p">)</span>
             <span class="p">})</span>
 
             <span class="k">if</span> <span class="s1">&#39;func&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">run_longitudinal</span><span class="p">:</span>
@@ -1897,6 +1937,8 @@
                             <span class="s1">&#39;functional_brain_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.mask&#39;</span><span class="p">),</span>
                             <span class="s1">&#39;motion_correct&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_correct&#39;</span><span class="p">),</span>
                             <span class="s1">&#39;coordinate_transformation&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.transform_matrices&#39;</span><span class="p">),</span>
+                            <span class="s1">&#39;motion_estimate_filter_info_design&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_filter_info&#39;</span><span class="p">),</span>
+                            <span class="s1">&#39;motion_estimate_filter_info_plot&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_filter_plot&#39;</span><span class="p">)</span>
                         <span class="p">})</span>
 
                         <span class="k">if</span> <span class="s1">&#39;func&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">run_longitudinal</span><span class="p">:</span>

@@ -1101,7 +1101,7 @@
                                         <span class="n">func_to_anat_bbreg</span><span class="p">,</span> <span class="s1">&#39;inputspec.func&#39;</span><span class="p">)</span>
 
                 <span class="c1"># Input anatomical whole-head image (reoriented)</span>
-                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;anatomical_reorient&#39;</span><span class="p">]</span>
+                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;anatomical_skull_leaf&#39;</span><span class="p">]</span>
                 <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
                                     <span class="n">func_to_anat_bbreg</span><span class="p">,</span>
                                     <span class="s1">&#39;inputspec.anat_skull&#39;</span><span class="p">)</span>
@@ -1206,17 +1206,18 @@
                     <span class="p">)</span>
 
                 <span class="c1"># Input registration parameters</span>
-                <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">ANTs_para_EPI_registration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">reg</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;ants&#39;</span> <span class="ow">and</span> <span class="n">c</span><span class="o">.</span><span class="n">ANTs_para_EPI_registration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">err_msg</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">[!] C-PAC says: </span><span class="se">\n</span><span class="s1">&#39;</span>\
                         <span class="s2">&quot;You have selected </span><span class="se">\&#39;</span><span class="s2">regOption: [</span><span class="si">{0}</span><span class="s2">]</span><span class="se">\&#39;</span><span class="s2"> and </span><span class="se">\&#39;</span><span class="s2">runRegisterFuncToTemplate :  [&#39;</span><span class="si">{1}</span><span class="s2">&#39;]</span><span class="se">\&#39;</span><span class="s2">. </span><span class="se">\n</span><span class="s2">&quot;</span>\
                                 <span class="s1">&#39;However, no EPI-to-template ANTs parameters were specified. &#39;</span> \
                                 <span class="s1">&#39;Please specify ANTs parameters properly and try again&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">regOption</span><span class="p">),</span>
-                                                                                                <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">runRegisterFuncToTemplate</span><span class="p">))</span>
+                                                                                               <span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">runRegisterFuncToTemplate</span><span class="p">))</span>
                     <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
+                <span class="k">elif</span> <span class="n">reg</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;ants&#39;</span><span class="p">:</span>
                     <span class="n">func_to_epi</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">ants_para</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">ANTs_para_EPI_registration</span>
-
-                <span class="n">func_to_epi</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">funcRegANTSinterpolation</span>
+                    <span class="n">func_to_epi</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">funcRegANTSinterpolation</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">func_to_epi</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">funcRegFSLinterpolation</span>
 
                 <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">get_leaf_properties</span><span class="p">()</span>
                 <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;inputspec.func_4d&#39;</span><span class="p">)</span>
@@ -1240,7 +1241,7 @@
                     <span class="s1">&#39;functional_to_epi-standard&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;outputspec.func_in_epi&#39;</span><span class="p">),</span>
                 <span class="p">})</span>
 
-                <span class="k">if</span> <span class="n">reg</span> <span class="o">==</span> <span class="s1">&#39;FSL&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">reg</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;fsl&#39;</span><span class="p">:</span>
                     <span class="n">strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
                         <span class="s1">&#39;epi_registration_method&#39;</span><span class="p">:</span> <span class="s1">&#39;FSL&#39;</span><span class="p">,</span>
                         <span class="s1">&#39;func_to_epi_linear_xfm&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;outputspec.fsl_flirt_xfm&#39;</span><span class="p">),</span>  
@@ -1248,7 +1249,7 @@
                         <span class="s1">&#39;epi_to_func_linear_xfm&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;outputspec.invlinear_xfm&#39;</span><span class="p">),</span>
                     <span class="p">})</span>
 
-                <span class="k">elif</span> <span class="n">reg</span> <span class="o">==</span> <span class="s1">&#39;ANTS&#39;</span><span class="p">:</span>
+                <span class="k">elif</span> <span class="n">reg</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;ants&#39;</span><span class="p">:</span>
                     <span class="n">strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
                         <span class="s1">&#39;epi_registration_method&#39;</span><span class="p">:</span> <span class="s1">&#39;ANTS&#39;</span><span class="p">,</span>
                         <span class="s1">&#39;func_to_epi_ants_initial_xfm&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_to_epi</span><span class="p">,</span> <span class="s1">&#39;outputspec.ants_initial_xfm&#39;</span><span class="p">),</span>

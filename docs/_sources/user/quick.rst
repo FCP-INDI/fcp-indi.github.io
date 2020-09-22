@@ -57,7 +57,7 @@ We currently have a publication in preparation, in the meantime please cite our 
 	        and Yan, Chaogan  and  Li, Qingyang  and  Lurie, Daniel  and  Vogelstein, Joshua  and  Burns, Randal  and
 	        Colcombe, Stanley  and  Mennes, Maarten  and  Kelly, Clare  and  Di Martino, Adriana  and  Castellanos,
 	        Francisco Xavier  and  Milham, Michael},
-	    TITLE={Towards Automated Analysis of Connectomes: The Configurable Pipeline for the Analysis of Connectomes (C-PAC)},
+	    TITLE={Towards Automated Analysis of Connectomes: The {Configurable Pipeline for the Analysis of Connectomes (C-PAC)}},
 	    JOURNAL={Frontiers in Neuroinformatics},
 	    YEAR={2013},
 	    NUMBER={42},

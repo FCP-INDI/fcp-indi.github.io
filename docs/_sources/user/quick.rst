@@ -3,6 +3,8 @@ C-PAC Quickstart
 
 .. include:: quick_overview.rst
 
+.. _cpac-python-package:
+
 .. include:: cpac.rst
 
 For instructions to run in Docker or Singularity without installing cpac (Python package), see :doc:`All Run Options </user/running>`

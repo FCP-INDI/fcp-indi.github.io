@@ -5,6 +5,12 @@ Overview
 
 This section explains how to create a new pipeline or edit an existing one. If you wish to use one of the pre-configured pipelines that come packaged with C-PAC, you can view the current available library of :doc:`pipelines here </user/preconfig>`.
 
+.. _ndmg_atlases:
+
+.. topic:: Neuroparc v1.0: Baseline
+
+  .. include:: /user/ndmg_atlases.rst
+
 There are two ways of setting up or editing a pipeline configuration for C-PAC:
 
 * Using the pipeline configuration interface in the C-PAC GUI

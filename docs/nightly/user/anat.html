@@ -52,9 +52,10 @@
 <h1>Anatomical Preprocessing<a class="headerlink" href="#anatomical-preprocessing" title="Permalink to this headline">¶</a></h1>
 <div class="flowchart-container"><object data="../_static/flowcharts/anatomical.svg" type="image/svg+xml"></object></div><div class="section" id="initial-preprocessing">
 <h2>Initial Preprocessing<a class="headerlink" href="#initial-preprocessing" title="Permalink to this headline">¶</a></h2>
-<p>Initial preprocessing offers methods like <a class="reference external" href="https://www.iro.umontreal.ca/~mignotte/IFT6150/Articles/Buades-NonLocal.pdf">non-local means filtering</a> and <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3071855/">N4 bias field correction</a> to preprocess anatomical images.</p>
+<p>Initial preprocessing offers methods like <a class="reference external" href="https://doi.org/10.1016/j.neuroimage.2013.04.127">ACPC Alignment</a> , <a class="reference external" href="https://www.iro.umontreal.ca/~mignotte/IFT6150/Articles/Buades-NonLocal.pdf">non-local means filtering</a> and <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3071855/">N4 bias field correction</a> to preprocess anatomical images.</p>
 <p>C-PAC provides options for configuring initial preprocessing - users can select:</p>
 <ul class="simple">
+<li><p><a class="reference external" href="https://github.com/Washington-University/HCPpipelines/blob/master/PreFreeSurfer/scripts/ACPCAlignment.sh">ACPC Alignment</a></p></li>
 <li><p><a class="reference external" href="https://manpages.debian.org/experimental/ants/DenoiseImage.1.en.html">ANT’s DenoiseImage</a></p></li>
 <li><p><a class="reference external" href="http://manpages.ubuntu.com/manpages/trusty/man1/N4BiasFieldCorrection.1.html">ANT’s N4BiasFieldCorrection</a></p></li>
 </ul>
@@ -64,8 +65,21 @@
 <img alt="../_images/anat_init_options.png" src="../_images/anat_init_options.png" />
 </div>
 <ol class="arabic simple">
+<li><p><strong>ACPC Alignment - [On,Off]:</strong> Anterior Commissure - Posterior Comissure (ACPC) alignment. Default is Off. If choose ‘on’, clicking on the setting icon will bring up a dialog where you can set ACPC alignment parameters.</p></li>
 <li><p><strong>Non-Local Means Filtering - [On,Off]:</strong> ANTs DenoiseImage. Default is Off.</p></li>
 <li><p><strong>N4 Bias Field Correction - [On,Off]:</strong> ANTs N4BiasFieldCorrection - a variant of the popular N3 (nonparametric nonuniform normalization) retrospective bias correction algorithm. Default is Off.</p></li>
+</ol>
+</div>
+<div class="section" id="configuring-acpc-alignment-options">
+<h3>Configuring ACPC Alignment options:<a class="headerlink" href="#configuring-acpc-alignment-options" title="Permalink to this headline">¶</a></h3>
+<p><strong>Note:</strong> These options are pre-set for ACPC Alignment’s default values. These do not need to be modified unless you are looking to optimize the results of ACPC alignment for your particular dataset.</p>
+<div class="figure align-default">
+<img alt="../_images/acpc_gui.png" src="../_images/acpc_gui.png" />
+</div>
+<ol class="arabic simple">
+<li><p><strong>ACPC Brain Size - [150]:</strong> ACPC size of brain in z-dimension in mm. Default: 150mm for human data, 70mm for macaque data.</p></li>
+<li><p><strong>ACPC Aligned Skull Template - [path]:</strong> Skull template to be used for ACPC alignment. It is not necessary to change this path unless you intend to use a non-standard template.</p></li>
+<li><p><strong>ACPC Aligned Brain Template - [path]:</strong> Brain template to be used for ACPC alignment. For human data, it can be ‘None’. It is not necessary to change this path unless you intend to use a non-standard template.</p></li>
 </ol>
 </div>
 </div>
@@ -371,8 +385,8 @@ fslmaths avg152T1_${tissue}.nii.gz -thr $threshold -bin avg152T1_${tissue}_2mm_b
 <li><p><strong>Right White Matter Label Value - [integer]:</strong> Label value corresponding to Right White Matter in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT">Freesurfer Color Lookup Table.</a></p></li>
 </ol>
 </div>
-<div class="section" id="id5">
-<h3>Configuration Without the GUI<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id6">
+<h3>Configuration Without the GUI<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <p>The following key/value pairs must be defined in your <a class="reference internal" href="pipeline_config"><span class="doc">pipeline configuration YAML</span></a> for C-PAC to run anatomical tissue segmentation:</p>
 <p>The box below contains an example of what these parameters might look like when defined in the YAML:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>runSegmentationPreprocessing : [1]
@@ -442,6 +456,7 @@ ANTs_prior_seg_right_WM_label: 41
 <li class="toctree-l4 current"><a class="current reference internal" href="#">Anatomical Preprocessing</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="#initial-preprocessing">Initial Preprocessing</a><ul>
 <li class="toctree-l6"><a class="reference internal" href="#configuring-cpac-to-run-initial-preprocessing">Configuring CPAC to run initial preprocessing:</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#configuring-acpc-alignment-options">Configuring ACPC Alignment options:</a></li>
 </ul>
 </li>
 <li class="toctree-l5"><a class="reference internal" href="#skull-stripping">Skull-Stripping</a><ul>
@@ -458,7 +473,7 @@ ANTs_prior_seg_right_WM_label: 41
 </li>
 <li class="toctree-l5"><a class="reference internal" href="#anatomical-tissue-segmentation">Anatomical Tissue Segmentation</a><ul>
 <li class="toctree-l6"><a class="reference internal" href="#configuring-cpac-to-run-anatomical-tissue-segmentation">Configuring CPAC to Run Anatomical Tissue Segmentation</a></li>
-<li class="toctree-l6"><a class="reference internal" href="#id5">Configuration Without the GUI</a></li>
+<li class="toctree-l6"><a class="reference internal" href="#id6">Configuration Without the GUI</a></li>
 </ul>
 </li>
 <li class="toctree-l5"><a class="reference internal" href="#references">References</a></li>

@@ -18,7 +18,16 @@ Initial Preprocessing
 #. **Motion Correction Tool - [3dvolreg, mcflirt]:** Choose motion correction method. Options: AFNI volreg, FSL mcflirt. Default is AFNI volreg.
 #. **Motion Correction Reference - [mean, median, selected volume]:** Choose motion correction reference. Options: mean, median, selected volume. Default is mean.
 #. **Motion Correction Reference Volume - [integer]:** Choose an integer as the motion correction reference volume if choosing "selected volume" as motion correction reference.
+#. **Motion Estimate Filter:** Adapted from the motion estimate filter by `DCAN Labs <https://github.com/DCAN-Labs>`__. Based on the filter described `in this publication <https://www.biorxiv.org/content/10.1101/337360v1.full.pdf>`__.
 
+    #. **run - [False, True]:** Toggle the filter.
+    #. **filter_type - ['notch', 'lowpass']:** Use either a notch/bandstop or low-pass filter.
+    #. **filter_order - [integer]:** Specify the filter order. Default is 4.
+    #. **breathing_rate_min - [integer]:** Lowest breaths-per-minute value in the entire dataset (across all participants). Required for both notch and lowpass filters. Mutually exclusive with `center_frequency`, `filter_bandwidth`, and `lowpass_cutoff`. Using this parameter will guide the automatic design of the filter.
+    #. **breathing_rate_max - [integer]:** Highest breaths-per-minute value in the entire dataset (across all participants). Required for the notch filter. Mutually exclusive with `center_frequency`, `filter_bandwidth`, and `lowpass_cutoff`. Using this parameter will guide the automatic design of the filter.
+    #. **center_frequency - [float]:** Notch filter only. Manually select the center frequency for the notch filter. Mutually exclusive with `breathing_rate_min` and `breathing_rate_max`. Use this to manually design the filter.
+    #. **filter_bandwidth - [float]:** Notch filter only. Manually select the bandwidth for the notch filter. Mutually exclusive with `breathing_rate_min` and `breathing_rate_max`. Use this to manually design the filter.
+    #. **lowpass_cutoff - [float]:** Lowpass filter only. Manually select the cutoff frequency for the lowpass filter. Mutually exclusive with `breathing_rate_min` and `breathing_rate_max`. Use this to manually design the filter.
 
 Configuration Without the GUI
 """""""""""""""""""""""""""""

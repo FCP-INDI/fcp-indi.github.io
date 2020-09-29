@@ -38,13 +38,15 @@ The output directory folders below are produced during a default run. If you ena
 * **frame_wise_displacement_power**: 1-D file containing the vector of framewise displacement values between volumes, as calculated via Power.
 * **functional_brain_mask**: Binary mask of the brain in functional space.
 * **functional_brain_mask_to_standard**: Binary mask of the functional-space brain warped to standard template.
-* **functional_freq_filtered**: Preprocessed functional timeseries file all the way up to temporal filtering.
+* **functional_freq_filtered**: Preprocessed functional timeseries file all the way up to temporal filtering. 4D time series.
 * **functional_nuisance_regressors**: .mat file containing the data corresponding to each nuisance that was regressed out during nuisance regression.
 * **functional_to_anat_linear_xfm**: Functional-to-anatomical space linear transform. FSL-FLIRT format.
-* **functional_to_standard**: Preprocessed functional timeseries warped to standard template space.
+* **functional_to_standard**: Preprocessed functional timeseries warped to standard template space. 4D time series.
+* **functional_to_standard_smooth**: Smoothed version of functional_to-standard. 4D time series.
+* **functional_to_standard_xfm**: Composite transform (as a NIfTI .nii.gz file) bringing data from native functional (BOLD) space to template space.
 * **mean_functional_to_standard**: Mean functional (one-volume 3D file of functional scan) warped to standard template space.
 * **mni_to_anatomical_nonlinear_xfm**: Same as the anatomical_to_mni_nonlinear_xfm described above, except the inverse warp.
-* **motion_correct**: Motion-corrected functional timeseries in functional space, before the rest of functional preprocessing.
+* **motion_correct**: Motion-corrected functional timeseries in functional space, before the rest of functional preprocessing. 4D time series.
 * **motion_params**: Text file containing the single-value max or mean numbers of each head motion parameter/measure.
 * **output_means**: Text files containing the mean intensity values of each output or derivative. Used later in group-level analysis.
 * **path_files_here**: Text files containing full file paths to all of the C-PAC outputs in the output directory. Can be used for convenient file path parsing.
@@ -104,14 +106,15 @@ In addition to the output directories described above under "Descriptions", the 
 
 **Extra Functional Outputs** - Set 'Write Extra Functional Outputs' to 'On' to produce these outputs.
 
-* **functional_nuisance_residuals**: A NIfTI (.nii) file of the pre-processed functional time series produced directly after nuisance regression is performed.
-* **functional_preprocessed**: The functional time series produced directly after initial functional pre-processing (de-obliquing, re-orienting, motion correction, functional skull-stripping, and image intensity normalization). In native space.
+* **functional_nuisance_residuals**: A NIfTI (.nii) file of the pre-processed functional time series produced directly after nuisance regression is performed. 4D time series.
+* **functional_nuisance_residuals_smooth**: Smoothed version of functional_nuisance_residuals. 4D time series.
+* **functional_preprocessed**: The functional time series produced directly after initial functional pre-processing (de-obliquing, re-orienting, motion correction, functional skull-stripping, and image intensity normalization). In native space. 4D time series.
 * **functional_preprocessed_mask**: A binary mask of the functional_preprocessed output. In native space.
 * **mean_functional**: The mean of the functional time-series taken over the time course. Presented as a single-volume NifTI file.
 * **mean_functional_in_anat**: The mean of the functional time-series, registered/warped to anatomical (T1) space.
-* **motion_correct_to_standard**: Motion-corrected functional timeseries in template space, before the rest of functional preprocessing.
-* **motion_correct_to_standard_smooth**: Motion-corrected functional timeseries in template space, before the rest of functional preprocessing, but smoothed.
-* **slice_time_corrected**: The functional time-series after slice-time correction.
+* **motion_correct_to_standard**: Motion-corrected functional timeseries in template space, before the rest of functional preprocessing. 4D time series.
+* **motion_correct_to_standard_smooth**: Motion-corrected functional timeseries in template space, before the rest of functional preprocessing, but smoothed. 4D time series.
+* **slice_time_corrected**: The functional time-series after slice-time correction. 4D time series.
 
 **Non-smoothed** - Set 'Run Smoothing' to either 'Off' or 'On/Off' to produce these outputs.
 

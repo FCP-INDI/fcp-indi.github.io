@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CPAC.anat_preproc.anat_preproc &#8212; C-PAC 1.7.0 Beta documentation</title>
+    <title>CPAC.anat_preproc.anat_preproc &#8212; C-PAC 1.7.1 Beta documentation</title>
     <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
@@ -28,7 +28,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.1 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.anat_preproc.anat_preproc</a></li> 
       </ul>
@@ -45,10 +45,13 @@
 <span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="kn">import</span> <span class="n">afni</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="kn">import</span> <span class="n">ants</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="kn">import</span> <span class="n">fsl</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.fsl</span> <span class="kn">import</span> <span class="n">utils</span> <span class="k">as</span> <span class="n">fsl_utils</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.fsl</span> <span class="kn">import</span> <span class="n">preprocess</span> <span class="k">as</span> <span class="n">fsl_preproc</span>
 <span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="nn">pe</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
 <span class="kn">from</span> <span class="nn">CPAC.anat_preproc.ants</span> <span class="kn">import</span> <span class="n">init_brain_extraction_wf</span>
-<span class="kn">from</span> <span class="nn">CPAC.anat_preproc.utils</span> <span class="kn">import</span> <span class="n">create_3dskullstrip_arg_string</span>
+<span class="kn">from</span> <span class="nn">CPAC.anat_preproc.utils</span> <span class="kn">import</span> <span class="n">create_3dskullstrip_arg_string</span><span class="p">,</span> \
+    <span class="n">fsl_aff_to_rigid</span>
 <span class="kn">from</span> <span class="nn">CPAC.utils.datasource</span> <span class="kn">import</span> <span class="n">create_check_for_s3_node</span>
 <span class="kn">from</span> <span class="nn">CPAC.unet.function</span> <span class="kn">import</span> <span class="n">predict_volumes</span>
 
@@ -70,10 +73,508 @@
         <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;lst index out of range&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">lst</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
 
-<div class="viewcode-block" id="create_anat_preproc"><a class="viewcode-back" href="../../../developer/workflows/anat_preproc#CPAC.anat_preproc.create_anat_preproc">[docs]</a><span class="k">def</span> <span class="nf">create_anat_preproc</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;afni&#39;</span><span class="p">,</span> <span class="n">already_skullstripped</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;anat_preproc&#39;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;The main purpose of this workflow is to process T1 scans. Raw mprage file is deobliqued, reoriented</span>
-<span class="sd">    into RPI and skullstripped. Also, a whole brain only mask is generated from the skull stripped image</span>
-<span class="sd">    for later use in registration.</span>
+
+<span class="k">def</span> <span class="nf">acpc_alignment</span><span class="p">(</span><span class="n">skullstrip_tool</span><span class="o">=</span><span class="s1">&#39;afni&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">acpc_target</span><span class="o">=</span><span class="s1">&#39;whole-head&#39;</span><span class="p">,</span> <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;acpc_align&#39;</span><span class="p">):</span>
+               
+    <span class="n">preproc</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">wf_name</span><span class="p">)</span>
+
+    <span class="n">inputnode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;anat_leaf&#39;</span><span class="p">,</span> 
+                                                       <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;template_brain_only_for_anat&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;template_skull_for_anat&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;template_brain_for_acpc&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;template_head_for_acpc&#39;</span><span class="p">]),</span> 
+                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
+
+    <span class="n">output_node</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;acpc_aligned_head&#39;</span><span class="p">,</span>
+                                                         <span class="s1">&#39;acpc_brain_mask&#39;</span><span class="p">]),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
+
+    <span class="n">robust_fov</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl_utils</span><span class="o">.</span><span class="n">RobustFOV</span><span class="p">(),</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_acpc_1_robustfov&#39;</span><span class="p">)</span>
+    <span class="n">robust_fov</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">brainsize</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">acpc_brainsize</span>
+    <span class="n">robust_fov</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_transform</span> <span class="o">=</span> <span class="s1">&#39;fov_xfm.mat&#39;</span>
+
+    <span class="c1"># align head-to-head to get acpc.mat (for human)</span>
+    <span class="k">if</span> <span class="n">acpc_target</span> <span class="o">==</span> <span class="s1">&#39;whole-head&#39;</span><span class="p">:</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;anat_leaf&#39;</span><span class="p">,</span> <span class="n">robust_fov</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># align brain-to-brain to get acpc.mat (for monkey)</span>
+    <span class="k">if</span> <span class="n">acpc_target</span> <span class="o">==</span> <span class="s1">&#39;brain&#39;</span><span class="p">:</span>
+        <span class="n">initial_skullstrip</span> <span class="o">=</span>  <span class="n">skullstrip_anatomical</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">skullstrip_tool</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> 
+                                                    <span class="n">wf_name</span><span class="o">=</span><span class="s2">&quot;anat_acpc_0_pre&quot;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;anat_leaf&#39;</span><span class="p">,</span> 
+                        <span class="n">initial_skullstrip</span><span class="p">,</span> <span class="s1">&#39;inputspec.anat_data&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">skullstrip_tool</span> <span class="o">==</span> <span class="s1">&#39;mask&#39;</span><span class="p">:</span>
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span>
+                            <span class="n">initial_skullstrip</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain_mask&#39;</span><span class="p">)</span> 
+        <span class="k">elif</span> <span class="n">skullstrip_tool</span> <span class="o">==</span> <span class="s1">&#39;unet&#39;</span><span class="p">:</span>
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_brain_only_for_anat&#39;</span><span class="p">,</span>
+                            <span class="n">initial_skullstrip</span><span class="p">,</span> <span class="s1">&#39;inputspec.template_brain_only_for_anat&#39;</span><span class="p">)</span>   
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_skull_for_anat&#39;</span><span class="p">,</span>
+                            <span class="n">initial_skullstrip</span><span class="p">,</span> <span class="s1">&#39;inputspec.template_skull_for_anat&#39;</span><span class="p">)</span> 
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">initial_skullstrip</span><span class="p">,</span> <span class="s1">&#39;outputspec.brain&#39;</span><span class="p">,</span> 
+                        <span class="n">robust_fov</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="n">convert_fov_xfm</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl_utils</span><span class="o">.</span><span class="n">ConvertXFM</span><span class="p">(),</span>
+                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_acpc_2_fov_convertxfm&#39;</span><span class="p">)</span>
+    <span class="n">convert_fov_xfm</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">invert_xfm</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">robust_fov</span><span class="p">,</span> <span class="s1">&#39;out_transform&#39;</span><span class="p">,</span>
+                    <span class="n">convert_fov_xfm</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="n">align</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_acpc_3_flirt&#39;</span><span class="p">)</span>
+    <span class="n">align</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;spline&#39;</span>
+    <span class="n">align</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">searchr_x</span> <span class="o">=</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">]</span>
+    <span class="n">align</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">searchr_y</span> <span class="o">=</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">]</span>
+    <span class="n">align</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">searchr_z</span> <span class="o">=</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">]</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">robust_fov</span><span class="p">,</span> <span class="s1">&#39;out_roi&#39;</span><span class="p">,</span> <span class="n">align</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="c1"># align head-to-head to get acpc.mat (for human)</span>
+    <span class="k">if</span> <span class="n">acpc_target</span> <span class="o">==</span> <span class="s1">&#39;whole-head&#39;</span><span class="p">:</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_head_for_acpc&#39;</span><span class="p">,</span> <span class="n">align</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># align brain-to-brain to get acpc.mat (for monkey)</span>
+    <span class="k">if</span> <span class="n">acpc_target</span><span class="o">==</span><span class="s1">&#39;brain&#39;</span><span class="p">:</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_brain_for_acpc&#39;</span><span class="p">,</span> <span class="n">align</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
+
+    <span class="n">concat_xfm</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl_utils</span><span class="o">.</span><span class="n">ConvertXFM</span><span class="p">(),</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_acpc_4_concatxfm&#39;</span><span class="p">)</span>
+    <span class="n">concat_xfm</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">concat_xfm</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">convert_fov_xfm</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">concat_xfm</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">align</span><span class="p">,</span> <span class="s1">&#39;out_matrix_file&#39;</span><span class="p">,</span> <span class="n">concat_xfm</span><span class="p">,</span> <span class="s1">&#39;in_file2&#39;</span><span class="p">)</span>
+
+    <span class="n">aff_to_rig_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;from numpy import *&#39;</span><span class="p">]</span>
+    <span class="n">aff_to_rig</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_xfm&#39;</span><span class="p">,</span> <span class="s1">&#39;out_name&#39;</span><span class="p">],</span>
+                                        <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_mat&#39;</span><span class="p">],</span>
+                                        <span class="n">function</span><span class="o">=</span><span class="n">fsl_aff_to_rigid</span><span class="p">,</span>
+                                        <span class="n">imports</span><span class="o">=</span><span class="n">aff_to_rig_imports</span><span class="p">),</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_acpc_5_aff2rigid&#39;</span><span class="p">)</span>
+    <span class="n">aff_to_rig</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_name</span> <span class="o">=</span> <span class="s1">&#39;acpc.mat&#39;</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">concat_xfm</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">aff_to_rig</span><span class="p">,</span> <span class="s1">&#39;in_xfm&#39;</span><span class="p">)</span>
+
+    <span class="n">apply_xfm</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ApplyWarp</span><span class="p">(),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_acpc_6_applywarp&#39;</span><span class="p">)</span>
+    <span class="n">apply_xfm</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;spline&#39;</span>
+    <span class="n">apply_xfm</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">relwarp</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;anat_leaf&#39;</span><span class="p">,</span> <span class="n">apply_xfm</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_head_for_acpc&#39;</span><span class="p">,</span> <span class="n">apply_xfm</span><span class="p">,</span> <span class="s1">&#39;ref_file&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">aff_to_rig</span><span class="p">,</span> <span class="s1">&#39;out_mat&#39;</span><span class="p">,</span> <span class="n">apply_xfm</span><span class="p">,</span> <span class="s1">&#39;premat&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">apply_xfm</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;acpc_aligned_head&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">skullstrip_tool</span> <span class="o">==</span> <span class="s1">&#39;mask&#39;</span><span class="p">:</span>
+        <span class="n">apply_xfm_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ApplyWarp</span><span class="p">(),</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_mask_acpc_7_applywarp&#39;</span><span class="p">)</span>
+        <span class="n">apply_xfm_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;nn&#39;</span>
+        <span class="n">apply_xfm_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">relwarp</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span> <span class="n">apply_xfm_mask</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_brain_for_acpc&#39;</span><span class="p">,</span> <span class="n">apply_xfm_mask</span><span class="p">,</span> <span class="s1">&#39;ref_file&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">aff_to_rig</span><span class="p">,</span> <span class="s1">&#39;out_mat&#39;</span><span class="p">,</span> <span class="n">apply_xfm_mask</span><span class="p">,</span> <span class="s1">&#39;premat&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">apply_xfm_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;acpc_brain_mask&#39;</span><span class="p">)</span>
+
+
+    <span class="k">return</span> <span class="n">preproc</span>
+
+<span class="k">def</span> <span class="nf">skullstrip_anatomical</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;afni&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;skullstrip_anatomical&#39;</span><span class="p">):</span>
+
+    <span class="n">method</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="n">preproc</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">wf_name</span><span class="p">)</span>
+
+    <span class="n">inputnode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;anat_data&#39;</span><span class="p">,</span> 
+                                                       <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;template_brain_only_for_anat&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;template_skull_for_anat&#39;</span><span class="p">]),</span> 
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
+    <span class="n">outputnode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;skullstrip&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;brain&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;brain_mask&#39;</span><span class="p">]),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;afni&#39;</span><span class="p">:</span>
+        <span class="c1"># Skull-stripping using AFNI 3dSkullStrip</span>
+        <span class="n">inputnode_afni</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
+            <span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mask_vol&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;shrink_factor&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;var_shrink_fac&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;shrink_fac_bot_lim&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;avoid_vent&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;niter&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;pushout&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;touchup&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;fill_hole&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;avoid_eyes&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;use_edge&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;exp_frac&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;smooth_final&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;push_to_edge&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;use_skull&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;perc_int&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;max_inter_iter&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;blur_fwhm&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;fac&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;monkey&#39;</span><span class="p">]),</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;AFNI_options&#39;</span><span class="p">)</span>
+
+        <span class="n">skullstrip_args</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;spat_norm&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;spat_norm_dxyz&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;mask_vol&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;shrink_fac&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;var_shrink_fac&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;shrink_fac_bot_lim&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;avoid_vent&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;niter&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;pushout&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;touchup&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;fill_hole&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;avoid_eyes&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;use_edge&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;exp_frac&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;smooth_final&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;push_to_edge&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;use_skull&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;perc_int&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;max_inter_iter&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;blur_fwhm&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;fac&#39;</span><span class="p">,</span>
+                                                                <span class="s1">&#39;monkey&#39;</span><span class="p">],</span>
+                                                <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;expr&#39;</span><span class="p">],</span>
+                                                <span class="n">function</span><span class="o">=</span><span class="n">create_3dskullstrip_arg_string</span><span class="p">),</span>
+                                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_skullstrip_args&#39;</span><span class="p">)</span>
+        
+        <span class="n">inputnode_afni</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+                <span class="n">mask_vol</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_mask_vol</span><span class="p">,</span>
+                <span class="n">shrink_factor</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_shrink_factor</span><span class="p">,</span>
+                <span class="n">var_shrink_fac</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_var_shrink_fac</span><span class="p">,</span>
+                <span class="n">shrink_fac_bot_lim</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_shrink_factor_bot_lim</span><span class="p">,</span>
+                <span class="n">avoid_vent</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_avoid_vent</span><span class="p">,</span>
+                <span class="n">niter</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_n_iterations</span><span class="p">,</span>
+                <span class="n">pushout</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_pushout</span><span class="p">,</span>
+                <span class="n">touchup</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_touchup</span><span class="p">,</span>
+                <span class="n">fill_hole</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_fill_hole</span><span class="p">,</span>
+                <span class="n">avoid_eyes</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_avoid_eyes</span><span class="p">,</span>
+                <span class="n">use_edge</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_use_edge</span><span class="p">,</span>
+                <span class="n">exp_frac</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_exp_frac</span><span class="p">,</span>
+                <span class="n">smooth_final</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_smooth_final</span><span class="p">,</span>
+                <span class="n">push_to_edge</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_push_to_edge</span><span class="p">,</span>
+                <span class="n">use_skull</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_use_skull</span><span class="p">,</span>
+                <span class="n">perc_int</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_perc_int</span><span class="p">,</span>
+                <span class="n">max_inter_iter</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_max_inter_iter</span><span class="p">,</span>
+                <span class="n">blur_fwhm</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_blur_fwhm</span><span class="p">,</span>
+                <span class="n">fac</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_fac</span><span class="p">,</span>
+                <span class="n">monkey</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">skullstrip_monkey</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">([</span>
+            <span class="p">(</span><span class="n">inputnode_afni</span><span class="p">,</span> <span class="n">skullstrip_args</span><span class="p">,</span> <span class="p">[</span>
+                <span class="p">(</span><span class="s1">&#39;mask_vol&#39;</span><span class="p">,</span> <span class="s1">&#39;mask_vol&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;shrink_factor&#39;</span><span class="p">,</span> <span class="s1">&#39;shrink_fac&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;var_shrink_fac&#39;</span><span class="p">,</span> <span class="s1">&#39;var_shrink_fac&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;shrink_fac_bot_lim&#39;</span><span class="p">,</span> <span class="s1">&#39;shrink_fac_bot_lim&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;avoid_vent&#39;</span><span class="p">,</span> <span class="s1">&#39;avoid_vent&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;niter&#39;</span><span class="p">,</span> <span class="s1">&#39;niter&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;pushout&#39;</span><span class="p">,</span> <span class="s1">&#39;pushout&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;touchup&#39;</span><span class="p">,</span> <span class="s1">&#39;touchup&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;fill_hole&#39;</span><span class="p">,</span> <span class="s1">&#39;fill_hole&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;avoid_eyes&#39;</span><span class="p">,</span> <span class="s1">&#39;avoid_eyes&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;use_edge&#39;</span><span class="p">,</span> <span class="s1">&#39;use_edge&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;exp_frac&#39;</span><span class="p">,</span> <span class="s1">&#39;exp_frac&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;smooth_final&#39;</span><span class="p">,</span> <span class="s1">&#39;smooth_final&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;push_to_edge&#39;</span><span class="p">,</span> <span class="s1">&#39;push_to_edge&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;use_skull&#39;</span><span class="p">,</span> <span class="s1">&#39;use_skull&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;perc_int&#39;</span><span class="p">,</span> <span class="s1">&#39;perc_int&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;max_inter_iter&#39;</span><span class="p">,</span> <span class="s1">&#39;max_inter_iter&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;blur_fwhm&#39;</span><span class="p">,</span> <span class="s1">&#39;blur_fwhm&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;fac&#39;</span><span class="p">,</span> <span class="s1">&#39;fac&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;monkey&#39;</span><span class="p">,</span><span class="s1">&#39;monkey&#39;</span><span class="p">)</span>
+            <span class="p">])</span>
+        <span class="p">])</span>
+
+        <span class="n">anat_skullstrip</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">SkullStrip</span><span class="p">(),</span>
+                                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_skullstrip&#39;</span><span class="p">)</span>
+
+        <span class="n">anat_skullstrip</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span>
+                        <span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">skullstrip_args</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span>
+                        <span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Generate anatomical brain mask</span>
+        <span class="n">anat_brain_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
+                                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_brain_mask&#39;</span><span class="p">)</span>
+
+        <span class="n">anat_brain_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="s1">&#39;step(a)&#39;</span>
+        <span class="n">anat_brain_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">anat_brain_mask</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Apply skull-stripping step mask to original volume</span>
+        <span class="n">anat_skullstrip_orig_vol</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
+                                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_skullstrip_orig_vol&#39;</span><span class="p">)</span>
+
+        <span class="n">anat_skullstrip_orig_vol</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="s1">&#39;a*step(b)&#39;</span>
+        <span class="n">anat_skullstrip_orig_vol</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span>
+                        <span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_brain_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;in_file_b&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_brain_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;fsl&#39;</span><span class="p">:</span>
+        <span class="c1"># Skull-stripping using FSL BET</span>
+        <span class="n">inputnode_bet</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
+            <span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;frac&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;mask_boolean&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;mesh_boolean&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;outline&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;padding&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;radius&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;reduce_bias&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;remove_eyes&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;robust&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;skull&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;surfaces&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;threshold&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;vertical_gradient&#39;</span><span class="p">]),</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;BET_options&#39;</span><span class="p">)</span>
+
+        <span class="n">anat_skullstrip</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
+            <span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">BET</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_skullstrip&#39;</span><span class="p">)</span>
+        <span class="n">anat_skullstrip</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">output_type</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+        
+        <span class="n">inputnode_bet</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+                <span class="n">frac</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">bet_frac</span><span class="p">,</span>
+                <span class="n">mask_boolean</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">bet_mask_boolean</span><span class="p">,</span>
+                <span class="n">mesh_boolean</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">bet_mesh_boolean</span><span class="p">,</span>
+                <span class="n">outline</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">bet_outline</span><span class="p">,</span>
+                <span class="n">padding</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">bet_padding</span><span class="p">,</span>
+                <span class="n">radius</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">bet_radius</span><span class="p">,</span>
+                <span class="n">reduce_bias</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">bet_reduce_bias</span><span class="p">,</span>
+                <span class="n">remove_eyes</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">bet_remove_eyes</span><span class="p">,</span>
+                <span class="n">robust</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">bet_robust</span><span class="p">,</span>
+                <span class="n">skull</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">bet_skull</span><span class="p">,</span>
+                <span class="n">surfaces</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">bet_surfaces</span><span class="p">,</span>
+                <span class="n">threshold</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">bet_threshold</span><span class="p">,</span>
+                <span class="n">vertical_gradient</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">bet_vertical_gradient</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span>
+                        <span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">([</span>
+            <span class="p">(</span><span class="n">inputnode_bet</span><span class="p">,</span> <span class="n">anat_skullstrip</span><span class="p">,</span> <span class="p">[</span>
+                <span class="p">(</span><span class="s1">&#39;frac&#39;</span><span class="p">,</span> <span class="s1">&#39;frac&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;mask_boolean&#39;</span><span class="p">,</span> <span class="s1">&#39;mask&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;mesh_boolean&#39;</span><span class="p">,</span> <span class="s1">&#39;mesh&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;outline&#39;</span><span class="p">,</span> <span class="s1">&#39;outline&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;padding&#39;</span><span class="p">,</span> <span class="s1">&#39;padding&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;radius&#39;</span><span class="p">,</span> <span class="s1">&#39;radius&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;reduce_bias&#39;</span><span class="p">,</span> <span class="s1">&#39;reduce_bias&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;remove_eyes&#39;</span><span class="p">,</span> <span class="s1">&#39;remove_eyes&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;robust&#39;</span><span class="p">,</span> <span class="s1">&#39;robust&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;skull&#39;</span><span class="p">,</span> <span class="s1">&#39;skull&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;surfaces&#39;</span><span class="p">,</span> <span class="s1">&#39;surfaces&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;threshold&#39;</span><span class="p">,</span> <span class="s1">&#39;threshold&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;vertical_gradient&#39;</span><span class="p">,</span> <span class="s1">&#39;vertical_gradient&#39;</span><span class="p">),</span>
+            <span class="p">])</span>
+        <span class="p">])</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;skullstrip&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Apply skull-stripping step mask to original volume</span>
+        <span class="n">anat_skullstrip_orig_vol</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
+                                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_skullstrip_orig_vol&#39;</span><span class="p">)</span>
+
+        <span class="n">anat_skullstrip_orig_vol</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="s1">&#39;a*step(b)&#39;</span>
+        <span class="n">anat_skullstrip_orig_vol</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span>
+                        <span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;in_file_b&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;mask_file&#39;</span><span class="p">,</span>
+                        <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;niworkflows-ants&#39;</span><span class="p">:</span> 
+        <span class="c1"># Skull-stripping using niworkflows-ants  </span>
+        <span class="n">anat_skullstrip_ants</span> <span class="o">=</span> <span class="n">init_brain_extraction_wf</span><span class="p">(</span><span class="n">tpl_target_path</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">niworkflows_ants_template_path</span><span class="p">,</span>
+                                                        <span class="n">tpl_mask_path</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">niworkflows_ants_mask_path</span><span class="p">,</span>
+                                                        <span class="n">tpl_regmask_path</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">niworkflows_ants_regmask_path</span><span class="p">,</span>
+                                                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_skullstrip_ants&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span>
+                        <span class="n">anat_skullstrip_ants</span><span class="p">,</span> <span class="s1">&#39;inputnode.in_files&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip_ants</span><span class="p">,</span> <span class="s1">&#39;copy_xform.out_file&#39;</span><span class="p">,</span>
+                        <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;skullstrip&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip_ants</span><span class="p">,</span> <span class="s1">&#39;copy_xform.out_file&#39;</span><span class="p">,</span>
+                        <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip_ants</span><span class="p">,</span> <span class="s1">&#39;atropos_wf.copy_xform.out_mask&#39;</span><span class="p">,</span>
+                        <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;mask&#39;</span><span class="p">:</span>
+
+        <span class="n">brain_mask_deoblique</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Refit</span><span class="p">(),</span>
+                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;brain_mask_deoblique&#39;</span><span class="p">)</span>
+        <span class="n">brain_mask_deoblique</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">deoblique</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span>
+                        <span class="n">brain_mask_deoblique</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+        <span class="n">brain_mask_reorient</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Resample</span><span class="p">(),</span>
+                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;brain_mask_reorient&#39;</span><span class="p">)</span>
+        <span class="n">brain_mask_reorient</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">orientation</span> <span class="o">=</span> <span class="s1">&#39;RPI&#39;</span>
+        <span class="n">brain_mask_reorient</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">brain_mask_deoblique</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">brain_mask_reorient</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+
+        <span class="n">anat_skullstrip_orig_vol</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
+                                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_skullstrip_orig_vol&#39;</span><span class="p">)</span>
+        <span class="n">anat_skullstrip_orig_vol</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="s1">&#39;a*step(b)&#39;</span>
+        <span class="n">anat_skullstrip_orig_vol</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span>
+                        <span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">brain_mask_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;in_file_b&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">brain_mask_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                        <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;unet&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        UNet</span>
+<span class="sd">        options (following numbers are default):</span>
+<span class="sd">        input_slice: 3</span>
+<span class="sd">        conv_block: 5</span>
+<span class="sd">        kernel_root: 16</span>
+<span class="sd">        rescale_dim: 256</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: add options to pipeline_config</span>
+        <span class="n">unet_check_for_s3</span> <span class="o">=</span> <span class="n">create_check_for_s3_node</span><span class="p">(</span><span class="s1">&#39;unet&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">unet_model</span><span class="p">)</span>
+        <span class="n">unet_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;model_path&#39;</span><span class="p">,</span> <span class="s1">&#39;cimg_in&#39;</span><span class="p">],</span> 
+                                            <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_path&#39;</span><span class="p">],</span>
+                                            <span class="n">function</span><span class="o">=</span><span class="n">predict_volumes</span><span class="p">),</span>                        
+                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;unet_mask&#39;</span><span class="p">)</span>
+        
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">unet_check_for_s3</span><span class="p">,</span> <span class="s1">&#39;local_path&#39;</span><span class="p">,</span> <span class="n">unet_mask</span><span class="p">,</span> <span class="s1">&#39;model_path&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span> <span class="n">unet_mask</span><span class="p">,</span> <span class="s1">&#39;cimg_in&#39;</span><span class="p">)</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Revised mask with ANTs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># fslmaths &lt;whole head&gt; -mul &lt;mask&gt; brain.nii.gz</span>
+        <span class="n">unet_masked_brain</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">MultiImageMaths</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;unet_masked_brain&#39;</span><span class="p">)</span>
+        <span class="n">unet_masked_brain</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s2">&quot;-mul </span><span class="si">%s</span><span class="s2">&quot;</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span> <span class="n">unet_masked_brain</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">unet_mask</span><span class="p">,</span> <span class="s1">&#39;out_path&#39;</span><span class="p">,</span> <span class="n">unet_masked_brain</span><span class="p">,</span> <span class="s1">&#39;operand_files&#39;</span><span class="p">)</span>
+
+        <span class="c1"># flirt -v -dof 6 -in brain.nii.gz -ref NMT_SS_0.5mm.nii.gz -o brain_rot2atl -omat brain_rot2atl.mat -interp sinc</span>
+        <span class="c1"># TODO: antsRegistration -z 0 -d 3 -r [NMT_SS_0.5mm.nii.gz,brain.nii.gz,0] -o [transform,brain_rot2atl.nii.gz,brain_inv_rot2atl.nii.gz] -t Rigid[0.1] -m MI[NMT_SS_0.5mm.nii.gz,brain.nii.gz,1,32,Regular,0.25] -c [1000x500x250x100,1e-08,10] -s 3.0x2.0x1.0x0.0 -f 8x4x2x1 -u 1 -t Affine[0.1] -m MI[NMT_SS_0.5mm.nii.gz,brain.nii.gz,1,32,Regular,0.25] -c [1000x500x250x100,1e-08,10] -s 3.0x2.0x1.0x0.0 -f 8x4x2x1 -u 1</span>
+        <span class="n">native_brain_to_template_brain</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;native_brain_to_template_brain&#39;</span><span class="p">)</span>
+        <span class="n">native_brain_to_template_brain</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">dof</span> <span class="o">=</span> <span class="mi">6</span>
+        <span class="n">native_brain_to_template_brain</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;sinc&#39;</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">unet_masked_brain</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">native_brain_to_template_brain</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_brain_only_for_anat&#39;</span><span class="p">,</span> <span class="n">native_brain_to_template_brain</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># flirt -in head.nii.gz -ref NMT_0.5mm.nii.gz -o head_rot2atl -applyxfm -init brain_rot2atl.mat</span>
+        <span class="c1"># TODO: antsApplyTransforms -d 3 -i head.nii.gz -r NMT_0.5mm.nii.gz -n Linear -o head_rot2atl.nii.gz -v -t transform1Rigid.mat -t transform2Affine.mat -t transform0DerivedInitialMovingTranslation.mat </span>
+        <span class="n">native_head_to_template_head</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;native_head_to_template_head&#39;</span><span class="p">)</span>
+        <span class="n">native_head_to_template_head</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">apply_xfm</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span> <span class="n">native_head_to_template_head</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">native_brain_to_template_brain</span><span class="p">,</span> <span class="s1">&#39;out_matrix_file&#39;</span><span class="p">,</span> <span class="n">native_head_to_template_head</span><span class="p">,</span> <span class="s1">&#39;in_matrix_file&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_skull_for_anat&#39;</span><span class="p">,</span> <span class="n">native_head_to_template_head</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
+
+        <span class="c1"># fslmaths NMT_SS_0.5mm.nii.gz -bin templateMask.nii.gz</span>
+        <span class="n">template_brain_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">maths</span><span class="o">.</span><span class="n">MathsCommand</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;template_brain_mask&#39;</span><span class="p">)</span>
+        <span class="n">template_brain_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;-bin&#39;</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_brain_only_for_anat&#39;</span><span class="p">,</span> <span class="n">template_brain_mask</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+        <span class="c1"># ANTS 3 -m  CC[head_rot2atl.nii.gz,NMT_0.5mm.nii.gz,1,5] -t SyN[0.25] -r Gauss[3,0] -o atl2T1rot -i 60x50x20 --use-Histogram-Matching  --number-of-affine-iterations 10000x10000x10000x10000x10000 --MI-option 32x16000</span>
+        <span class="n">ants_template_head_to_template</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">ants</span><span class="o">.</span><span class="n">Registration</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;template_head_to_template&#39;</span><span class="p">)</span>
+        <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CC&#39;</span><span class="p">]</span>
+        <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">metric_weight</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span>
+        <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">transforms</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SyN&#39;</span><span class="p">]</span>
+        <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">transform_parameters</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">0.25</span><span class="p">,)]</span>
+        <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="s1">&#39;NearestNeighbor&#39;</span>
+        <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">number_of_iterations</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">60</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="mi">20</span><span class="p">]]</span> 
+        <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">smoothing_sigmas</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.6</span><span class="p">,</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]]</span>
+        <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">shrink_factors</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span> 
+        <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">convergence_threshold</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.e-8</span><span class="p">]</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">native_head_to_template_head</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">ants_template_head_to_template</span><span class="p">,</span> <span class="s1">&#39;fixed_image&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_skull_for_anat&#39;</span><span class="p">,</span> <span class="n">ants_template_head_to_template</span><span class="p">,</span> <span class="s1">&#39;moving_image&#39;</span><span class="p">)</span>
+        <span class="c1"># antsApplyTransforms -d 3 -i templateMask.nii.gz -t atl2T1rotWarp.nii.gz atl2T1rotAffine.txt -r brain_rot2atl.nii.gz -o brain_rot2atl_mask.nii.gz</span>
+        <span class="n">template_head_transform_to_template</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">ants</span><span class="o">.</span><span class="n">ApplyTransforms</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;template_head_transform_to_template&#39;</span><span class="p">)</span>
+        <span class="n">template_head_transform_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">template_brain_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">template_head_transform_to_template</span><span class="p">,</span> <span class="s1">&#39;input_image&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">native_brain_to_template_brain</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">template_head_transform_to_template</span><span class="p">,</span> <span class="s1">&#39;reference_image&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">ants_template_head_to_template</span><span class="p">,</span> <span class="s1">&#39;forward_transforms&#39;</span><span class="p">,</span> <span class="n">template_head_transform_to_template</span><span class="p">,</span> <span class="s1">&#39;transforms&#39;</span><span class="p">)</span>
+
+        <span class="c1"># TODO: replace convert_xfm and flirt with: </span>
+        <span class="c1"># antsApplyTransforms -d 3 -i brain_rot2atl_mask.nii.gz -r brain.nii.gz -n linear -o brain_mask.nii.gz -t [transform0DerivedInitialMovingTranslation.mat,1] -t [transform2Affine.mat,1] -t [transform1Rigid.mat,1] </span>
+        <span class="c1"># convert_xfm -omat brain_rot2native.mat -inverse brain_rot2atl.mat </span>
+        <span class="n">invt</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ConvertXFM</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;convert_xfm&#39;</span><span class="p">)</span>
+        <span class="n">invt</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">invert_xfm</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">native_brain_to_template_brain</span><span class="p">,</span> <span class="s1">&#39;out_matrix_file&#39;</span><span class="p">,</span> <span class="n">invt</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+        <span class="c1"># flirt -in brain_rot2atl_mask.nii.gz -ref brain.nii.gz -o brain_mask.nii.gz -applyxfm -init brain_rot2native.mat</span>
+        <span class="n">template_brain_to_native_brain</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;template_brain_to_native_brain&#39;</span><span class="p">)</span>
+        <span class="n">template_brain_to_native_brain</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">apply_xfm</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">template_head_transform_to_template</span><span class="p">,</span> <span class="s1">&#39;output_image&#39;</span><span class="p">,</span> <span class="n">template_brain_to_native_brain</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">unet_masked_brain</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">template_brain_to_native_brain</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">invt</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">template_brain_to_native_brain</span><span class="p">,</span> <span class="s1">&#39;in_matrix_file&#39;</span><span class="p">)</span>
+
+        <span class="c1"># fslmaths brain_mask.nii.gz -thr .5 -bin brain_mask_thr.nii.gz</span>
+        <span class="n">refined_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">Threshold</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;refined_mask&#39;</span><span class="p">)</span>
+        <span class="n">refined_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">thresh</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="n">refined_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;-bin&#39;</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">template_brain_to_native_brain</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">refined_mask</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+        <span class="c1"># get a new brain with mask</span>
+        <span class="n">refined_brain</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">MultiImageMaths</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;refined_brain&#39;</span><span class="p">)</span>
+        <span class="n">refined_brain</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s2">&quot;-mul </span><span class="si">%s</span><span class="s2">&quot;</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span> <span class="n">refined_brain</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">refined_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">refined_brain</span><span class="p">,</span> <span class="s1">&#39;operand_files&#39;</span><span class="p">)</span>
+        
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">refined_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">refined_brain</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">preproc</span>
+
+<div class="viewcode-block" id="create_anat_preproc"><a class="viewcode-back" href="../../../developer/workflows/anat_preproc#CPAC.anat_preproc.create_anat_preproc">[docs]</a><span class="k">def</span> <span class="nf">create_anat_preproc</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;afni&#39;</span><span class="p">,</span> <span class="n">already_skullstripped</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">acpc_target</span><span class="o">=</span><span class="s1">&#39;whole-head&#39;</span><span class="p">,</span> <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;anat_preproc&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The main purpose of this workflow is to process T1 scans. Raw mprage</span>
+<span class="sd">    file is deobliqued, reoriented into RPI and skullstripped. Also, a whole</span>
+<span class="sd">    brain only mask is generated from the skull stripped image for later use</span>
+<span class="sd">    in registration.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -97,16 +598,19 @@
 <span class="sd">            Path to RPI oriented anatomical image</span>
 
 <span class="sd">        outputspec.skullstrip : string</span>
-<span class="sd">            Path to skull stripped RPI oriented mprage file with normalized intensities.</span>
+<span class="sd">            Path to skull stripped RPI oriented mprage file with normalized</span>
+<span class="sd">            intensities.</span>
 
 <span class="sd">        outputspec.brain : string</span>
-<span class="sd">            Path to skull stripped RPI brain image with original intensity values and not normalized or scaled.</span>
+<span class="sd">            Path to skull stripped RPI brain image with original intensity</span>
+<span class="sd">            values and not normalized or scaled.</span>
 
 <span class="sd">    Order of commands:</span>
 <span class="sd">    - Deobliqing the scans. ::</span>
 <span class="sd">        3drefit -deoblique mprage.nii.gz</span>
 
-<span class="sd">    - Re-orienting the Image into Right-to-Left Posterior-to-Anterior Inferior-to-Superior  (RPI) orientation ::</span>
+<span class="sd">    - Re-orienting the Image into Right-to-Left Posterior-to-Anterior</span>
+<span class="sd">      Inferior-to-Superior  (RPI) orientation ::</span>
 <span class="sd">        3dresample -orient RPI</span>
 <span class="sd">                   -prefix mprage_RPI.nii.gz</span>
 <span class="sd">                   -inset mprage.nii.gz</span>
@@ -118,7 +622,9 @@
 <span class="sd">        or using BET ::</span>
 <span class="sd">            bet mprage_RPI.nii.gz</span>
 
-<span class="sd">    - The skull-stripping step modifies the intensity values. To get back the original intensity values, we do an element wise product of RPI data with step function of skull-stripped data ::</span>
+<span class="sd">    - The skull-stripping step modifies the intensity values. To get back the</span>
+<span class="sd">      original intensity values, we do an element wise product of RPI data</span>
+<span class="sd">      with step function of skull-stripped data ::</span>
 <span class="sd">        3dcalc -a mprage_RPI.nii.gz</span>
 <span class="sd">               -b mprage_RPI_3dT.nii.gz</span>
 <span class="sd">               -expr &#39;a*step(b)&#39;</span>
@@ -146,6 +652,8 @@
                                                        <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span>
                                                        <span class="s1">&#39;template_brain_only_for_anat&#39;</span><span class="p">,</span>
                                                        <span class="s1">&#39;template_skull_for_anat&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;template_brain_only_for_acpc&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;template_skull_for_acpc&#39;</span><span class="p">,</span>
                                                        <span class="s1">&#39;template_cmass&#39;</span><span class="p">]),</span> 
                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
 
@@ -154,55 +662,81 @@
                                                         <span class="s1">&#39;skullstrip&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;brain&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;anat_skull_leaf&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;center_of_mass&#39;</span><span class="p">]),</span>
                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
 
     <span class="n">anat_deoblique</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Refit</span><span class="p">(),</span>
                              <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_deoblique&#39;</span><span class="p">)</span>
     <span class="n">anat_deoblique</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">deoblique</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;anat&#39;</span><span class="p">,</span> <span class="n">anat_deoblique</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_deoblique</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;refit&#39;</span><span class="p">)</span>    
-    <span class="c1"># Disable non_local_means_filtering and n4_bias_field_correction when run niworkflows-ants</span>
-    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;niworkflows-ants&#39;</span><span class="p">:</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">non_local_means_filtering</span> <span class="o">=</span> <span class="kc">False</span> 
-        <span class="n">config</span><span class="o">.</span><span class="n">n4_bias_field_correction</span> <span class="o">=</span> <span class="kc">False</span>
-        
-    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">non_local_means_filtering</span> <span class="ow">and</span> <span class="n">config</span><span class="o">.</span><span class="n">n4_bias_field_correction</span><span class="p">:</span>
-        <span class="n">denoise</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span> <span class="o">=</span> <span class="n">ants</span><span class="o">.</span><span class="n">DenoiseImage</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;anat_denoise&#39;</span><span class="p">)</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_deoblique</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">denoise</span><span class="p">,</span> <span class="s1">&#39;input_image&#39;</span><span class="p">)</span>
-        <span class="n">n4</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span> <span class="o">=</span> <span class="n">ants</span><span class="o">.</span><span class="n">N4BiasFieldCorrection</span><span class="p">(</span><span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">shrink_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">copy_header</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_n4&#39;</span><span class="p">)</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">denoise</span><span class="p">,</span> <span class="s1">&#39;output_image&#39;</span><span class="p">,</span> <span class="n">n4</span><span class="p">,</span> <span class="s1">&#39;input_image&#39;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">config</span><span class="o">.</span><span class="n">non_local_means_filtering</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">n4_bias_field_correction</span><span class="p">:</span>
-        <span class="n">denoise</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span> <span class="o">=</span> <span class="n">ants</span><span class="o">.</span><span class="n">DenoiseImage</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;anat_denoise&#39;</span><span class="p">)</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_deoblique</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">denoise</span><span class="p">,</span> <span class="s1">&#39;input_image&#39;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">non_local_means_filtering</span> <span class="ow">and</span> <span class="n">config</span><span class="o">.</span><span class="n">n4_bias_field_correction</span><span class="p">:</span>
-        <span class="n">n4</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span> <span class="o">=</span> <span class="n">ants</span><span class="o">.</span><span class="n">N4BiasFieldCorrection</span><span class="p">(</span><span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">shrink_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">copy_header</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_n4&#39;</span><span class="p">)</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_deoblique</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">n4</span><span class="p">,</span> <span class="s1">&#39;input_image&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;anat&#39;</span><span class="p">,</span> <span class="n">anat_deoblique</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_deoblique</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;refit&#39;</span><span class="p">)</span>
 
     <span class="c1"># Anatomical reorientation</span>
     <span class="n">anat_reorient</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Resample</span><span class="p">(),</span>
                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_reorient&#39;</span><span class="p">)</span>
     <span class="n">anat_reorient</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">orientation</span> <span class="o">=</span> <span class="s1">&#39;RPI&#39;</span>
     <span class="n">anat_reorient</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
-    
-    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">n4_bias_field_correction</span><span class="p">:</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">n4</span><span class="p">,</span> <span class="s1">&#39;output_image&#39;</span><span class="p">,</span> <span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">config</span><span class="o">.</span><span class="n">non_local_means_filtering</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">n4_bias_field_correction</span><span class="p">:</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">denoise</span><span class="p">,</span> <span class="s1">&#39;output_image&#39;</span><span class="p">,</span> <span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_deoblique</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_deoblique</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;reorient&#39;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">already_skullstripped</span><span class="p">:</span>
+    <span class="n">anat_leaf</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;anat_data&#39;</span><span class="p">]),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_leaf&#39;</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">acpc_align</span><span class="p">:</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">anat_leaf</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">)</span>
+
+    <span class="c1"># ACPC alignment     </span>
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">acpc_align</span><span class="p">:</span>
+        <span class="n">acpc_align</span> <span class="o">=</span> <span class="n">acpc_alignment</span><span class="p">(</span><span class="n">skullstrip_tool</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">acpc_target</span><span class="o">=</span><span class="n">acpc_target</span><span class="p">,</span> <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;acpc_align&#39;</span><span class="p">)</span>
+
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">acpc_align</span><span class="p">,</span> <span class="s1">&#39;inputspec.anat_leaf&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span> <span class="n">acpc_align</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain_mask&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_brain_only_for_acpc&#39;</span><span class="p">,</span> <span class="n">acpc_align</span><span class="p">,</span> <span class="s1">&#39;inputspec.template_brain_for_acpc&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_skull_for_acpc&#39;</span><span class="p">,</span> <span class="n">acpc_align</span><span class="p">,</span> <span class="s1">&#39;inputspec.template_head_for_acpc&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">acpc_align</span><span class="p">,</span> <span class="s1">&#39;outputspec.acpc_aligned_head&#39;</span><span class="p">,</span> <span class="n">anat_leaf</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;unet&#39;</span><span class="p">:</span>
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_brain_only_for_anat&#39;</span><span class="p">,</span> <span class="n">acpc_align</span><span class="p">,</span> <span class="s1">&#39;inputspec.template_brain_only_for_anat&#39;</span><span class="p">)</span>
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_skull_for_anat&#39;</span><span class="p">,</span> <span class="n">acpc_align</span><span class="p">,</span> <span class="s1">&#39;inputspec.template_skull_for_anat&#39;</span><span class="p">)</span>
+    <span class="c1"># Disable non_local_means_filtering and n4_bias_field_correction when run niworkflows-ants</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;niworkflows-ants&#39;</span><span class="p">:</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">non_local_means_filtering</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">n4_bias_field_correction</span> <span class="o">=</span> <span class="kc">False</span>
+        
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">non_local_means_filtering</span> <span class="ow">and</span> <span class="n">config</span><span class="o">.</span><span class="n">n4_bias_field_correction</span><span class="p">:</span>
+        <span class="n">denoise</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span> <span class="o">=</span> <span class="n">ants</span><span class="o">.</span><span class="n">DenoiseImage</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;anat_denoise&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_leaf</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span> <span class="n">denoise</span><span class="p">,</span> <span class="s1">&#39;input_image&#39;</span><span class="p">)</span>
+
+        <span class="n">n4</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span> <span class="o">=</span> <span class="n">ants</span><span class="o">.</span><span class="n">N4BiasFieldCorrection</span><span class="p">(</span><span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">shrink_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">copy_header</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_n4&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">denoise</span><span class="p">,</span> <span class="s1">&#39;output_image&#39;</span><span class="p">,</span> <span class="n">n4</span><span class="p">,</span> <span class="s1">&#39;input_image&#39;</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">config</span><span class="o">.</span><span class="n">non_local_means_filtering</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">n4_bias_field_correction</span><span class="p">:</span>
+        <span class="n">denoise</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span> <span class="o">=</span> <span class="n">ants</span><span class="o">.</span><span class="n">DenoiseImage</span><span class="p">(),</span> <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;anat_denoise&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_leaf</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span> <span class="n">denoise</span><span class="p">,</span> <span class="s1">&#39;input_image&#39;</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">non_local_means_filtering</span> <span class="ow">and</span> <span class="n">config</span><span class="o">.</span><span class="n">n4_bias_field_correction</span><span class="p">:</span>
+        <span class="n">n4</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span> <span class="o">=</span> <span class="n">ants</span><span class="o">.</span><span class="n">N4BiasFieldCorrection</span><span class="p">(</span><span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">shrink_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">copy_header</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_n4&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_leaf</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span> <span class="n">n4</span><span class="p">,</span> <span class="s1">&#39;input_image&#39;</span><span class="p">)</span>
+
+    <span class="n">anat_leaf2</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;anat_data&#39;</span><span class="p">]),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_leaf2&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">n4_bias_field_correction</span><span class="p">:</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">n4</span><span class="p">,</span> <span class="s1">&#39;output_image&#39;</span><span class="p">,</span> <span class="n">anat_leaf2</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">config</span><span class="o">.</span><span class="n">non_local_means_filtering</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">n4_bias_field_correction</span><span class="p">:</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">denoise</span><span class="p">,</span> <span class="s1">&#39;output_image&#39;</span><span class="p">,</span> <span class="n">anat_leaf2</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_leaf</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span> <span class="n">anat_leaf2</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">already_skullstripped</span><span class="p">:</span>
         <span class="n">anat_skullstrip</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
                                     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_skullstrip&#39;</span><span class="p">)</span>
 
-        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_leaf2</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span>
                         <span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
 
         <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
@@ -223,339 +757,30 @@
 
     <span class="k">else</span><span class="p">:</span>
 
-        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;afni&#39;</span><span class="p">:</span>
-            <span class="c1"># Skull-stripping using AFNI 3dSkullStrip</span>
-            <span class="n">inputnode_afni</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                <span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mask_vol&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;shrink_factor&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;var_shrink_fac&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;shrink_fac_bot_lim&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;avoid_vent&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;niter&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;pushout&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;touchup&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;fill_hole&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;avoid_eyes&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;use_edge&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;exp_frac&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;smooth_final&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;push_to_edge&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;use_skull&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;perc_int&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;max_inter_iter&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;blur_fwhm&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;fac&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;monkey&#39;</span><span class="p">]),</span>
-                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;AFNI_options&#39;</span><span class="p">)</span>
-
-            <span class="n">skullstrip_args</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;spat_norm&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;spat_norm_dxyz&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;mask_vol&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;shrink_fac&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;var_shrink_fac&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;shrink_fac_bot_lim&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;avoid_vent&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;niter&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;pushout&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;touchup&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;fill_hole&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;avoid_eyes&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;use_edge&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;exp_frac&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;smooth_final&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;push_to_edge&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;use_skull&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;perc_int&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;max_inter_iter&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;blur_fwhm&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;fac&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;monkey&#39;</span><span class="p">],</span>
-                                                    <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;expr&#39;</span><span class="p">],</span>
-                                                    <span class="n">function</span><span class="o">=</span><span class="n">create_3dskullstrip_arg_string</span><span class="p">),</span>
-                                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_skullstrip_args&#39;</span><span class="p">)</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">([</span>
-                <span class="p">(</span><span class="n">inputnode_afni</span><span class="p">,</span> <span class="n">skullstrip_args</span><span class="p">,</span> <span class="p">[</span>
-                    <span class="p">(</span><span class="s1">&#39;mask_vol&#39;</span><span class="p">,</span> <span class="s1">&#39;mask_vol&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;shrink_factor&#39;</span><span class="p">,</span> <span class="s1">&#39;shrink_fac&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;var_shrink_fac&#39;</span><span class="p">,</span> <span class="s1">&#39;var_shrink_fac&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;shrink_fac_bot_lim&#39;</span><span class="p">,</span> <span class="s1">&#39;shrink_fac_bot_lim&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;avoid_vent&#39;</span><span class="p">,</span> <span class="s1">&#39;avoid_vent&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;niter&#39;</span><span class="p">,</span> <span class="s1">&#39;niter&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;pushout&#39;</span><span class="p">,</span> <span class="s1">&#39;pushout&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;touchup&#39;</span><span class="p">,</span> <span class="s1">&#39;touchup&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;fill_hole&#39;</span><span class="p">,</span> <span class="s1">&#39;fill_hole&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;avoid_eyes&#39;</span><span class="p">,</span> <span class="s1">&#39;avoid_eyes&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;use_edge&#39;</span><span class="p">,</span> <span class="s1">&#39;use_edge&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;exp_frac&#39;</span><span class="p">,</span> <span class="s1">&#39;exp_frac&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;smooth_final&#39;</span><span class="p">,</span> <span class="s1">&#39;smooth_final&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;push_to_edge&#39;</span><span class="p">,</span> <span class="s1">&#39;push_to_edge&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;use_skull&#39;</span><span class="p">,</span> <span class="s1">&#39;use_skull&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;perc_int&#39;</span><span class="p">,</span> <span class="s1">&#39;perc_int&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;max_inter_iter&#39;</span><span class="p">,</span> <span class="s1">&#39;max_inter_iter&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;blur_fwhm&#39;</span><span class="p">,</span> <span class="s1">&#39;blur_fwhm&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;fac&#39;</span><span class="p">,</span> <span class="s1">&#39;fac&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;monkey&#39;</span><span class="p">,</span><span class="s1">&#39;monkey&#39;</span><span class="p">)</span>
-                <span class="p">])</span>
-            <span class="p">])</span>
-
-            <span class="n">anat_skullstrip</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">SkullStrip</span><span class="p">(),</span>
-                                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_skullstrip&#39;</span><span class="p">)</span>
-
-            <span class="n">anat_skullstrip</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">skullstrip_args</span><span class="p">,</span> <span class="s1">&#39;expr&#39;</span><span class="p">,</span>
-                            <span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;args&#39;</span><span class="p">)</span>
-
-            <span class="c1"># Generate anatomical brain mask</span>
-
-            <span class="n">anat_brain_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
-                                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_brain_mask&#39;</span><span class="p">)</span>
-
-            <span class="n">anat_brain_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="s1">&#39;step(a)&#39;</span>
-            <span class="n">anat_brain_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">anat_brain_mask</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
-
-            <span class="c1"># Apply skull-stripping step mask to original volume</span>
-            <span class="n">anat_skullstrip_orig_vol</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
-                                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_skullstrip_orig_vol&#39;</span><span class="p">)</span>
-
-            <span class="n">anat_skullstrip_orig_vol</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="s1">&#39;a*step(b)&#39;</span>
-            <span class="n">anat_skullstrip_orig_vol</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_brain_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;in_file_b&#39;</span><span class="p">)</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_brain_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">)</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">)</span>
-
-        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;fsl&#39;</span><span class="p">:</span>
-            <span class="c1"># Skull-stripping using FSL BET</span>
-            <span class="n">inputnode_bet</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                <span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;frac&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;mask_boolean&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;mesh_boolean&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;outline&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;padding&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;radius&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;reduce_bias&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;remove_eyes&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;robust&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;skull&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;surfaces&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;threshold&#39;</span><span class="p">,</span>
-                                               <span class="s1">&#39;vertical_gradient&#39;</span><span class="p">]),</span>
-                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;BET_options&#39;</span><span class="p">)</span>
-
-            <span class="n">anat_skullstrip</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                <span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">BET</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_skullstrip&#39;</span><span class="p">)</span>
-            <span class="n">anat_skullstrip</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">output_type</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+        <span class="n">anat_skullstrip</span> <span class="o">=</span> <span class="n">skullstrip_anatomical</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> 
+                                                <span class="n">wf_name</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">_skullstrip&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">wf_name</span><span class="p">))</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_leaf2</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span>
+                        <span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;inputspec.anat_data&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_brain_only_for_anat&#39;</span><span class="p">,</span>
+                        <span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;inputspec.template_brain_only_for_anat&#39;</span><span class="p">)</span> 
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_skull_for_anat&#39;</span><span class="p">,</span> 
+                        <span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;inputspec.template_skull_for_anat&#39;</span><span class="p">)</span>
             
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">([</span>
-                <span class="p">(</span><span class="n">inputnode_bet</span><span class="p">,</span> <span class="n">anat_skullstrip</span><span class="p">,</span> <span class="p">[</span>
-                    <span class="p">(</span><span class="s1">&#39;frac&#39;</span><span class="p">,</span> <span class="s1">&#39;frac&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;mask_boolean&#39;</span><span class="p">,</span> <span class="s1">&#39;mask&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;mesh_boolean&#39;</span><span class="p">,</span> <span class="s1">&#39;mesh&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;outline&#39;</span><span class="p">,</span> <span class="s1">&#39;outline&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;padding&#39;</span><span class="p">,</span> <span class="s1">&#39;padding&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;radius&#39;</span><span class="p">,</span> <span class="s1">&#39;radius&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;reduce_bias&#39;</span><span class="p">,</span> <span class="s1">&#39;reduce_bias&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;remove_eyes&#39;</span><span class="p">,</span> <span class="s1">&#39;remove_eyes&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;robust&#39;</span><span class="p">,</span> <span class="s1">&#39;robust&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;skull&#39;</span><span class="p">,</span> <span class="s1">&#39;skull&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;surfaces&#39;</span><span class="p">,</span> <span class="s1">&#39;surfaces&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;threshold&#39;</span><span class="p">,</span> <span class="s1">&#39;threshold&#39;</span><span class="p">),</span>
-                    <span class="p">(</span><span class="s1">&#39;vertical_gradient&#39;</span><span class="p">,</span> <span class="s1">&#39;vertical_gradient&#39;</span><span class="p">),</span>
-                <span class="p">])</span>
-            <span class="p">])</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;skullstrip&#39;</span><span class="p">)</span>
-
-            <span class="c1"># Apply skull-stripping step mask to original volume</span>
-            <span class="n">anat_skullstrip_orig_vol</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
-                                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_skullstrip_orig_vol&#39;</span><span class="p">)</span>
-
-            <span class="n">anat_skullstrip_orig_vol</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="s1">&#39;a*step(b)&#39;</span>
-            <span class="n">anat_skullstrip_orig_vol</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;in_file_b&#39;</span><span class="p">)</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;mask_file&#39;</span><span class="p">,</span>
-                            <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">)</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">)</span>
-
-        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;niworkflows-ants&#39;</span><span class="p">:</span> 
-            <span class="c1"># Skull-stripping using niworkflows-ants  </span>
-            <span class="n">anat_skullstrip_ants</span> <span class="o">=</span> <span class="n">init_brain_extraction_wf</span><span class="p">(</span><span class="n">tpl_target_path</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">niworkflows_ants_template_path</span><span class="p">,</span>
-                                                            <span class="n">tpl_mask_path</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">niworkflows_ants_mask_path</span><span class="p">,</span>
-                                                            <span class="n">tpl_regmask_path</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">niworkflows_ants_regmask_path</span><span class="p">,</span>
-                                                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_skullstrip_ants&#39;</span><span class="p">)</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">anat_skullstrip_ants</span><span class="p">,</span> <span class="s1">&#39;inputnode.in_files&#39;</span><span class="p">)</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip_ants</span><span class="p">,</span> <span class="s1">&#39;copy_xform.out_file&#39;</span><span class="p">,</span>
-                            <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;skullstrip&#39;</span><span class="p">)</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip_ants</span><span class="p">,</span> <span class="s1">&#39;copy_xform.out_file&#39;</span><span class="p">,</span>
-                            <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">)</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip_ants</span><span class="p">,</span> <span class="s1">&#39;atropos_wf.copy_xform.out_mask&#39;</span><span class="p">,</span>
-                            <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">)</span>
-
-        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;mask&#39;</span><span class="p">:</span>
-
-            <span class="n">brain_mask_deoblique</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Refit</span><span class="p">(),</span>
-                                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;brain_mask_deoblique&#39;</span><span class="p">)</span>
-            <span class="n">brain_mask_deoblique</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">deoblique</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;mask&#39;</span> <span class="ow">and</span> <span class="n">config</span><span class="o">.</span><span class="n">acpc_align</span><span class="p">:</span>
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">acpc_align</span><span class="p">,</span> <span class="s1">&#39;outputspec.acpc_brain_mask&#39;</span><span class="p">,</span> 
+                            <span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain_mask&#39;</span><span class="p">)</span> 
+        <span class="k">else</span><span class="p">:</span>             
             <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span>
-                            <span class="n">brain_mask_deoblique</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-            <span class="n">brain_mask_reorient</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Resample</span><span class="p">(),</span>
-                                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;brain_mask_reorient&#39;</span><span class="p">)</span>
-            <span class="n">brain_mask_reorient</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">orientation</span> <span class="o">=</span> <span class="s1">&#39;RPI&#39;</span>
-            <span class="n">brain_mask_reorient</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">brain_mask_deoblique</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">brain_mask_reorient</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-
-            <span class="n">anat_skullstrip_orig_vol</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
-                                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_skullstrip_orig_vol&#39;</span><span class="p">)</span>
-            <span class="n">anat_skullstrip_orig_vol</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="s1">&#39;a*step(b)&#39;</span>
-            <span class="n">anat_skullstrip_orig_vol</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">brain_mask_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;in_file_b&#39;</span><span class="p">)</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">brain_mask_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">)</span>
-
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip_orig_vol</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                            <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">)</span>
-
-        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;unet&#39;</span><span class="p">:</span>
-            <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            UNet</span>
-<span class="sd">            options (following numbers are default):</span>
-<span class="sd">            input_slice: 3</span>
-<span class="sd">            conv_block: 5</span>
-<span class="sd">            kernel_root: 16</span>
-<span class="sd">            rescale_dim: 256</span>
-<span class="sd">            &quot;&quot;&quot;</span>
-            <span class="c1"># TODO: add options to pipeline_config</span>
-            <span class="n">unet_check_for_s3</span> <span class="o">=</span> <span class="n">create_check_for_s3_node</span><span class="p">(</span><span class="s1">&#39;unet&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">unet_model</span><span class="p">)</span>
-            <span class="n">unet_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;model_path&#39;</span><span class="p">,</span> <span class="s1">&#39;cimg_in&#39;</span><span class="p">],</span> 
-                                              <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_path&#39;</span><span class="p">],</span>
-                                              <span class="n">function</span><span class="o">=</span><span class="n">predict_volumes</span><span class="p">),</span>                        
-                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;unet_mask&#39;</span><span class="p">)</span>
-            
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">unet_check_for_s3</span><span class="p">,</span> <span class="s1">&#39;local_path&#39;</span><span class="p">,</span> <span class="n">unet_mask</span><span class="p">,</span> <span class="s1">&#39;model_path&#39;</span><span class="p">)</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">unet_mask</span><span class="p">,</span> <span class="s1">&#39;cimg_in&#39;</span><span class="p">)</span>
-
-            <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            Revised mask with ANTs</span>
-<span class="sd">            &quot;&quot;&quot;</span>
-            <span class="c1"># fslmaths &lt;whole head&gt; -mul &lt;mask&gt; brain.nii.gz</span>
-            <span class="n">unet_masked_brain</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">MultiImageMaths</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;unet_masked_brain&#39;</span><span class="p">)</span>
-            <span class="n">unet_masked_brain</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s2">&quot;-mul </span><span class="si">%s</span><span class="s2">&quot;</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">unet_masked_brain</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">unet_mask</span><span class="p">,</span> <span class="s1">&#39;out_path&#39;</span><span class="p">,</span> <span class="n">unet_masked_brain</span><span class="p">,</span> <span class="s1">&#39;operand_files&#39;</span><span class="p">)</span>
-
-            <span class="c1"># flirt -v -dof 6 -in brain.nii.gz -ref NMT_SS_0.5mm.nii.gz -o brain_rot2atl -omat brain_rot2atl.mat -interp sinc</span>
-            <span class="c1"># TODO: antsRegistration -z 0 -d 3 -r [NMT_SS_0.5mm.nii.gz,brain.nii.gz,0] -o [transform,brain_rot2atl.nii.gz,brain_inv_rot2atl.nii.gz] -t Rigid[0.1] -m MI[NMT_SS_0.5mm.nii.gz,brain.nii.gz,1,32,Regular,0.25] -c [1000x500x250x100,1e-08,10] -s 3.0x2.0x1.0x0.0 -f 8x4x2x1 -u 1 -t Affine[0.1] -m MI[NMT_SS_0.5mm.nii.gz,brain.nii.gz,1,32,Regular,0.25] -c [1000x500x250x100,1e-08,10] -s 3.0x2.0x1.0x0.0 -f 8x4x2x1 -u 1</span>
-            <span class="n">native_brain_to_template_brain</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;native_brain_to_template_brain&#39;</span><span class="p">)</span>
-            <span class="n">native_brain_to_template_brain</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">dof</span> <span class="o">=</span> <span class="mi">6</span>
-            <span class="n">native_brain_to_template_brain</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;sinc&#39;</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">unet_masked_brain</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">native_brain_to_template_brain</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_brain_only_for_anat&#39;</span><span class="p">,</span> <span class="n">native_brain_to_template_brain</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
-            
-            <span class="c1"># flirt -in head.nii.gz -ref NMT_0.5mm.nii.gz -o head_rot2atl -applyxfm -init brain_rot2atl.mat</span>
-            <span class="c1"># TODO: antsApplyTransforms -d 3 -i head.nii.gz -r NMT_0.5mm.nii.gz -n Linear -o head_rot2atl.nii.gz -v -t transform1Rigid.mat -t transform2Affine.mat -t transform0DerivedInitialMovingTranslation.mat </span>
-            <span class="n">native_head_to_template_head</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;native_head_to_template_head&#39;</span><span class="p">)</span>
-            <span class="n">native_head_to_template_head</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">apply_xfm</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">native_head_to_template_head</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">native_brain_to_template_brain</span><span class="p">,</span> <span class="s1">&#39;out_matrix_file&#39;</span><span class="p">,</span> <span class="n">native_head_to_template_head</span><span class="p">,</span> <span class="s1">&#39;in_matrix_file&#39;</span><span class="p">)</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_skull_for_anat&#39;</span><span class="p">,</span> <span class="n">native_head_to_template_head</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
-
-            <span class="c1"># fslmaths NMT_SS_0.5mm.nii.gz -bin templateMask.nii.gz</span>
-            <span class="n">template_brain_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">maths</span><span class="o">.</span><span class="n">MathsCommand</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;template_brain_mask&#39;</span><span class="p">)</span>
-            <span class="n">template_brain_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;-bin&#39;</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_brain_only_for_anat&#39;</span><span class="p">,</span> <span class="n">template_brain_mask</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-            <span class="c1"># ANTS 3 -m  CC[head_rot2atl.nii.gz,NMT_0.5mm.nii.gz,1,5] -t SyN[0.25] -r Gauss[3,0] -o atl2T1rot -i 60x50x20 --use-Histogram-Matching  --number-of-affine-iterations 10000x10000x10000x10000x10000 --MI-option 32x16000</span>
-            <span class="n">ants_template_head_to_template</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">ants</span><span class="o">.</span><span class="n">Registration</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;template_head_to_template&#39;</span><span class="p">)</span>
-            <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CC&#39;</span><span class="p">]</span>
-            <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">metric_weight</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">]</span>
-            <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">transforms</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SyN&#39;</span><span class="p">]</span>
-            <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">transform_parameters</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">0.25</span><span class="p">,)]</span>
-            <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="s1">&#39;NearestNeighbor&#39;</span>
-            <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">number_of_iterations</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">60</span><span class="p">,</span><span class="mi">50</span><span class="p">,</span><span class="mi">20</span><span class="p">]]</span> 
-            <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">smoothing_sigmas</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.6</span><span class="p">,</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.0</span><span class="p">]]</span>
-            <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">shrink_factors</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">]]</span> 
-            <span class="n">ants_template_head_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">convergence_threshold</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.e-8</span><span class="p">]</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">native_head_to_template_head</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">ants_template_head_to_template</span><span class="p">,</span> <span class="s1">&#39;fixed_image&#39;</span><span class="p">)</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;template_skull_for_anat&#39;</span><span class="p">,</span> <span class="n">ants_template_head_to_template</span><span class="p">,</span> <span class="s1">&#39;moving_image&#39;</span><span class="p">)</span>
-            <span class="c1"># antsApplyTransforms -d 3 -i templateMask.nii.gz -t atl2T1rotWarp.nii.gz atl2T1rotAffine.txt -r brain_rot2atl.nii.gz -o brain_rot2atl_mask.nii.gz</span>
-            <span class="n">template_head_transform_to_template</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">ants</span><span class="o">.</span><span class="n">ApplyTransforms</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;template_head_transform_to_template&#39;</span><span class="p">)</span>
-            <span class="n">template_head_transform_to_template</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="mi">3</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">template_brain_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">template_head_transform_to_template</span><span class="p">,</span> <span class="s1">&#39;input_image&#39;</span><span class="p">)</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">native_brain_to_template_brain</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">template_head_transform_to_template</span><span class="p">,</span> <span class="s1">&#39;reference_image&#39;</span><span class="p">)</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">ants_template_head_to_template</span><span class="p">,</span> <span class="s1">&#39;forward_transforms&#39;</span><span class="p">,</span> <span class="n">template_head_transform_to_template</span><span class="p">,</span> <span class="s1">&#39;transforms&#39;</span><span class="p">)</span>
-
-            <span class="c1"># TODO: replace convert_xfm and flirt with: </span>
-            <span class="c1"># antsApplyTransforms -d 3 -i brain_rot2atl_mask.nii.gz -r brain.nii.gz -n linear -o brain_mask.nii.gz -t [transform0DerivedInitialMovingTranslation.mat,1] -t [transform2Affine.mat,1] -t [transform1Rigid.mat,1] </span>
-            <span class="c1"># convert_xfm -omat brain_rot2native.mat -inverse brain_rot2atl.mat </span>
-            <span class="n">invt</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ConvertXFM</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;convert_xfm&#39;</span><span class="p">)</span>
-            <span class="n">invt</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">invert_xfm</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">native_brain_to_template_brain</span><span class="p">,</span> <span class="s1">&#39;out_matrix_file&#39;</span><span class="p">,</span> <span class="n">invt</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-            <span class="c1"># flirt -in brain_rot2atl_mask.nii.gz -ref brain.nii.gz -o brain_mask.nii.gz -applyxfm -init brain_rot2native.mat</span>
-            <span class="n">template_brain_to_native_brain</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;template_brain_to_native_brain&#39;</span><span class="p">)</span>
-            <span class="n">template_brain_to_native_brain</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">apply_xfm</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">template_head_transform_to_template</span><span class="p">,</span> <span class="s1">&#39;output_image&#39;</span><span class="p">,</span> <span class="n">template_brain_to_native_brain</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">unet_masked_brain</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">template_brain_to_native_brain</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">invt</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">template_brain_to_native_brain</span><span class="p">,</span> <span class="s1">&#39;in_matrix_file&#39;</span><span class="p">)</span>
-
-            <span class="c1"># fslmaths brain_mask.nii.gz -thr .5 -bin brain_mask_thr.nii.gz</span>
-            <span class="n">refined_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">Threshold</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;refined_mask&#39;</span><span class="p">)</span>
-            <span class="n">refined_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">thresh</span> <span class="o">=</span> <span class="mf">0.5</span>
-            <span class="n">refined_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;-bin&#39;</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">template_brain_to_native_brain</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">refined_mask</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-            <span class="c1"># get a new brain with mask</span>
-            <span class="n">refined_brain</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">MultiImageMaths</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;refined_brain&#39;</span><span class="p">)</span>
-            <span class="n">refined_brain</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s2">&quot;-mul </span><span class="si">%s</span><span class="s2">&quot;</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_reorient</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">refined_brain</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">refined_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">refined_brain</span><span class="p">,</span> <span class="s1">&#39;operand_files&#39;</span><span class="p">)</span>
-            
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">refined_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">)</span>
-            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">refined_brain</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">)</span>
+                            <span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain_mask&#39;</span><span class="p">)</span> 
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;outputspec.brain_mask&#39;</span><span class="p">,</span>
+                        <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_skullstrip</span><span class="p">,</span> <span class="s1">&#39;outputspec.brain&#39;</span><span class="p">,</span> 
+                        <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;brain&#39;</span><span class="p">)</span>
+    
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">anat_leaf2</span><span class="p">,</span> <span class="s1">&#39;anat_data&#39;</span><span class="p">,</span> <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;anat_skull_leaf&#39;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">preproc</span></div>
+
 
 </pre></div>
 
@@ -598,7 +823,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.1 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.anat_preproc.anat_preproc</a></li> 
       </ul>

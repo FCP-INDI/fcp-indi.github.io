@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    installation
+   nodes
    workflow_documentation
    workflows/index
    testing

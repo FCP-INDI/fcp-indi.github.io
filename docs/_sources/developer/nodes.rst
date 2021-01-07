@@ -1,8 +1,7 @@
-.. _nodes:
-
 *****
 Nodes
 *****
 
 .. autoclass:: nipype.pipeline.engine.nodes.Node
-    :members:
+   :members: 
+   :special-members: __init__

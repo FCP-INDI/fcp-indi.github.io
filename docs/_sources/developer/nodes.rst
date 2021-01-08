@@ -2,8 +2,7 @@
 Nodes
 *****
 
-mem_gb
-======
+.. _mem_gb:
 
 .. warning::
    A Nipype :py:class:`~nipype.pipeline.engine.nodes.Node` has an initialization parameter ``mem_gb`` that differs from the :doc:`commandline option </user/run/help>` ``--mem_gb``. While the commandline option is a limit, the Node parameter is an estimate of the most memory that Node will consume when run. The Node parameter is not a limit; rather, this value is used to allocate system resources at runtime.

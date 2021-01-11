@@ -5,16 +5,15 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CPAC.timeseries.timeseries_analysis &#8212; C-PAC 1.7.0 Beta documentation</title>
-    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <title>CPAC.timeseries.timeseries_analysis &#8212; C-PAC 1.7.3.dev Beta documentation</title>
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
     
     <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
     <script src="../../../_static/doctools.js"></script>
-    <script src="../../../_static/language_data.js"></script>
     
     <link rel="index" title="Index" href="../../../genindex" />
     <link rel="search" title="Search" href="../../../search" /> 
@@ -28,7 +27,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.3.dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.timeseries.timeseries_analysis</a></li> 
       </ul>
@@ -41,9 +40,10 @@
             
   <h1>Source code for CPAC.timeseries.timeseries_analysis</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="nn">pe</span>
-<span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="k">as</span> <span class="nn">fsl</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
-<span class="kn">import</span> <span class="nn">nipype.interfaces.afni</span> <span class="k">as</span> <span class="nn">afni</span>
+
+<span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="kn">import</span> <span class="n">fsl</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="kn">import</span> <span class="n">afni</span>
 <span class="kn">from</span> <span class="nn">nipype</span> <span class="kn">import</span> <span class="n">logging</span>
 
 
@@ -159,11 +159,6 @@
 
     <span class="c1"># flag whether to re-write</span>
     <span class="n">modified</span> <span class="o">=</span> <span class="kc">False</span>
-
-    <span class="c1"># uncomment the header if commented:</span>
-    <span class="k">if</span> <span class="n">csv_lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;#&#39;</span><span class="p">:</span>
-        <span class="n">csv_lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">csv_lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>
-        <span class="n">modified</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="n">edited_lines</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">csv_lines</span><span class="p">:</span>
@@ -290,7 +285,7 @@
                   <span class="n">timeseries_roi</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
     <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode_roi</span><span class="p">,</span> <span class="s1">&#39;roi&#39;</span><span class="p">,</span>
-                  <span class="n">timeseries_roi</span><span class="p">,</span> <span class="s1">&#39;mask&#39;</span><span class="p">)</span>
+                  <span class="n">timeseries_roi</span><span class="p">,</span> <span class="s1">&#39;mask_file&#39;</span><span class="p">)</span>
 
     <span class="n">clean_csv_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">]</span>
     <span class="n">clean_csv</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;roi_csv&#39;</span><span class="p">],</span>
@@ -300,7 +295,7 @@
                                       <span class="n">imports</span><span class="o">=</span><span class="n">clean_csv_imports</span><span class="p">),</span>
                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;clean_roi_csv&#39;</span><span class="p">)</span>
 
-    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">timeseries_roi</span><span class="p">,</span> <span class="s1">&#39;stats&#39;</span><span class="p">,</span> <span class="n">clean_csv</span><span class="p">,</span> <span class="s1">&#39;roi_csv&#39;</span><span class="p">)</span>
+    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">timeseries_roi</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">clean_csv</span><span class="p">,</span> <span class="s1">&#39;roi_csv&#39;</span><span class="p">)</span>
 
     <span class="n">write_npz_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;import numpy as np&#39;</span><span class="p">,</span>
                          <span class="s1">&#39;from numpy import genfromtxt&#39;</span><span class="p">]</span>
@@ -837,7 +832,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.3.dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.timeseries.timeseries_analysis</a></li> 
       </ul>
@@ -845,7 +840,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

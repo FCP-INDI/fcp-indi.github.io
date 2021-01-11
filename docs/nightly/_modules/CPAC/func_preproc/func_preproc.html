@@ -5,16 +5,15 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CPAC.func_preproc.func_preproc &#8212; C-PAC 1.7.0 Beta documentation</title>
-    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <title>CPAC.func_preproc.func_preproc &#8212; C-PAC 1.7.3.dev Beta documentation</title>
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
     
     <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
     <script src="../../../_static/doctools.js"></script>
-    <script src="../../../_static/language_data.js"></script>
     
     <link rel="index" title="Index" href="../../../genindex" />
     <link rel="search" title="Search" href="../../../search" /> 
@@ -28,7 +27,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.3.dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.func_preproc.func_preproc</a></li> 
       </ul>
@@ -191,6 +190,93 @@
 
     <span class="k">return</span> <span class="n">wf</span>
 
+<span class="k">def</span> <span class="nf">anat_based_mask</span><span class="p">(</span><span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;bold_mask&#39;</span><span class="p">):</span>
+<span class="c1"># reference DCAN lab BOLD mask</span>
+<span class="c1"># https://github.com/DCAN-Labs/DCAN-HCP/blob/master/fMRIVolume/scripts/DistortionCorrectionAndEPIToT1wReg_FLIRTBBRAndFreeSurferBBRbased.sh</span>
+    <span class="n">wf</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">wf_name</span><span class="p">)</span>
+
+    <span class="n">input_node</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;func&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;anat_brain&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;anat_head&#39;</span><span class="p">]),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
+
+    <span class="n">output_node</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;func_brain_mask&#39;</span><span class="p">]),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
+
+    <span class="c1"># 0. Take single volume of func </span>
+    <span class="n">func_single_volume</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_single_volume&#39;</span><span class="p">)</span>
+
+    <span class="n">func_single_volume</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+        <span class="n">expr</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span>
+        <span class="n">single_idx</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">outputtype</span><span class="o">=</span><span class="s1">&#39;NIFTI_GZ&#39;</span>
+    <span class="p">)</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">,</span>
+                <span class="n">func_single_volume</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
+
+    <span class="c1"># 1. Register func head to anat head to get func2anat matrix</span>
+    <span class="n">linear_reg_func_to_anat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_to_anat_linear_reg&#39;</span><span class="p">)</span>
+    <span class="n">linear_reg_func_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">dof</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">linear_reg_func_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;spline&#39;</span>
+    <span class="n">linear_reg_func_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">searchr_x</span> <span class="o">=</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">]</span>
+    <span class="n">linear_reg_func_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">searchr_y</span> <span class="o">=</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">]</span>
+    <span class="n">linear_reg_func_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">searchr_z</span> <span class="o">=</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">]</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_single_volume</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> 
+                <span class="n">linear_reg_func_to_anat</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;anat_head&#39;</span><span class="p">,</span> 
+                <span class="n">linear_reg_func_to_anat</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
+
+    <span class="c1"># 2. Inverse func to anat affine, to get anat-to-func transform </span>
+    <span class="n">inv_func_to_anat_affine</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ConvertXFM</span><span class="p">(),</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inv_func2anat_affine&#39;</span><span class="p">)</span>
+    <span class="n">inv_func_to_anat_affine</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">invert_xfm</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">linear_reg_func_to_anat</span><span class="p">,</span> <span class="s1">&#39;out_matrix_file&#39;</span><span class="p">,</span>
+                <span class="n">inv_func_to_anat_affine</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="c1"># 3. get BOLD mask</span>
+    <span class="c1"># 3.1 Apply anat-to-func transform to transfer anatomical brain to functional space </span>
+    <span class="n">reg_anat_brain_to_func</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ApplyWarp</span><span class="p">(),</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reg_anat_brain_to_func&#39;</span><span class="p">)</span>
+    <span class="n">reg_anat_brain_to_func</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;nn&#39;</span>
+    <span class="n">reg_anat_brain_to_func</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">relwarp</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;anat_brain&#39;</span><span class="p">,</span> 
+                <span class="n">reg_anat_brain_to_func</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">,</span> 
+                <span class="n">reg_anat_brain_to_func</span><span class="p">,</span> <span class="s1">&#39;ref_file&#39;</span><span class="p">)</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inv_func_to_anat_affine</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> 
+                <span class="n">reg_anat_brain_to_func</span><span class="p">,</span> <span class="s1">&#39;premat&#39;</span><span class="p">)</span>
+
+    <span class="c1"># 3.2 Binarize transfered image</span>
+    <span class="n">func_mask_bin</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(),</span>
+                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_mask_bin&#39;</span><span class="p">)</span>
+    <span class="n">func_mask_bin</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s1">&#39;-abs -bin&#39;</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">reg_anat_brain_to_func</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> 
+                <span class="n">func_mask_bin</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="c1"># 3.3 Fill holes to get BOLD mask</span>
+    <span class="n">func_mask_fill_holes</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">MaskTool</span><span class="p">(),</span>
+                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_mask_fill_holes&#39;</span><span class="p">)</span>
+    <span class="n">func_mask_fill_holes</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fill_holes</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">func_mask_fill_holes</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_mask_bin</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> 
+                <span class="n">func_mask_fill_holes</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_mask_fill_holes</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> 
+                <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;func_brain_mask&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wf</span>
+
 
 <span class="k">def</span> <span class="nf">normalize_motion_parameters</span><span class="p">(</span><span class="n">in_file</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -217,10 +303,10 @@
 <span class="k">def</span> <span class="nf">skullstrip_functional</span><span class="p">(</span><span class="n">skullstrip_tool</span><span class="o">=</span><span class="s1">&#39;afni&#39;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;skullstrip_functional&#39;</span><span class="p">):</span>
 
     <span class="n">skullstrip_tool</span> <span class="o">=</span> <span class="n">skullstrip_tool</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">skullstrip_tool</span> <span class="o">!=</span> <span class="s1">&#39;afni&#39;</span> <span class="ow">and</span> <span class="n">skullstrip_tool</span> <span class="o">!=</span> <span class="s1">&#39;fsl&#39;</span> <span class="ow">and</span> <span class="n">skullstrip_tool</span> <span class="o">!=</span> <span class="s1">&#39;fsl_afni&#39;</span> <span class="ow">and</span> <span class="n">skullstrip_tool</span> <span class="o">!=</span> <span class="s1">&#39;anatomical_refined&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">skullstrip_tool</span> <span class="o">!=</span> <span class="s1">&#39;afni&#39;</span> <span class="ow">and</span> <span class="n">skullstrip_tool</span> <span class="o">!=</span> <span class="s1">&#39;fsl&#39;</span> <span class="ow">and</span> <span class="n">skullstrip_tool</span> <span class="o">!=</span> <span class="s1">&#39;fsl_afni&#39;</span> <span class="ow">and</span> <span class="n">skullstrip_tool</span> <span class="o">!=</span> <span class="s1">&#39;anatomical_refined&#39;</span> <span class="ow">and</span> <span class="n">skullstrip_tool</span> <span class="o">!=</span> <span class="s1">&#39;anatomical_based&#39;</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">[!] Error: The &#39;tool&#39; parameter of the &quot;</span>
                         <span class="s2">&quot;&#39;skullstrip_functional&#39; workflow must be either &quot;</span>
-                        <span class="s2">&quot;&#39;afni&#39; or &#39;fsl&#39; or &#39;fsl_afni&#39; or &#39;anatomical_refined&#39;.</span><span class="se">\n\n</span><span class="s2">Tool input: &quot;</span>
+                        <span class="s2">&quot;&#39;afni&#39; or &#39;fsl&#39; or &#39;fsl_afni&#39; or &#39;anatomical_refined&#39; or &#39;anatomical_based&#39;.</span><span class="se">\n\n</span><span class="s2">Tool input: &quot;</span>
                         <span class="s2">&quot;</span><span class="si">{0}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">skullstrip_tool</span><span class="p">))</span>
                
     <span class="n">wf</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">wf_name</span><span class="p">)</span>
@@ -228,7 +314,8 @@
     <span class="n">input_node</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;raw_func&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;func&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;anatomical_brain_mask&#39;</span><span class="p">,</span>
-                                                        <span class="s1">&#39;anat_brain&#39;</span><span class="p">]),</span>
+                                                        <span class="s1">&#39;anat_brain&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;anat_head&#39;</span><span class="p">]),</span>
                          <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
 
     <span class="n">output_node</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;func_brain&#39;</span><span class="p">,</span>
@@ -447,6 +534,24 @@
 
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_mask_final</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> 
                     <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;func_brain_mask&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># simply transforms the anatomical brain mask to the functional BOLD data.</span>
+    <span class="k">elif</span> <span class="n">skullstrip_tool</span> <span class="o">==</span> <span class="s1">&#39;anatomical_based&#39;</span><span class="p">:</span>
+
+        <span class="c1"># refined_bold_mask : input motion corrected func </span>
+        <span class="n">bold_mask</span> <span class="o">=</span> <span class="n">anat_based_mask</span><span class="p">(</span><span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;bold_mask&#39;</span><span class="p">)</span>
+
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">,</span>
+                    <span class="n">bold_mask</span><span class="p">,</span> <span class="s1">&#39;inputspec.func&#39;</span><span class="p">)</span>
+
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;anat_brain&#39;</span><span class="p">,</span> 
+                    <span class="n">bold_mask</span><span class="p">,</span> <span class="s1">&#39;inputspec.anat_brain&#39;</span><span class="p">)</span>
+
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;anat_head&#39;</span><span class="p">,</span> 
+                    <span class="n">bold_mask</span><span class="p">,</span> <span class="s1">&#39;inputspec.anat_head&#39;</span><span class="p">)</span>
+
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">bold_mask</span><span class="p">,</span> <span class="s1">&#39;outputspec.func_brain_mask&#39;</span><span class="p">,</span> 
+                    <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;func_brain_mask&#39;</span><span class="p">)</span>
 
     <span class="n">func_edge_detect</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_extract_brain&#39;</span><span class="p">)</span>
@@ -467,6 +572,9 @@
                     <span class="n">func_edge_detect</span><span class="p">,</span> <span class="s1">&#39;in_file_b&#39;</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">skullstrip_tool</span> <span class="o">==</span> <span class="s1">&#39;anatomical_refined&#39;</span><span class="p">:</span>
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_mask_final</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                    <span class="n">func_edge_detect</span><span class="p">,</span> <span class="s1">&#39;in_file_b&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">skullstrip_tool</span> <span class="o">==</span> <span class="s1">&#39;anatomical_based&#39;</span><span class="p">:</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">bold_mask</span><span class="p">,</span> <span class="s1">&#39;outputspec.func_brain_mask&#39;</span><span class="p">,</span> 
                     <span class="n">func_edge_detect</span><span class="p">,</span> <span class="s1">&#39;in_file_b&#39;</span><span class="p">)</span>
 
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_edge_detect</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>  <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;func_brain&#39;</span><span class="p">)</span>
@@ -614,8 +722,8 @@
 
 <span class="c1"># functional preprocessing</span>
 <div class="viewcode-block" id="create_func_preproc"><a class="viewcode-back" href="../../../developer/workflows/func_preproc#CPAC.func_preproc.create_func_preproc">[docs]</a><span class="k">def</span> <span class="nf">create_func_preproc</span><span class="p">(</span><span class="n">skullstrip_tool</span><span class="p">,</span> <span class="n">motion_correct_tool</span><span class="p">,</span>
-                        <span class="n">motion_correct_ref</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                        <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;func_preproc&#39;</span><span class="p">):</span>
+                        <span class="n">motion_correct_ref</span><span class="p">,</span> <span class="n">motion_estimate_filter_option</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;func_preproc&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">    The main purpose of this workflow is to process functional data. Raw rest file is deobliqued and reoriented</span>
@@ -773,8 +881,17 @@
 <span class="sd">               -odt char</span>
 
 <span class="sd">    .. exec::</span>
+<span class="sd">        import yaml</span>
+<span class="sd">        from urllib.request import urlopen</span>
 <span class="sd">        from CPAC.func_preproc import create_func_preproc</span>
-<span class="sd">        wf = create_func_preproc()</span>
+<span class="sd">        from CPAC.utils.configuration import Configuration</span>
+
+<span class="sd">        wf = create_func_preproc(&#39;fsl&#39;, &#39;3dvolreg&#39;, &#39;mean&#39;,</span>
+<span class="sd">            config=Configuration(yaml.safe_load(urlopen(</span>
+<span class="sd">                &#39;https://raw.githubusercontent.com/FCP-INDI/C-PAC/develop/&#39;</span>
+<span class="sd">                &#39;dev/docker_data/default_pipeline.yml&#39;</span>
+<span class="sd">            )))</span>
+<span class="sd">        )</span>
 <span class="sd">        wf.write_graph(</span>
 <span class="sd">            graph2use=&#39;orig&#39;,</span>
 <span class="sd">            dotfilename=&#39;./images/generated/func_preproc.dot&#39;</span>
@@ -782,12 +899,12 @@
 
 <span class="sd">    High Level Workflow Graph:</span>
 
-<span class="sd">    .. image:: ../images/generated/func_preproc.png</span>
+<span class="sd">    .. image:: ../../images/generated/func_preproc.png</span>
 <span class="sd">       :width: 1000</span>
 
 <span class="sd">    Detailed Workflow Graph:</span>
 
-<span class="sd">    .. image:: ../images/generated/func_preproc_detailed.png</span>
+<span class="sd">    .. image:: ../../images/generated/func_preproc_detailed.png</span>
 <span class="sd">       :width: 1000</span>
 
 <span class="sd">    Examples</span>
@@ -824,6 +941,7 @@
                                                         <span class="s1">&#39;twopass&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;anatomical_brain_mask&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;anat_brain&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;anat_head&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;TR&#39;</span><span class="p">]),</span>
                          <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
 
@@ -1168,7 +1286,7 @@
                             <span class="n">out_oned_matrix</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">config</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;run&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">motion_estimate_filter_option</span><span class="p">:</span>
                 <span class="n">notch_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;import numpy as np&#39;</span><span class="p">,</span>
                                  <span class="s1">&#39;from scipy.signal import iirnotch, lfilter, firwin, freqz&#39;</span><span class="p">,</span>
                                  <span class="s1">&#39;from matplotlib import pyplot as plt&#39;</span><span class="p">,</span>
@@ -1259,7 +1377,7 @@
                         <span class="n">normalize_motion_params</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">config</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;run&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">motion_estimate_filter_option</span><span class="p">:</span>
                 <span class="n">notch_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;import numpy as np&#39;</span><span class="p">,</span>
                                  <span class="s1">&#39;from scipy.signal import iirnotch, lfilter, firwin, freqz&#39;</span><span class="p">,</span>
                                  <span class="s1">&#39;from matplotlib import pyplot as plt&#39;</span><span class="p">,</span>
@@ -1322,6 +1440,8 @@
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;anat_brain&#39;</span><span class="p">,</span>
                     <span class="n">skullstrip_func</span><span class="p">,</span> <span class="s1">&#39;inputspec.anat_brain&#39;</span><span class="p">)</span>                
 
+    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;anat_head&#39;</span><span class="p">,</span>
+                    <span class="n">skullstrip_func</span><span class="p">,</span> <span class="s1">&#39;inputspec.anat_head&#39;</span><span class="p">)</span>                
 
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">skullstrip_func</span><span class="p">,</span> <span class="s1">&#39;outputspec.func_brain&#39;</span><span class="p">,</span>
                     <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;skullstrip&#39;</span><span class="p">)</span>
@@ -1338,7 +1458,35 @@
     <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">skullstrip_func</span><span class="p">,</span> <span class="s1">&#39;outputspec.func_brain&#39;</span><span class="p">,</span> 
                     <span class="n">func_mean</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">n4_correct_mean_EPI</span> <span class="p">:</span>
+    <span class="k">if</span> <span class="s2">&quot;Selected Functional Volume&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">func_reg_input</span><span class="p">:</span>
+        <span class="n">get_func_volume</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
+                                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;get_func_volume&#39;</span><span class="p">)</span>
+
+        <span class="n">get_func_volume</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+            <span class="n">expr</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span>
+            <span class="n">single_idx</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">func_reg_input_volume</span><span class="p">,</span>
+            <span class="n">outputtype</span><span class="o">=</span><span class="s1">&#39;NIFTI_GZ&#39;</span>
+        <span class="p">)</span>
+        <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">skullstrip_func</span><span class="p">,</span> <span class="s1">&#39;outputspec.func_brain&#39;</span><span class="p">,</span> 
+                        <span class="n">get_func_volume</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
+    
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">n4_correct_func_reg_input</span> <span class="p">:</span>
+
+            <span class="n">get_func_volume_n4_corrected</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span> <span class="o">=</span> <span class="n">ants</span><span class="o">.</span><span class="n">N4BiasFieldCorrection</span><span class="p">(</span><span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">copy_header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bspline_fitting_distance</span><span class="o">=</span><span class="mi">200</span><span class="p">),</span> <span class="n">shrink_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> 
+                                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;get_func_volume_n4_corrected&#39;</span><span class="p">)</span>
+            <span class="n">get_func_volume_n4_corrected</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;-r True&#39;</span>
+            
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">get_func_volume</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> 
+                            <span class="n">get_func_volume_n4_corrected</span><span class="p">,</span> <span class="s1">&#39;input_image&#39;</span><span class="p">)</span>
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">get_func_volume_n4_corrected</span><span class="p">,</span> <span class="s1">&#39;output_image&#39;</span><span class="p">,</span>
+                            <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;get_func_volume&#39;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">get_func_volume</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+                            <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;get_func_volume&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">n4_correct_func_reg_input</span> <span class="p">:</span>
+
         <span class="n">func_mean_n4_corrected</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span> <span class="o">=</span> <span class="n">ants</span><span class="o">.</span><span class="n">N4BiasFieldCorrection</span><span class="p">(</span><span class="n">dimension</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">copy_header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bspline_fitting_distance</span><span class="o">=</span><span class="mi">200</span><span class="p">),</span> <span class="n">shrink_factor</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> 
                                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_mean_n4_corrected&#39;</span><span class="p">)</span>
         <span class="n">func_mean_n4_corrected</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;-r True&#39;</span>
@@ -1584,128 +1732,134 @@
                     <span class="n">motion_correct_ref</span> <span class="o">=</span> <span class="n">motion_correct_ref</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
                     <span class="k">if</span> <span class="s2">&quot; &quot;</span> <span class="ow">in</span> <span class="n">motion_correct_ref</span><span class="p">:</span>
-                        <span class="n">motion_correct_ref</span> <span class="o">=</span> <span class="n">motion_correct_ref</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span>
-                                                                        <span class="s2">&quot;_&quot;</span><span class="p">)</span>
+                        <span class="n">motion_correct_ref</span> <span class="o">=</span> <span class="n">motion_correct_ref</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
 
                     <span class="k">for</span> <span class="n">motion_correct_tool</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">motion_correction</span><span class="p">:</span>
+
                         <span class="n">motion_correct_tool</span> <span class="o">=</span> <span class="n">motion_correct_tool</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
-                        <span class="n">new_strat</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
+                        <span class="k">for</span> <span class="n">motion_estimate_filter_option</span> <span class="ow">in</span>  <span class="n">c</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;run&#39;</span><span class="p">]:</span>
 
-                        <span class="n">func_preproc</span> <span class="o">=</span> <span class="n">create_func_preproc</span><span class="p">(</span>
-                            <span class="n">skullstrip_tool</span><span class="o">=</span><span class="n">skullstrip_tool</span><span class="p">,</span>
-                            <span class="n">motion_correct_tool</span><span class="o">=</span><span class="n">motion_correct_tool</span><span class="p">,</span>
-                            <span class="n">motion_correct_ref</span><span class="o">=</span><span class="n">motion_correct_ref</span><span class="p">,</span>
-                            <span class="n">config</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
-                            <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;func_preproc_before_stc_</span><span class="si">{0}</span><span class="s1">_</span><span class="si">{1}</span><span class="s1">_</span><span class="si">{2}</span><span class="s1">_</span><span class="si">{3}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                                <span class="n">skullstrip_tool</span><span class="p">,</span>
-                                <span class="n">motion_correct_ref</span><span class="p">,</span>
-                                <span class="n">motion_correct_tool</span><span class="p">,</span>
-                                <span class="n">num_strat</span><span class="p">)</span>
-                        <span class="p">)</span>
+                            <span class="k">if</span> <span class="n">motion_estimate_filter_option</span><span class="p">:</span>
+                                <span class="n">func_preproc_workflow_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_preproc_before_stc_</span><span class="si">{</span><span class="n">skullstrip_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_ref</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s1">_motion_filter_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
+                                <span class="n">motion_stats_workflow_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;gen_motion_stats_before_stc_</span><span class="si">{</span><span class="n">skullstrip_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_ref</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s1">_motion_filter_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">func_preproc_workflow_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_preproc_before_stc_</span><span class="si">{</span><span class="n">skullstrip_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_ref</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
+                                <span class="n">motion_stats_workflow_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;gen_motion_stats_before_stc_</span><span class="si">{</span><span class="n">skullstrip_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_ref</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
 
-                        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;raw_functional_trunc&#39;</span><span class="p">]</span>
-                        <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
-                                         <span class="s1">&#39;inputspec.raw_func&#39;</span><span class="p">)</span>
+                            <span class="n">new_strat</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
 
-                        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="o">.</span><span class="n">get_leaf_properties</span><span class="p">()</span>
-                        <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
-                                         <span class="s1">&#39;inputspec.func&#39;</span><span class="p">)</span>
+                            <span class="n">func_preproc</span> <span class="o">=</span> <span class="n">create_func_preproc</span><span class="p">(</span>
+                                <span class="n">skullstrip_tool</span><span class="o">=</span><span class="n">skullstrip_tool</span><span class="p">,</span>
+                                <span class="n">motion_correct_tool</span><span class="o">=</span><span class="n">motion_correct_tool</span><span class="p">,</span>
+                                <span class="n">motion_correct_ref</span><span class="o">=</span><span class="n">motion_correct_ref</span><span class="p">,</span>
+                                <span class="n">motion_estimate_filter_option</span><span class="o">=</span><span class="n">motion_estimate_filter_option</span><span class="p">,</span>
+                                <span class="n">config</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+                                <span class="n">wf_name</span><span class="o">=</span><span class="n">func_preproc_workflow_name</span>
+                            <span class="p">)</span>
 
-                        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;anatomical_brain&#39;</span><span class="p">]</span>
-                        <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
-                                         <span class="s1">&#39;inputspec.anat_brain&#39;</span><span class="p">)</span>
+                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;raw_functional_trunc&#39;</span><span class="p">]</span>
+                            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
+                                            <span class="s1">&#39;inputspec.raw_func&#39;</span><span class="p">)</span>
 
-                        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;anatomical_brain_mask&#39;</span><span class="p">]</span>
-                        <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
-                                         <span class="s1">&#39;inputspec.anatomical_brain_mask&#39;</span><span class="p">)</span>
+                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="o">.</span><span class="n">get_leaf_properties</span><span class="p">()</span>
+                            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
+                                            <span class="s1">&#39;inputspec.func&#39;</span><span class="p">)</span>
 
-                        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;tr&#39;</span><span class="p">]</span>
-                        <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
-                                        <span class="s1">&#39;inputspec.TR&#39;</span><span class="p">)</span>
+                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;anatomical_brain&#39;</span><span class="p">]</span>
+                            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
+                                            <span class="s1">&#39;inputspec.anat_brain&#39;</span><span class="p">)</span>
 
-                        <span class="n">func_preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">twopass</span> <span class="o">=</span> \
-                            <span class="nb">getattr</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s1">&#39;functional_volreg_twopass&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;anatomical_brain_mask&#39;</span><span class="p">]</span>
+                            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
+                                            <span class="s1">&#39;inputspec.anatomical_brain_mask&#39;</span><span class="p">)</span>
 
-                        <span class="n">new_strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
-                            <span class="s1">&#39;bold_masking_method&#39;</span><span class="p">:</span> <span class="n">skullstrip_tool</span><span class="p">,</span>
-                            <span class="s1">&#39;motion_correction_method&#39;</span><span class="p">:</span> <span class="n">motion_correct_tool</span><span class="p">,</span>
-                            <span class="s1">&#39;motion_correction_ref&#39;</span><span class="p">:</span> <span class="n">motion_correct_ref</span><span class="p">,</span>
-                            <span class="s1">&#39;movement_parameters&#39;</span><span class="p">:</span> <span class="p">(</span>
-                            <span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.movement_parameters&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;max_displacement&#39;</span><span class="p">:</span> <span class="p">(</span>
-                            <span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.max_displacement&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;functional_brain_mask_before_stc&#39;</span><span class="p">:</span> <span class="p">(</span>
-                            <span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.mask&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;motion_correct_before_stc&#39;</span><span class="p">:</span> <span class="p">(</span>
-                            <span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_correct&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;coordinate_transformation&#39;</span><span class="p">:</span> <span class="p">(</span>
-                            <span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.transform_matrices&#39;</span><span class="p">),</span>
-                        <span class="p">})</span>
+                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;anatomical_skull_leaf&#39;</span><span class="p">]</span>
+                            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
+                                            <span class="s1">&#39;inputspec.anat_head&#39;</span><span class="p">)</span>
 
-                        <span class="n">gen_motion_stats</span> <span class="o">=</span> <span class="n">motion_power_statistics</span><span class="p">(</span>
-                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;gen_motion_stats_before_stc_</span><span class="si">{0}</span><span class="s1">_</span><span class="si">{1}</span><span class="s1">_</span><span class="si">{2}</span><span class="s1">_</span><span class="si">{3}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                                <span class="n">skullstrip_tool</span><span class="p">,</span>
-                                <span class="n">motion_correct_ref</span><span class="p">,</span>
-                                <span class="n">motion_correct_tool</span><span class="p">,</span>
-                                <span class="n">num_strat</span><span class="p">),</span>
-                            <span class="n">motion_correct_tool</span><span class="o">=</span><span class="n">motion_correct_tool</span><span class="p">)</span>
+                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;tr&#39;</span><span class="p">]</span>
+                            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
+                                            <span class="s1">&#39;inputspec.TR&#39;</span><span class="p">)</span>
 
-                        <span class="c1"># Special case where the workflow is not getting outputs from</span>
-                        <span class="c1"># resource pool but is connected to functional datasource</span>
-                        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;subject&#39;</span><span class="p">]</span>
-                        <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                         <span class="n">gen_motion_stats</span><span class="p">,</span>
-                                         <span class="s1">&#39;inputspec.subject_id&#39;</span><span class="p">)</span>
+                            <span class="n">func_preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">twopass</span> <span class="o">=</span> \
+                                <span class="nb">getattr</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s1">&#39;functional_volreg_twopass&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
-                        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;scan&#39;</span><span class="p">]</span>
-                        <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                         <span class="n">gen_motion_stats</span><span class="p">,</span>
-                                         <span class="s1">&#39;inputspec.scan_id&#39;</span><span class="p">)</span>
+                            <span class="n">new_strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
+                                <span class="s1">&#39;bold_masking_method&#39;</span><span class="p">:</span> <span class="n">skullstrip_tool</span><span class="p">,</span>
+                                <span class="s1">&#39;motion_correction_method&#39;</span><span class="p">:</span> <span class="n">motion_correct_tool</span><span class="p">,</span>
+                                <span class="s1">&#39;motion_correction_ref&#39;</span><span class="p">:</span> <span class="n">motion_correct_ref</span><span class="p">,</span>
+                                <span class="s1">&#39;movement_parameters&#39;</span><span class="p">:</span> <span class="p">(</span>
+                                <span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.movement_parameters&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;max_displacement&#39;</span><span class="p">:</span> <span class="p">(</span>
+                                <span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.max_displacement&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;functional_brain_mask_before_stc&#39;</span><span class="p">:</span> <span class="p">(</span>
+                                <span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.mask&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;motion_correct_before_stc&#39;</span><span class="p">:</span> <span class="p">(</span>
+                                <span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_correct&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;coordinate_transformation&#39;</span><span class="p">:</span> <span class="p">(</span>
+                                <span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.transform_matrices&#39;</span><span class="p">),</span>
+                            <span class="p">})</span>
 
-                        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span>
-                            <span class="s1">&#39;motion_correct_before_stc&#39;</span><span class="p">]</span>
-                        <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                         <span class="n">gen_motion_stats</span><span class="p">,</span>
-                                         <span class="s1">&#39;inputspec.motion_correct&#39;</span><span class="p">)</span>
+                            <span class="n">gen_motion_stats</span> <span class="o">=</span> <span class="n">motion_power_statistics</span><span class="p">(</span>
+                                <span class="n">name</span><span class="o">=</span><span class="n">motion_stats_workflow_name</span><span class="p">,</span>
+                                <span class="n">motion_correct_tool</span><span class="o">=</span><span class="n">motion_correct_tool</span><span class="p">)</span>
 
-                        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;movement_parameters&#39;</span><span class="p">]</span>
-                        <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                         <span class="n">gen_motion_stats</span><span class="p">,</span>
-                                         <span class="s1">&#39;inputspec.movement_parameters&#39;</span><span class="p">)</span>
+                            <span class="c1"># Special case where the workflow is not getting outputs from</span>
+                            <span class="c1"># resource pool but is connected to functional datasource</span>
+                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;subject&#39;</span><span class="p">]</span>
+                            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                                            <span class="n">gen_motion_stats</span><span class="p">,</span>
+                                            <span class="s1">&#39;inputspec.subject_id&#39;</span><span class="p">)</span>
 
-                        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;max_displacement&#39;</span><span class="p">]</span>
-                        <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                         <span class="n">gen_motion_stats</span><span class="p">,</span>
-                                         <span class="s1">&#39;inputspec.max_displacement&#39;</span><span class="p">)</span>
+                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;scan&#39;</span><span class="p">]</span>
+                            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                                            <span class="n">gen_motion_stats</span><span class="p">,</span>
+                                            <span class="s1">&#39;inputspec.scan_id&#39;</span><span class="p">)</span>
 
-                        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span>
-                            <span class="s1">&#39;functional_brain_mask_before_stc&#39;</span><span class="p">]</span>
-                        <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                         <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;inputspec.mask&#39;</span><span class="p">)</span>
+                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span>
+                                <span class="s1">&#39;motion_correct_before_stc&#39;</span><span class="p">]</span>
+                            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                                            <span class="n">gen_motion_stats</span><span class="p">,</span>
+                                            <span class="s1">&#39;inputspec.motion_correct&#39;</span><span class="p">)</span>
 
-                        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span>
-                            <span class="s1">&#39;coordinate_transformation&#39;</span><span class="p">]</span>
-                        <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-                                         <span class="n">gen_motion_stats</span><span class="p">,</span>
-                                         <span class="s1">&#39;inputspec.transformations&#39;</span><span class="p">)</span>
+                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;movement_parameters&#39;</span><span class="p">]</span>
+                            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                                            <span class="n">gen_motion_stats</span><span class="p">,</span>
+                                            <span class="s1">&#39;inputspec.movement_parameters&#39;</span><span class="p">)</span>
 
-                        <span class="n">new_strat</span><span class="o">.</span><span class="n">append_name</span><span class="p">(</span><span class="n">gen_motion_stats</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;max_displacement&#39;</span><span class="p">]</span>
+                            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                                            <span class="n">gen_motion_stats</span><span class="p">,</span>
+                                            <span class="s1">&#39;inputspec.max_displacement&#39;</span><span class="p">)</span>
 
-                        <span class="n">new_strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
-                            <span class="s1">&#39;frame_wise_displacement_power&#39;</span><span class="p">:</span> <span class="p">(</span>
-                            <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.FDP_1D&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;frame_wise_displacement_jenkinson&#39;</span><span class="p">:</span> <span class="p">(</span>
-                            <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.FDJ_1D&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;dvars&#39;</span><span class="p">:</span> <span class="p">(</span>
-                            <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.DVARS_1D&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;power_params&#39;</span><span class="p">:</span> <span class="p">(</span>
-                            <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.power_params&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;motion_params&#39;</span><span class="p">:</span> <span class="p">(</span>
-                            <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_params&#39;</span><span class="p">)</span>
-                        <span class="p">})</span>
+                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span>
+                                <span class="s1">&#39;functional_brain_mask_before_stc&#39;</span><span class="p">]</span>
+                            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                                            <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;inputspec.mask&#39;</span><span class="p">)</span>
 
-                        <span class="n">new_strat_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_strat</span><span class="p">)</span>
+                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span>
+                                <span class="s1">&#39;coordinate_transformation&#39;</span><span class="p">]</span>
+                            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
+                                            <span class="n">gen_motion_stats</span><span class="p">,</span>
+                                            <span class="s1">&#39;inputspec.transformations&#39;</span><span class="p">)</span>
+
+                            <span class="n">new_strat</span><span class="o">.</span><span class="n">append_name</span><span class="p">(</span><span class="n">gen_motion_stats</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+                            <span class="n">new_strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
+                                <span class="s1">&#39;frame_wise_displacement_power&#39;</span><span class="p">:</span> <span class="p">(</span>
+                                <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.FDP_1D&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;frame_wise_displacement_jenkinson&#39;</span><span class="p">:</span> <span class="p">(</span>
+                                <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.FDJ_1D&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;dvars&#39;</span><span class="p">:</span> <span class="p">(</span>
+                                <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.DVARS_1D&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;power_params&#39;</span><span class="p">:</span> <span class="p">(</span>
+                                <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.power_params&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;motion_params&#39;</span><span class="p">:</span> <span class="p">(</span>
+                                <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_params&#39;</span><span class="p">)</span>
+                            <span class="p">})</span>
+
+                            <span class="n">new_strat_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_strat</span><span class="p">)</span>
 
     <span class="n">strat_list</span> <span class="o">=</span> <span class="n">new_strat_list</span>
 
@@ -1734,6 +1888,7 @@
                 <span class="s1">&#39;despiked&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">despike</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
             <span class="p">})</span>
 
+            <span class="n">new_strat</span><span class="o">.</span><span class="n">append_name</span><span class="p">(</span><span class="n">despike</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
             <span class="n">new_strat_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_strat</span><span class="p">)</span>
 
     <span class="n">strat_list</span> <span class="o">=</span> <span class="n">new_strat_list</span>
@@ -1808,15 +1963,25 @@
             <span class="c1"># motion correction tool</span>
             <span class="n">motion_correct_tool</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;motion_correction_method&#39;</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">unique_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">workflow_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_preproc_</span><span class="si">{</span><span class="n">skullstrip_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_ref</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="c1"># motion estimate filter option</span>
+            <span class="n">motion_estimate_filter_option</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="s1">&#39;motion_filter&#39;</span> <span class="ow">in</span> <span class="n">node_name</span> <span class="k">for</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">strat</span><span class="o">.</span><span class="n">get_nodes_names</span><span class="p">())</span>
+
+            <span class="k">if</span> <span class="n">motion_estimate_filter_option</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">unique_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">workflow_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_preproc_</span><span class="si">{</span><span class="n">skullstrip_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_ref</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s1">_motion_filter_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">workflow_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_preproc_</span><span class="si">{</span><span class="n">skullstrip_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_ref</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s1">_motion_filter_</span><span class="si">{</span><span class="n">unique_id</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">workflow_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_preproc_</span><span class="si">{</span><span class="n">skullstrip_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_ref</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">unique_id</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="k">if</span> <span class="n">unique_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">workflow_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_preproc_</span><span class="si">{</span><span class="n">skullstrip_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_ref</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">workflow_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_preproc_</span><span class="si">{</span><span class="n">skullstrip_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_ref</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">unique_id</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
 
             <span class="n">func_preproc</span> <span class="o">=</span> <span class="n">create_func_preproc</span><span class="p">(</span>
                 <span class="n">skullstrip_tool</span><span class="o">=</span><span class="n">skullstrip_tool</span><span class="p">,</span>
                 <span class="n">motion_correct_tool</span><span class="o">=</span><span class="n">motion_correct_tool</span><span class="p">,</span>
                 <span class="n">motion_correct_ref</span><span class="o">=</span><span class="n">motion_correct_ref</span><span class="p">,</span>
+                <span class="n">motion_estimate_filter_option</span><span class="o">=</span><span class="n">motion_estimate_filter_option</span><span class="p">,</span>
                 <span class="n">config</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
                 <span class="n">wf_name</span><span class="o">=</span><span class="n">workflow_name</span>
             <span class="p">)</span>
@@ -1837,6 +2002,10 @@
             <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
                             <span class="s1">&#39;inputspec.anatomical_brain_mask&#39;</span><span class="p">)</span>
 
+            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;anatomical_skull_leaf&#39;</span><span class="p">]</span>
+            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
+                            <span class="s1">&#39;inputspec.anat_head&#39;</span><span class="p">)</span>
+
             <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;tr&#39;</span><span class="p">]</span>
             <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
                              <span class="s1">&#39;inputspec.TR&#39;</span><span class="p">)</span>
@@ -1849,6 +2018,7 @@
 
             <span class="n">strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
                 <span class="s1">&#39;mean_functional&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.func_mean&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;selected_func_volume&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.get_func_volume&#39;</span><span class="p">),</span>
                 <span class="s1">&#39;functional_preprocessed_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.preprocessed_mask&#39;</span><span class="p">),</span>                              
                 <span class="s1">&#39;functional_preprocessed&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.preprocessed&#39;</span><span class="p">),</span>
                 <span class="s1">&#39;functional_brain_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.mask&#39;</span><span class="p">),</span>
@@ -1881,73 +2051,87 @@
                     <span class="k">for</span> <span class="n">motion_correct_tool</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">motion_correction</span><span class="p">:</span>
 
                         <span class="n">motion_correct_tool</span> <span class="o">=</span> <span class="n">motion_correct_tool</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-
-                        <span class="n">new_strat</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
                         
-                        <span class="k">if</span> <span class="n">unique_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                            <span class="n">workflow_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_preproc_</span><span class="si">{</span><span class="n">skullstrip_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_ref</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
-                        <span class="k">else</span><span class="p">:</span>
-                            <span class="n">workflow_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_preproc_</span><span class="si">{</span><span class="n">skullstrip_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_ref</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">unique_id</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
+                        <span class="k">for</span> <span class="n">motion_estimate_filter_option</span> <span class="ow">in</span>  <span class="n">c</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;run&#39;</span><span class="p">]:</span>
 
-                        <span class="n">func_preproc</span> <span class="o">=</span> <span class="n">create_func_preproc</span><span class="p">(</span>
-                            <span class="n">skullstrip_tool</span><span class="o">=</span><span class="n">skullstrip_tool</span><span class="p">,</span>
-                            <span class="n">motion_correct_tool</span><span class="o">=</span><span class="n">motion_correct_tool</span><span class="p">,</span>
-                            <span class="n">motion_correct_ref</span><span class="o">=</span><span class="n">motion_correct_ref</span><span class="p">,</span>
-                            <span class="n">config</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
-                            <span class="n">wf_name</span><span class="o">=</span><span class="n">workflow_name</span>
-                        <span class="p">)</span>
+                            <span class="k">if</span> <span class="n">motion_estimate_filter_option</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="n">unique_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                                    <span class="n">workflow_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_preproc_</span><span class="si">{</span><span class="n">skullstrip_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_ref</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s1">_motion_filter_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
+                                <span class="k">else</span><span class="p">:</span>
+                                    <span class="n">workflow_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_preproc_</span><span class="si">{</span><span class="n">skullstrip_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_ref</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s1">_motion_filter_</span><span class="si">{</span><span class="n">unique_id</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="n">unique_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                                    <span class="n">workflow_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_preproc_</span><span class="si">{</span><span class="n">skullstrip_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_ref</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
+                                <span class="k">else</span><span class="p">:</span>
+                                    <span class="n">workflow_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_preproc_</span><span class="si">{</span><span class="n">skullstrip_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_ref</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">unique_id</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">num_strat</span><span class="si">}</span><span class="s1">&#39;</span>
 
-                        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;raw_functional_trunc&#39;</span><span class="p">]</span>
-                        <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
-                                        <span class="s1">&#39;inputspec.raw_func&#39;</span><span class="p">)</span>
+                            <span class="n">new_strat</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">fork</span><span class="p">()</span>
 
-                        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="o">.</span><span class="n">get_leaf_properties</span><span class="p">()</span>
-                        <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
-                                        <span class="s1">&#39;inputspec.func&#39;</span><span class="p">)</span>
-                        
-                        <span class="k">if</span> <span class="n">skullstrip_tool</span> <span class="o">==</span> <span class="s1">&#39;anatomical_refined&#39;</span><span class="p">:</span>
+                            <span class="n">func_preproc</span> <span class="o">=</span> <span class="n">create_func_preproc</span><span class="p">(</span>
+                                <span class="n">skullstrip_tool</span><span class="o">=</span><span class="n">skullstrip_tool</span><span class="p">,</span>
+                                <span class="n">motion_correct_tool</span><span class="o">=</span><span class="n">motion_correct_tool</span><span class="p">,</span>
+                                <span class="n">motion_correct_ref</span><span class="o">=</span><span class="n">motion_correct_ref</span><span class="p">,</span>
+                                <span class="n">motion_estimate_filter_option</span><span class="o">=</span><span class="n">motion_estimate_filter_option</span><span class="p">,</span>
+                                <span class="n">config</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+                                <span class="n">wf_name</span><span class="o">=</span><span class="n">workflow_name</span>
+                            <span class="p">)</span>
+
+                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;raw_functional_trunc&#39;</span><span class="p">]</span>
+                            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
+                                            <span class="s1">&#39;inputspec.raw_func&#39;</span><span class="p">)</span>
+
+                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="o">.</span><span class="n">get_leaf_properties</span><span class="p">()</span>
+                            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
+                                            <span class="s1">&#39;inputspec.func&#39;</span><span class="p">)</span>
                             
-                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;anatomical_brain&#39;</span><span class="p">]</span>
+                            <span class="k">if</span> <span class="n">skullstrip_tool</span> <span class="o">==</span> <span class="s1">&#39;anatomical_refined&#39;</span> <span class="ow">or</span> <span class="n">skullstrip_tool</span> <span class="o">==</span> <span class="s1">&#39;anatomical_based&#39;</span><span class="p">:</span>
+                                
+                                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;anatomical_skull_leaf&#39;</span><span class="p">]</span>
+                                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
+                                                <span class="s1">&#39;inputspec.anat_head&#39;</span><span class="p">)</span>
+
+                                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;anatomical_brain&#39;</span><span class="p">]</span>
+                                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
+                                                <span class="s1">&#39;inputspec.anat_brain&#39;</span><span class="p">)</span>
+
+                                <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;anatomical_brain_mask&#39;</span><span class="p">]</span>
+                                <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
+                                                <span class="s1">&#39;inputspec.anatomical_brain_mask&#39;</span><span class="p">)</span>
+
+                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;tr&#39;</span><span class="p">]</span>
                             <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
-                                            <span class="s1">&#39;inputspec.anat_brain&#39;</span><span class="p">)</span>
+                                            <span class="s1">&#39;inputspec.TR&#39;</span><span class="p">)</span>
 
-                            <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">new_strat</span><span class="p">[</span><span class="s1">&#39;anatomical_brain_mask&#39;</span><span class="p">]</span>
-                            <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
-                                            <span class="s1">&#39;inputspec.anatomical_brain_mask&#39;</span><span class="p">)</span>
+                            <span class="n">func_preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">twopass</span> <span class="o">=</span> \
+                                <span class="nb">getattr</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s1">&#39;functional_volreg_twopass&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
-                        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="p">[</span><span class="s1">&#39;tr&#39;</span><span class="p">]</span>
-                        <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_preproc</span><span class="p">,</span>
-                                        <span class="s1">&#39;inputspec.TR&#39;</span><span class="p">)</span>
+                            <span class="n">new_strat</span><span class="o">.</span><span class="n">append_name</span><span class="p">(</span><span class="n">func_preproc</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                            <span class="n">new_strat</span><span class="o">.</span><span class="n">set_leaf_properties</span><span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.preprocessed&#39;</span><span class="p">)</span>
 
-                        <span class="n">func_preproc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">twopass</span> <span class="o">=</span> \
-                            <span class="nb">getattr</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s1">&#39;functional_volreg_twopass&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-
-                        <span class="n">new_strat</span><span class="o">.</span><span class="n">append_name</span><span class="p">(</span><span class="n">func_preproc</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-                        <span class="n">new_strat</span><span class="o">.</span><span class="n">set_leaf_properties</span><span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.preprocessed&#39;</span><span class="p">)</span>
-
-                        <span class="n">new_strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
-                            <span class="s1">&#39;bold_masking_method&#39;</span><span class="p">:</span> <span class="n">skullstrip_tool</span><span class="p">,</span>
-                            <span class="s1">&#39;motion_correction_method&#39;</span><span class="p">:</span> <span class="n">motion_correct_tool</span><span class="p">,</span>
-                            <span class="s1">&#39;motion_correction_ref&#39;</span><span class="p">:</span> <span class="n">motion_correct_ref</span><span class="p">,</span>
-                            <span class="s1">&#39;mean_functional&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.func_mean&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;functional_preprocessed_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.preprocessed_mask&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;movement_parameters&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.movement_parameters&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;max_displacement&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.max_displacement&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;functional_preprocessed&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.preprocessed&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;functional_brain_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.mask&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;motion_correct&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_correct&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;coordinate_transformation&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.transform_matrices&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;motion_estimate_filter_info_design&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_filter_info&#39;</span><span class="p">),</span>
-                            <span class="s1">&#39;motion_estimate_filter_info_plot&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_filter_plot&#39;</span><span class="p">)</span>
-                        <span class="p">})</span>
-
-                        <span class="k">if</span> <span class="s1">&#39;func&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">run_longitudinal</span><span class="p">:</span>
                             <span class="n">new_strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
-                                <span class="s1">&#39;functional_preprocessed_median&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.preprocessed_median&#39;</span><span class="p">),</span>
-                                <span class="s1">&#39;motion_correct_median&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_correct_median&#39;</span><span class="p">),</span>                                
+                                <span class="s1">&#39;bold_masking_method&#39;</span><span class="p">:</span> <span class="n">skullstrip_tool</span><span class="p">,</span>
+                                <span class="s1">&#39;motion_correction_method&#39;</span><span class="p">:</span> <span class="n">motion_correct_tool</span><span class="p">,</span>
+                                <span class="s1">&#39;motion_correction_ref&#39;</span><span class="p">:</span> <span class="n">motion_correct_ref</span><span class="p">,</span>
+                                <span class="s1">&#39;mean_functional&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.func_mean&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;selected_func_volume&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.get_func_volume&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;functional_preprocessed_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.preprocessed_mask&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;movement_parameters&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.movement_parameters&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;max_displacement&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.max_displacement&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;functional_preprocessed&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.preprocessed&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;functional_brain_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.mask&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;motion_correct&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_correct&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;coordinate_transformation&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.transform_matrices&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;motion_estimate_filter_info_design&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_filter_info&#39;</span><span class="p">),</span>
+                                <span class="s1">&#39;motion_estimate_filter_info_plot&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_filter_plot&#39;</span><span class="p">)</span>
                             <span class="p">})</span>
-                        
-                        <span class="n">new_strat_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_strat</span><span class="p">)</span>
+
+                            <span class="k">if</span> <span class="s1">&#39;func&#39;</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">run_longitudinal</span><span class="p">:</span>
+                                <span class="n">new_strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span>
+                                    <span class="s1">&#39;functional_preprocessed_median&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.preprocessed_median&#39;</span><span class="p">),</span>
+                                    <span class="s1">&#39;motion_correct_median&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_preproc</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_correct_median&#39;</span><span class="p">),</span>                                
+                                <span class="p">})</span>
+                            
+                            <span class="n">new_strat_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_strat</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">workflow</span><span class="p">,</span> <span class="n">new_strat_list</span>
 </pre></div>
@@ -1991,7 +2175,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.0 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.3.dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.func_preproc.func_preproc</a></li> 
       </ul>
@@ -1999,7 +2183,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

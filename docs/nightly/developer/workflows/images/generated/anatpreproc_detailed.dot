@@ -1,0 +1,23 @@
+digraph structs {
+node [shape=record];
+anat_preprocinputspec [label="{IN}|{ inputspec | utility |  }|{OUT|<outanat> anat|<outbrainmask> brain_mask|<outtemplatebrainonlyforanat> template_brain_only_for_anat|<outtemplateskullforanat> template_skull_for_anat}"];
+anat_preprocanat_deoblique [label="{IN|<ininfile> in_file}|{ anat_deoblique | afni |  }|{OUT|<outoutfile> out_file}"];
+anat_preprocanat_reorient [label="{IN|<ininfile> in_file}|{ anat_reorient | afni |  }|{OUT|<outoutfile> out_file}"];
+anat_preprocanat_leaf [label="{IN|<inanatdata> anat_data}|{ anat_leaf | utility |  }|{OUT|<outanatdata> anat_data}"];
+anat_preprocanat_leaf2 [label="{IN|<inanatdata> anat_data}|{ anat_leaf2 | utility |  }|{OUT|<outanatdata> anat_data}"];
+anat_preprocanat_preproc_skullstrip [label="{IN|<ininputspecanatdata> inputspec.anat_data|<ininputspecbrainmask> inputspec.brain_mask|<ininputspectemplatebrainonlyforanat> inputspec.template_brain_only_for_anat|<ininputspectemplateskullforanat> inputspec.template_skull_for_anat}|{ anat_preproc_skullstrip |  |  }|{OUT|<outoutputspecbrain> outputspec.brain|<outoutputspecbrainmask> outputspec.brain_mask}"];
+anat_preprocoutputspec [label="{IN|<inanatskullleaf> anat_skull_leaf|<inbrain> brain|<inbrainmask> brain_mask|<inrefit> refit|<inreorient> reorient}|{ outputspec | utility |  }|{OUT}"];
+anat_preprocanat_deoblique:outoutfile:e -> anat_preprocanat_reorient:ininfile:w;
+anat_preprocanat_deoblique:outoutfile:e -> anat_preprocoutputspec:inrefit:w;
+anat_preprocanat_leaf2:outanatdata:e -> anat_preprocanat_preproc_skullstrip:ininputspecanatdata:w;
+anat_preprocanat_leaf2:outanatdata:e -> anat_preprocoutputspec:inanatskullleaf:w;
+anat_preprocanat_leaf:outanatdata:e -> anat_preprocanat_leaf2:inanatdata:w;
+anat_preprocanat_preproc_skullstrip:outoutputspecbrain:e -> anat_preprocoutputspec:inbrain:w;
+anat_preprocanat_preproc_skullstrip:outoutputspecbrainmask:e -> anat_preprocoutputspec:inbrainmask:w;
+anat_preprocanat_reorient:outoutfile:e -> anat_preprocanat_leaf:inanatdata:w;
+anat_preprocanat_reorient:outoutfile:e -> anat_preprocoutputspec:inreorient:w;
+anat_preprocinputspec:outanat:e -> anat_preprocanat_deoblique:ininfile:w;
+anat_preprocinputspec:outbrainmask:e -> anat_preprocanat_preproc_skullstrip:ininputspecbrainmask:w;
+anat_preprocinputspec:outtemplatebrainonlyforanat:e -> anat_preprocanat_preproc_skullstrip:ininputspectemplatebrainonlyforanat:w;
+anat_preprocinputspec:outtemplateskullforanat:e -> anat_preprocanat_preproc_skullstrip:ininputspectemplateskullforanat:w;
+}

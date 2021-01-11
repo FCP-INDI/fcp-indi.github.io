@@ -1,6 +1,22 @@
 Design A Pipeline
 -----------------
 
+.. warning::
+
+    The C-PAC pipeline configuration was changed to a nested format with import capabilities in v1.8.0.
+    
+    With this change, the following configuration keys are deprecated:
+
+    * ``TR``
+    * ``fdCalc``
+    * ``reGenerateOutputs``
+    * ``runMedianAngleCorrection``
+    * ``slice_timing_pattern``
+    * ``targetAngleDeg``
+    * ``runSymbolicLinks``
+
+    Mappings for all other C-PAC 1.7 keys can be found :doc:`here </user/1.7-1.8-nesting-mappings>`.
+
 C-PAC offers a graphical interface you can use to quickly and easily modify the default pipeline or create your own from scratch:
 
 `https://fcp-indi.github.io/C-PAC_GUI/versions/latest/browser/#/ <https://fcp-indi.github.io/C-PAC_GUI/versions/latest/browser/#/>`_

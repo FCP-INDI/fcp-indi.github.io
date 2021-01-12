@@ -25,7 +25,7 @@ Nodes
    When a developer creates or modifies a Node in C-PAC, a ``mem_gb`` and ``n_procs`` argument should be provided unless the respective defaults of 0.2 and 1 are expected to be sufficient. When testing, the ``mem_gb`` and ``n_procs`` arguments should be adjusted if the observed memory and/or thread usage of a Node exceeds the estimate.
  
 
-.. autoclass:: nipype.pipeline.engine.nodes.Node
+.. autoclass:: CPAC.pipeline.Node
    :special-members: __init__
 
 .. _mem_gb:

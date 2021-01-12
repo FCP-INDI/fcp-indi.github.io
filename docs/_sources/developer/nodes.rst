@@ -28,8 +28,6 @@ Nodes
 .. autoclass:: CPAC.pipeline.Node
    :special-members: __init__
 
-.. _mem_gb:
-
 .. autofunction:: CPAC.utils.monitoring.log_nodes_cb
 
 .. autofunction:: nipype.utils.draw_gantt_chart.log_to_dict

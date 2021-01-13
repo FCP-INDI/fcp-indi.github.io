@@ -24,13 +24,12 @@ commands:
             source ~/simple/bin/activate
             pip install cpac
             deactivate
-  link-references:
-    steps:
       - run:
           name: 🖇️ Linking references
           command: |
             ln $(python -c "import os, CPAC; print(os.path.abspath(os.path.dirname(CPAC.__file__)))")/resources/configs/1.7-1.8-nesting-mappings.yml docs/_sources/references/1.7-1.8-nesting-mappings.yml || true
-            ln $(python -c "import os, CPAC; print(os.path.abspath(os.path.join(os.path.dirname(CPAC.__file__), os.pardir)))")/dev/docker_data/default_pipeline.yml docs/_sources/references/default_pipeline.yml || true
+            curl -o docs/_sources/references/default_pipeline.yml -L https://raw.githubusercontent.com/${CIRCLE_PROJECT_USERNAME}/C-PAC/<< parameters.version >>/dev/docker_data/default_pipeline.yml || true
+  
   run-cpac-commands:
     steps:
       - setup_remote_docker
@@ -116,7 +115,6 @@ jobs:
       - install-build-dependencies:
           version: develop
       - run-cpac-commands
-      - link-references
       - run:
           name: 🏗️ Building nightly branch docs
           command: ./bin/build nightly
@@ -133,7 +131,6 @@ jobs:
       - install-build-dependencies:
           version: ${BUILD_VERSION}
       - run-cpac-commands
-      - link-references
       - run:
           name: 🏗️ Building version branch docs
           command: ./bin/build ${BUILD_VERSION}

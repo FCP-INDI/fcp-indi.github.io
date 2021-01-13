@@ -40,7 +40,7 @@ In addition to the default pipeline, C-PAC comes packaged with a growing library
 
 Detailed information about the selection of pre-configured pipelines are :doc:`available here </user/preconfig>`.
 
-.. include:: design_a_pipeline.rst
+.. include:: pipelines/design_a_pipeline.rst
 
 Acknowledgments
 ---------------

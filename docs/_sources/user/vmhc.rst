@@ -48,7 +48,7 @@ Configuring CPAC to run VMHC
 Configuration Without the GUI
 """"""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run anatomical preprocessing:
+The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>` for C-PAC to run anatomical preprocessing:
 
 .. csv-table::
     :header: "Key","Description","Potential Values"

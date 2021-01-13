@@ -15,7 +15,7 @@ Design A Pipeline
     * ``targetAngleDeg``
     * ``runSymbolicLinks``
 
-    Mappings for all other C-PAC 1.7 keys can be found :doc:`here </user/1.7-1.8-nesting-mappings>`.
+    Mappings for all other C-PAC 1.7 keys can be found :doc:`here </user/pipelines/1.7-1.8-nesting-mappings>`.
 
 C-PAC offers a graphical interface you can use to quickly and easily modify the default pipeline or create your own from scratch:
 

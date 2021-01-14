@@ -3,7 +3,7 @@ Setting Up A Pipeline Configuration
 Overview
 --------
 
-This section explains how to create a new pipeline or edit an existing one. If you wish to use one of the pre-configured pipelines that come packaged with C-PAC, you can view the current available library of :doc:`pipelines here </user/preconfig>`.
+This section explains how to create a new pipeline or edit an existing one. If you wish to use one of the pre-configured pipelines that come packaged with C-PAC, you can view the current available library of :doc:`pipelines here </user/pipelines/preconfig>`.
 
 .. _ndmg_atlases:
 
@@ -53,7 +53,7 @@ If you want to base a pipeline on another pipeline configuration YAML file, you 
 
    FROM: /path/to/pipeline.yml
 
-in your pipeline configuration file. You can use the name of a :doc:`preconfigured pipeline </user/preconfig>` instead of a filepath if you want to base a configuration file on a preconfigured pipeline. If ``FROM`` is not specified, the pipeline will be based on :doc:`the default pipeline </user/pipelines/default>`.
+in your pipeline configuration file. You can use the name of a :doc:`preconfigured pipeline </user/pipelines/preconfig>` instead of a filepath if you want to base a configuration file on a preconfigured pipeline. If ``FROM`` is not specified, the pipeline will be based on :doc:`the default pipeline </user/pipelines/default>`.
 
 C-PAC will include all expected keys from the pipeline file specified in ``FROM`` (or the default pipeline if none is specified). Any keys specified in a pipeline configuration file will take precedence over the same key in the ``FROM`` base configuration, but all omitted keys will retain their values from the ``FROM`` base configuration.
 
@@ -143,8 +143,8 @@ Configurable Settings
 Data Management and Environment Settings
 '''''''''''''''''''''''''''''''''''''''''
 
-* :doc:`Computer Settings <compute_config>`
-* :doc:`Output Settings <output_config>`
+* :doc:`Computer Settings </user/compute_config>`
+* :doc:`Output Settings </user/output_config>`
 
 Pre- and post-processing
 '''''''''''''''''''''''''

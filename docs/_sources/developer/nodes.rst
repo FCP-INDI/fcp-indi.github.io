@@ -28,10 +28,12 @@ Nodes
 .. autoclass:: CPAC.pipeline.engine.Node
    :special-members: __init__
    :members:
+   :inherited-members:
 
 .. autoclass:: CPAC.pipeline.engine.MapNode
    :special-members: __init__
    :members:
+   :inherited-members:
 
 .. autofunction:: CPAC.utils.monitoring.log_nodes_cb
 

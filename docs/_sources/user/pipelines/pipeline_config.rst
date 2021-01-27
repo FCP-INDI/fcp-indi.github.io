@@ -73,7 +73,19 @@ Pipeline configuration files, like the data settings and data configuration file
    :language: YAML
    :lines: 10-53
 
-An example of a pipeline configuration YAML file can be found :doc:`here </user/pipelines/default>`_.  Tables explaining the keys and their potential values can be found on the individual pages for each of the outputs C-PAC is capable of producing. All pipeline setup configuration files should have the keys in the :doc:`Output Settings </user/output_config>` table defined.
+An example of a pipeline configuration YAML file can be found :doc:`here </user/pipelines/default>`.  Tables explaining the keys and their potential values can be found on the individual pages for each of the outputs C-PAC is capable of producing. All pipeline setup configuration files should have the keys in the :doc:`Output Settings </user/output_config>`_ table defined.
+
+String values can include the simplest form of `POSIX parameter expansion <https://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_02>` (``${parameter}``). Two special variables are included for these types of parameters:
+
+* ``resolution_for_anat`` will be populated with the value set in ``registration_workflows['anatomical_registration']['resolution_for_anat']``.
+
+* ``func_resolution`` will
+
+  * be populated with the value set in ``registration_workflows['functional_registration']['func_registration_to_template']['output_resolution']['func_preproc_outputs']`` if ``funcreg`` is in the value's key, 
+
+  * be populated with the value set in ``registration_workflows['functional_registration']['func_registration_to_template']['output_resolution']['func_derivative_outputs']`` if ``deriv`` is in the value's key, or
+
+  * raise an exception if neither ``funcreg`` nor ``deriv`` is in the value's key.
 
 If ``FROM`` is defined (see above), any undefined keys will be inferred from the pipeline configuration specified; otherwise, any undefined keys will be inferred from the default pipeline.
 

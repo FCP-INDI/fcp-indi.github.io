@@ -7,13 +7,8 @@ Design A Pipeline
     
     With this change, the following configuration keys are deprecated:
 
-    * ``TR``
-    * ``fdCalc``
-    * ``reGenerateOutputs``
-    * ``runMedianAngleCorrection``
-    * ``slice_timing_pattern``
-    * ``targetAngleDeg``
-    * ``runSymbolicLinks``
+    .. literalinclude:: /references/1.7-1.8-deprecations.yml
+       :language: YAML
 
     Mappings for all other C-PAC 1.7 keys can be found :doc:`here </user/pipelines/1.7-1.8-nesting-mappings>`.
 

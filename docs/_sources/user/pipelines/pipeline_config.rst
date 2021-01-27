@@ -69,61 +69,9 @@ If you want to run the analysis from terminal::
 
 Pipeline configuration files, like the data settings and data configuration files discussed in the :doc:`data configuration builder section </user/subject_list_config>`, are stored as YAML files.  Similarly, each of the parameters used by C-PAC to assemble your pipeline can be specified as nested key-value pairs, so a pipeline configuration YAML would have multiple lines of the form ``key: value`` like so
 
-.. code-block:: YAML
-
-    pipeline_setup:
-
-    # Name for this pipeline configuration - useful for identification.
-      pipelineName: pipeline01
-
-    working_directory:
-
-      # Directory where C-PAC should store temporary and intermediate files.
-      # - This directory must be saved if you wish to re-run your pipeline from where you left off (if not completed).
-      # - NOTE: As it stores all intermediate files, this directory can grow to become very
-      #   large, especially for data with a large amount of TRs.
-      # - If running in a container (Singularity/Docker), you can simply set this to an arbitrary
-      #   name like '/work', and then map (-B/-v) your desired output directory to that label.
-      # - If running outside a container, this should be a full path to a directory.
-      # - This can be written to '/tmp' if you do not intend to save your working directory.
-      path: /tmp
-
-      # Deletes the contents of the Working Directory after running.
-      # This saves disk space, but any additional preprocessing or analysis will have to be completely re-run.
-      remove_working_dir: True
-
-    crash_log_directory:
-
-      # Directory where CPAC should write crash logs.
-      path: /crash
-
-    log_directory:
-
-      # Whether to write log details of the pipeline run to the logging files.
-      run_logging: True
-
-      path: /logs
-
-    output_directory:
-
-      # Directory where C-PAC should write out processed data, logs, and crash reports.
-      # - If running in a container (Singularity/Docker), you can simply set this to an arbitrary
-      #   name like '/output', and then map (-B/-v) your desired output directory to that label.
-      # - If running outside a container, this should be a full path to a directory.
-      path: /output
-
-      # Include extra versions and intermediate steps of functional preprocessing in the output directory.
-      write_func_outputs: False
-
-      # Include extra outputs in the output directory that may be of interest when more information is needed.
-      write_debugging_outputs: False
-
-      # Output directory format and structure.
-      # Options: default, ndmg
-      output_tree: "default"
-
-      # Generate quality control pages containing preprocessing and derivative outputs.
-      generate_quality_control_images: True
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 10-53
 
 An example of a pipeline configuration YAML file can be found :doc:`here </user/pipelines/default>`_.  Tables explaining the keys and their potential values can be found on the individual pages for each of the outputs C-PAC is capable of producing. All pipeline setup configuration files should have the keys in the :doc:`Output Settings </user/output_config>` table defined.
 

@@ -7,8 +7,7 @@ Design A Pipeline
     
     With this change, the following configuration keys are deprecated:
 
-    .. literalinclude:: /references/1.7-1.8-deprecations.yml
-       :language: YAML
+    .. include:: /references/1.7-1.8-deprecations.rst
 
     Mappings for all other C-PAC 1.7 keys can be found :doc:`here </user/pipelines/1.7-1.8-nesting-mappings>`.
 

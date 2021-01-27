@@ -102,6 +102,29 @@ def compare_versions(new, old):
     )
 
 
+# prepare nested pipeline upgrade documentation
+def yaml_to_rst(path):
+    '''Function to convert a YAML list to RST
+
+    Parameters
+    ----------
+    path: str
+
+    Returns
+    -------
+    None
+    '''
+    lines = open(path, 'r').readlines()
+    lines = [
+        f'{line[:2]}``{line.rstrip()[2:]}``\n' if line.startswith('- ') else
+        f"\n{line.lstrip('# ')}\n" for line in lines
+    ]
+    path = f'{path[:-4]}.rst'
+    open(path, 'w').write(''.join(lines))
+
+
+yaml_to_rst('references/1.7-1.8-deprecations.yml')
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.

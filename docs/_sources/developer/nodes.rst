@@ -37,6 +37,9 @@ Nodes
 
 .. autofunction:: CPAC.utils.monitoring.log_nodes_cb
 
+draw_gantt_chart
+================
+
 .. automodule:: CPAC.utils.monitoring.draw_gantt_chart
    :members: resource_report, log_to_dict, generate_gantt_chart, resource_overusage_report
    :inherited-members:

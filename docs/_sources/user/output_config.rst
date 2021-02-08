@@ -34,25 +34,8 @@ Output Settings
 Configuration Without the GUI
 """"""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>` for C-PAC to run:
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
 
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/output_config.csv
-
-The box below contains an example of what these parameters might look like when defined in the YAML::
-
-    pipelineName :  gelastic_epilepsy_pipeline
-    workingDirectory :  /data/working
-    crashLogDirectory :  /data/crash
-    logDirectory : /data/logs
-    outputDirectory : /data/output
-    awsOutputBucketCredentials : /data/credentials.csv
-    s3Encryption :  [1]
-    generateQualityControlImages : [1]
-    write_func_outputs : [0]
-    write_debugging_outputs : [0]
-    removeWorkingDir :  False
-    reGenerateOutputs :  False
-    runSymbolicLinks :  [1]
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 10-75,133-144

@@ -24,22 +24,12 @@ Configuring CPAC to Run Longitudinal Preprocessing Pipeline
 
 Configuration Without the GUI
 """""""""""""""""""""""""""""
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>` for C-PAC to run longitudinal preprocessing:
 
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/longitudinal_config.csv
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
 
-The box below contains an example of what these parameters might look like when defined in the YAML::
-    
-    run_longitudinal : ['anat']
-    longitudinal_template_average_method : median
-    longitudinal_template_dof : 12
-    longitudinal_template_interp : trilinear
-    longitudinal_template_cost : corratio
-    longitudinal_template_thread_pool : 2
-    longitudinal_template_convergence_threshold : -1
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 157-189
 
 References
 ^^^^^^^^^^

@@ -50,12 +50,11 @@ Before SCA can be calculated, you **must** first extract a seed time series from
 Configuration Without the GUI
 """"""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>` for C-PAC to run SCA:
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
 
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/sca_config.csv
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 1245-1267
 
 References
 ^^^^^^^^^^

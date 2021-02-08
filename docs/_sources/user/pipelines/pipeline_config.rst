@@ -45,6 +45,8 @@ Definitions
 
 .. include:: design_a_pipeline.rst
 
+.. _using_a_text_editor:
+
 Using a Text Editor
 -------------------
 If you want to base a pipeline on another pipeline configuration YAML file, you can specify

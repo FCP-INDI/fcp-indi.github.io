@@ -190,79 +190,11 @@ Configuring CPAC to Run Anatomical Registration
 Configuration Without the GUI
 """""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>` for C-PAC to run anatomical preprocessing:
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
 
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/anat_config.csv
-
-The box below contains an example of what these parameters might look like when defined in the YAML::
-
-    resolution_for_anat : 2mm
-    template_brain_only_for_anat : /usr/share/fsl/5.0/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz
-    template_skull_for_anat : /usr/share/fsl/5.0/data/standard/MNI152_T1_${resolution_for_anat}.nii.gz
-    regOption : ['ANTS']
-    fnirtConfig : T1_2_MNI152_2mm
-    ref_mask : $FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain_mask_symmetric_dil.nii.gz
-    regWithSkull : [0]
-    already_skullstripped : [0]
-    ANTs_para_T1_registration:
-        - collapse-output-transforms: 0
-        - dimensionality: 3
-        - initial-moving-transform : 
-            initializationFeature: 0       
-        - transforms:
-            - Rigid: 
-                gradientStep : 0.1
-                metric : 
-                    type : MI     
-                    metricWeight: 1
-                    numberOfBins : 32
-                    samplingStrategy : Regular
-                    samplingPercentage : 0.25
-                convergence: 
-                    iteration : 1000x500x250x100
-                    convergenceThreshold : 1e-08
-                    convergenceWindowSize : 10
-                smoothing-sigmas : 3.0x2.0x1.0x0.0
-                shrink-factors : 8x4x2x1
-                use-histogram-matching : True
-            - Affine: 
-                gradientStep : 0.1
-                metric : 
-                    type : MI       
-                    metricWeight: 1
-                    numberOfBins : 32
-                    samplingStrategy : Regular
-                    samplingPercentage : 0.25        
-                convergence: 
-                    iteration : 1000x500x250x100
-                    convergenceThreshold : 1e-08
-                    convergenceWindowSize : 10
-                smoothing-sigmas : 3.0x2.0x1.0x0.0
-                shrink-factors : 8x4x2x1
-                use-histogram-matching : True
-            - SyN: 
-                gradientStep : 0.1
-                updateFieldVarianceInVoxelSpace : 3.0
-                totalFieldVarianceInVoxelSpace : 0.0
-                metric: 
-                    type : CC
-                    metricWeight: 1
-                    radius : 4
-                convergence: 
-                    iteration : 100x100x70x20
-                    convergenceThreshold : 1e-09
-                    convergenceWindowSize : 15
-                smoothing-sigmas : 3.0x2.0x1.0x0.0
-                shrink-factors : 6x4x2x1
-                use-histogram-matching : True
-                winsorize-image-intensities :
-                    lowerQuantile : 0.01
-                    upperQuantile : 0.99    
-
-
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 192-353
 
 Anatomical Tissue Segmentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -362,45 +294,11 @@ Configuring CPAC to Run Anatomical Tissue Segmentation
 Configuration Without the GUI
 """""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>` for C-PAC to run anatomical tissue segmentation:
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
 
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/seg_config.csv
-
-
-The box below contains an example of what these parameters might look like when defined in the YAML::
-
-    runSegmentationPreprocessing : [1]
-    seg_use_priors: True
-    priors_path : /usr/share/fsl/5.0/data/standard/tissuepriors/2mm
-    PRIORS_WHITE : $priors_path/avg152T1_white_bin.nii.gz
-    PRIORS_GRAY : $priors_path/avg152T1_gray_bin.nii.gz
-    PRIORS_CSF : $priors_path/avg152T1_csf_bin.nii.gz
-    seg_use_threshold : ['FSL-FAST Thresholding']
-    seg_CSF_threshold_value : 0.95
-    seg_WM_threshold_value : 0.95
-    seg_GM_threshold_value : 0.95
-    seg_use_erosion : False
-    seg_erosion_prop : 0.6
-    template_based_segmentation : ['None']
-    template_based_segmentation_WHITE :  $FSLDIR/data/standard/tissuepriors/2mm/avg152T1_white_bin.nii.gz
-    template_based_segmentation_GRAY :  $FSLDIR/data/standard/tissuepriors/2mm/avg152T1_gray_bin.nii.gz
-    template_based_segmentation_CSF :  $FSLDIR/data/standard/tissuepriors/2mm/avg152T1_csf_bin.nii.gz
-    ANTs_prior_based_segmentation: [0]
-    ANTs_prior_seg_template_brain_list : 
-        - s3://fcp-indi/resources/cpac/resources/MacaqueYerkes19_T1w_0.5mm/T1w_brain.nii.gz
-        - s3://fcp-indi/resources/cpac/resources/J_Macaque_11mo_atlas_nACQ_194x252x160space_0.5mm/T1w_brain.nii.gz
-    ANTs_prior_seg_template_segmentation_list:
-        - s3://fcp-indi/resources/cpac/resources/MacaqueYerkes19_T1w_0.5mm/Segmentation.nii.gz
-        - s3://fcp-indi/resources/cpac/resources/J_Macaque_11mo_atlas_nACQ_194x252x160space_0.5mm/Segmentation.nii.gz
-    ANTs_prior_seg_CSF_label: 24
-    ANTs_prior_seg_left_GM_label: 3
-    ANTs_prior_seg_right_GM_label: 42
-    ANTs_prior_seg_left_WM_label: 2
-    ANTs_prior_seg_right_WM_label: 41
-
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 356-476
 
 References
 ^^^^^^^^^^

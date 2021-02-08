@@ -179,9 +179,12 @@ version = __version__
 
 # Set redirects for renamed pages
 redirects = {
-    'user/design_a_pipeline': 'user/pipelines/design_a_pipeline',
-    'user/pipeline_config': 'user/pipelines/pipeline_config',
-    'user/preconfig': 'user/pipelines/preconfig'
+    'user/1.7-1.8-nesting-mappings': 'user/pipelines/' \
+                                     '1.7-1.8-nesting-mappings.html',
+    'user/default': 'user/pipelines/default.html',
+    'user/design_a_pipeline': 'user/pipelines/design_a_pipeline.html',
+    'user/pipeline_config': 'user/pipelines/pipeline_config.html',
+    'user/preconfig': 'user/pipelines/preconfig.html'
 }
 
 

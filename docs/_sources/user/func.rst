@@ -31,25 +31,11 @@ Initial Preprocessing
 
 Configuration Without the GUI
 """""""""""""""""""""""""""""
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>` for C-PAC to run initial functional preprocessing:
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
 
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/func_init_config.csv
-
-The box below contains an example of what these parameters might look like when defined in the YAML::
-
-    n4_correct_mean_EPI : False
-    runDespike : [0]
-    runScaling : False
-    scaling_factor : 10
-    runMotionStatisticsFirst : [0]
-    motion_correction : ['3dvolreg']
-    motion_correction_reference: ['mean']
-    motion_correction_reference_volume :  0
-
-
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 812-843
 
 Slice Timing Correction
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -75,20 +61,11 @@ Note that if a scan parameters file was used to construct the participant list, 
 Configuration Without the GUI
 """""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>` for C-PAC to run slice timing correction and drop TRs:
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
 
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/ts_config.csv
-
-The box below contains an example of what these parameters might look like when defined in the YAML::
-
-    startIdx : 0
-    stopIdx : None
-    TR : None
-    slice_timing_correction : [0]
-    slice_timing_pattern : ['Use NIFTI Header']
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 812-814,844-850
 
 Through the Data Configuration
 """"""""""""""""""""""""""""""
@@ -170,22 +147,11 @@ The C-PAC pipeline configuration builder provides options for configuring the Di
 Configuration Without the GUI
 """""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>` for C-PAC to run distortion correction:
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
 
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/fmap_distcorr_config.csv
-
-The box below contains an example of what these parameters might look like when defined in the pipeline configuration YAML::
-
-    distortion_correction :  ["PhaseDiff"]
-    fmap_distcorr_skullstrip: ["BET"]
-    fmap_distcorr_frac: [0.5]
-    fmap_distcorr_deltaTE : 2.46
-    fmap_distcorr_dwell_time : [0.0005]
-    fmap_distcorr_dwell_asym_ratio : [0.93902439]
-    fmap_distcorr_pedir: -y
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 812-814,916-944
 
 Functional to Anatomical Registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -242,21 +208,11 @@ Configuring FSL BET options:
 Configuration Without the GUI
 """""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>` for C-PAC to run functional to anatomical registration:
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
 
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/fta_config.csv
-
-The box below contains an example of what these parameters might look like when defined in the YAML::
-
-    runRegisterFuncToAnat : [1]
-    runBBReg : [1]
-    boundaryBasedRegistrationSchedule : /usr/share/fsl/5.0/etc/flirtsch/bbr.sch
-    func_reg_input :  ['Mean Functional']
-    func_reg_input_volume :  0
-    functionalMasking: ['AFNI']
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 479-480,599-631,812-813,946-998
 
 Functional to Template Registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -285,73 +241,8 @@ Functional to Template Registration
 Configuration Without the GUI
 """""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>` for C-PAC to run functional to anatomical registration:
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
 
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/ftm_config.csv
-
-The box below contains an example of what these parameters might look like when defined in the YAML::
-
-    runRegisterFuncToTemplate :  ['T1_template']
-    resolution_for_func : 2mm
-    resolution_for_func_derivative : 2mm
-    template_brain_only_for_anat : /usr/share/fsl/5.0/data/standard/MNI152_T1_${resolution_for_anat}_brain.nii.gz
-    template_skull_for_anat : /usr/share/fsl/5.0/data/standard/MNI152_T1_${resolution_for_anat}.nii.gz
-    identityMatrix : /usr/share/fsl/5.0/etc/flirtsch/ident.mat
-    template_epi : s3://fcp-indi/resources/cpac/resources/epi_hbn.nii.gz
-    ANTs_para_EPI_registration:
-        - collapse-output-transforms: 0
-        - dimensionality: 3
-        - initial-moving-transform : 
-            initializationFeature: 0       
-        - transforms:
-            - Rigid: 
-                gradientStep : 0.1
-                metric : 
-                    type : MI     
-                    metricWeight: 1
-                    numberOfBins : 32
-                    samplingStrategy : Regular
-                    samplingPercentage : 0.25
-                convergence: 
-                    iteration : 1000x500x250x100
-                    convergenceThreshold : 1e-08
-                    convergenceWindowSize : 10
-                smoothing-sigmas : 3.0x2.0x1.0x0.0
-                shrink-factors : 8x4x2x1
-                use-histogram-matching : True
-            - Affine: 
-                gradientStep : 0.1
-                metric : 
-                    type : MI       
-                    metricWeight: 1
-                    numberOfBins : 32
-                    samplingStrategy : Regular
-                    samplingPercentage : 0.25        
-                convergence: 
-                    iteration : 1000x500x250x100
-                    convergenceThreshold : 1e-08
-                    convergenceWindowSize : 10
-                smoothing-sigmas : 3.0x2.0x1.0x0.0
-                shrink-factors : 8x4x2x1
-                use-histogram-matching : True
-            - SyN: 
-                gradientStep : 0.1
-                updateFieldVarianceInVoxelSpace : 3.0
-                totalFieldVarianceInVoxelSpace : 0.0
-                metric: 
-                    type : CC
-                    metricWeight: 1
-                    radius : 4
-                convergence: 
-                    iteration : 100x100x70x20
-                    convergenceThreshold : 1e-09
-                    convergenceWindowSize : 15
-                smoothing-sigmas : 3.0x2.0x1.0x0.0
-                shrink-factors : 6x4x2x1
-                use-histogram-matching : True
-                winsorize-image-intensities :
-                    lowerQuantile : 0.01
-                    upperQuantile : 0.99    
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 479-480,599-600,633-809

@@ -38,19 +38,11 @@ Configuring C-PAC to Run After-Warping Steps
 Configuration Using a YAML File
 """"""""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>` for C-PAC to run the after warping options:
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
 
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/afterwarp_config.csv
-
-The box below contains an example of what these parameters might look like when defined in the pipeline configuration YAML::
-
-    run_smoothing :  [1]
-    fwhm : [4]
-    smoothing_order :  ['Before']
-    runZScoring :  [1]
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 1161-1191
 
 External Resources
 ^^^^^^^^^^^^^^^^^^

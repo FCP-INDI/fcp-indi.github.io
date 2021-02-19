@@ -29,6 +29,7 @@ Initial Preprocessing
     #. **filter_bandwidth - [float]:** Notch filter only. Manually select the bandwidth for the notch filter. Mutually exclusive with `breathing_rate_min` and `breathing_rate_max`. Use this to manually design the filter.
     #. **lowpass_cutoff - [float]:** Lowpass filter only. Manually select the cutoff frequency for the lowpass filter. Mutually exclusive with `breathing_rate_min` and `breathing_rate_max`. Use this to manually design the filter.
 
+
 .. _func_init_without_gui:
 
 Configuration Without the GUI
@@ -38,6 +39,9 @@ The following nested key/value pairs that will be set to these defaults if not d
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
    :lines: 602-619,815-847,855-936
+
+
+.. _motion_estimate_filter_valid_options:
 
 For ``motion_estimate_filter``, if ``breathing_rate_min`` and ``breathing_rate_max`` are provided, the filter design attributes (``center_frequency``, ``filter_bandwidth``, ``lowpass_cutoff``) are automatically configured. But if you provide these directly, you don't need the breathing rates. If all all parameters are provided, the filter design attributes will be ignored in favor of the ``breathing_rate_*`` attributes. A configuration must match at least one row in the following table:
 

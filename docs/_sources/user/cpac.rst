@@ -13,7 +13,39 @@ cpac requires Python 3.6 or greater. To get cpac, simply
 
     pip install cpac
 
-As a quick example, in order to run C-PAC in participant mode, for one participant, using a BIDS dataset stored on your machine or server, and using the container image's default pipeline configuration:
+Download / Upgrade C-PAC with cpac
+``````````````````````````````````
+
+To download or upgrade a particular C-PAC image,
+
+.. code-block:: console
+
+    cpac pull
+
+or
+
+.. code-block:: console
+
+    cpac upgrade
+
+When downloading/upgrading, the ``--platform``, ``--image``, and ``--tag`` let you specify platform (Docker or Singularity), image (Docker image name or URL to image in repository), and tag (version tag, currently only for Docker repositories), respectively.
+
+For example, a development Docker image can be downloaded with
+
+.. code-block:: console
+
+    cpac --platform docker --tag nightly pull
+
+Or a Singularity image built from that Docker image can be downloaded with
+
+.. code-block:: console
+
+    cpac --platform singularity --tag nightly pull
+
+Run C-PAC with cpac
+```````````````````
+
+To run C-PAC in participant mode for one participant, using a BIDS dataset stored on your machine or server and using the container image's default pipeline configuration:
 
 .. code-block:: console
 

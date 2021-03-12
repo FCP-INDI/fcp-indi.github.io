@@ -38,9 +38,9 @@ Pre-configured Pipelines
 
 In addition to the default pipeline, C-PAC comes packaged with a growing library of pre-configured pipelines that are ready to use. They can be invoked when running C-PAC using the ``--preconfig`` flag detailed above.
 
-Detailed information about the selection of pre-configured pipelines are :doc:`available here </user/preconfig>`.
+Detailed information about the selection of pre-configured pipelines are :doc:`available here </user/pipelines/preconfig>`.
 
-.. include:: design_a_pipeline.rst
+.. include:: pipelines/design_a_pipeline.rst
 
 Acknowledgments
 ---------------

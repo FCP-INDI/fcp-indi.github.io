@@ -118,164 +118,25 @@ Configuring Nuisance Signal Regression Options
 
 #. **Select Regressors: - [checkbox: compcor, wm, csf, global, pc1, motion, linear, quadratic]:**  Clicking on the *+* icon to the right of the box here will bring up a dialog where you can check off which nuisance variables you would like to include.  You may generate multiple sets of nuisance regression strategies in this way.  When you are done defining nuisance regression strategies, check the box next to each strategy you would like to run.
 
+Configuring Temporal Filtering Options
+""""""""""""""""""""""""""""""""""""""
+
+.. figure:: /_images/tf_gui.png
+
+#. **Run Temporal Filtering - [Off, On, On/Off]:** Apply a temporal band-pass filter to functional data.
+
+#. **Select regressors: - [dialogue: Low-frequency cutoff, High-frequency cutoff]:**  Clicking on the *+* icon to the right of the box here will bring up a dialog where you can define the upper and lower cutoffs for the bandpass filter.  You may generate multiple sets of bandpass filter strategies in this way.  When you are done defining bandpasses, check the box next to each bandpass you would like to run.
+
 .. _nuisance-no-gui:
 
 Configuration Without the GUI
 """""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run nuisance correction:
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
 
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/nuisance_config.csv
-
-The following box contains the full specification for regressors:
-
-.. program-output:: python /build/docs/_sources/user/nuisance_regressors_docstring.py
-
-The box below contains an example of what these parameters might look like when defined in the YAML.
-
-.. code-block:: yaml
-
-    runNuisance : [1]
-    lateral_ventricles_mask : /usr/share/fsl/5.0/data/atlases/HarvardOxford/HarvardOxford-lateral-ventricles-thr25-2mm.nii.gz
-
-    Regressors :
-
-      - Motion:
-          include_delayed: True
-
-        aCompCor:
-          summary:
-            method: DetrendPC
-            components: 5
-          tissues:
-            - WhiteMatter
-            - CerebrospinalFluid
-          extraction_resolution: 2
-
-        tCompCor:
-          summary:
-            filter: cosine
-            method: PC
-            components: 5
-          threshold: 1.5SD
-          by_slice: False
-          extraction_resolution: 2
-
-        CerebrospinalFluid:
-          summary: Mean
-          extraction_resolution: 2
-          erode_mask: true
-
-        GlobalSignal:
-          summary: Mean
-
-        Custom:
-          - file: custom_signal.nii.gz
-            convolve: true
-
-        PolyOrt: 2
-
-        Censor:
-          method: Interpolate
-          thresholds:
-            - type: FD_J
-              value: 0.3
-            - type: DVARS
-              value: 0.5
-          number_of_previous_trs_to_censor: 0
-          number_of_subsequent_trs_to_censor: 0
-
-      - Motion:  # Empty motion to include just the 6 motion parameters
-
-        aCompCor:
-          summary:
-            method: PC
-            components: 5
-          tissues:
-            - WhiteMatter
-            - CerebrospinalFluid
-          extraction_resolution: 2
-
-        CerebrospinalFluid:
-          summary: Mean
-          extraction_resolution: 2
-          erode_mask: true
-
-        PolyOrt: 2
-
-Translating from old C-PAC configuration
-""""""""""""""""""""""""""""""""""""""""
-In order to provide flexibility for the nuisance regression strategies, we changed how their definition are written in the YAML config file. Each regressor can be translated as follows:
-
-+----------------------+------------------------------------------------------------------------------------------------------------------------------------------------+
-| Old Configuration    | New Configuration                                                                                                                              |
-+----------------------+------------------------------------------------------------------------------------------------------------------------------------------------+
-| .. code-block:: yaml | .. code-block:: yaml                                                                                                                           |
-|                      |                                                                                                                                                |
-|     compcor: 1       |     aCompCor:                                                                                                                                  |
-|                      |       summary:                                                                                                                                 |
-|                      |         filter:                                                                                                                                |
-|                      |         method: DetrendPC                                                                                                                      |
-|                      |         components: 5                                                                                                                          |
-|                      |       tissues:                                                                                                                                 |
-|                      |         - WhiteMatter                                                                                                                          |
-|                      |         - CerebrospinalFluid                                                                                                                   |
-|                      |       extraction_resolution: 2                                                                                                                 |
-|                      |                                                                                                                                                |
-|                      | where components is the number of principal components parametrized by the parameter ``nComponents``                                           |
-+----------------------+------------------------------------------------------------------------------------------------------------------------------------------------+
-| .. code-block:: yaml | .. code-block:: yaml                                                                                                                           |
-|                      |                                                                                                                                                |
-|     wm: 1            |     WhiteMatter:                                                                                                                               |
-|                      |       summary: Mean                                                                                                                            |
-|                      |       extraction_resolution: 2                                                                                                                 |
-|                      |       erode_mask: true                                                                                                                         |
-+----------------------+------------------------------------------------------------------------------------------------------------------------------------------------+
-| .. code-block:: yaml | .. code-block:: yaml                                                                                                                           |
-|                      |                                                                                                                                                |
-|     csf: 1           |     CerebrospinalFluid:                                                                                                                        |
-|                      |       summary: Mean                                                                                                                            |
-|                      |       extraction_resolution: 2                                                                                                                 |
-+----------------------+------------------------------------------------------------------------------------------------------------------------------------------------+
-| .. code-block:: yaml | .. code-block:: yaml                                                                                                                           |
-|                      |                                                                                                                                                |
-|     gm: 1            |     GreyMatter:                                                                                                                                |
-|                      |       summary: Mean                                                                                                                            |
-|                      |       extraction_resolution: 2                                                                                                                 |
-|                      |       erode_mask: true                                                                                                                         |
-+----------------------+------------------------------------------------------------------------------------------------------------------------------------------------+
-| .. code-block:: yaml | .. code-block:: yaml                                                                                                                           |
-|                      |                                                                                                                                                |
-|     global: 1        |     GlobalSignal:                                                                                                                              |
-|                      |       summary: Mean                                                                                                                            |
-+----------------------+------------------------------------------------------------------------------------------------------------------------------------------------+
-| .. code-block:: yaml | .. code-block:: yaml                                                                                                                           |
-|                      |                                                                                                                                                |
-|     pc1: 1           |     GlobalSignal:                                                                                                                              |
-|                      |       summary:                                                                                                                                 |
-|                      |         type: PC                                                                                                                               |
-|                      |         components: 1                                                                                                                          |
-+----------------------+------------------------------------------------------------------------------------------------------------------------------------------------+
-| .. code-block:: yaml | .. code-block:: yaml                                                                                                                           |
-|                      |                                                                                                                                                |
-|     motion: 1        |     Motion:                                                                                                                                    |
-|                      |       include_delayed: true                                                                                                                    |
-|                      |       include_squared: true                                                                                                                    |
-|                      |       include_delayed_squared: true                                                                                                            |
-|                      |                                                                                                                                                |
-|                      | the delayed, squared and squared delayed derivatives were included when the Friston 24-parameters model was enabled (``runFristonModel: [1]``) |
-+----------------------+------------------------------------------------------------------------------------------------------------------------------------------------+
-| .. code-block:: yaml | .. code-block:: yaml                                                                                                                           |
-|                      |                                                                                                                                                |
-|     linear: 1        |     PolyOrt: 1                                                                                                                                 |
-+----------------------+------------------------------------------------------------------------------------------------------------------------------------------------+
-| .. code-block:: yaml | .. code-block:: yaml                                                                                                                           |
-|                      |                                                                                                                                                |
-|     quadratic: 1     |     PolyOrt: 2                                                                                                                                 |
-+----------------------+------------------------------------------------------------------------------------------------------------------------------------------------+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 1001-1158
 
 An example of nuisance regressors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -298,50 +159,7 @@ The following box contains an example of a TSV file generated by C-PAC with the 
 Configuring Median Angle Correction Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. figure:: /_images/median_angle.png
-
-#. **Run Median Angle Correction - [Off, On, On/Off]:** Correct for the global signal using median angle regression.
-
-#. **Target Angle (degrees) - [number]:** The target angle used during median angle correction.
-
-Configuration Without the GUI
-"""""""""""""""""""""""""""""
-
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run median angle correction:
-
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/medianangle_config.csv
-
-The box below contains an example of what these parameters might look like when defined in the YAML::
-
-    runMedianAngleCorrection : [0]
-    targetAngleDeg : [90]
-
-Configuring Temporal Filtering Options
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. figure:: /_images/tf_gui.png
-
-#. **Run Temporal Filtering - [Off, On, On/Off]:** Apply a temporal band-pass filter to functional data.
-
-#. **Select regressors: - [dialogue: Low-frequency cutoff, High-frequency cutoff]:**  Clicking on the *+* icon to the right of the box here will bring up a dialog where you can define the upper and lower cutoffs for the bandpass filter.  You may generate multiple sets of bandpass filter strategies in this way.  When you are done defining bandpasses, check the box next to each bandpass you would like to run.
-
-Configuration Without the GUI
-"""""""""""""""""""""""""""""
-
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run temporal filtering:
-
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/tf_config.csv
-
-The box below contains an example of what these parameters might look like when defined in the YAML::
-
-    runFrequencyFiltering: [1]
-    nuisanceBandpassFreq: [[0.01, 0.1]]
+.. warning:: median angle correction functionality was removed in C-PAC v1.8.0.
 
 External Resources
 ^^^^^^^^^^^^^^^^^^

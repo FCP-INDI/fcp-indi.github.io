@@ -30,18 +30,8 @@ Configuring ROI Time Series Extraction
 Configuration Without the GUI
 """"""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run time series extraction:
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
 
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/tse_roi_config.csv
-
-The box below contains an example of what these parameters might look like when defined in the YAML::
-
-    runROITimeseries :  [1]
-    realignment : ['ROI_to_func']
-    tsa_roi_paths:
-        - s3://fcp-indi/resources/cpac/resources/CC400.nii.gz: Avg
-          s3://fcp-indi/resources/cpac/resources/PNAS_Smith09_rsn10.nii.gz: SpatialReg
-    roiTSOutputs :  [True, True]
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 1194-1242

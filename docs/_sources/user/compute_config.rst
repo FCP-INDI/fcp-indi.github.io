@@ -27,24 +27,11 @@ Computer Settings
 Configuration Without the GUI
 """"""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run:
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
 
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/compute_config.csv
-
-The box below contains an example of what these parameters might look like when defined in the YAML::
-
-    runOnGrid :  False
-    FSLDIR :  /usr/share/fsl/5.0
-    resourceManager :  SGE
-    parallelEnvironment :  cpac
-    queue :  all.q
-    memoryAllocatedPerSubject : 2
-    numCoresPerSubject :  1
-    numSubjectsAtOnce :  1
-    num_ants_threads :  1
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 10-11,76-131
 
 Setting up SGE
 """""""""""""""

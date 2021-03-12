@@ -101,7 +101,7 @@ User Guide Index
 
    1. C-PAC Quickstart <quick>
    2. Specify Your Data <subject_list_config>
-   3. Select Your Pipeline <pipeline_config>
+   3. Select Your Pipeline <pipelines/pipeline_config>
    4. Pre-Process Your Data <preprocessing>
    5. Compute Derivatives <derivatives>
    6. All Run Options <running>

@@ -3,17 +3,45 @@ cpac (Python package)
 
 `cpac <https://pypi.org/project/cpac/>`_ is available so that you can easily run analyses without needing interact with the container platform that allows you to run C-PAC without installing all of the underlying software.
 
-.. note::
-
-    Currently the cpac wrapper supports Singularity (version ≥ 2.5 < 3.0) [*]_ and Docker.
-
 cpac requires Python 3.6 or greater. To get cpac, simply
 
 .. code-block:: console
 
     pip install cpac
 
-As a quick example, in order to run C-PAC in participant mode, for one participant, using a BIDS dataset stored on your machine or server, and using the container image's default pipeline configuration:
+Download / Upgrade C-PAC with cpac
+``````````````````````````````````
+
+To download or upgrade a particular C-PAC image,
+
+.. code-block:: console
+
+    cpac pull
+
+or
+
+.. code-block:: console
+
+    cpac upgrade
+
+When downloading/upgrading, the ``--platform``, ``--image``, and ``--tag`` let you specify platform (Docker or Singularity), image (Docker image name or URL to image in repository), and tag (version tag, currently only for Docker repositories), respectively.
+
+For example, a development Docker image can be downloaded with
+
+.. code-block:: console
+
+    cpac --platform docker --tag nightly pull
+
+Or a Singularity image built from that Docker image can be downloaded with
+
+.. code-block:: console
+
+    cpac --platform singularity --tag nightly pull
+
+Run C-PAC with cpac
+```````````````````
+
+To run C-PAC in participant mode for one participant, using a BIDS dataset stored on your machine or server and using the container image's default pipeline configuration:
 
 .. code-block:: console
 
@@ -48,7 +76,7 @@ You can also provide a link to an AWS S3 bucket containing a BIDS directory as t
 
     cpac run s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /Users/You/some_folder_for_outputs participant
 
-In addition to the default pipeline, C-PAC comes packaged with a growing library of pre-configured pipelines that are ready to use. To run C-PAC with one of the pre-packaged pre-configured pipelines, simply invoke the ``--preconfig`` flag, shown below. See the full selection of pre-configured pipelines :doc:`here </user/preconfig>`.
+In addition to the default pipeline, C-PAC comes packaged with a growing library of pre-configured pipelines that are ready to use. To run C-PAC with one of the pre-packaged pre-configured pipelines, simply invoke the ``--preconfig`` flag, shown below. See the full selection of pre-configured pipelines :doc:`here </user/pipelines/preconfig>`.
 
 .. code-block:: console
 

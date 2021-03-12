@@ -102,6 +102,29 @@ def compare_versions(new, old):
     )
 
 
+# prepare nested pipeline upgrade documentation
+def yaml_to_rst(path):
+    '''Function to convert a YAML list to RST
+
+    Parameters
+    ----------
+    path: str
+
+    Returns
+    -------
+    None
+    '''
+    lines = open(path, 'r').readlines()
+    lines = [
+        f'{line[:2]}``{line.rstrip()[2:]}``\n' if line.startswith('- ') else
+        f"\n{line.lstrip('# ')}\n" for line in lines
+    ]
+    path = f'{path[:-4]}.rst'
+    open(path, 'w').write(''.join(lines))
+
+
+yaml_to_rst('references/1.7-1.8-deprecations.yml')
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -116,6 +139,7 @@ sys.path.insert(0, os.path.abspath('.'))
 # extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
+    'sphinx_reredirects',
     'sphinx.ext.autodoc',
     'sphinxcontrib.bibtex',
     'sphinxcontrib.fulltoc',
@@ -152,6 +176,16 @@ copyright = '2020, C-PAC Team'
 #
 # The short X.Y version.
 version = __version__
+
+# Set redirects for renamed pages
+redirects = {
+    'user/1.7-1.8-nesting-mappings': 'user/pipelines/' \
+                                     '1.7-1.8-nesting-mappings.html',
+    'user/default': 'user/pipelines/default.html',
+    'user/design_a_pipeline': 'user/pipelines/design_a_pipeline.html',
+    'user/pipeline_config': 'user/pipelines/pipeline_config.html',
+    'user/preconfig': 'user/pipelines/preconfig.html'
+}
 
 
 # Get tags from GitHub
@@ -357,7 +391,7 @@ exclude_patterns = ['futuredocs/*']
 # default_role = None
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
-# add_function_parentheses = True
+add_function_parentheses = False
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).

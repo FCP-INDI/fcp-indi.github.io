@@ -15,7 +15,7 @@ commands:
           command: |
             sudo apt-get update && sudo apt-get -y install git python3-dev graphviz graphviz-dev libgraphviz-dev pkg-config python3-sphinx
             pip install --user -r https://raw.githubusercontent.com/FCP-INDI/C-PAC/<< parameters.version >>/requirements.txt
-            pip install --user git+https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git@<< parameters.version >> sphinx m2r numpydoc PyGithub "sphinxcontrib-bibtex<2.0" sphinxcontrib-fulltoc sphinxcontrib-programoutput semver torch
+            pip install --user git+https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git@<< parameters.version >> sphinx m2r numpydoc PyGithub "sphinxcontrib-bibtex<2.0" sphinxcontrib-fulltoc sphinxcontrib-programoutput sphinx-reredirects semver torch
             git clone https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git /home/circleci/build/C-PAC
             cd /home/circleci/build/C-PAC
             git checkout << parameters.version >>
@@ -24,6 +24,14 @@ commands:
             source ~/simple/bin/activate
             pip install cpac
             deactivate
+      - run:
+          name: 🖇️ Linking references
+          command: |
+            CPAC_DIRECTORY=$(python -c "import os, CPAC; print(os.path.abspath(os.path.dirname(CPAC.__file__)))")
+            ln ${CPAC_DIRECTORY}/resources/configs/1.7-1.8-nesting-mappings.yml docs/_sources/references/1.7-1.8-nesting-mappings.yml || true
+            ln ${CPAC_DIRECTORY}/resources/configs/1.7-1.8-deprecations.yml docs/_sources/references/1.7-1.8-deprecations.yml || true
+            curl -o docs/_sources/references/default_pipeline.yml -L https://raw.githubusercontent.com/${CIRCLE_PROJECT_USERNAME}/C-PAC/<< parameters.version >>/dev/docker_data/default_pipeline.yml || true
+  
   run-cpac-commands:
     steps:
       - setup_remote_docker

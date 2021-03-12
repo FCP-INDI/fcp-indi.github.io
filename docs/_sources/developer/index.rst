@@ -14,6 +14,7 @@ Contents:
    :maxdepth: 2
 
    installation
+   pipeline
    nodes
    workflow_documentation
    workflows/index

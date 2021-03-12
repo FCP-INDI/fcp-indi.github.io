@@ -3,10 +3,6 @@ cpac (Python package)
 
 `cpac <https://pypi.org/project/cpac/>`_ is available so that you can easily run analyses without needing interact with the container platform that allows you to run C-PAC without installing all of the underlying software.
 
-.. note::
-
-    Currently the cpac wrapper supports Singularity (version ≥ 2.5 < 3.0) [*]_ and Docker.
-
 cpac requires Python 3.6 or greater. To get cpac, simply
 
 .. code-block:: console

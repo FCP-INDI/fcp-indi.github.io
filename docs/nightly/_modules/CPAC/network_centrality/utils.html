@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CPAC.network_centrality.utils &#8212; C-PAC 1.7.3.dev Beta documentation</title>
+    <title>CPAC.network_centrality.utils &#8212; C-PAC 1.8.0.dev Beta documentation</title>
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.3.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.network_centrality.utils</a></li> 
       </ul>
@@ -39,8 +39,10 @@
           <div class="body" role="main">
             
   <h1>Source code for CPAC.network_centrality.utils</h1><div class="highlight"><pre>
-<span></span>
-<span class="c1"># Convert probability threshold value to correlation threshold</span>
+<span></span><span class="kn">from</span> <span class="nn">CPAC.pipeline.schema</span> <span class="kn">import</span> <span class="n">valid_options</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.docs</span> <span class="kn">import</span> <span class="n">docstring_parameter</span>
+
+
 <div class="viewcode-block" id="convert_pvalue_to_r"><a class="viewcode-back" href="../../../developer/workflows/network_centrality#CPAC.network_centrality.convert_pvalue_to_r">[docs]</a><span class="k">def</span> <span class="nf">convert_pvalue_to_r</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">two_tailed</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Method to calculate correlation threshold from p_value</span>
@@ -58,7 +60,7 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    r_value : float</span>
-<span class="sd">        correlation threshold value </span>
+<span class="sd">        correlation threshold value</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nb</span>
@@ -128,94 +130,160 @@
     <span class="k">return</span> <span class="n">output_niftis</span>
 
 
-<span class="c1"># Check centrality parameters</span>
+<span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">m_options</span><span class="o">=</span><span class="n">valid_options</span><span class="p">[</span><span class="s1">&#39;centrality&#39;</span><span class="p">][</span><span class="s1">&#39;method_options&#39;</span><span class="p">],</span>
+                     <span class="n">t_options</span><span class="o">=</span><span class="n">valid_options</span><span class="p">[</span><span class="s1">&#39;centrality&#39;</span><span class="p">][</span>
+                         <span class="s1">&#39;threshold_options&#39;</span><span class="p">])</span>
 <span class="k">def</span> <span class="nf">check_centrality_params</span><span class="p">(</span><span class="n">method_option</span><span class="p">,</span> <span class="n">threshold_option</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Function to check the centrality parameters</span>
+<span class="sd">    Function to check the centrality parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    method_option : str or int</span>
+<span class="sd">        one of {m_options} or index of option</span>
+
+<span class="sd">    threshold_option : str</span>
+<span class="sd">        one of {t_options} or index of option</span>
+
+<span class="sd">    threshold: float</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    method_option : str</span>
+<span class="sd">        one of {m_options}</span>
+
+<span class="sd">    threshold_option : str</span>
+<span class="sd">        one of {t_options}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="c1"># Check method option</span>
-    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">method_option</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">method_option</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">method_option</span> <span class="o">=</span> <span class="s1">&#39;degree&#39;</span>
-        <span class="k">elif</span> <span class="n">method_option</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">method_option</span> <span class="o">=</span> <span class="s1">&#39;eigenvector&#39;</span>
-        <span class="k">elif</span> <span class="n">method_option</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="n">method_option</span> <span class="o">=</span> <span class="s1">&#39;lfcd&#39;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">method_option</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">method_option</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid_options</span><span class="p">[</span><span class="s1">&#39;centrality&#39;</span><span class="p">][</span><span class="s1">&#39;method_options&#39;</span><span class="p">]):</span>
+            <span class="n">method_option</span> <span class="o">=</span> <span class="n">valid_options</span><span class="p">[</span>
+                <span class="s1">&#39;centrality&#39;</span><span class="p">][</span><span class="s1">&#39;method_options&#39;</span><span class="p">][</span><span class="n">method_option</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">err_msg</span> <span class="o">=</span> <span class="s1">&#39;Method option: </span><span class="si">%d</span><span class="s1"> not supported&#39;</span> <span class="o">%</span> <span class="n">method_option</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">method_option</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="n">err_msg</span> <span class="o">=</span> <span class="s1">&#39;Method option must be a string, but type: </span><span class="si">%s</span><span class="s1"> provided&#39;</span> \
-                  <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">method_option</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">MethodOptionError</span><span class="p">(</span><span class="n">method_option</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">method_option</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Method option must be a string, but type </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s1"> &#39;</span>
+                        <span class="s1">&#39;provided&#39;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">method_option</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
 
     <span class="c1"># Check threshold option</span>
     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">threshold_option</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
         <span class="n">threshold_option</span> <span class="o">=</span> <span class="n">threshold_option</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">threshold_option</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">threshold_option</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">threshold_option</span> <span class="o">=</span> <span class="s1">&#39;significance&#39;</span>
-        <span class="k">elif</span> <span class="n">threshold_option</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">threshold_option</span> <span class="o">=</span> <span class="s1">&#39;sparsity&#39;</span>
-        <span class="k">elif</span> <span class="n">threshold_option</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="n">threshold_option</span> <span class="o">=</span> <span class="s1">&#39;correlation&#39;</span>
+        <span class="k">if</span> <span class="n">threshold_option</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span>
+            <span class="n">valid_options</span><span class="p">[</span><span class="s1">&#39;centrality&#39;</span><span class="p">][</span><span class="s1">&#39;threshold_options&#39;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="n">threshold_option</span> <span class="o">=</span> <span class="n">valid_options</span><span class="p">[</span>
+                <span class="s1">&#39;centrality&#39;</span><span class="p">][</span><span class="s1">&#39;threshold_options&#39;</span><span class="p">][</span><span class="n">threshold_option</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">err_msg</span> <span class="o">=</span> <span class="s1">&#39;Threshold option: </span><span class="si">%s</span><span class="s1"> not supported for network centrality &#39;</span>\
-                      <span class="s1">&#39;measure: </span><span class="si">%s</span><span class="s1">; fix this in the pipeline config&#39;</span>\
-                      <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">threshold_option</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">method_option</span><span class="p">))</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ThresholdOptionError</span><span class="p">(</span><span class="n">threshold_option</span><span class="p">,</span> <span class="n">method_option</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">threshold_option</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="n">err_msg</span> <span class="o">=</span> <span class="s1">&#39;Threshold option must be a string, but type: </span><span class="si">%s</span><span class="s1"> provided&#39;</span> \
-                  <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">threshold_option</span><span class="p">))</span>
-
-    <span class="c1"># Init lists of acceptable strings</span>
-    <span class="n">acceptable_methods</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;degree&#39;</span><span class="p">,</span> <span class="s1">&#39;eigenvector&#39;</span><span class="p">,</span> <span class="s1">&#39;lfcd&#39;</span><span class="p">]</span>
-    <span class="n">acceptable_thresholds</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;significance&#39;</span><span class="p">,</span> <span class="s1">&#39;sparsity&#39;</span><span class="p">,</span> <span class="s1">&#39;correlation&#39;</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Threshold option must be a string, but type </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s1"> &#39;</span>
+                        <span class="s1">&#39;provided&#39;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">threshold_option</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
 
     <span class="c1"># Format input strings</span>
-    <span class="n">method_option</span> <span class="o">=</span> <span class="n">method_option</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;centrality&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
-    <span class="n">threshold_option</span> <span class="o">=</span> <span class="n">threshold_option</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;threshold&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+    <span class="n">method_option</span> <span class="o">=</span> <span class="n">method_option</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+    <span class="n">method_options_v1</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;degree&#39;</span><span class="p">,</span> <span class="s1">&#39;eigenvector&#39;</span><span class="p">,</span> <span class="s1">&#39;lfcd&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">method_option</span> <span class="ow">in</span> <span class="n">method_options_v1</span><span class="p">:</span>
+        <span class="n">method_option</span> <span class="o">=</span> <span class="n">valid_options</span><span class="p">[</span><span class="s1">&#39;centrality&#39;</span><span class="p">][</span><span class="s1">&#39;method_options&#39;</span><span class="p">][</span>
+            <span class="n">method_options_v1</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">method_option</span><span class="p">)</span>
+        <span class="p">]</span>
+    <span class="k">if</span> <span class="s1">&#39; &#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">threshold_option</span><span class="p">:</span>
+        <span class="n">threshold_option</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">threshold_option</span><span class="p">,</span> <span class="s1">&#39;threshold&#39;</span><span class="p">])</span>
+    <span class="n">threshold_option</span> <span class="o">=</span> <span class="n">threshold_option</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
 
     <span class="c1"># Check for strings properly formatted</span>
-    <span class="k">if</span> <span class="n">method_option</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">acceptable_methods</span><span class="p">:</span>
-        <span class="n">err_msg</span> <span class="o">=</span> <span class="s1">&#39;Method option: </span><span class="si">%s</span><span class="s1"> not supported&#39;</span> <span class="o">%</span> <span class="n">method_option</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">method_option</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_options</span><span class="p">[</span><span class="s1">&#39;centrality&#39;</span><span class="p">][</span><span class="s1">&#39;method_options&#39;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="n">MethodOptionError</span><span class="p">(</span><span class="n">method_option</span><span class="p">)</span>
 
     <span class="c1"># Check for strings properly formatted</span>
-    <span class="k">if</span> <span class="n">threshold_option</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">acceptable_thresholds</span><span class="p">:</span>
-        <span class="n">err_msg</span> <span class="o">=</span> <span class="s1">&#39;Threshold option: </span><span class="si">%s</span><span class="s1"> not supported for network centrality &#39;</span>\
-                  <span class="s1">&#39;measure: </span><span class="si">%s</span><span class="s1">; fix this in the pipeline config&#39;</span>\
-                  <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">threshold_option</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">method_option</span><span class="p">))</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">threshold_option</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_options</span><span class="p">[</span><span class="s1">&#39;centrality&#39;</span><span class="p">][</span>
+        <span class="s1">&#39;threshold_options&#39;</span>
+    <span class="p">]:</span>
+        <span class="k">raise</span> <span class="n">ThresholdOptionError</span><span class="p">(</span><span class="n">threshold_option</span><span class="p">,</span> <span class="n">method_option</span><span class="p">)</span>
+
+    <span class="c1"># Check for invalid combinations of method_option + threshold_option</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">method_option</span> <span class="o">==</span> <span class="s1">&#39;local_functional_connectivity_density&#39;</span> <span class="ow">and</span>
+        <span class="n">threshold_option</span> <span class="o">==</span> <span class="s1">&#39;Sparsity threshold&#39;</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">ThresholdOptionError</span><span class="p">(</span><span class="n">threshold_option</span><span class="p">,</span> <span class="n">method_option</span><span class="p">)</span>
 
     <span class="c1"># If it&#39;s significance/sparsity thresholding, check for (0,1]</span>
-    <span class="k">if</span> <span class="n">threshold_option</span> <span class="o">==</span> <span class="s1">&#39;significance&#39;</span> <span class="ow">or</span> <span class="n">threshold_option</span> <span class="o">==</span> <span class="s1">&#39;sparsity&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">threshold_option</span> <span class="o">==</span> <span class="s1">&#39;Significance threshold&#39;</span> <span class="ow">or</span>
+        <span class="n">threshold_option</span> <span class="o">==</span> <span class="s1">&#39;Sparsity threshold&#39;</span>
+    <span class="p">):</span>
         <span class="k">if</span> <span class="n">threshold</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">threshold</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">err_msg</span> <span class="o">=</span> <span class="s1">&#39;Threshold value must be a positive number greater than &#39;</span>\
-                      <span class="s1">&#39;0 and less than or equal to 1.</span><span class="se">\n</span><span class="s1">Currently it is set &#39;</span>\
-                      <span class="s1">&#39;at </span><span class="si">%f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">threshold</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ThresholdError</span><span class="p">(</span><span class="n">threshold_option</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
+
     <span class="c1"># If it&#39;s correlation, check for [-1,1]</span>
-    <span class="k">elif</span> <span class="n">threshold_option</span> <span class="o">==</span> <span class="s1">&#39;correlation&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">threshold_option</span> <span class="o">==</span> <span class="s1">&#39;Correlation threshold&#39;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">threshold</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">threshold</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">err_msg</span> <span class="o">=</span> <span class="s1">&#39;Threshold value must be greater than or equal to -1 and &#39;</span>\
-                      <span class="s1">&#39;less than or equal to 1.</span><span class="se">\n</span><span class="s1"> Current it is set at </span><span class="si">%f</span><span class="s1">&#39;</span>\
-                      <span class="o">%</span> <span class="n">threshold</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ThresholdError</span><span class="p">(</span><span class="n">threshold_option</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">err_msg</span> <span class="o">=</span> <span class="s1">&#39;Threshold option: </span><span class="si">%s</span><span class="s1"> not supported for network centrality &#39;</span>\
-                  <span class="s1">&#39;measure: </span><span class="si">%s</span><span class="s1">; fix this in the pipeline config&#39;</span>\
-                  <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">threshold_option</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">method_option</span><span class="p">))</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
-    <span class="c1"># </span>
-    <span class="k">if</span> <span class="n">method_option</span> <span class="o">==</span> <span class="s1">&#39;lfcd&#39;</span> <span class="ow">and</span> <span class="n">threshold_option</span> <span class="o">==</span> <span class="s1">&#39;sparsity&#39;</span><span class="p">:</span>
-        <span class="n">err_msg</span> <span class="o">=</span> <span class="s1">&#39;lFCD must use significance or correlation-type &#39;</span>\
-                  <span class="s1">&#39;thresholding. Check the pipline configuration has &#39;</span>\
-                  <span class="s1">&#39;this setting&#39;</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ThresholdOptionError</span><span class="p">(</span><span class="n">threshold_option</span><span class="p">,</span> <span class="n">method_option</span><span class="p">)</span>
 
     <span class="c1"># Return valid method and threshold options</span>
     <span class="k">return</span> <span class="n">method_option</span><span class="p">,</span> <span class="n">threshold_option</span>
+
+
+<span class="k">class</span> <span class="nc">MethodOptionError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised when a selected centrality method option is not supported.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method_option</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method_option</span> <span class="o">=</span> <span class="n">method_option</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;Method option </span><span class="se">\&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s1"> not supported&#39;</span> <span class="o">%</span> <span class="n">method_option</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ThresholdError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised when a selected threshold value is not supported for a</span>
+<span class="sd">    selected threshold option.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold_option</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold_option</span> <span class="o">=</span> <span class="n">threshold_option</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">threshold</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;For </span><span class="se">\&#39;</span><span class="si">{</span><span class="n">threshold_option</span><span class="si">}</span><span class="se">\&#39;</span><span class="s1">, threshold value must be &#39;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">threshold_option</span> <span class="o">==</span> <span class="s1">&#39;Significance threshold&#39;</span> <span class="ow">or</span>
+            <span class="n">threshold_option</span> <span class="o">==</span> <span class="s1">&#39;Sparsity threshold&#39;</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39;a positive number greater than 0 &#39;</span>
+        <span class="k">elif</span> <span class="n">threshold_option</span> <span class="o">==</span> <span class="s1">&#39;Correlation threshold&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39;greater than or equal to -1 &#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ThresholdOptionError</span><span class="p">(</span><span class="n">threshold_option</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39;and less than or equal to 1.</span><span class="se">\n</span><span class="s1"> Currently it is set &#39;</span> \
+                        <span class="sa">f</span><span class="s1">&#39;at </span><span class="si">{</span><span class="n">threshold</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ThresholdOptionError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Raised when a selected threshold option is not supported for a</span>
+<span class="sd">    selected centrality measure.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold_option</span><span class="p">,</span> <span class="n">method_option</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method_option</span> <span class="o">=</span> <span class="n">method_option</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold_option</span> <span class="o">=</span> <span class="n">threshold_option</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Threshold option </span><span class="se">\&#39;</span><span class="si">{</span><span class="n">threshold_option</span><span class="si">}</span><span class="se">\&#39;</span><span class="s1"> not supported&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">method_option</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39; for network centrality measure &#39;</span> \
+                            <span class="sa">f</span><span class="s1">&#39;</span><span class="se">\&#39;</span><span class="si">{</span><span class="n">method_option</span><span class="si">}</span><span class="se">\&#39;</span><span class="s1">&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39;; fix this in the pipeline config&#39;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">method_option</span> <span class="o">==</span> <span class="s1">&#39;local_functional_connectivity_density&#39;</span> <span class="ow">and</span>
+            <span class="n">threshold_option</span> <span class="o">==</span> <span class="s1">&#39;Sparsity threshold&#39;</span>
+        <span class="p">):</span>
+            <span class="n">valid_options</span> <span class="o">=</span> <span class="s1">&#39; or &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+                <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">&#39;&quot;</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">valid_options</span><span class="p">[</span>
+                    <span class="s1">&#39;centrality&#39;</span>
+                <span class="p">][</span><span class="s1">&#39;threshold_options&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">t</span> <span class="o">!=</span> <span class="n">threshold_option</span>
+            <span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;. </span><span class="se">\&#39;</span><span class="si">{</span><span class="n">method_option</span><span class="si">}</span><span class="se">\&#39;</span><span class="s1"> must use </span><span class="si">{</span><span class="n">valid_options</span><span class="si">}</span><span class="s1">.&#39;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
 </pre></div>
 
             <div class="clearer"></div>
@@ -257,7 +325,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.3.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.network_centrality.utils</a></li> 
       </ul>
@@ -265,7 +333,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.2.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

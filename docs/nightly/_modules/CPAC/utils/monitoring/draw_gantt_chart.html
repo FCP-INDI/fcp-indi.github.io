@@ -1,0 +1,672 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CPAC.utils.monitoring.draw_gantt_chart &#8212; C-PAC 1.8.0.dev Beta documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css" />
+    
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="../../../../genindex" />
+    <link rel="search" title="Search" href="../../../../search" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CPAC.utils.monitoring.draw_gantt_chart</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for CPAC.utils.monitoring.draw_gantt_chart</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;Module to draw an html gantt chart from logfile produced by</span>
+<span class="sd">``CPAC.utils.monitoring.log_nodes_cb()``.</span>
+
+<span class="sd">See https://nipype.readthedocs.io/en/latest/api/generated/nipype.utils.draw_gantt_chart.html</span>
+<span class="sd">&#39;&#39;&#39;</span>  <span class="c1"># noqa: E501</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+
+<span class="kn">from</span> <span class="nn">nipype.utils.draw_gantt_chart</span> <span class="kn">import</span> <span class="n">draw_lines</span><span class="p">,</span> <span class="n">draw_resource_bar</span><span class="p">,</span> \
+                                          <span class="n">log_to_dict</span>
+
+
+<div class="viewcode-block" id="create_event_dict"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.utils.monitoring.draw_gantt_chart.create_event_dict">[docs]</a><span class="k">def</span> <span class="nf">create_event_dict</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">nodes_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to generate a dictionary of event (start/finish) nodes</span>
+<span class="sd">    from the nodes list</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start_time : datetime.datetime</span>
+<span class="sd">        a datetime object of the pipeline start time</span>
+<span class="sd">    nodes_list : list</span>
+<span class="sd">        a list of the node dictionaries that were run in the pipeline</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    events : dictionary</span>
+<span class="sd">        a dictionary where the key is the timedelta from the start of</span>
+<span class="sd">        the pipeline execution to the value node it accompanies</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Import packages</span>
+    <span class="kn">import</span> <span class="nn">copy</span>
+
+    <span class="n">events</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes_list</span><span class="p">:</span>
+        <span class="c1"># Format node fields</span>
+        <span class="n">estimated_threads</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;num_threads&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">estimated_memory_gb</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;estimated_memory_gb&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">runtime_threads</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;runtime_threads&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">runtime_memory_gb</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;runtime_memory_gb&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+        <span class="c1"># Init and format event-based nodes</span>
+        <span class="n">node</span><span class="p">[</span><span class="s2">&quot;estimated_threads&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">estimated_threads</span>
+        <span class="n">node</span><span class="p">[</span><span class="s2">&quot;estimated_memory_gb&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">estimated_memory_gb</span>
+        <span class="n">node</span><span class="p">[</span><span class="s2">&quot;runtime_threads&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">runtime_threads</span>
+        <span class="n">node</span><span class="p">[</span><span class="s2">&quot;runtime_memory_gb&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">runtime_memory_gb</span>
+        <span class="n">start_node</span> <span class="o">=</span> <span class="n">node</span>
+        <span class="n">finish_node</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">start_node</span><span class="p">[</span><span class="s2">&quot;event&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;start&quot;</span>
+        <span class="n">finish_node</span><span class="p">[</span><span class="s2">&quot;event&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;finish&quot;</span>
+
+        <span class="c1"># Get dictionary key</span>
+        <span class="n">start_delta</span> <span class="o">=</span> <span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+        <span class="n">finish_delta</span> <span class="o">=</span> <span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s2">&quot;finish&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+
+        <span class="c1"># Populate dictionary</span>
+        <span class="k">if</span> <span class="n">events</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">start_delta</span><span class="p">):</span>
+            <span class="n">err_msg</span> <span class="o">=</span> <span class="s2">&quot;Event logged twice or events started at exact same &quot;</span> \
+                      <span class="s2">&quot;time!&quot;</span>
+            <span class="n">warn</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="ne">KeyError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)),</span> <span class="n">category</span><span class="o">=</span><span class="ne">Warning</span><span class="p">)</span>
+        <span class="n">events</span><span class="p">[</span><span class="n">start_delta</span><span class="p">]</span> <span class="o">=</span> <span class="n">start_node</span>
+        <span class="n">events</span><span class="p">[</span><span class="n">finish_delta</span><span class="p">]</span> <span class="o">=</span> <span class="n">finish_node</span>
+
+    <span class="c1"># Return events dictionary</span>
+    <span class="k">return</span> <span class="n">events</span></div>
+
+
+<div class="viewcode-block" id="calculate_resource_timeseries"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.utils.monitoring.draw_gantt_chart.calculate_resource_timeseries">[docs]</a><span class="k">def</span> <span class="nf">calculate_resource_timeseries</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="n">resource</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given as event dictionary, calculate the resources used</span>
+<span class="sd">    as a timeseries</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    events : dictionary</span>
+<span class="sd">        a dictionary of event-based node dictionaries of the workflow</span>
+<span class="sd">        execution statistics</span>
+<span class="sd">    resource : string</span>
+<span class="sd">        the resource of interest to return the time-series of;</span>
+<span class="sd">        e.g. &#39;runtime_memory_gb&#39;, &#39;estimated_threads&#39;, etc</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    time_series : pandas Series</span>
+<span class="sd">        a pandas Series object that contains timestamps as the indices</span>
+<span class="sd">        and the resource amount as values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Import packages</span>
+    <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+    <span class="c1"># Init variables</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+    <span class="n">all_res</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="c1"># Iterate through the events</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">event</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;event&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;start&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">resource</span> <span class="ow">in</span> <span class="n">event</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">all_res</span> <span class="o">+=</span> <span class="nb">float</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="n">resource</span><span class="p">])</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="nb">next</span>
+            <span class="n">current_time</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;event&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;finish&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">resource</span> <span class="ow">in</span> <span class="n">event</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">all_res</span> <span class="o">-=</span> <span class="nb">float</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="n">resource</span><span class="p">])</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="nb">next</span>
+            <span class="n">current_time</span> <span class="o">=</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;finish&quot;</span><span class="p">]</span>
+        <span class="n">res</span><span class="p">[</span><span class="n">current_time</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_res</span>
+
+    <span class="c1"># Formulate the pandas timeseries</span>
+    <span class="n">time_series</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">index</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+    <span class="c1"># Downsample where there is only value-diff</span>
+    <span class="n">ts_diff</span> <span class="o">=</span> <span class="n">time_series</span><span class="o">.</span><span class="n">diff</span><span class="p">()</span>
+    <span class="n">time_series</span> <span class="o">=</span> <span class="n">time_series</span><span class="p">[</span><span class="n">ts_diff</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Return the new time series</span>
+    <span class="k">return</span> <span class="n">time_series</span></div>
+
+
+<div class="viewcode-block" id="draw_nodes"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.utils.monitoring.draw_gantt_chart.draw_nodes">[docs]</a><span class="k">def</span> <span class="nf">draw_nodes</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">nodes_list</span><span class="p">,</span> <span class="n">cores</span><span class="p">,</span> <span class="n">minute_scale</span><span class="p">,</span> <span class="n">space_between_minutes</span><span class="p">,</span>
+               <span class="n">colors</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to return the html-string of the node drawings for the</span>
+<span class="sd">    gantt chart</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start : datetime.datetime obj</span>
+<span class="sd">        start time for first node</span>
+<span class="sd">    nodes_list : list</span>
+<span class="sd">        a list of the node dictionaries</span>
+<span class="sd">    cores : integer</span>
+<span class="sd">        the number of cores given to the workflow via the &#39;n_procs&#39;</span>
+<span class="sd">        plugin arg</span>
+<span class="sd">    total_duration : float</span>
+<span class="sd">        total duration of the workflow execution (in seconds)</span>
+<span class="sd">    minute_scale : integer</span>
+<span class="sd">        the scale, in minutes, at which to plot line markers for the</span>
+<span class="sd">        gantt chart; for example, minute_scale=10 means there are lines</span>
+<span class="sd">        drawn at every 10 minute interval from start to finish</span>
+<span class="sd">    space_between_minutes : integer</span>
+<span class="sd">        scale factor in pixel spacing between minute line markers</span>
+<span class="sd">    colors : list</span>
+<span class="sd">        a list of colors to choose from when coloring the nodes in the</span>
+<span class="sd">        gantt chart</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    result : string</span>
+<span class="sd">        the html-formatted string for producing the minutes-based</span>
+<span class="sd">        time line markers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Init variables</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">space_between_minutes</span> <span class="o">/</span> <span class="n">minute_scale</span>
+    <span class="n">space_between_minutes</span> <span class="o">=</span> <span class="n">space_between_minutes</span> <span class="o">/</span> <span class="n">scale</span>
+    <span class="n">end_times</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span>
+            <span class="n">start</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">start</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">start</span><span class="o">.</span><span class="n">day</span><span class="p">,</span> <span class="n">start</span><span class="o">.</span><span class="n">hour</span><span class="p">,</span> <span class="n">start</span><span class="o">.</span><span class="n">minute</span><span class="p">,</span>
+            <span class="n">start</span><span class="o">.</span><span class="n">second</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">core</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cores</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="c1"># For each node in the pipeline</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes_list</span><span class="p">:</span>
+        <span class="c1"># Get start and finish times</span>
+        <span class="n">node_start</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">]</span>
+        <span class="n">node_finish</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s2">&quot;finish&quot;</span><span class="p">]</span>
+        <span class="c1"># Calculate an offset and scale duration</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">node_start</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">60</span>
+        <span class="p">)</span> <span class="o">*</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">space_between_minutes</span> <span class="o">+</span> <span class="mi">220</span>
+        <span class="c1"># Scale duration</span>
+        <span class="n">scale_duration</span> <span class="o">=</span> <span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s2">&quot;duration&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale</span> \
+            <span class="o">*</span> <span class="n">space_between_minutes</span>
+        <span class="k">if</span> <span class="n">scale_duration</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="n">scale_duration</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="n">scale_duration</span> <span class="o">-=</span> <span class="mi">2</span>
+        <span class="c1"># Left</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="mi">60</span>
+        <span class="k">for</span> <span class="n">core</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">end_times</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">end_times</span><span class="p">[</span><span class="n">core</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">node_start</span><span class="p">:</span>
+                <span class="n">left</span> <span class="o">+=</span> <span class="n">core</span> <span class="o">*</span> <span class="mi">30</span>
+                <span class="n">end_times</span><span class="p">[</span><span class="n">core</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span>
+                    <span class="n">node_finish</span><span class="o">.</span><span class="n">year</span><span class="p">,</span>
+                    <span class="n">node_finish</span><span class="o">.</span><span class="n">month</span><span class="p">,</span>
+                    <span class="n">node_finish</span><span class="o">.</span><span class="n">day</span><span class="p">,</span>
+                    <span class="n">node_finish</span><span class="o">.</span><span class="n">hour</span><span class="p">,</span>
+                    <span class="n">node_finish</span><span class="o">.</span><span class="n">minute</span><span class="p">,</span>
+                    <span class="n">node_finish</span><span class="o">.</span><span class="n">second</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">break</span>
+
+        <span class="c1"># Get color for node object</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;red&quot;</span>
+
+        <span class="c1"># Setup dictionary for node html string insertion</span>
+        <span class="n">node_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;left&quot;</span><span class="p">:</span> <span class="n">left</span><span class="p">,</span>
+            <span class="s2">&quot;offset&quot;</span><span class="p">:</span> <span class="n">offset</span><span class="p">,</span>
+            <span class="s2">&quot;scale_duration&quot;</span><span class="p">:</span> <span class="n">scale_duration</span><span class="p">,</span>
+            <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="n">color</span><span class="p">,</span>
+            <span class="s2">&quot;node_name&quot;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)),</span>
+            <span class="s2">&quot;node_dur&quot;</span><span class="p">:</span> <span class="n">node</span><span class="p">[</span><span class="s2">&quot;duration&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">,</span>
+            <span class="s2">&quot;node_start&quot;</span><span class="p">:</span> <span class="n">node_start</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;node_finish&quot;</span><span class="p">:</span> <span class="n">node_finish</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">),</span>
+        <span class="p">}</span>
+        <span class="c1"># Create new node string</span>
+        <span class="n">new_node</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;&lt;div class=&#39;node&#39; style=&#39;left:</span><span class="si">%(left)s</span><span class="s2">px;top:</span><span class="si">%(offset)s</span><span class="s2">px;&quot;</span>
+            <span class="s2">&quot;height:</span><span class="si">%(scale_duration)s</span><span class="s2">px;background-color:</span><span class="si">%(color)s</span><span class="s2">;&#39;&quot;</span>
+            <span class="s2">&quot;title=&#39;</span><span class="si">%(node_name)s</span><span class="se">\n</span><span class="s2">duration:</span><span class="si">%(node_dur)s</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;start:</span><span class="si">%(node_start)s</span><span class="se">\n</span><span class="s2">end:</span><span class="si">%(node_finish)s</span><span class="s2">&#39;&gt;&lt;/div&gt;&quot;</span> <span class="o">%</span> <span class="n">node_dict</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Append to output result</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="n">new_node</span>
+
+    <span class="c1"># Return html string for nodes</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="generate_gantt_chart"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.utils.monitoring.draw_gantt_chart.generate_gantt_chart">[docs]</a><span class="k">def</span> <span class="nf">generate_gantt_chart</span><span class="p">(</span>
+    <span class="n">logfile</span><span class="p">,</span>
+    <span class="n">cores</span><span class="p">,</span>
+    <span class="n">minute_scale</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">space_between_minutes</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+    <span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;#7070FF&quot;</span><span class="p">,</span> <span class="s2">&quot;#4E4EB2&quot;</span><span class="p">,</span> <span class="s2">&quot;#2D2D66&quot;</span><span class="p">,</span> <span class="s2">&quot;#9B9BFF&quot;</span><span class="p">],</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a gantt chart in html showing the workflow execution based on a callback log file.</span>
+<span class="sd">    This script was intended to be used with the MultiprocPlugin.</span>
+<span class="sd">    The following code shows how to set up the workflow in order to generate the log file:</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    logfile : string</span>
+<span class="sd">        filepath to the callback log file to plot the gantt chart of</span>
+<span class="sd">    cores : integer</span>
+<span class="sd">        the number of cores given to the workflow via the &#39;n_procs&#39;</span>
+<span class="sd">        plugin arg</span>
+<span class="sd">    minute_scale : integer (optional); default=10</span>
+<span class="sd">        the scale, in minutes, at which to plot line markers for the</span>
+<span class="sd">        gantt chart; for example, minute_scale=10 means there are lines</span>
+<span class="sd">        drawn at every 10 minute interval from start to finish</span>
+<span class="sd">    space_between_minutes : integer (optional); default=50</span>
+<span class="sd">        scale factor in pixel spacing between minute line markers</span>
+<span class="sd">    colors : list (optional)</span>
+<span class="sd">        a list of colors to choose from when coloring the nodes in the</span>
+<span class="sd">        gantt chart</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+<span class="sd">        the function does not return any value but writes out an html</span>
+<span class="sd">        file in the same directory as the callback log path passed in</span>
+
+<span class="sd">    Usage</span>
+<span class="sd">    -----</span>
+<span class="sd">    # import logging</span>
+<span class="sd">    # import logging.handlers</span>
+<span class="sd">    # from nipype.utils.profiler import log_nodes_cb</span>
+
+<span class="sd">    # log_filename = &#39;callback.log&#39;</span>
+<span class="sd">    # logger = logging.getLogger(&#39;callback&#39;)</span>
+<span class="sd">    # logger.setLevel(logging.DEBUG)</span>
+<span class="sd">    # handler = logging.FileHandler(log_filename)</span>
+<span class="sd">    # logger.addHandler(handler)</span>
+
+<span class="sd">    # #create workflow</span>
+<span class="sd">    # workflow = ...</span>
+
+<span class="sd">    # workflow.run(plugin=&#39;MultiProc&#39;,</span>
+<span class="sd">    #     plugin_args={&#39;n_procs&#39;:8, &#39;memory&#39;:12, &#39;status_callback&#39;: log_nodes_cb})</span>
+
+<span class="sd">    # generate_gantt_chart(&#39;callback.log&#39;, 8)</span>
+<span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+
+    <span class="c1"># add the html header</span>
+    <span class="n">html_string</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;&lt;!DOCTYPE html&gt;</span>
+<span class="s2">    &lt;head&gt;</span>
+<span class="s2">        &lt;style&gt;</span>
+<span class="s2">            #content{</span>
+<span class="s2">                width:99%;</span>
+<span class="s2">                height:100%;</span>
+<span class="s2">                position:absolute;</span>
+<span class="s2">            }</span>
+
+<span class="s2">            .node{</span>
+<span class="s2">                background-color:#7070FF;</span>
+<span class="s2">                border-radius: 5px;</span>
+<span class="s2">                position:absolute;</span>
+<span class="s2">                width:20px;</span>
+<span class="s2">                white-space:pre-wrap;</span>
+<span class="s2">            }</span>
+
+<span class="s2">            .line{</span>
+<span class="s2">                position: absolute;</span>
+<span class="s2">                color: #C2C2C2;</span>
+<span class="s2">                opacity: 0.5;</span>
+<span class="s2">                margin: 0px;</span>
+<span class="s2">            }</span>
+
+<span class="s2">            .time{</span>
+<span class="s2">                position: absolute;</span>
+<span class="s2">                font-size: 16px;</span>
+<span class="s2">                color: #666666;</span>
+<span class="s2">                margin: 0px;</span>
+<span class="s2">            }</span>
+
+<span class="s2">            .bar{</span>
+<span class="s2">                position: absolute;</span>
+<span class="s2">                height: 1px;</span>
+<span class="s2">                opacity: 0.7;</span>
+<span class="s2">            }</span>
+
+<span class="s2">            .dot{</span>
+<span class="s2">                position: absolute;</span>
+<span class="s2">                width: 1px;</span>
+<span class="s2">                height: 1px;</span>
+<span class="s2">                background-color: red;</span>
+<span class="s2">            }</span>
+<span class="s2">            .label {</span>
+<span class="s2">                width:20px;</span>
+<span class="s2">                height:20px;</span>
+<span class="s2">                opacity: 0.7;</span>
+<span class="s2">                display: inline-block;</span>
+<span class="s2">            }</span>
+<span class="s2">        &lt;/style&gt;</span>
+<span class="s2">    &lt;/head&gt;</span>
+
+<span class="s2">    &lt;body&gt;</span>
+<span class="s2">        &lt;div id=&quot;content&quot;&gt;</span>
+<span class="s2">            &lt;div style=&quot;display:inline-block;&quot;&gt;</span>
+<span class="s2">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+
+    <span class="n">close_header</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    &lt;/div&gt;</span>
+<span class="s2">    &lt;div style=&quot;display:inline-block;margin-left:60px;vertical-align: top;&quot;&gt;</span>
+<span class="s2">        &lt;p&gt;&lt;span&gt;&lt;div class=&quot;label&quot; style=&quot;background-color:#90BBD7;&quot;&gt;&lt;/div&gt; Estimated Resource&lt;/span&gt;&lt;/p&gt;</span>
+<span class="s2">        &lt;p&gt;&lt;span&gt;&lt;div class=&quot;label&quot; style=&quot;background-color:#03969D;&quot;&gt;&lt;/div&gt; Actual Resource&lt;/span&gt;&lt;/p&gt;</span>
+<span class="s2">        &lt;p&gt;&lt;span&gt;&lt;div class=&quot;label&quot; style=&quot;background-color:#f00;&quot;&gt;&lt;/div&gt; Failed Node&lt;/span&gt;&lt;/p&gt;</span>
+<span class="s2">    &lt;/div&gt;</span>
+<span class="s2">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+
+    <span class="c1"># Read in json-log to get list of node dicts</span>
+    <span class="n">nodes_list</span> <span class="o">=</span> <span class="n">log_to_dict</span><span class="p">(</span><span class="n">logfile</span><span class="p">)</span>
+
+    <span class="c1"># Only include nodes with timing information, and covert timestamps</span>
+    <span class="c1"># from strings to datetimes</span>
+    <span class="n">nodes_list</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%S.</span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;finish&quot;</span><span class="p">}</span>
+            <span class="k">else</span> <span class="n">i</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">i</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nodes_list</span>
+        <span class="k">if</span> <span class="s2">&quot;start&quot;</span> <span class="ow">in</span> <span class="n">i</span> <span class="ow">and</span> <span class="s2">&quot;finish&quot;</span> <span class="ow">in</span> <span class="n">i</span>
+    <span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;duration&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+            <span class="n">node</span><span class="p">[</span><span class="s2">&quot;duration&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">node</span><span class="p">[</span><span class="s2">&quot;finish&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">node</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+
+    <span class="c1"># Create the header of the report with useful information</span>
+    <span class="n">start_node</span> <span class="o">=</span> <span class="n">nodes_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">last_node</span> <span class="o">=</span> <span class="n">nodes_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">duration</span> <span class="o">=</span> <span class="p">(</span><span class="n">last_node</span><span class="p">[</span><span class="s2">&quot;finish&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">start_node</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+
+    <span class="c1"># Get events based dictionary of node run stats</span>
+    <span class="n">events</span> <span class="o">=</span> <span class="n">create_event_dict</span><span class="p">(</span><span class="n">start_node</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">],</span> <span class="n">nodes_list</span><span class="p">)</span>
+
+    <span class="c1"># Summary strings of workflow at top</span>
+    <span class="n">html_string</span> <span class="o">+=</span> <span class="p">(</span>
+        <span class="s2">&quot;&lt;p&gt;Start: &quot;</span> <span class="o">+</span> <span class="n">start_node</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)</span>
+        <span class="o">+</span> <span class="s2">&quot;&lt;/p&gt;&quot;</span>
+    <span class="p">)</span>
+    <span class="n">html_string</span> <span class="o">+=</span> <span class="p">(</span>
+        <span class="s2">&quot;&lt;p&gt;Finish: &quot;</span> <span class="o">+</span> <span class="n">last_node</span><span class="p">[</span><span class="s2">&quot;finish&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)</span>
+        <span class="o">+</span> <span class="s2">&quot;&lt;/p&gt;&quot;</span>
+    <span class="p">)</span>
+    <span class="n">html_string</span> <span class="o">+=</span> <span class="s2">&quot;&lt;p&gt;Duration: &quot;</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">{0:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">duration</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)</span> \
+                   <span class="o">+</span> <span class="s2">&quot; minutes&lt;/p&gt;&quot;</span>
+    <span class="n">html_string</span> <span class="o">+=</span> <span class="s2">&quot;&lt;p&gt;Nodes: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nodes_list</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;&lt;/p&gt;&quot;</span>
+    <span class="n">html_string</span> <span class="o">+=</span> <span class="s2">&quot;&lt;p&gt;Cores: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">cores</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;&lt;/p&gt;&quot;</span>
+    <span class="n">html_string</span> <span class="o">+=</span> <span class="n">close_header</span>
+    <span class="c1"># Draw nipype nodes Gantt chart and runtimes</span>
+    <span class="n">html_string</span> <span class="o">+=</span> <span class="n">draw_lines</span><span class="p">(</span>
+        <span class="n">start_node</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">],</span> <span class="n">duration</span><span class="p">,</span> <span class="n">minute_scale</span><span class="p">,</span> <span class="n">space_between_minutes</span>
+    <span class="p">)</span>
+    <span class="n">html_string</span> <span class="o">+=</span> <span class="n">draw_nodes</span><span class="p">(</span>
+        <span class="n">start_node</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">],</span>
+        <span class="n">nodes_list</span><span class="p">,</span>
+        <span class="n">cores</span><span class="p">,</span>
+        <span class="n">minute_scale</span><span class="p">,</span>
+        <span class="n">space_between_minutes</span><span class="p">,</span>
+        <span class="n">colors</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Get memory timeseries</span>
+    <span class="n">estimated_mem_ts</span> <span class="o">=</span> <span class="n">calculate_resource_timeseries</span><span class="p">(</span>
+        <span class="n">events</span><span class="p">,</span> <span class="s2">&quot;estimated_memory_gb&quot;</span><span class="p">)</span>
+    <span class="n">runtime_mem_ts</span> <span class="o">=</span> <span class="n">calculate_resource_timeseries</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="s2">&quot;runtime_memory_gb&quot;</span><span class="p">)</span>
+    <span class="c1"># Plot gantt chart</span>
+    <span class="n">resource_offset</span> <span class="o">=</span> <span class="mi">120</span> <span class="o">+</span> <span class="mi">30</span> <span class="o">*</span> <span class="n">cores</span>
+    <span class="n">html_string</span> <span class="o">+=</span> <span class="n">draw_resource_bar</span><span class="p">(</span>
+        <span class="n">start_node</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">],</span>
+        <span class="n">last_node</span><span class="p">[</span><span class="s2">&quot;finish&quot;</span><span class="p">],</span>
+        <span class="n">estimated_mem_ts</span><span class="p">,</span>
+        <span class="n">space_between_minutes</span><span class="p">,</span>
+        <span class="n">minute_scale</span><span class="p">,</span>
+        <span class="s2">&quot;#90BBD7&quot;</span><span class="p">,</span>
+        <span class="n">resource_offset</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">120</span><span class="p">,</span>
+        <span class="s2">&quot;Memory&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">html_string</span> <span class="o">+=</span> <span class="n">draw_resource_bar</span><span class="p">(</span>
+        <span class="n">start_node</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">],</span>
+        <span class="n">last_node</span><span class="p">[</span><span class="s2">&quot;finish&quot;</span><span class="p">],</span>
+        <span class="n">runtime_mem_ts</span><span class="p">,</span>
+        <span class="n">space_between_minutes</span><span class="p">,</span>
+        <span class="n">minute_scale</span><span class="p">,</span>
+        <span class="s2">&quot;#03969D&quot;</span><span class="p">,</span>
+        <span class="n">resource_offset</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">120</span><span class="p">,</span>
+        <span class="s2">&quot;Memory&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Get threads timeseries</span>
+    <span class="n">estimated_threads_ts</span> <span class="o">=</span> <span class="n">calculate_resource_timeseries</span><span class="p">(</span>
+        <span class="n">events</span><span class="p">,</span> <span class="s2">&quot;estimated_threads&quot;</span><span class="p">)</span>
+    <span class="n">runtime_threads_ts</span> <span class="o">=</span> <span class="n">calculate_resource_timeseries</span><span class="p">(</span>
+        <span class="n">events</span><span class="p">,</span> <span class="s2">&quot;runtime_threads&quot;</span><span class="p">)</span>
+    <span class="c1"># Plot gantt chart</span>
+    <span class="n">html_string</span> <span class="o">+=</span> <span class="n">draw_resource_bar</span><span class="p">(</span>
+        <span class="n">start_node</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">],</span>
+        <span class="n">last_node</span><span class="p">[</span><span class="s2">&quot;finish&quot;</span><span class="p">],</span>
+        <span class="n">estimated_threads_ts</span><span class="p">,</span>
+        <span class="n">space_between_minutes</span><span class="p">,</span>
+        <span class="n">minute_scale</span><span class="p">,</span>
+        <span class="s2">&quot;#90BBD7&quot;</span><span class="p">,</span>
+        <span class="n">resource_offset</span><span class="p">,</span>
+        <span class="s2">&quot;Threads&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">html_string</span> <span class="o">+=</span> <span class="n">draw_resource_bar</span><span class="p">(</span>
+        <span class="n">start_node</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">],</span>
+        <span class="n">last_node</span><span class="p">[</span><span class="s2">&quot;finish&quot;</span><span class="p">],</span>
+        <span class="n">runtime_threads_ts</span><span class="p">,</span>
+        <span class="n">space_between_minutes</span><span class="p">,</span>
+        <span class="n">minute_scale</span><span class="p">,</span>
+        <span class="s2">&quot;#03969D&quot;</span><span class="p">,</span>
+        <span class="n">resource_offset</span><span class="p">,</span>
+        <span class="s2">&quot;Threads&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># finish html</span>
+    <span class="n">html_string</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        &lt;/div&gt;</span>
+<span class="s2">    &lt;/body&gt;&quot;&quot;&quot;</span>
+
+    <span class="c1"># save file</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">logfile</span> <span class="o">+</span> <span class="s2">&quot;.html&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">html_file</span><span class="p">:</span>
+        <span class="n">html_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">html_string</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="resource_overusage_report"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.utils.monitoring.draw_gantt_chart.resource_overusage_report">[docs]</a><span class="k">def</span> <span class="nf">resource_overusage_report</span><span class="p">(</span><span class="n">cblog</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Function to parse through a callback log for memory and/or</span>
+<span class="sd">    thread usage above estimates / limits.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cblog : str</span>
+<span class="sd">        path to callback.log</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    text_report : str</span>
+
+<span class="sd">    excessive : dict</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">cb_dict_list</span> <span class="o">=</span> <span class="n">log_to_dict</span><span class="p">(</span><span class="n">cblog</span><span class="p">)</span>
+    <span class="n">excessive</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]:</span> <span class="p">[</span>
+        <span class="n">node</span><span class="p">[</span><span class="s1">&#39;runtime_memory_gb&#39;</span><span class="p">]</span><span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;runtime_memory_gb&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="o">&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;estimated_memory_gb&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">node</span><span class="p">[</span><span class="s1">&#39;estimated_memory_gb&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;runtime_memory_gb&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="o">&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;estimated_memory_gb&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">node</span><span class="p">[</span><span class="s1">&#39;runtime_threads&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;runtime_threads&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="o">&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;num_threads&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">node</span><span class="p">[</span><span class="s1">&#39;num_threads&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;runtime_threads&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="o">&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;num_threads&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">]</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="p">[</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">cb_dict_list</span> <span class="k">if</span> <span class="p">(</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;runtime_memory_gb&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;estimated_memory_gb&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;runtime_threads&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;num_threads&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">)]}</span>
+    <span class="n">text_report</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">excessive</span><span class="p">:</span>
+        <span class="n">text_report</span> <span class="o">+=</span> <span class="s1">&#39;The following nodes used excessive resources:</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">dotted_line</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">text_report</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">text_report</span> <span class="o">+=</span> <span class="n">dotted_line</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">excessive</span><span class="p">:</span>
+            <span class="n">node_id</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">  .&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">))</span>
+            <span class="n">text_report</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="k">if</span> <span class="n">excessive</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">text_report</span> <span class="o">+=</span> <span class="s1">&#39;      **memory_gb**</span><span class="se">\n</span><span class="s1">&#39;</span> \
+                               <span class="s1">&#39;        runtime &gt; estimated</span><span class="se">\n</span><span class="s1">&#39;</span> \
+                               <span class="sa">f</span><span class="s1">&#39;        </span><span class="si">{</span><span class="n">excessive</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1"> &#39;</span> \
+                               <span class="sa">f</span><span class="s1">&#39;&gt; </span><span class="si">{</span><span class="n">excessive</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="k">if</span> <span class="n">excessive</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="mi">2</span><span class="p">]:</span>
+                <span class="n">text_report</span> <span class="o">+=</span> <span class="s1">&#39;      **threads**</span><span class="se">\n</span><span class="s1">        runtime &gt; limit</span><span class="se">\n</span><span class="s1">&#39;</span> \
+                               <span class="sa">f</span><span class="s1">&#39;        </span><span class="si">{</span><span class="n">excessive</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s1"> &#39;</span> \
+                               <span class="sa">f</span><span class="s1">&#39;&gt; </span><span class="si">{</span><span class="n">excessive</span><span class="p">[</span><span class="n">node</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">text_report</span> <span class="o">+=</span> <span class="n">dotted_line</span>
+    <span class="k">return</span> <span class="n">text_report</span><span class="p">,</span> <span class="n">excessive</span></div>
+
+
+<div class="viewcode-block" id="resource_report"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.utils.monitoring.draw_gantt_chart.resource_report">[docs]</a><span class="k">def</span> <span class="nf">resource_report</span><span class="p">(</span><span class="n">callback_log</span><span class="p">,</span> <span class="n">num_cores</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Function to attempt to warn any excessive resource usage and</span>
+<span class="sd">    generate an interactive HTML chart.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    callback_log : str</span>
+<span class="sd">        path to callback.log</span>
+
+<span class="sd">    num_cores : int</span>
+
+<span class="sd">    logger : Logger</span>
+<span class="sd">        https://docs.python.org/3/library/logging.html#logger-objects</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+
+<span class="sd">    Warns</span>
+<span class="sd">    -----</span>
+<span class="sd">    ResourceWarning</span>
+<span class="sd">        If any resources are overused or if the report generation fails.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">e_msg</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">txt_report</span> <span class="o">=</span> <span class="n">resource_overusage_report</span><span class="p">(</span><span class="n">callback_log</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">txt_report</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">logger</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">txt_report</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">warn</span><span class="p">(</span><span class="n">txt_report</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">ResourceWarning</span><span class="p">)</span>
+            <span class="nb">open</span><span class="p">(</span>
+                <span class="n">callback_log</span> <span class="o">+</span> <span class="s2">&quot;.resource_overusage.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt_report</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">e_msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;Excessive usage report failed for </span><span class="si">{</span><span class="n">callback_log</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">generate_gantt_chart</span><span class="p">(</span><span class="n">callback_log</span><span class="p">,</span> <span class="n">num_cores</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">e_msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;Report generation failed for </span><span class="si">{</span><span class="n">callback_log</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="k">if</span> <span class="n">e_msg</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">logger</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">e_msg</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">e_msg</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">ResourceWarning</span><span class="p">)</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index">
+              <img class="logo" src="../../../../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../../index">Table of Contents</a></h3>
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../user/index">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index">Welcome to CPAC’s developer documentation!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CPAC.utils.monitoring.draw_gantt_chart</a></li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, C-PAC Team.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.2.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+    <script defer src="https://fcp-indi.github.io/scripts/versionList.js"></script>
+
+  </body>
+</html>

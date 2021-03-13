@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Voxel-Mirrored Homotopic Connectivity (VMHC) &#8212; C-PAC 1.7.3.dev Beta documentation</title>
+    <title>Voxel-Mirrored Homotopic Connectivity (VMHC) &#8212; C-PAC 1.8.0.dev Beta documentation</title>
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="sca" title="Seed-based Correlation Analysis (SCA) and Dual Regression"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.7.3.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index" >Welcome to C-PAC’s user guide!</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="derivatives" accesskey="U">Computable Derivatives</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Voxel-Mirrored Homotopic Connectivity (VMHC)</a></li> 
@@ -90,42 +90,36 @@
 </div>
 <div class="section" id="configuration-without-the-gui">
 <h3>Configuration Without the GUI<a class="headerlink" href="#configuration-without-the-gui" title="Permalink to this headline">¶</a></h3>
-<p>The following key/value pairs must be defined in your <a class="reference internal" href="pipeline_config"><span class="doc">pipeline configuration YAML</span></a> for C-PAC to run anatomical preprocessing:</p>
-<table class="colwidths-given docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 60%" />
-<col style="width: 30%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Key</p></th>
-<th class="head"><p>Description</p></th>
-<th class="head"><p>Potential Values</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>runVMHC</p></td>
-<td><p>Calculate Voxel-mirrored Homotopic Connectivity (VMHC) for all voxels.</p></td>
-<td><p>A list where ‘1’ represents ‘yes’ and ‘0’ represents ‘no’ (e.g., ‘[1]’).</p></td>
-</tr>
-<tr class="row-odd"><td><p>template_symmetric_brain_only</p></td>
-<td><p>The path to the symmetric brain template from the C-PAC resources. You should be able to use the value from the example configuration. You would only use a different path if using a different symmetric template.</p></td>
-<td><p>A path.</p></td>
-</tr>
-<tr class="row-even"><td><p>template_symmetric_skull</p></td>
-<td><p>The path to the symmetric brain template (with skull) from the C-PAC resources. You should be able to use the value from the example configuration. You would only use a different path if using a different symmetric template.</p></td>
-<td><p>A path.</p></td>
-</tr>
-<tr class="row-odd"><td><p>dilated_symmetric_brain_mask</p></td>
-<td><p>The path to the symmetric brain template (dilated) from the C-PAC resources. You should be able to use the value from the example configuration. You would only use a different path if using a different symmetric template.</p></td>
-<td><p>A path.</p></td>
-</tr>
-<tr class="row-even"><td><p>configFileTwomm</p></td>
-<td><p>The path to the FLIRT configuration file for the symmetric template from the C-PAC resources. You should be able to use the value from the example configuration. You would only use a different path if using a different symmetric template.</p></td>
-<td><p>A path.</p></td>
-</tr>
-</tbody>
-</table>
+<p>The following nested key/value pairs that will be set to these defaults if not defined in your <a class="reference internal" href="pipelines/pipeline_config"><span class="doc">pipeline configuration YAML</span></a>:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span>    <span class="c1"># Included as part of the &#39;Image Resource Files&#39; package available on the Install page of the User Guide.</span>
+    <span class="c1"># It is not necessary to change this path unless you intend to use a non-standard symmetric template.</span>
+    <span class="nt">dilated_symmetric_brain_mask</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$FSLDIR/data/standard/MNI152_T1_${resolution_for_anat}_brain_mask_symmetric_dil.nii.gz</span>
+
+    <span class="c1"># A reference symmetric brain mask template for resampling</span>
+    <span class="nt">dilated_symmetric_brain_mask_for_resample</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$FSLDIR/data/standard/MNI152_T1_1mm_brain_mask_symmetric_dil.nii.gz</span>
+
+
+<span class="nt">network_centrality</span><span class="p">:</span>
+
+  <span class="c1"># Calculate Degree, Eigenvector Centrality, or Functional Connectivity Density.</span>
+  <span class="c1"># this is a fork point</span>
+  <span class="c1">#   run: [On, Off] - this will run both and fork the pipeline</span>
+  <span class="nt">run</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">On</span><span class="p p-Indicator">]</span>
+
+  <span class="c1"># Maximum amount of RAM (in GB) to be used when calculating Degree Centrality.</span>
+  <span class="c1"># Calculating Eigenvector Centrality will require additional memory based on the size of the mask or number of ROI nodes.</span>
+  <span class="nt">memory_allocation</span><span class="p">:</span>  <span class="l l-Scalar l-Scalar-Plain">1.0</span>
+
+  <span class="c1"># Full path to a NIFTI file describing the mask. Centrality will be calculated for all voxels within the mask.</span>
+  <span class="nt">template_specification_file</span><span class="p">:</span>  <span class="l l-Scalar l-Scalar-Plain">/cpac_templates/Mask_ABIDE_85Percent_GM.nii.gz</span>
+
+  <span class="nt">degree_centrality</span><span class="p">:</span>
+
+    <span class="c1"># Enable/Disable degree centrality by selecting the connectivity weights</span>
+    <span class="c1">#   weight_options: [&#39;Binarized&#39;, &#39;Weighted&#39;]</span>
+    <span class="c1"># disable this type of centrality with:</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="references">
@@ -158,7 +152,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="index#user-guide-index">User Guide Index</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="quick">1. C-PAC Quickstart</a></li>
 <li class="toctree-l3"><a class="reference internal" href="subject_list_config">2. Specify Your Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pipeline_config">3. Select Your Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pipelines/pipeline_config">3. Select Your Pipeline</a></li>
 <li class="toctree-l3"><a class="reference internal" href="preprocessing">4. Pre-Process Your Data</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="derivatives">5. Compute Derivatives</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="alff">ALFF and f/ALFF</a></li>
@@ -223,7 +217,7 @@
         <li class="right" >
           <a href="sca" title="Seed-based Correlation Analysis (SCA) and Dual Regression"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.7.3.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index" >Welcome to C-PAC’s user guide!</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="derivatives" >Computable Derivatives</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Voxel-Mirrored Homotopic Connectivity (VMHC)</a></li> 
@@ -232,7 +226,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.2.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

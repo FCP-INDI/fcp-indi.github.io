@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CPAC.reho.reho &#8212; C-PAC 1.7.3.dev Beta documentation</title>
+    <title>CPAC.reho.reho &#8212; C-PAC 1.8.0.dev Beta documentation</title>
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.3.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.reho.reho</a></li> 
       </ul>
@@ -40,13 +40,13 @@
             
   <h1>Source code for CPAC.reho.reho</h1><div class="highlight"><pre>
 <span></span><span class="c1"># coding: utf-8</span>
-<span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="nn">pe</span>
+<span class="kn">from</span> <span class="nn">CPAC.pipeline</span> <span class="kn">import</span> <span class="n">nipype_pipeline_engine</span> <span class="k">as</span> <span class="n">pe</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="k">as</span> <span class="nn">fsl</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
 <span class="kn">from</span> <span class="nn">CPAC.reho.utils</span> <span class="kn">import</span> <span class="o">*</span>
 
 
-<div class="viewcode-block" id="create_reho"><a class="viewcode-back" href="../../../developer/workflows/reho#CPAC.reho.create_reho">[docs]</a><span class="k">def</span> <span class="nf">create_reho</span><span class="p">():</span>
+<div class="viewcode-block" id="create_reho"><a class="viewcode-back" href="../../../developer/workflows/reho#CPAC.reho.create_reho">[docs]</a><span class="k">def</span> <span class="nf">create_reho</span><span class="p">(</span><span class="n">wf_name</span><span class="p">):</span>
 
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Regional Homogeneity(ReHo) approach to fMRI data analysis</span>
@@ -125,7 +125,7 @@
 <span class="sd">    &gt;&gt;&gt; wf.run()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">reHo</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;reHo&#39;</span><span class="p">)</span>
+    <span class="n">reHo</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">wf_name</span><span class="p">)</span>
     <span class="n">inputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cluster_size&#39;</span><span class="p">,</span>
                                                        <span class="s1">&#39;rest_res_filt&#39;</span><span class="p">,</span>
                                                        <span class="s1">&#39;rest_mask&#39;</span><span class="p">]),</span>
@@ -142,7 +142,7 @@
                                          <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
                                          <span class="n">function</span><span class="o">=</span><span class="n">compute_reho</span><span class="p">,</span>
                                          <span class="n">imports</span><span class="o">=</span><span class="n">reho_imports</span><span class="p">),</span>
-                           <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reho_map&#39;</span><span class="p">)</span>
+                           <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reho_map&#39;</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="mf">6.0</span><span class="p">)</span>
 
     <span class="n">reHo</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;rest_res_filt&#39;</span><span class="p">,</span> <span class="n">raw_reho_map</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
     <span class="n">reHo</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;rest_mask&#39;</span><span class="p">,</span> <span class="n">raw_reho_map</span><span class="p">,</span> <span class="s1">&#39;mask_file&#39;</span><span class="p">)</span>
@@ -150,6 +150,49 @@
     <span class="n">reHo</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">raw_reho_map</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;raw_reho_map&#39;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">reHo</span></div>
+
+
+<span class="k">def</span> <span class="nf">reho</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    {&quot;name&quot;: &quot;ReHo&quot;,</span>
+<span class="sd">     &quot;config&quot;: [&quot;regional_homogeneity&quot;],</span>
+<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
+<span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
+<span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
+<span class="sd">     &quot;inputs&quot;: [[&quot;desc-filtered_bold&quot;, &quot;desc-cleaned_bold&quot;, &quot;desc-brain_bold&quot;,</span>
+<span class="sd">                 &quot;desc-preproc_bold&quot;, &quot;bold&quot;],</span>
+<span class="sd">                &quot;space-bold_desc-brain_mask&quot;],</span>
+<span class="sd">     &quot;outputs&quot;: [&quot;reho&quot;]}</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">cluster_size</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">regional_homogeneity</span><span class="p">[</span><span class="s1">&#39;cluster_size&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Check the cluster size is supported</span>
+    <span class="k">if</span> <span class="n">cluster_size</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">27</span><span class="p">]:</span>
+        <span class="n">err_msg</span> <span class="o">=</span> <span class="s1">&#39;Cluster size specified: </span><span class="si">%d</span><span class="s1">, is not &#39;</span> \
+                  <span class="s1">&#39;supported. Change to 7, 19, or 27 and try &#39;</span> \
+                  <span class="s1">&#39;again&#39;</span> <span class="o">%</span> <span class="n">cluster_size</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+
+    <span class="n">reho</span> <span class="o">=</span> <span class="n">create_reho</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;reho_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">reho</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">cluster_size</span> <span class="o">=</span> <span class="n">cluster_size</span>
+
+
+    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;desc-filtered_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;desc-cleaned_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;desc-brain_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;desc-preproc_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;bold&quot;</span><span class="p">])</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">reho</span><span class="p">,</span> <span class="s1">&#39;inputspec.rest_res_filt&#39;</span><span class="p">)</span>
+
+    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;space-bold_desc-brain_mask&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">reho</span><span class="p">,</span> <span class="s1">&#39;inputspec.rest_mask&#39;</span><span class="p">)</span>
+
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;reho&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">reho</span><span class="p">,</span> <span class="s1">&#39;outputspec.raw_reho_map&#39;</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 </pre></div>
 
             <div class="clearer"></div>
@@ -191,7 +234,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.3.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.reho.reho</a></li> 
       </ul>
@@ -199,7 +242,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.2.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

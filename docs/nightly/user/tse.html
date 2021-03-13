@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Timeseries Extraction &#8212; C-PAC 1.7.3.dev Beta documentation</title>
+    <title>Timeseries Extraction &#8212; C-PAC 1.8.0.dev Beta documentation</title>
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="aroma_ica" title="ICA-AROMA (Independent Component Analysis - Automatic Removal of Motion Artifacts)"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.7.3.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index" >Welcome to C-PAC’s user guide!</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="preprocessing" accesskey="U">Pre-Processing Steps</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Timeseries Extraction</a></li> 
@@ -81,45 +81,56 @@
 </ol>
 <div class="section" id="configuration-without-the-gui">
 <h2>Configuration Without the GUI<a class="headerlink" href="#configuration-without-the-gui" title="Permalink to this headline">¶</a></h2>
-<p>The following key/value pairs must be defined in your <a class="reference internal" href="pipeline_config"><span class="doc">pipeline configuration YAML</span></a> for C-PAC to run time series extraction:</p>
-<table class="colwidths-given docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 60%" />
-<col style="width: 30%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Key</p></th>
-<th class="head"><p>Description</p></th>
-<th class="head"><p>Potential Values</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>runROITimeseries</p></td>
-<td><p>Extract the average time series of one or more ROIs/seeds. Must be enabled for seed-based correlation analysis.</p></td>
-<td><p>A list where ‘1’ represents ‘yes’ and ‘0’ represents ‘no’ (e.g., ‘[1]’).</p></td>
-</tr>
-<tr class="row-odd"><td><p>realignment</p></td>
-<td><p>Realign the atlas/ROI to functional space or realign the functional time series to the atlas/ROI space.</p></td>
-<td><p>A list where ‘ROI_to_func’ will realign the atlas/ROI to functional space and ‘func_to_ROI’ will realign the functional time series to the atlas/ROI space (e.g., [‘ROI_to_func’]).</p></td>
-</tr>
-<tr class="row-even"><td><p>tsa_roi_paths</p></td>
-<td><p>Enter full paths to region-of-interest (ROI) NIFTI files (.nii or .nii.gz) to be used for time-series extraction, and then select which types of analyses to run. Each line in this file should be the path to a NIfTI file containing a single mask. If you only wish to extract time series for newly defined spherical seed ROIs, set this field to None.</p></td>
-<td><p>‘A path: type of analyses’ or ‘None’. Available analyses: [‘Avg’, ‘Voxel’, ‘SpatialReg’].</p></td>
-</tr>
-<tr class="row-odd"><td><p>roiTSOutputs</p></td>
-<td><p>Extracted voxelwise time series are written as both a text file and a 1D file by default. With this option, you may also save them out as CSV files or Numpy arrays.</p></td>
-<td><p>A two-element list, where the first element is a boolean (‘True’ or ‘False’) for whether or not to save out a CSV and the second element is a boolean for whether or not to save a Numpy array.</p></td>
-</tr>
-</tbody>
-</table>
-<p>The box below contains an example of what these parameters might look like when defined in the YAML:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">runROITimeseries</span> <span class="p">:</span>  <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">realignment</span> <span class="p">:</span> <span class="p">[</span><span class="s1">&#39;ROI_to_func&#39;</span><span class="p">]</span>
-<span class="n">tsa_roi_paths</span><span class="p">:</span>
-    <span class="o">-</span> <span class="n">s3</span><span class="p">:</span><span class="o">//</span><span class="n">fcp</span><span class="o">-</span><span class="n">indi</span><span class="o">/</span><span class="n">resources</span><span class="o">/</span><span class="n">cpac</span><span class="o">/</span><span class="n">resources</span><span class="o">/</span><span class="n">CC400</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span><span class="p">:</span> <span class="n">Avg</span>
-      <span class="n">s3</span><span class="p">:</span><span class="o">//</span><span class="n">fcp</span><span class="o">-</span><span class="n">indi</span><span class="o">/</span><span class="n">resources</span><span class="o">/</span><span class="n">cpac</span><span class="o">/</span><span class="n">resources</span><span class="o">/</span><span class="n">PNAS_Smith09_rsn10</span><span class="o">.</span><span class="n">nii</span><span class="o">.</span><span class="n">gz</span><span class="p">:</span> <span class="n">SpatialReg</span>
-<span class="n">roiTSOutputs</span> <span class="p">:</span>  <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">]</span>
+<p>The following nested key/value pairs that will be set to these defaults if not defined in your <a class="reference internal" href="pipelines/pipeline_config"><span class="doc">pipeline configuration YAML</span></a>:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span>    <span class="nt">/ndmg_atlases/label/Human/HarvardOxfordsub-maxprob-thr25_space-MNI152NLin6_res-1x1x1.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg</span>
+    <span class="nt">/ndmg_atlases/label/Human/Juelich_space-MNI152NLin6_res-1x1x1.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg</span>
+    <span class="nt">/ndmg_atlases/label/Human/MICCAI_space-MNI152NLin6_res-1x1x1.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg</span>
+    <span class="nt">/ndmg_atlases/label/Human/Schaefer1000_space-MNI152NLin6_res-1x1x1.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg</span>
+    <span class="nt">/ndmg_atlases/label/Human/Schaefer200_space-MNI152NLin6_res-1x1x1.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg</span>
+    <span class="nt">/ndmg_atlases/label/Human/Schaefer300_space-MNI152NLin6_res-1x1x1.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg</span>
+    <span class="nt">/ndmg_atlases/label/Human/Schaefer400_space-MNI152NLin6_res-1x1x1.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg</span>
+    <span class="nt">/ndmg_atlases/label/Human/Talairach_space-MNI152NLin6_res-1x1x1.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg</span>
+    <span class="nt">/ndmg_atlases/label/Human/Brodmann_space-MNI152NLin6_res-1x1x1.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg</span>
+    <span class="nt">/ndmg_atlases/label/Human/Desikan_space-MNI152NLin6_res-1x1x1.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg</span>
+    <span class="nt">/ndmg_atlases/label/Human/Glasser_space-MNI152NLin6_res-1x1x1.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg</span>
+    <span class="nt">/ndmg_atlases/label/Human/Slab907_space-MNI152NLin6_res-1x1x1.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg</span>
+    <span class="nt">/ndmg_atlases/label/Human/Yeo-17-liberal_space-MNI152NLin6_res-1x1x1.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg</span>
+    <span class="nt">/ndmg_atlases/label/Human/Yeo-17_space-MNI152NLin6_res-1x1x1.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg</span>
+    <span class="nt">/ndmg_atlases/label/Human/Yeo-7-liberal_space-MNI152NLin6_res-1x1x1.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg</span>
+    <span class="nt">/ndmg_atlases/label/Human/Yeo-7_space-MNI152NLin6_res-1x1x1.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg</span>
+
+  <span class="c1"># Functional time-series and ROI realignment method: [&#39;ROI_to_func&#39;] or [&#39;func_to_ROI&#39;]</span>
+  <span class="c1"># &#39;ROI_to_func&#39; will realign the atlas/ROI to functional space (fast)</span>
+  <span class="c1"># &#39;func_to_ROI&#39; will realign the functional time series to the atlas/ROI space</span>
+  <span class="c1">#</span>
+  <span class="c1">#     NOTE: in rare cases, realigning the ROI to the functional space may</span>
+  <span class="c1">#           result in small misalignments for very small ROIs - please double</span>
+  <span class="c1">#           check your data if you see issues</span>
+ <span class=" -Error"> </span><span class="nt">realignment</span><span class="p">:</span> <span class="s">&#39;ROI_to_func&#39;</span>
+
+  <span class="c1"># By default, extracted time series are written as both a text file and a 1D file. Additional output formats are as a .csv spreadsheet or a Numpy array.</span>
+  <span class="nt">roi_tse_outputs</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;csv&#39;</span><span class="p p-Indicator">,</span> <span class="s">&#39;numpy&#39;</span><span class="p p-Indicator">]</span>
+
+
+<span class="nt">seed_based_correlation_analysis</span><span class="p">:</span>
+
+  <span class="c1"># SCA - Seed-Based Correlation Analysis</span>
+  <span class="c1"># For each extracted ROI Average time series, CPAC will generate a whole-brain correlation map.</span>
+  <span class="c1"># It should be noted that for a given seed/ROI, SCA maps for ROI Average time series will be the same.</span>
+  <span class="nt">run</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">On</span>
+
+  <span class="c1"># Enter paths to region-of-interest (ROI) NIFTI files (.nii or .nii.gz) to be used for time-series extraction, and then select which types of analyses to run.</span>
+  <span class="c1"># Denote which analyses to run for each ROI path by listing the names below. For example, if you wish to run Avg and MultReg, you would enter: &#39;/path/to/ROI.nii.gz&#39;: Avg, MultReg</span>
+  <span class="c1"># available analyses:</span>
+  <span class="c1">#   /path/to/atlas.nii.gz: Avg, DualReg, MultReg</span>
+  <span class="nt">sca_roi_paths</span><span class="p">:</span>
+    <span class="nt">/cpac_templates/PNAS_Smith09_rsn10.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">DualReg</span>
+    <span class="nt">/cpac_templates/CC400.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg, MultReg</span>
+    <span class="nt">/cpac_templates/ez_mask_pad.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg, MultReg</span>
+    <span class="nt">/cpac_templates/aal_mask_pad.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg, MultReg</span>
+    <span class="nt">/cpac_templates/CC200.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg, MultReg</span>
+    <span class="nt">/cpac_templates/tt_mask_pad.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg, MultReg</span>
+    <span class="nt">/cpac_templates/ho_mask_pad.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg, MultReg</span>
 </pre></div>
 </div>
 </div>
@@ -145,7 +156,7 @@
 <li class="toctree-l2 current"><a class="reference internal" href="index#user-guide-index">User Guide Index</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="quick">1. C-PAC Quickstart</a></li>
 <li class="toctree-l3"><a class="reference internal" href="subject_list_config">2. Specify Your Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pipeline_config">3. Select Your Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pipelines/pipeline_config">3. Select Your Pipeline</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="preprocessing">4. Pre-Process Your Data</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="anat">Anatomical Preprocessing</a></li>
 <li class="toctree-l4"><a class="reference internal" href="func">Functional Preprocessing</a></li>
@@ -205,7 +216,7 @@
         <li class="right" >
           <a href="aroma_ica" title="ICA-AROMA (Independent Component Analysis - Automatic Removal of Motion Artifacts)"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.7.3.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index" >Welcome to C-PAC’s user guide!</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="preprocessing" >Pre-Processing Steps</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Timeseries Extraction</a></li> 
@@ -214,7 +225,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.4.3.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.2.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

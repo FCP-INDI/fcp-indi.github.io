@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CPAC.utils.monitoring.monitoring &#8212; C-PAC 1.8.0 Beta documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css" />
+    
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="../../../../genindex" />
+    <link rel="search" title="Search" href="../../../../search" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CPAC.utils.monitoring.monitoring</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for CPAC.utils.monitoring.monitoring</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">import</span> <span class="nn">socketserver</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+
+<span class="kn">from</span> <span class="nn">CPAC.pipeline</span> <span class="kn">import</span> <span class="n">nipype_pipeline_engine</span> <span class="k">as</span> <span class="n">pe</span>
+
+
+<span class="c1"># Log initial information from all the nodes</span>
+<span class="k">def</span> <span class="nf">recurse_nodes</span><span class="p">(</span><span class="n">workflow</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">(</span><span class="n">workflow</span><span class="o">.</span><span class="n">_graph</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">subnode</span> <span class="ow">in</span> <span class="n">recurse_nodes</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">prefix</span> <span class="o">+</span> <span class="n">workflow</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">subnode</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="p">{</span>
+                <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">prefix</span> <span class="o">+</span> <span class="n">workflow</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s2">&quot;hash&quot;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">get_hashval</span><span class="p">()[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">log_nodes_initial</span><span class="p">(</span><span class="n">workflow</span><span class="p">):</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;callback&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">recurse_nodes</span><span class="p">(</span><span class="n">workflow</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="log_nodes_cb"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.utils.monitoring.log_nodes_cb">[docs]</a><span class="k">def</span> <span class="nf">log_nodes_cb</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">status</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Function to record node run statistics to a log file as json</span>
+<span class="sd">    dictionaries</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node : nipype.pipeline.engine.Node</span>
+<span class="sd">        the node being logged</span>
+<span class="sd">    status : string</span>
+<span class="sd">        acceptable values are &#39;start&#39;, &#39;end&#39;; otherwise it is</span>
+<span class="sd">        considered and error</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+<span class="sd">        this function does not return any values, it logs the node</span>
+<span class="sd">        status info to the callback logger</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">status</span> <span class="o">!=</span> <span class="s1">&#39;end&#39;</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="kn">import</span> <span class="nn">nipype.pipeline.engine.nodes</span> <span class="k">as</span> <span class="nn">nodes</span>
+
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;callback&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">MapNode</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="n">runtime</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">runtime</span>
+    <span class="n">runtime_threads</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">runtime</span><span class="p">,</span> <span class="s1">&#39;cpu_percent&#39;</span><span class="p">,</span> <span class="s1">&#39;N/A&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">runtime_threads</span> <span class="o">!=</span> <span class="s1">&#39;N/A&#39;</span><span class="p">:</span>
+        <span class="n">runtime_threads</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">runtime_threads</span><span class="o">/</span><span class="mi">100</span><span class="p">)</span>
+
+    <span class="n">status_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+        <span class="s1">&#39;hash&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">get_hashval</span><span class="p">()[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="s1">&#39;start&#39;</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">runtime</span><span class="p">,</span> <span class="s1">&#39;startTime&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;finish&#39;</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">runtime</span><span class="p">,</span> <span class="s1">&#39;endTime&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;runtime_threads&#39;</span><span class="p">:</span> <span class="n">runtime_threads</span><span class="p">,</span>
+        <span class="s1">&#39;runtime_memory_gb&#39;</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">runtime</span><span class="p">,</span> <span class="s1">&#39;mem_peak_gb&#39;</span><span class="p">,</span> <span class="s1">&#39;N/A&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;estimated_memory_gb&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">mem_gb</span><span class="p">,</span>
+        <span class="s1">&#39;num_threads&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">n_procs</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">status_dict</span><span class="p">[</span><span class="s1">&#39;start&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">status_dict</span><span class="p">[</span><span class="s1">&#39;finish&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">status_dict</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">status_dict</span><span class="p">))</span></div>
+
+
+<span class="k">class</span> <span class="nc">LoggingRequestHandler</span><span class="p">(</span><span class="n">socketserver</span><span class="o">.</span><span class="n">BaseRequestHandler</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">tree</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">logs</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">logging_dir</span><span class="p">,</span>
+                <span class="s2">&quot;pipeline_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">pipeline_name</span><span class="p">,</span>
+                <span class="s2">&quot;*&quot;</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="n">logs</span><span class="p">:</span>
+            <span class="n">subject</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">tree</span><span class="p">[</span><span class="n">subject</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="n">callback_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="s2">&quot;callback.log&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">callback_file</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">callback_file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">lf</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lf</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>  <span class="c1"># noqa: E741</span>
+                    <span class="n">l</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>  <span class="c1"># noqa: E741</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">node</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">node</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tree</span><span class="p">[</span><span class="n">subject</span><span class="p">]:</span>
+                            <span class="n">tree</span><span class="p">[</span><span class="n">subject</span><span class="p">][</span><span class="n">node</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+                                <span class="s2">&quot;hash&quot;</span><span class="p">:</span> <span class="n">node</span><span class="p">[</span><span class="s2">&quot;hash&quot;</span><span class="p">]</span>
+                            <span class="p">}</span>
+                            <span class="k">if</span> <span class="s2">&quot;start&quot;</span> <span class="ow">in</span> <span class="n">node</span> <span class="ow">and</span> <span class="s2">&quot;finish&quot;</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+                                <span class="n">tree</span><span class="p">[</span><span class="n">subject</span><span class="p">][</span><span class="n">node</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span>
+                                    <span class="s2">&quot;start&quot;</span><span class="p">]</span>
+                                <span class="n">tree</span><span class="p">[</span><span class="n">subject</span><span class="p">][</span><span class="n">node</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]][</span><span class="s2">&quot;finish&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span>
+                                    <span class="s2">&quot;finish&quot;</span><span class="p">]</span>
+
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="s2">&quot;start&quot;</span> <span class="ow">in</span> <span class="n">node</span> <span class="ow">and</span> <span class="s2">&quot;finish&quot;</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="n">tree</span><span class="p">[</span><span class="n">subject</span><span class="p">][</span><span class="n">node</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]][</span><span class="s2">&quot;hash&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">node</span><span class="p">[</span>
+                                    <span class="s2">&quot;hash&quot;</span>
+                                <span class="p">]:</span>
+                                    <span class="n">tree</span><span class="p">[</span><span class="n">subject</span><span class="p">][</span><span class="n">node</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]][</span><span class="s2">&quot;cached&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                                        <span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="n">node</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">],</span>
+                                        <span class="s2">&quot;finish&quot;</span><span class="p">:</span> <span class="n">node</span><span class="p">[</span><span class="s2">&quot;finish&quot;</span><span class="p">],</span>
+                                    <span class="p">}</span>
+
+                                <span class="c1"># pipeline was changed, and we have a new hash</span>
+                                <span class="k">else</span><span class="p">:</span>
+                                    <span class="n">tree</span><span class="p">[</span><span class="n">subject</span><span class="p">][</span><span class="n">node</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]][</span><span class="s2">&quot;start&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span>
+                                        <span class="s2">&quot;start&quot;</span><span class="p">]</span>
+                                    <span class="n">tree</span><span class="p">[</span><span class="n">subject</span><span class="p">][</span><span class="n">node</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]][</span><span class="s2">&quot;finish&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span>
+                                        <span class="s2">&quot;finish&quot;</span><span class="p">]</span>
+
+                    <span class="k">except</span><span class="p">:</span>
+                        <span class="k">break</span>
+
+                <span class="n">tree</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="p">:</span> <span class="n">t</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">t</span><span class="p">}</span>
+
+        <span class="n">headers</span> <span class="o">=</span> <span class="s1">&#39;HTTP/1.1 200 OK</span><span class="se">\n</span><span class="s1">Connection: close</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">sendall</span><span class="p">(</span><span class="n">headers</span> <span class="o">+</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">LoggingHTTPServer</span><span class="p">(</span><span class="n">socketserver</span><span class="o">.</span><span class="n">ThreadingTCPServer</span><span class="p">,</span> <span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline_name</span><span class="p">,</span> <span class="n">logging_dir</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8080</span><span class="p">,</span>
+                 <span class="n">request</span><span class="o">=</span><span class="n">LoggingRequestHandler</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LoggingHTTPServer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">((</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">),</span> <span class="n">request</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">logging_dir</span><span class="p">:</span>
+            <span class="n">logging_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logging_dir</span> <span class="o">=</span> <span class="n">logging_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_name</span> <span class="o">=</span> <span class="n">pipeline_name</span>
+
+
+<span class="k">def</span> <span class="nf">monitor_server</span><span class="p">(</span><span class="n">pipeline_name</span><span class="p">,</span> <span class="n">logging_dir</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s1">&#39;0.0.0.0&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8080</span><span class="p">):</span>
+    <span class="n">httpd</span> <span class="o">=</span> <span class="n">LoggingHTTPServer</span><span class="p">(</span><span class="n">pipeline_name</span><span class="p">,</span> <span class="n">logging_dir</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span>
+                              <span class="n">LoggingRequestHandler</span><span class="p">)</span>
+
+    <span class="n">server_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">httpd</span><span class="o">.</span><span class="n">serve_forever</span><span class="p">)</span>
+    <span class="n">server_thread</span><span class="o">.</span><span class="n">isDaemon</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">server_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">server_thread</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index">
+              <img class="logo" src="../../../../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../../index">Table of Contents</a></h3>
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../user/index">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index">Welcome to CPAC’s developer documentation!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CPAC.utils.monitoring.monitoring</a></li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, C-PAC Team.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.2.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+    <script defer src="https://fcp-indi.github.io/scripts/versionList.js"></script>
+
+  </body>
+</html>

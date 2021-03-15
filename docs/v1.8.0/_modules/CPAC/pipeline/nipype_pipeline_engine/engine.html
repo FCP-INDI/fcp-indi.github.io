@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CPAC.pipeline.nipype_pipeline_engine.engine &#8212; C-PAC 1.8.0 Beta documentation</title>
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css" />
+    
+    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="../../../../genindex" />
+    <link rel="search" title="Search" href="../../../../search" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CPAC.pipeline.nipype_pipeline_engine.engine</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for CPAC.pipeline.nipype_pipeline_engine.engine</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;Module to import Nipype Pipeline engine and override some Classes.</span>
+<span class="sd">See https://fcp-indi.github.com/docs/developer/nodes</span>
+<span class="sd">for C-PAC-specific documentation.</span>
+<span class="sd">See https://nipype.readthedocs.io/en/latest/api/generated/nipype.pipeline.engine.html</span>
+<span class="sd">for Nipype&#39;s documentation.&#39;&#39;&#39;</span>  <span class="c1"># noqa E501</span>
+<span class="kn">from</span> <span class="nn">nipype.pipeline</span> <span class="kn">import</span> <span class="n">engine</span> <span class="k">as</span> <span class="n">pe</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partialmethod</span>
+
+<span class="c1"># set global default mem_gb</span>
+<span class="n">DEFAULT_MEM_GB</span> <span class="o">=</span> <span class="mf">2.0</span>
+
+
+<span class="k">def</span> <span class="nf">_doctest_skiplines</span><span class="p">(</span><span class="n">docstring</span><span class="p">,</span> <span class="n">lines_to_skip</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Function to add &#39;  # doctest: +SKIP&#39; to the end of docstring lines</span>
+<span class="sd">    to skip in imported docstrings.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    docstring: str</span>
+
+<span class="sd">    lines_to_skip: set or list</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    docstring: str</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; _doctest_skiplines(&#39;skip this line&#39;, {&#39;skip this line&#39;})</span>
+<span class="sd">    &#39;skip this line  # doctest: +SKIP&#39;</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lines_to_skip</span><span class="p">,</span> <span class="nb">set</span><span class="p">)</span> <span class="ow">and</span>
+        <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lines_to_skip</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s1">&#39;_doctest_skiplines: `lines_to_skip` must be a set or list.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+        <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s1">  # doctest: +SKIP&#39;</span> <span class="k">if</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines_to_skip</span> <span class="k">else</span> <span class="n">line</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">docstring</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="p">])</span>
+
+
+<div class="viewcode-block" id="Node"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Node">[docs]</a><span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
+    <span class="vm">__doc__</span> <span class="o">=</span> <span class="n">_doctest_skiplines</span><span class="p">(</span>
+        <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">,</span>
+        <span class="p">{</span><span class="s2">&quot;    &gt;&gt;&gt; realign.inputs.in_files = &#39;functional.nii&#39;&quot;</span><span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="fm">__init__</span> <span class="o">=</span> <span class="n">partialmethod</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="o">.</span><span class="fm">__init__</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="n">DEFAULT_MEM_GB</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MapNode"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.MapNode">[docs]</a><span class="k">class</span> <span class="nc">MapNode</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">):</span>
+    <span class="vm">__doc__</span> <span class="o">=</span> <span class="n">_doctest_skiplines</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s1">&#39;mem_gb=</span><span class="si">{</span><span class="n">DEFAULT_MEM_GB</span><span class="si">}</span><span class="se">\n\n</span><span class="s1">n_procs=1</span><span class="se">\n\n</span><span class="si">{</span><span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="o">.</span><span class="vm">__doc__</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+        <span class="p">{</span><span class="s2">&quot;    ...                           &#39;functional3.nii&#39;]&quot;</span><span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="fm">__init__</span> <span class="o">=</span> <span class="n">partialmethod</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="o">.</span><span class="fm">__init__</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="n">DEFAULT_MEM_GB</span><span class="p">,</span>
+                             <span class="n">n_procs</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index">
+              <img class="logo" src="../../../../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../../index">Table of Contents</a></h3>
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../user/index">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index">Welcome to CPAC’s developer documentation!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CPAC.pipeline.nipype_pipeline_engine.engine</a></li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, C-PAC Team.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.2.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+    <script defer src="https://fcp-indi.github.io/scripts/versionList.js"></script>
+
+  </body>
+</html>

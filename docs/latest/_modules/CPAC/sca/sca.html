@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CPAC.sca.sca &#8212; C-PAC 1.7.2 Beta documentation</title>
+    <title>CPAC.sca.sca &#8212; C-PAC 1.8.0 Beta documentation</title>
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
@@ -14,7 +14,6 @@
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
     <script src="../../../_static/doctools.js"></script>
-    <script src="../../../_static/language_data.js"></script>
     
     <link rel="index" title="Index" href="../../../genindex" />
     <link rel="search" title="Search" href="../../../search" /> 
@@ -28,7 +27,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.2 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.sca.sca</a></li> 
       </ul>
@@ -41,17 +40,23 @@
             
   <h1>Source code for CPAC.sca.sca</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">nipype.interfaces.afni</span> <span class="kn">import</span> <span class="n">preprocess</span>
-<span class="kn">import</span> <span class="nn">nipype.pipeline.engine</span> <span class="k">as</span> <span class="nn">pe</span>
+<span class="kn">from</span> <span class="nn">CPAC.pipeline</span> <span class="kn">import</span> <span class="n">nipype_pipeline_engine</span> <span class="k">as</span> <span class="n">pe</span>
 <span class="kn">import</span> <span class="nn">nipype.algorithms.rapidart</span> <span class="k">as</span> <span class="nn">ra</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.afni</span> <span class="k">as</span> <span class="nn">afni</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="k">as</span> <span class="nn">fsl</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.io</span> <span class="k">as</span> <span class="nn">nio</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
+
 <span class="kn">from</span> <span class="nn">CPAC.sca.utils</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.utils</span> <span class="kn">import</span> <span class="n">extract_one_d</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.datasource</span> <span class="kn">import</span> <span class="n">resample_func_roi</span><span class="p">,</span> \
+    <span class="n">create_roi_mask_dataflow</span><span class="p">,</span> <span class="n">create_spatial_map_dataflow</span>
+
+<span class="kn">from</span> <span class="nn">CPAC.timeseries.timeseries_analysis</span> <span class="kn">import</span> <span class="n">get_roi_timeseries</span><span class="p">,</span> \
+    <span class="n">get_spatial_map_timeseries</span>
 
 
 <div class="viewcode-block" id="create_sca"><a class="viewcode-back" href="../../../developer/workflows/sca#CPAC.sca.create_sca">[docs]</a><span class="k">def</span> <span class="nf">create_sca</span><span class="p">(</span><span class="n">name_sca</span><span class="o">=</span><span class="s1">&#39;sca&#39;</span><span class="p">):</span>
-
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Map of the correlations of the Region of Interest(Seed in native or MNI space) with the rest of brain voxels.</span>
 <span class="sd">    The map is normalized to contain Z-scores, mapped in standard space and treated with spatial smoothing.</span>
@@ -96,14 +101,22 @@
 <span class="sd">       a single Z score file is returned, otherwise z-scores for all ROIs are returned as a list of</span>
 <span class="sd">       nifti files</span>
 
+<span class="sd">    .. exec::</span>
+<span class="sd">        from CPAC.sca import create_sca</span>
+<span class="sd">        wf = create_sca()</span>
+<span class="sd">        wf.write_graph(</span>
+<span class="sd">            graph2use=&#39;orig&#39;,</span>
+<span class="sd">            dotfilename=&#39;./images/generated/sca.dot&#39;</span>
+<span class="sd">        )</span>
+
 <span class="sd">    Workflow:</span>
 
-<span class="sd">    .. image:: ../images/sca_graph.dot.png</span>
+<span class="sd">    .. image:: ../../images/generated/sca.png</span>
 <span class="sd">        :width: 500</span>
 
 <span class="sd">    Detailed Workflow:</span>
 
-<span class="sd">    .. image:: ../images/sca_detailed_graph.dot.png</span>
+<span class="sd">    .. image:: ../../images/generated/sca_detailed.png</span>
 <span class="sd">        :width: 500</span>
 
 <span class="sd">    Examples</span>
@@ -120,8 +133,7 @@
 
     <span class="n">sca</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name_sca</span><span class="p">)</span>
     <span class="n">inputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;timeseries_one_d&#39;</span><span class="p">,</span>
-                                                <span class="s1">&#39;functional_file&#39;</span><span class="p">,</span>
-                                                <span class="p">]),</span>
+                                                       <span class="s1">&#39;functional_file&#39;</span><span class="p">,]),</span>
                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
 
     <span class="n">outputNode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span>
@@ -129,11 +141,11 @@
                                                     <span class="s1">&#39;correlation_files&#39;</span><span class="p">,</span>
                                                     <span class="s1">&#39;Z_score&#39;</span><span class="p">,</span>
                                                     <span class="p">]),</span>
-                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
 
     <span class="c1"># 2. Compute voxel-wise correlation with Seed Timeseries</span>
     <span class="n">corr</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">TCorr1D</span><span class="p">(),</span>
-                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;3dTCorr1D&#39;</span><span class="p">)</span>
+                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;3dTCorr1D&#39;</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
     <span class="n">corr</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">pearson</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">corr</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
 
@@ -152,41 +164,38 @@
     <span class="n">concat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
 
     <span class="c1"># also write out volumes as individual files</span>
-    <span class="n">split</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">Split</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;split_raw_volumes_sca&#39;</span><span class="p">)</span>
-    <span class="n">split</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="s1">&#39;t&#39;</span>
-    <span class="n">split</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_base_name</span> <span class="o">=</span> <span class="s1">&#39;sca_&#39;</span>
+    <span class="c1">#split = pe.Node(interface=fsl.Split(), name=&#39;split_raw_volumes_sca&#39;)</span>
+    <span class="c1">#split.inputs.dimension = &#39;t&#39;</span>
+    <span class="c1">#split.inputs.out_base_name = &#39;sca_&#39;</span>
 
-    <span class="n">get_roi_num_list</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;timeseries_file&#39;</span><span class="p">,</span>
-                                                          <span class="s1">&#39;prefix&#39;</span><span class="p">],</span>
-                                             <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;roi_list&#39;</span><span class="p">],</span>
-                                             <span class="n">function</span><span class="o">=</span><span class="n">get_roi_num_list</span><span class="p">),</span>
-                               <span class="n">name</span><span class="o">=</span><span class="s1">&#39;get_roi_num_list&#39;</span><span class="p">)</span>
-    <span class="n">get_roi_num_list</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;sca&quot;</span>
+    <span class="c1">#get_roi_num_list = pe.Node(util.Function(input_names=[&#39;timeseries_file&#39;,</span>
+    <span class="c1">#                                                      &#39;prefix&#39;],</span>
+    <span class="c1">#                                         output_names=[&#39;roi_list&#39;],</span>
+    <span class="c1">#                                         function=get_roi_num_list),</span>
+    <span class="c1">#                           name=&#39;get_roi_num_list&#39;)</span>
+    <span class="c1">#get_roi_num_list.inputs.prefix = &quot;sca&quot;</span>
 
-    <span class="n">rename_rois</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">Rename</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;output_rois&#39;</span><span class="p">,</span>
-                             <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">,</span> <span class="s1">&#39;format_string&#39;</span><span class="p">])</span>
-    <span class="n">rename_rois</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">keep_ext</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="c1">#sca.connect(inputNode, &#39;timeseries_one_d&#39;, get_roi_num_list,</span>
+    <span class="c1">#            &#39;timeseries_file&#39;)</span>
+
+    <span class="c1">#rename_rois = pe.MapNode(interface=util.Rename(), name=&#39;output_rois&#39;,</span>
+    <span class="c1">#                         iterfield=[&#39;in_file&#39;, &#39;format_string&#39;])</span>
+    <span class="c1">#rename_rois.inputs.keep_ext = True</span>
+
+    <span class="c1">#sca.connect(split, &#39;out_files&#39;, rename_rois, &#39;in_file&#39;)</span>
+    <span class="c1">#sca.connect(get_roi_num_list, &#39;roi_list&#39;, rename_rois, &#39;format_string&#39;)</span>
 
     <span class="n">sca</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">corr</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">concat</span><span class="p">,</span> <span class="s1">&#39;in_files&#39;</span><span class="p">)</span>
-    <span class="n">sca</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">concat</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">split</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+    <span class="c1">#sca.connect(concat, &#39;out_file&#39;, split, &#39;in_file&#39;)</span>
     <span class="n">sca</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">concat</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
                 <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;correlation_stack&#39;</span><span class="p">)</span>
-
-    <span class="n">sca</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;timeseries_one_d&#39;</span><span class="p">,</span> <span class="n">get_roi_num_list</span><span class="p">,</span>
-                <span class="s1">&#39;timeseries_file&#39;</span><span class="p">)</span>
-
-    <span class="n">sca</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">split</span><span class="p">,</span> <span class="s1">&#39;out_files&#39;</span><span class="p">,</span> <span class="n">rename_rois</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-    <span class="n">sca</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">get_roi_num_list</span><span class="p">,</span> <span class="s1">&#39;roi_list&#39;</span><span class="p">,</span> <span class="n">rename_rois</span><span class="p">,</span> <span class="s1">&#39;format_string&#39;</span><span class="p">)</span>
-
-    <span class="n">sca</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">rename_rois</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">outputNode</span><span class="p">,</span>
-                <span class="s1">&#39;correlation_files&#39;</span><span class="p">)</span>
+    <span class="c1">#sca.connect(rename_rois, &#39;out_file&#39;, outputNode,</span>
+    <span class="c1">#            &#39;correlation_files&#39;)</span>
 
     <span class="k">return</span> <span class="n">sca</span></div>
 
 
 <div class="viewcode-block" id="create_temporal_reg"><a class="viewcode-back" href="../../../developer/workflows/sca#CPAC.sca.create_temporal_reg">[docs]</a><span class="k">def</span> <span class="nf">create_temporal_reg</span><span class="p">(</span><span class="n">wflow_name</span><span class="o">=</span><span class="s1">&#39;temporal_reg&#39;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;SR&#39;</span><span class="p">):</span>
-
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Temporal multiple regression workflow</span>
 <span class="sd">    Provides a spatial map of parameter estimates corresponding to each</span>
@@ -259,15 +268,22 @@
 <span class="sd">    timeseries to the subjects functional file to get spatial maps of voxels</span>
 <span class="sd">    showing activation patterns related to those in the timeseries.</span>
 
+<span class="sd">    .. exec::</span>
+<span class="sd">        from CPAC.sca import create_temporal_reg</span>
+<span class="sd">        wf = create_temporal_reg()</span>
+<span class="sd">        wf.write_graph(</span>
+<span class="sd">            graph2use=&#39;orig&#39;,</span>
+<span class="sd">            dotfilename=&#39;./images/generated/create_temporal_regression.dot&#39;</span>
+<span class="sd">        )</span>
 
 <span class="sd">    Workflow:</span>
 
-<span class="sd">    .. image:: ../images/create_temporal_regression.png</span>
+<span class="sd">    .. image:: ../../images/generated/create_temporal_regression.png</span>
 <span class="sd">        :width: 500</span>
 
 <span class="sd">    Detailed Workflow:</span>
 
-<span class="sd">    .. image:: ../images/detailed_graph_create_temporal_regression.png</span>
+<span class="sd">    .. image:: ../../images/generated/create_temporal_regression_detailed.png</span>
 <span class="sd">        :width: 500</span>
 
 <span class="sd">    References</span>
@@ -312,7 +328,8 @@
     <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;subject_timeseries&#39;</span><span class="p">,</span>
                   <span class="n">check_timeseries</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
-    <span class="n">temporalReg</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">GLM</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;temporal_regression&#39;</span><span class="p">)</span>
+    <span class="n">temporalReg</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">GLM</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;temporal_regression&#39;</span><span class="p">,</span>
+        <span class="n">mem_gb</span><span class="o">=</span><span class="mf">4.0</span><span class="p">)</span>
     <span class="n">temporalReg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_file</span> <span class="o">=</span> <span class="s1">&#39;temp_reg_map.nii.gz&#39;</span>
     <span class="n">temporalReg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_z_name</span> <span class="o">=</span> <span class="s1">&#39;temp_reg_map_z.nii.gz&#39;</span>
 
@@ -325,81 +342,379 @@
     <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">temporalReg</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;temp_reg_map&#39;</span><span class="p">)</span>
     <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">temporalReg</span><span class="p">,</span> <span class="s1">&#39;out_z&#39;</span><span class="p">,</span> <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;temp_reg_map_z&#39;</span><span class="p">)</span>
 
-    <span class="n">split</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">Split</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;split_raw_volumes&#39;</span><span class="p">)</span>
-    <span class="n">split</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="s1">&#39;t&#39;</span>
-    <span class="n">split</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_base_name</span> <span class="o">=</span> <span class="s1">&#39;temp_reg_map_&#39;</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    split = pe.Node(interface=fsl.Split(), name=&#39;split_raw_volumes&#39;)</span>
+<span class="sd">    split.inputs.dimension = &#39;t&#39;</span>
+<span class="sd">    split.inputs.out_base_name = &#39;temp_reg_map_&#39;</span>
 
-    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">temporalReg</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">split</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+<span class="sd">    wflow.connect(temporalReg, &#39;out_file&#39;, split, &#39;in_file&#39;)</span>
 
-    <span class="n">split_zstat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">Split</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;split_zstat_volumes&#39;</span><span class="p">)</span>
-    <span class="n">split_zstat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">dimension</span> <span class="o">=</span> <span class="s1">&#39;t&#39;</span>
-    <span class="n">split_zstat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_base_name</span> <span class="o">=</span> <span class="s1">&#39;temp_reg_map_z_&#39;</span>
+<span class="sd">    split_zstat = pe.Node(interface=fsl.Split(), name=&#39;split_zstat_volumes&#39;)</span>
+<span class="sd">    split_zstat.inputs.dimension = &#39;t&#39;</span>
+<span class="sd">    split_zstat.inputs.out_base_name = &#39;temp_reg_map_z_&#39;</span>
 
-    <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">temporalReg</span><span class="p">,</span> <span class="s1">&#39;out_z&#39;</span><span class="p">,</span>
-                  <span class="n">split_zstat</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+<span class="sd">    wflow.connect(temporalReg, &#39;out_z&#39;,</span>
+<span class="sd">                  split_zstat, &#39;in_file&#39;)</span>
 
-    <span class="k">if</span> <span class="n">which</span> <span class="o">==</span> <span class="s1">&#39;SR&#39;</span><span class="p">:</span>
-        <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">split</span><span class="p">,</span> <span class="s1">&#39;out_files&#39;</span><span class="p">,</span>
-                      <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;temp_reg_map_files&#39;</span><span class="p">)</span>
-        <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">split_zstat</span><span class="p">,</span> <span class="s1">&#39;out_files&#39;</span><span class="p">,</span>
-                      <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;temp_reg_map_z_files&#39;</span><span class="p">)</span>
+<span class="sd">    if which == &#39;SR&#39;:</span>
+<span class="sd">        wflow.connect(split, &#39;out_files&#39;,</span>
+<span class="sd">                      outputNode, &#39;temp_reg_map_files&#39;)</span>
+<span class="sd">        wflow.connect(split_zstat, &#39;out_files&#39;,</span>
+<span class="sd">                      outputNode, &#39;temp_reg_map_z_files&#39;)</span>
 
-    <span class="k">elif</span> <span class="n">which</span> <span class="o">==</span> <span class="s1">&#39;RT&#39;</span><span class="p">:</span>
-        <span class="n">map_roi_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;import numpy as np&#39;</span><span class="p">]</span>
+<span class="sd">    elif which == &#39;RT&#39;:</span>
+<span class="sd">        map_roi_imports = [&#39;import os&#39;, &#39;import numpy as np&#39;]</span>
 
-        <span class="c1"># get roi order and send to output node for raw outputs</span>
-        <span class="n">get_roi_order</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;maps&#39;</span><span class="p">,</span>
-                                                           <span class="s1">&#39;timeseries&#39;</span><span class="p">],</span>
-                                              <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span>
-                                                            <span class="s1">&#39;maps&#39;</span><span class="p">],</span>
-                                              <span class="n">function</span><span class="o">=</span><span class="n">map_to_roi</span><span class="p">,</span>
-                                              <span class="n">imports</span><span class="o">=</span><span class="n">map_roi_imports</span><span class="p">),</span>
-                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;get_roi_order&#39;</span><span class="p">)</span>
+<span class="sd">        # get roi order and send to output node for raw outputs</span>
+<span class="sd">        get_roi_order = pe.Node(util.Function(input_names=[&#39;maps&#39;,</span>
+<span class="sd">                                                           &#39;timeseries&#39;],</span>
+<span class="sd">                                              output_names=[&#39;labels&#39;,</span>
+<span class="sd">                                                            &#39;maps&#39;],</span>
+<span class="sd">                                              function=map_to_roi,</span>
+<span class="sd">                                              imports=map_roi_imports),</span>
+<span class="sd">                                name=&#39;get_roi_order&#39;)</span>
 
-        <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">split</span><span class="p">,</span> <span class="s1">&#39;out_files&#39;</span><span class="p">,</span> <span class="n">get_roi_order</span><span class="p">,</span> <span class="s1">&#39;maps&#39;</span><span class="p">)</span>
+<span class="sd">        wflow.connect(split, &#39;out_files&#39;, get_roi_order, &#39;maps&#39;)</span>
 
-        <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;subject_timeseries&#39;</span><span class="p">,</span>
-                      <span class="n">get_roi_order</span><span class="p">,</span> <span class="s1">&#39;timeseries&#39;</span><span class="p">)</span>
+<span class="sd">        wflow.connect(inputNode, &#39;subject_timeseries&#39;,</span>
+<span class="sd">                      get_roi_order, &#39;timeseries&#39;)</span>
 
-        <span class="n">rename_maps</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">Rename</span><span class="p">(),</span>
-                                 <span class="n">name</span><span class="o">=</span><span class="s1">&#39;rename_maps&#39;</span><span class="p">,</span>
-                                 <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">,</span>
-                                            <span class="s1">&#39;format_string&#39;</span><span class="p">])</span>
-        <span class="n">rename_maps</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">keep_ext</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="sd">        rename_maps = pe.MapNode(interface=util.Rename(),</span>
+<span class="sd">                                 name=&#39;rename_maps&#39;,</span>
+<span class="sd">                                 iterfield=[&#39;in_file&#39;,</span>
+<span class="sd">                                            &#39;format_string&#39;])</span>
+<span class="sd">        rename_maps.inputs.keep_ext = True</span>
 
-        <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">get_roi_order</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="n">rename_maps</span><span class="p">,</span> <span class="s1">&#39;format_string&#39;</span><span class="p">)</span>
-        <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">get_roi_order</span><span class="p">,</span> <span class="s1">&#39;maps&#39;</span><span class="p">,</span> <span class="n">rename_maps</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-        <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">rename_maps</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                      <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;temp_reg_map_files&#39;</span><span class="p">)</span>
+<span class="sd">        wflow.connect(get_roi_order, &#39;labels&#39;, rename_maps, &#39;format_string&#39;)</span>
+<span class="sd">        wflow.connect(get_roi_order, &#39;maps&#39;, rename_maps, &#39;in_file&#39;)</span>
+<span class="sd">        wflow.connect(rename_maps, &#39;out_file&#39;,</span>
+<span class="sd">                      outputNode, &#39;temp_reg_map_files&#39;)</span>
 
-        <span class="c1"># get roi order and send to output node for z-stat outputs</span>
-        <span class="n">get_roi_order_zstat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;maps&#39;</span><span class="p">,</span>
-                                                           <span class="s1">&#39;timeseries&#39;</span><span class="p">],</span>
-                                                    <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span>
-                                                                  <span class="s1">&#39;maps&#39;</span><span class="p">],</span>
-                                                    <span class="n">function</span><span class="o">=</span><span class="n">map_to_roi</span><span class="p">,</span>
-                                                    <span class="n">imports</span><span class="o">=</span><span class="n">map_roi_imports</span><span class="p">),</span>
-                                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;get_roi_order_zstat&#39;</span><span class="p">)</span>
+<span class="sd">        # get roi order and send to output node for z-stat outputs</span>
+<span class="sd">        get_roi_order_zstat = pe.Node(util.Function(input_names=[&#39;maps&#39;,</span>
+<span class="sd">                                                           &#39;timeseries&#39;],</span>
+<span class="sd">                                                    output_names=[&#39;labels&#39;,</span>
+<span class="sd">                                                                  &#39;maps&#39;],</span>
+<span class="sd">                                                    function=map_to_roi,</span>
+<span class="sd">                                                    imports=map_roi_imports),</span>
+<span class="sd">                                      name=&#39;get_roi_order_zstat&#39;)</span>
 
-        <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">split_zstat</span><span class="p">,</span> <span class="s1">&#39;out_files&#39;</span><span class="p">,</span> <span class="n">get_roi_order_zstat</span><span class="p">,</span> <span class="s1">&#39;maps&#39;</span><span class="p">)</span>
-        <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputNode</span><span class="p">,</span> <span class="s1">&#39;subject_timeseries&#39;</span><span class="p">,</span>
-                      <span class="n">get_roi_order_zstat</span><span class="p">,</span> <span class="s1">&#39;timeseries&#39;</span><span class="p">)</span>
+<span class="sd">        wflow.connect(split_zstat, &#39;out_files&#39;, get_roi_order_zstat, &#39;maps&#39;)</span>
+<span class="sd">        wflow.connect(inputNode, &#39;subject_timeseries&#39;,</span>
+<span class="sd">                      get_roi_order_zstat, &#39;timeseries&#39;)</span>
 
-        <span class="n">rename_maps_zstat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">Rename</span><span class="p">(),</span>
-                                       <span class="n">name</span><span class="o">=</span><span class="s1">&#39;rename_maps_zstat&#39;</span><span class="p">,</span>
-                                       <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">,</span>
-                                                  <span class="s1">&#39;format_string&#39;</span><span class="p">])</span>
-        <span class="n">rename_maps_zstat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">keep_ext</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="sd">        rename_maps_zstat = pe.MapNode(interface=util.Rename(),</span>
+<span class="sd">                                       name=&#39;rename_maps_zstat&#39;,</span>
+<span class="sd">                                       iterfield=[&#39;in_file&#39;,</span>
+<span class="sd">                                                  &#39;format_string&#39;])</span>
+<span class="sd">        rename_maps_zstat.inputs.keep_ext = True</span>
 
-        <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">get_roi_order_zstat</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">,</span>
-                      <span class="n">rename_maps_zstat</span><span class="p">,</span> <span class="s1">&#39;format_string&#39;</span><span class="p">)</span>
-        <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">get_roi_order_zstat</span><span class="p">,</span> <span class="s1">&#39;maps&#39;</span><span class="p">,</span>
-                      <span class="n">rename_maps_zstat</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+<span class="sd">        wflow.connect(get_roi_order_zstat, &#39;labels&#39;,</span>
+<span class="sd">                      rename_maps_zstat, &#39;format_string&#39;)</span>
+<span class="sd">        wflow.connect(get_roi_order_zstat, &#39;maps&#39;,</span>
+<span class="sd">                      rename_maps_zstat, &#39;in_file&#39;)</span>
 
-        <span class="n">wflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">rename_maps_zstat</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                      <span class="n">outputNode</span><span class="p">,</span> <span class="s1">&#39;temp_reg_map_z_files&#39;</span><span class="p">)</span>
+<span class="sd">        wflow.connect(rename_maps_zstat, &#39;out_file&#39;,</span>
+<span class="sd">                      outputNode, &#39;temp_reg_map_z_files&#39;)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">return</span> <span class="n">wflow</span></div>
+
+
+<span class="k">def</span> <span class="nf">SCA_AVG</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Run Seed-Based Correlation Analysis.</span>
+
+<span class="sd">    Node Block:</span>
+<span class="sd">    {&quot;name&quot;: &quot;SCA_AVG&quot;,</span>
+<span class="sd">     &quot;config&quot;: [&quot;seed_based_correlation_analysis&quot;],</span>
+<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
+<span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
+<span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
+<span class="sd">     &quot;inputs&quot;: [[&quot;space-template_desc-cleaned_bold&quot;,</span>
+<span class="sd">                 &quot;space-template_desc-brain_bold&quot;,</span>
+<span class="sd">                 &quot;space-template_desc-motion_bold&quot;,</span>
+<span class="sd">                 &quot;space-template_desc-preproc_bold&quot;,</span>
+<span class="sd">                 &quot;space-template_bold&quot;]],</span>
+<span class="sd">     &quot;outputs&quot;: [&quot;desc-MeanSCA_timeseries&quot;,</span>
+<span class="sd">                 &quot;desc-MeanSCA_correlations&quot;,</span>
+<span class="sd">                 &quot;atlas_name&quot;]}</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c1"># same workflow, except to run TSE and send it to the resource</span>
+    <span class="c1"># pool so that it will not get sent to SCA</span>
+    <span class="n">resample_functional_roi_for_sca</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
+        <span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_func&#39;</span><span class="p">,</span>
+                                   <span class="s1">&#39;in_roi&#39;</span><span class="p">,</span>
+                                   <span class="s1">&#39;realignment&#39;</span><span class="p">,</span>
+                                   <span class="s1">&#39;identity_matrix&#39;</span><span class="p">],</span>
+                      <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_func&#39;</span><span class="p">,</span> <span class="s1">&#39;out_roi&#39;</span><span class="p">],</span>
+                      <span class="n">function</span><span class="o">=</span><span class="n">resample_func_roi</span><span class="p">,</span>
+                      <span class="n">as_module</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;resample_functional_roi_for_sca_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">resample_functional_roi_for_sca</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">realignment</span> <span class="o">=</span> \
+        <span class="n">cfg</span><span class="o">.</span><span class="n">timeseries_extraction</span><span class="p">[</span><span class="s1">&#39;realignment&#39;</span><span class="p">]</span>
+    <span class="n">resample_functional_roi_for_sca</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">identity_matrix</span> <span class="o">=</span> \
+    <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span><span class="s1">&#39;functional_registration&#39;</span><span class="p">][</span>
+        <span class="s1">&#39;func_registration_to_template&#39;</span><span class="p">][</span><span class="s1">&#39;FNIRT_pipelines&#39;</span><span class="p">][</span><span class="s1">&#39;identity_matrix&#39;</span><span class="p">]</span>
+
+    <span class="n">roi_dataflow_for_sca</span> <span class="o">=</span> <span class="n">create_roi_mask_dataflow</span><span class="p">(</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">seed_based_correlation_analysis</span><span class="p">[</span><span class="s1">&#39;sca_atlases&#39;</span><span class="p">][</span><span class="s1">&#39;Avg&#39;</span><span class="p">],</span>
+        <span class="sa">f</span><span class="s1">&#39;roi_dataflow_for_sca_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="p">)</span>
+
+    <span class="n">roi_dataflow_for_sca</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+        <span class="n">creds_path</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">pipeline_setup</span><span class="p">[</span><span class="s1">&#39;input_creds_path&#39;</span><span class="p">],</span>
+        <span class="n">dl_dir</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">pipeline_setup</span><span class="p">[</span><span class="s1">&#39;working_directory&#39;</span><span class="p">][</span><span class="s1">&#39;path&#39;</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">roi_timeseries_for_sca</span> <span class="o">=</span> <span class="n">get_roi_timeseries</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s1">&#39;roi_timeseries_for_sca_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;space-template_desc-cleaned_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-brain_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-motion_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-preproc_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_bold&quot;</span><span class="p">])</span>
+    <span class="c1"># resample the input functional file to roi</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span>
+                     <span class="n">resample_functional_roi_for_sca</span><span class="p">,</span> <span class="s1">&#39;in_func&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">roi_dataflow_for_sca</span><span class="p">,</span> <span class="s1">&#39;outputspec.out_file&#39;</span><span class="p">,</span>
+                     <span class="n">resample_functional_roi_for_sca</span><span class="p">,</span> <span class="s1">&#39;in_roi&#39;</span><span class="p">)</span>
+
+    <span class="c1"># connect it to the roi_timeseries</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">resample_functional_roi_for_sca</span><span class="p">,</span> <span class="s1">&#39;out_roi&#39;</span><span class="p">,</span>
+                     <span class="n">roi_timeseries_for_sca</span><span class="p">,</span> <span class="s1">&#39;input_roi.roi&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">resample_functional_roi_for_sca</span><span class="p">,</span> <span class="s1">&#39;out_func&#39;</span><span class="p">,</span>
+                     <span class="n">roi_timeseries_for_sca</span><span class="p">,</span> <span class="s1">&#39;inputspec.rest&#39;</span><span class="p">)</span>
+
+    <span class="n">sca_roi</span> <span class="o">=</span> <span class="n">create_sca</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;sca_roi_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;space-template_desc-cleaned_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-brain_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-motion_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-preproc_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_bold&quot;</span><span class="p">])</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">sca_roi</span><span class="p">,</span> <span class="s1">&#39;inputspec.functional_file&#39;</span><span class="p">)</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">roi_timeseries_for_sca</span><span class="p">,</span> <span class="s1">&#39;outputspec.roi_csv&#39;</span><span class="p">,</span>
+               <span class="c1">#(&#39;outputspec.roi_outputs&#39;, extract_one_d),</span>
+               <span class="n">sca_roi</span><span class="p">,</span> <span class="s1">&#39;inputspec.timeseries_one_d&#39;</span><span class="p">)</span>
+
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;desc-MeanSCA_timeseries&#39;</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">roi_timeseries_for_sca</span><span class="p">,</span> <span class="s1">&#39;outputspec.roi_csv&#39;</span><span class="p">),</span>
+                                    <span class="c1">#(&#39;outputspec.roi_outputs&#39;,</span>
+                                    <span class="c1"># extract_one_d)),</span>
+        <span class="s1">&#39;desc-MeanSCA_correlations&#39;</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">sca_roi</span><span class="p">,</span> <span class="s1">&#39;outputspec.correlation_stack&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;atlas_name&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">roi_dataflow_for_sca</span><span class="p">,</span> <span class="s1">&#39;outputspec.out_name&#39;</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">dual_regression</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Run Dual Regression - spatial regression and then temporal regression.</span>
+
+<span class="sd">    Node Block:</span>
+<span class="sd">    {&quot;name&quot;: &quot;dual_regression&quot;,</span>
+<span class="sd">     &quot;config&quot;: [&quot;seed_based_correlation_analysis&quot;],</span>
+<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
+<span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
+<span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
+<span class="sd">     &quot;inputs&quot;: [[&quot;space-template_desc-cleaned_bold&quot;,</span>
+<span class="sd">                 &quot;space-template_desc-brain_bold&quot;,</span>
+<span class="sd">                 &quot;space-template_desc-motion_bold&quot;,</span>
+<span class="sd">                 &quot;space-template_desc-preproc_bold&quot;,</span>
+<span class="sd">                 &quot;space-template_bold&quot;],</span>
+<span class="sd">                &quot;space-template_desc-bold_mask&quot;],</span>
+<span class="sd">     &quot;outputs&quot;: [&quot;desc-DualReg_correlations&quot;,</span>
+<span class="sd">                 &quot;desc-DualReg_statmap&quot;,</span>
+<span class="sd">                 &quot;atlas_name&quot;]}</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">resample_spatial_map_to_native_space_for_dr</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
+        <span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span>
+        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;resample_spatial_map_to_native_space_for_DR_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="p">)</span>
+    <span class="n">resample_spatial_map_to_native_space_for_dr</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+        <span class="n">interp</span><span class="o">=</span><span class="s1">&#39;nearestneighbour&#39;</span><span class="p">,</span>
+        <span class="n">apply_xfm</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">in_matrix_file</span><span class="o">=</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span><span class="s1">&#39;functional_registration&#39;</span><span class="p">][</span>
+            <span class="s1">&#39;func_registration_to_template&#39;</span><span class="p">][</span><span class="s1">&#39;FNIRT_pipelines&#39;</span><span class="p">][</span>
+            <span class="s1">&#39;identity_matrix&#39;</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">spatial_map_dataflow_for_dr</span> <span class="o">=</span> <span class="n">create_spatial_map_dataflow</span><span class="p">(</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">seed_based_correlation_analysis</span><span class="p">[</span><span class="s1">&#39;sca_atlases&#39;</span><span class="p">][</span><span class="s1">&#39;DualReg&#39;</span><span class="p">],</span>
+        <span class="sa">f</span><span class="s1">&#39;spatial_map_dataflow_for_DR_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="p">)</span>
+
+    <span class="n">spatial_map_dataflow_for_dr</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+        <span class="n">creds_path</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">pipeline_setup</span><span class="p">[</span><span class="s1">&#39;input_creds_path&#39;</span><span class="p">],</span>
+        <span class="n">dl_dir</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">pipeline_setup</span><span class="p">[</span><span class="s1">&#39;working_directory&#39;</span><span class="p">][</span><span class="s1">&#39;path&#39;</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">spatial_map_timeseries_for_dr</span> <span class="o">=</span> <span class="n">get_spatial_map_timeseries</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s1">&#39;spatial_map_timeseries_for_DR_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="p">)</span>
+    <span class="n">spatial_map_timeseries_for_dr</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">demean</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># resample the input functional file and functional mask</span>
+    <span class="c1"># to spatial map</span>
+    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;space-template_desc-cleaned_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-brain_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-motion_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-preproc_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_bold&quot;</span><span class="p">])</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span>
+               <span class="n">resample_spatial_map_to_native_space_for_dr</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span>
+               <span class="n">spatial_map_timeseries_for_dr</span><span class="p">,</span> <span class="s1">&#39;inputspec.subject_rest&#39;</span><span class="p">)</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">spatial_map_dataflow_for_dr</span><span class="p">,</span> <span class="s1">&#39;select_spatial_map.out_file&#39;</span><span class="p">,</span>
+               <span class="n">resample_spatial_map_to_native_space_for_dr</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="c1"># connect it to the spatial_map_timeseries</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">resample_spatial_map_to_native_space_for_dr</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
+               <span class="n">spatial_map_timeseries_for_dr</span><span class="p">,</span> <span class="s1">&#39;inputspec.spatial_map&#39;</span>
+    <span class="p">)</span>
+
+    <span class="n">dr_temp_reg</span> <span class="o">=</span> <span class="n">create_temporal_reg</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;temporal_regression_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">dr_temp_reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">normalize</span> <span class="o">=</span> \
+        <span class="n">cfg</span><span class="o">.</span><span class="n">seed_based_correlation_analysis</span><span class="p">[</span><span class="s1">&#39;norm_timeseries_for_DR&#39;</span><span class="p">]</span>
+    <span class="n">dr_temp_reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">demean</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">spatial_map_timeseries_for_dr</span><span class="p">,</span> <span class="s1">&#39;outputspec.subject_timeseries&#39;</span><span class="p">,</span>
+               <span class="n">dr_temp_reg</span><span class="p">,</span> <span class="s1">&#39;inputspec.subject_timeseries&#39;</span><span class="p">)</span>
+
+    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;space-template_desc-cleaned_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-brain_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-motion_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-preproc_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_bold&quot;</span><span class="p">])</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">dr_temp_reg</span><span class="p">,</span> <span class="s1">&#39;inputspec.subject_rest&#39;</span><span class="p">)</span>
+
+    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;space-template_desc-bold_mask&quot;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">dr_temp_reg</span><span class="p">,</span> <span class="s1">&#39;inputspec.subject_mask&#39;</span><span class="p">)</span>
+
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;desc-DualReg_correlations&#39;</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">dr_temp_reg</span><span class="p">,</span> <span class="s1">&#39;outputspec.temp_reg_map&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;desc-DualReg_statmap&#39;</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">dr_temp_reg</span><span class="p">,</span> <span class="s1">&#39;outputspec.temp_reg_map_z&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;atlas_name&#39;</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">spatial_map_dataflow_for_dr</span><span class="p">,</span> <span class="s1">&#39;select_spatial_map.out_name&#39;</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">multiple_regression</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Run Multiple Regression.</span>
+
+<span class="sd">    Node Block:</span>
+<span class="sd">    {&quot;name&quot;: &quot;multiple_regression&quot;,</span>
+<span class="sd">     &quot;config&quot;: [&quot;seed_based_correlation_analysis&quot;],</span>
+<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
+<span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
+<span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
+<span class="sd">     &quot;inputs&quot;: [[&quot;space-template_desc-cleaned_bold&quot;,</span>
+<span class="sd">                 &quot;space-template_desc-brain_bold&quot;,</span>
+<span class="sd">                 &quot;space-template_desc-motion_bold&quot;,</span>
+<span class="sd">                 &quot;space-template_desc-preproc_bold&quot;,</span>
+<span class="sd">                 &quot;space-template_bold&quot;],</span>
+<span class="sd">                &quot;space-template_desc-bold_mask&quot;],</span>
+<span class="sd">     &quot;outputs&quot;: [&quot;desc-MultReg_correlations&quot;,</span>
+<span class="sd">                 &quot;desc-MultReg_statmap&quot;,</span>
+<span class="sd">                 &quot;atlas_name&quot;]}</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c1"># same workflow, except to run TSE and send it to the resource</span>
+    <span class="c1"># pool so that it will not get sent to SCA</span>
+    <span class="n">resample_functional_roi_for_multreg</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
+        <span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_func&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;in_roi&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;realignment&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;identity_matrix&#39;</span><span class="p">],</span>
+                 <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_func&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;out_roi&#39;</span><span class="p">],</span>
+                 <span class="n">function</span><span class="o">=</span><span class="n">resample_func_roi</span><span class="p">,</span>
+                 <span class="n">as_module</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;resample_functional_roi_for_multreg_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">resample_functional_roi_for_multreg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">realignment</span> <span class="o">=</span> \
+    <span class="n">cfg</span><span class="o">.</span><span class="n">timeseries_extraction</span><span class="p">[</span><span class="s1">&#39;realignment&#39;</span><span class="p">]</span>
+    <span class="n">resample_functional_roi_for_multreg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">identity_matrix</span> <span class="o">=</span> \
+    <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span><span class="s1">&#39;functional_registration&#39;</span><span class="p">][</span>
+        <span class="s1">&#39;func_registration_to_template&#39;</span><span class="p">][</span><span class="s1">&#39;FNIRT_pipelines&#39;</span><span class="p">][</span><span class="s1">&#39;identity_matrix&#39;</span><span class="p">]</span>
+
+    <span class="n">roi_dataflow_for_multreg</span> <span class="o">=</span> <span class="n">create_roi_mask_dataflow</span><span class="p">(</span>
+        <span class="n">cfg</span><span class="o">.</span><span class="n">seed_based_correlation_analysis</span><span class="p">[</span><span class="s1">&#39;sca_atlases&#39;</span><span class="p">][</span><span class="s1">&#39;MultReg&#39;</span><span class="p">],</span>
+        <span class="sa">f</span><span class="s1">&#39;roi_dataflow_for_mult_reg_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">roi_dataflow_for_multreg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+        <span class="n">creds_path</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">pipeline_setup</span><span class="p">[</span><span class="s1">&#39;input_creds_path&#39;</span><span class="p">],</span>
+        <span class="n">dl_dir</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">pipeline_setup</span><span class="p">[</span><span class="s1">&#39;working_directory&#39;</span><span class="p">][</span><span class="s1">&#39;path&#39;</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">roi_timeseries_for_multreg</span> <span class="o">=</span> <span class="n">get_roi_timeseries</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s1">&#39;roi_timeseries_for_mult_reg_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;space-template_desc-cleaned_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-brain_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-motion_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-preproc_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_bold&quot;</span><span class="p">])</span>
+    <span class="c1"># resample the input functional file to roi</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">resample_functional_roi_for_multreg</span><span class="p">,</span> <span class="s1">&#39;in_func&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">roi_dataflow_for_multreg</span><span class="p">,</span>
+                     <span class="s1">&#39;outputspec.out_file&#39;</span><span class="p">,</span>
+                     <span class="n">resample_functional_roi_for_multreg</span><span class="p">,</span>
+                     <span class="s1">&#39;in_roi&#39;</span><span class="p">)</span>
+
+    <span class="c1"># connect it to the roi_timeseries</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">resample_functional_roi_for_multreg</span><span class="p">,</span>
+                     <span class="s1">&#39;out_roi&#39;</span><span class="p">,</span>
+                     <span class="n">roi_timeseries_for_multreg</span><span class="p">,</span>
+                     <span class="s1">&#39;input_roi.roi&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">resample_functional_roi_for_multreg</span><span class="p">,</span>
+                     <span class="s1">&#39;out_func&#39;</span><span class="p">,</span>
+                     <span class="n">roi_timeseries_for_multreg</span><span class="p">,</span>
+                     <span class="s1">&#39;inputspec.rest&#39;</span><span class="p">)</span>
+
+    <span class="n">sc_temp_reg</span> <span class="o">=</span> <span class="n">create_temporal_reg</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s1">&#39;temporal_regression_sca_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+        <span class="n">which</span><span class="o">=</span><span class="s1">&#39;RT&#39;</span><span class="p">)</span>
+    <span class="n">sc_temp_reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">normalize</span> <span class="o">=</span> \
+    <span class="n">cfg</span><span class="o">.</span><span class="n">seed_based_correlation_analysis</span><span class="p">[</span><span class="s1">&#39;norm_timeseries_for_DR&#39;</span><span class="p">]</span>
+    <span class="n">sc_temp_reg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">demean</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;space-template_desc-cleaned_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-brain_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-motion_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_desc-preproc_bold&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-template_bold&quot;</span><span class="p">])</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">sc_temp_reg</span><span class="p">,</span> <span class="s1">&#39;inputspec.subject_rest&#39;</span><span class="p">)</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">roi_timeseries_for_multreg</span><span class="p">,</span> <span class="s1">&#39;outputspec.roi_csv&#39;</span><span class="p">,</span>
+                     <span class="c1">#(&#39;outputspec.roi_outputs&#39;, extract_one_d),</span>
+                     <span class="n">sc_temp_reg</span><span class="p">,</span> <span class="s1">&#39;inputspec.subject_timeseries&#39;</span><span class="p">)</span>
+
+    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;space-template_desc-bold_mask&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">sc_temp_reg</span><span class="p">,</span> <span class="s1">&#39;inputspec.subject_mask&#39;</span><span class="p">)</span>
+
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;desc-MultReg_correlations&#39;</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">sc_temp_reg</span><span class="p">,</span> <span class="s1">&#39;outputspec.temp_reg_map&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;desc-MultReg_statmap&#39;</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">sc_temp_reg</span><span class="p">,</span> <span class="s1">&#39;outputspec.temp_reg_map_z&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;atlas_name&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">roi_dataflow_for_multreg</span><span class="p">,</span> <span class="s1">&#39;outputspec.out_name&#39;</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 </pre></div>
 
             <div class="clearer"></div>
@@ -441,7 +756,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.7.2 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.sca.sca</a></li> 
       </ul>
@@ -449,7 +764,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.3.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.2.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

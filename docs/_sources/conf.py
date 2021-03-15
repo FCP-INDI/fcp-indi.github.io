@@ -139,7 +139,6 @@ sys.path.insert(0, os.path.abspath('.'))
 # extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
-    'sphinx_reredirects',
     'sphinx.ext.autodoc',
     'sphinxcontrib.bibtex',
     'sphinxcontrib.fulltoc',
@@ -176,17 +175,6 @@ copyright = '2020, C-PAC Team'
 #
 # The short X.Y version.
 version = __version__
-
-# Set redirects for renamed pages
-redirects = {
-    'user/1.7-1.8-nesting-mappings': 'user/pipelines/' \
-                                     '1.7-1.8-nesting-mappings.html',
-    'user/default': 'user/pipelines/default.html',
-    'user/design_a_pipeline': 'user/pipelines/design_a_pipeline.html',
-    'user/pipeline_config': 'user/pipelines/pipeline_config.html',
-    'user/preconfig': 'user/pipelines/preconfig.html'
-}
-
 
 # Get tags from GitHub
 # Set GITHUBTOKEN to your API token in your environment to increase rate limit.

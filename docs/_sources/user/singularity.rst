@@ -36,7 +36,7 @@ Again, you can also provide an AWS S3 link for the data:
             /outputs \
             participant
 
-As mentioned above, in addition to the default pipeline, C-PAC comes packaged with a growing library of pre-configured pipelines that are ready to use. Once again, you can use the ``--preconfig`` flag with Singularity to run any of the pre-configured pipelines. See the full selection of pre-configured pipelines :doc:`here </user/preconfig>`.
+As mentioned above, in addition to the default pipeline, C-PAC comes packaged with a growing library of pre-configured pipelines that are ready to use. Once again, you can use the ``--preconfig`` flag with Singularity to run any of the pre-configured pipelines. See the full selection of pre-configured pipelines :doc:`here </user/pipelines/preconfig>`.
 
 .. code-block:: console
 

@@ -3,6 +3,8 @@ C-PAC Quickstart
 
 .. include:: quick_overview.rst
 
+.. _cpac-python-package:
+
 .. include:: cpac.rst
 
 For instructions to run in Docker or Singularity without installing cpac (Python package), see :doc:`All Run Options </user/running>`
@@ -36,9 +38,9 @@ Pre-configured Pipelines
 
 In addition to the default pipeline, C-PAC comes packaged with a growing library of pre-configured pipelines that are ready to use. They can be invoked when running C-PAC using the ``--preconfig`` flag detailed above.
 
-Detailed information about the selection of pre-configured pipelines are :doc:`available here </user/preconfig>`.
+Detailed information about the selection of pre-configured pipelines are :doc:`available here </user/pipelines/preconfig>`.
 
-..include:: design_a_pipeline.rst
+.. include:: pipelines/design_a_pipeline.rst
 
 Acknowledgments
 ---------------
@@ -57,7 +59,7 @@ We currently have a publication in preparation, in the meantime please cite our 
 	        and Yan, Chaogan  and  Li, Qingyang  and  Lurie, Daniel  and  Vogelstein, Joshua  and  Burns, Randal  and
 	        Colcombe, Stanley  and  Mennes, Maarten  and  Kelly, Clare  and  Di Martino, Adriana  and  Castellanos,
 	        Francisco Xavier  and  Milham, Michael},
-	    TITLE={Towards Automated Analysis of Connectomes: The Configurable Pipeline for the Analysis of Connectomes (C-PAC)},
+	    TITLE={Towards Automated Analysis of Connectomes: The {Configurable Pipeline for the Analysis of Connectomes (C-PAC)}},
 	    JOURNAL={Frontiers in Neuroinformatics},
 	    YEAR={2013},
 	    NUMBER={42},

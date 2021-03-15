@@ -453,8 +453,4 @@ Some network centrality features will not be available without compiling the C-b
 
     python setup.py build_ext --inplace
 
-.. note::
-
-   Unfortunately, it is not possible at this time to use the C-PAC GUI without installing C-PAC.
-
 .. include:: benchmark.rst

@@ -8,7 +8,7 @@ Computer Settings
 
 #. **Maximum Memory Per Participant (GB) - [number]:**  The maximum amount of memory each participant's workflow can allocate. Use this to place an upper bound of memory usage. **Warning: 'Memory Per Participant' multiplied by 'Number of Participants to Run Simultaneously' must not be more than the total amount of RAM. Conversely, using too little RAM can impede the speed of a pipeline run. It is recommended that you set this to a value that when multiplied by 'Number of Participants to Run Simultaneously' is as much RAM you can safely allocate.**
 
-#. **Maximum Cores Per Participant - [integer]:** Number of cores (on a single machine) or slots on a node (cluster/grid) per subject. Slots are cores on a cluster/grid node. 'Number of Cores Per Subject' multiplied by 'Number of Subjects to Run Simultaneously' multiplied by 'Number of Cores for Anatomical Registration (ANTS)' must not be greater than the total number of cores.
+#. **Maximum Cores Per Participant - [integer]:** Number of cores (on a single machine) or slots on a node (cluster/grid) per subject. Slots are cores on a cluster/grid node. 'Number of Cores Per Participant' multiplied by 'Number of Participants to Run Simultaneously' must not be greater than the total number of cores. Dedicating more than one core/CPU per participant will direct C-PAC to parallelize the motion correction and time series registration transform application steps, for a speed increase.
 
 #. **Number of Participants to Run Simultaneously - [integer]:** This number depends on computing resources.
 
@@ -27,24 +27,11 @@ Computer Settings
 Configuration Without the GUI
 """"""""""""""""""""""""""""""
 
-The following key/value pairs must be defined in your :doc:`pipeline configuration YAML </user/pipeline_config>` for C-PAC to run:
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
 
-.. csv-table::
-    :header: "Key","Description","Potential Values"
-    :widths: 5,30,15
-    :file: ../_static/params/compute_config.csv
-
-The box below contains an example of what these parameters might look like when defined in the YAML::
-
-    runOnGrid :  False
-    FSLDIR :  /usr/share/fsl/5.0
-    resourceManager :  SGE
-    parallelEnvironment :  cpac
-    queue :  all.q
-    memoryAllocatedPerSubject : 2
-    numCoresPerSubject :  1
-    numSubjectsAtOnce :  1
-    num_ants_threads :  1
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 10-11,76-131
 
 Setting up SGE
 """""""""""""""

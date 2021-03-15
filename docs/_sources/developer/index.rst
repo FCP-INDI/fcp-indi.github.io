@@ -3,6 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. title:: Developer Documentation
+
 Welcome to CPAC's developer documentation!
 ==========================================
 
@@ -12,6 +14,8 @@ Contents:
    :maxdepth: 2
 
    installation
+   pipeline
+   nodes
    workflow_documentation
    workflows/index
    testing

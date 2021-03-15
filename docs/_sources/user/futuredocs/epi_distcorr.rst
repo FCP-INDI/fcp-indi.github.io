@@ -11,52 +11,11 @@ The parameters provided in the GUI are described below:
 6. Dwell to asymmetric ratio-[float]: This is the ratio between the Dwell time, as referenced above and the asymmetric time. Here, the default value is 0.93902439.
 7. Phase encoding direction-[string]: This is the position of the voxels in the input image, and can have values of x/y/z or -x/-y/-z. This is predominantly a trail and error based parameter.
 
-Configuration without the GUI 
-The following key/value pairs must be defined in your pipeline configuration YAML for C-PAC to run Distortion correction
+Configuration without the GUI
+"""""""""""""""""""""""""""""
 
-Key 					Descripton 				Potential Values
-Perform distortion			Run Distortion 				A switch with [‘On’], 
-correction with field map		correction workflow			[‘Off’] or [‘On’,’Off’]
-correction 
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
 
-Skull-strip the magnitude		Use either FSL-BET			A list to choose between 
-file					or AFNI-3dSkullStrip 			[‘FSL-BET’] and 
-					for the brain extraction 		[3d-SkullStrip’]
-					of magnitude image. 
-
-Brain Extraction Threshold		The ratio between 				
-(or shrink factor in 			 brain voxels to include		Float,default value is 0.5
-AFNI-3dSkullStrip)			 and those to exclude(strip)
-
-DeltaTE, ms				 The time delay between 		Float,default value is 2.46
-					 first magnitude image and 		for SIEMENS scanner.
-					 second magnitude image.
-					 The value is specific to each 
-					 session.This parameter is 
-					 used for preparing the 
-					 field map.
-Dwell Time, s				 Also called the “echo spacing”	Float,default value is 
-					 time, this is used as a parameter 	0.0005
-					 for FUGUE interface.
-
-Dwell to asymmetric			 Ratio between the dwell time 		Float,default value is
-ratio					 to the asymmetric time. This 		0.93902439
-					 parameter is used for running 
-					 the EPI-registration
-
-
-Phase encoding                         Direction of unwrapping, the 		(x/y/z or -x/-y/-z)	
-direction				 location of voxels in the input
-					 image 
-					 
-
-
-The box below contains an example of what these parameters might look like when defined in the YAML:
-
-runEPI_DistCorr                       :              [1]
-fmap_distcorr_skullstrip	        :          	[BET]
-fmap_distcorr_frac                    :          	[0.5]
-fmap_distcorr_deltaTE                 :          	[2.46]
-fmap_distcorr_dwell_time              :         	[0.0005]
-fmap_distcorr_dwell_asym_ratio        :         	[0.93902439]
-fmap_distcorr_pedir		        :		-y
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 940-967

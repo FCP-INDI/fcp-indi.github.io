@@ -162,39 +162,7 @@ Power and colleagues (2011) proposed two measures to identify volumes contaminat
 <div class="section" id="configuration-without-the-gui">
 <span id="nuisance-no-gui"></span><h3>Configuration Without the GUI<a class="headerlink" href="#configuration-without-the-gui" title="Permalink to this headline">¶</a></h3>
 <p>The following nested key/value pairs that will be set to these defaults if not defined in your <a class="reference internal" href="pipelines/pipeline_config"><span class="doc">pipeline configuration YAML</span></a>:</p>
-<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span>      <span class="p p-Indicator">-</span>  <span class="nt">Name</span><span class="p">:</span> <span class="s">&#39;default&#39;</span>
-
-         <span class="nt">Motion</span><span class="p">:</span>
-           <span class="nt">include_delayed</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-           <span class="nt">include_squared</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-           <span class="nt">include_delayed_squared</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-
-         <span class="nt">aCompCor</span><span class="p">:</span>
-           <span class="nt">summary</span><span class="p">:</span>
-             <span class="nt">method</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">DetrendPC</span>
-             <span class="nt">components</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">5</span>
-           <span class="nt">tissues</span><span class="p">:</span>
-             <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">WhiteMatter</span>
-             <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">CerebrospinalFluid</span>
-           <span class="nt">extraction_resolution</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
-
-         <span class="nt">CerebrospinalFluid</span><span class="p">:</span>
-           <span class="nt">summary</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Mean</span>
-           <span class="nt">extraction_resolution</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
-           <span class="nt">erode_mask</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-
-         <span class="nt">GlobalSignal</span><span class="p">:</span>
-           <span class="nt">summary</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Mean</span>
-
-         <span class="nt">PolyOrt</span><span class="p">:</span>
-          <span class="nt">degree</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
-
-         <span class="nt">Bandpass</span><span class="p">:</span>
-           <span class="nt">bottom_frequency</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.01</span>
-           <span class="nt">top_frequency</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.1</span>
-
-      <span class="p p-Indicator">-</span>  <span class="nt">Name</span><span class="p">:</span> <span class="s">&#39;defaultNoGSR&#39;</span>
-
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span>         <span class="nt">GlobalSignal</span><span class="p">:</span>
          <span class="nt">Motion</span><span class="p">:</span>
            <span class="nt">include_delayed</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
            <span class="nt">include_squared</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
@@ -319,6 +287,29 @@ Power and colleagues (2011) proposed two measures to identify volumes contaminat
     <span class="nt">smoothing_method</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;FSL&#39;</span><span class="p p-Indicator">]</span>
 
     <span class="c1"># Full Width at Half Maximum of the Gaussian kernel used during spatial smoothing.</span>
+    <span class="c1"># this is a fork point</span>
+    <span class="c1">#   i.e. multiple kernels - fwhm: [4,6,8]</span>
+    <span class="nt">fwhm</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">4</span><span class="p p-Indicator">]</span>
+
+  <span class="nt">z-scoring</span><span class="p">:</span>
+
+    <span class="c1"># z-score standardize the derivatives. This may be needed for group-level analysis.</span>
+    <span class="c1"># Set as [&#39;raw&#39;] to disable z-scoring. Set as both to get both.</span>
+    <span class="c1">#</span>
+    <span class="c1"># Options:</span>
+    <span class="c1">#     [&#39;z-scored&#39;, &#39;raw&#39;]</span>
+    <span class="nt">output</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;z-scored&#39;</span><span class="p p-Indicator">]</span>
+
+
+<span class="nt">timeseries_extraction</span><span class="p">:</span>
+
+  <span class="nt">run</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">On</span>
+
+  <span class="c1"># Enter paths to region-of-interest (ROI) NIFTI files (.nii or .nii.gz) to be used for time-series extraction, and then select which types of analyses to run.</span>
+  <span class="c1"># Denote which analyses to run for each ROI path by listing the names below. For example, if you wish to run Avg and SpatialReg, you would enter: &#39;/path/to/ROI.nii.gz&#39;: Avg, SpatialReg</span>
+  <span class="c1"># available analyses:</span>
+  <span class="c1">#   /path/to/atlas.nii.gz: Avg, Voxel, SpatialReg, PearsonCorr, PartialCorr</span>
+  <span class="nt">tse_roi_paths</span><span class="p">:</span>
 </pre></div>
 </div>
 </div>
@@ -396,7 +387,7 @@ Fox, M.D., Snyder, A.Z., Vincent, J.L., Corbetta, M., Van Essen, D.C., Raichle, 
   <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index">User Guide</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="index#the-c-pac-mission">The C-PAC Mission</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index#latest-release-version-1-7-2-beta-nov-10-2020">Latest Release: Version 1.7.2 Beta (Nov 10, 2020)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index#latest-release-version-1-8-0-beta-mar-13-2021">Latest Release: Version 1.8.0 Beta (Mar 13, 2021)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index#the-c-pac-team">The C-PAC Team</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index#funding-acknowledgements">Funding Acknowledgements</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="index#user-guide-index">User Guide Index</a><ul class="current">

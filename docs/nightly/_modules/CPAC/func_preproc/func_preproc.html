@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CPAC.func_preproc.func_preproc &#8212; C-PAC 1.8.0.dev Beta documentation</title>
+    <title>CPAC.func_preproc.func_preproc &#8212; C-PAC 1.8.0 Beta documentation</title>
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.func_preproc.func_preproc</a></li> 
       </ul>
@@ -195,6 +195,85 @@
 
     <span class="k">return</span> <span class="n">wf</span>
 
+<span class="k">def</span> <span class="nf">anat_based_mask</span><span class="p">(</span><span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;bold_mask&#39;</span><span class="p">):</span>
+<span class="c1"># reference DCAN lab BOLD mask</span>
+<span class="c1"># https://github.com/DCAN-Labs/DCAN-HCP/blob/master/fMRIVolume/scripts/DistortionCorrectionAndEPIToT1wReg_FLIRTBBRAndFreeSurferBBRbased.sh</span>
+    <span class="n">wf</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">wf_name</span><span class="p">)</span>
+
+    <span class="n">input_node</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;func&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;anat_brain&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;anat_head&#39;</span><span class="p">]),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
+
+    <span class="n">output_node</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;func_brain_mask&#39;</span><span class="p">]),</span>
+                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
+
+    <span class="c1"># 0. Take single volume of func </span>
+    <span class="n">func_single_volume</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_single_volume&#39;</span><span class="p">)</span>
+
+    <span class="n">func_single_volume</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+        <span class="n">expr</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span>
+        <span class="n">single_idx</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">outputtype</span><span class="o">=</span><span class="s1">&#39;NIFTI_GZ&#39;</span>
+    <span class="p">)</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">,</span>
+                <span class="n">func_single_volume</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
+
+    <span class="c1"># 1. Register func head to anat head to get func2anat matrix</span>
+    <span class="n">linear_reg_func_to_anat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_to_anat_linear_reg&#39;</span><span class="p">)</span>
+    <span class="n">linear_reg_func_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">dof</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">linear_reg_func_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;spline&#39;</span>
+    <span class="n">linear_reg_func_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">searchr_x</span> <span class="o">=</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">]</span>
+    <span class="n">linear_reg_func_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">searchr_y</span> <span class="o">=</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">]</span>
+    <span class="n">linear_reg_func_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">searchr_z</span> <span class="o">=</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">]</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_single_volume</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> 
+                <span class="n">linear_reg_func_to_anat</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;anat_head&#39;</span><span class="p">,</span> 
+                <span class="n">linear_reg_func_to_anat</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
+
+    <span class="c1"># 2. Inverse func to anat affine, to get anat-to-func transform </span>
+    <span class="n">inv_func_to_anat_affine</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ConvertXFM</span><span class="p">(),</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inv_func2anat_affine&#39;</span><span class="p">)</span>
+    <span class="n">inv_func_to_anat_affine</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">invert_xfm</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">linear_reg_func_to_anat</span><span class="p">,</span> <span class="s1">&#39;out_matrix_file&#39;</span><span class="p">,</span>
+                <span class="n">inv_func_to_anat_affine</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="c1"># 3. get BOLD mask</span>
+    <span class="c1"># 3.1 Apply anat-to-func transform to transfer anatomical brain to functional space </span>
+    <span class="n">reg_anat_brain_to_func</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ApplyWarp</span><span class="p">(),</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;reg_anat_brain_to_func&#39;</span><span class="p">)</span>
+    <span class="n">reg_anat_brain_to_func</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;nn&#39;</span>
+    <span class="n">reg_anat_brain_to_func</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">relwarp</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;anat_brain&#39;</span><span class="p">,</span> 
+                <span class="n">reg_anat_brain_to_func</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">,</span> 
+                <span class="n">reg_anat_brain_to_func</span><span class="p">,</span> <span class="s1">&#39;ref_file&#39;</span><span class="p">)</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inv_func_to_anat_affine</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> 
+                <span class="n">reg_anat_brain_to_func</span><span class="p">,</span> <span class="s1">&#39;premat&#39;</span><span class="p">)</span>
+
+    <span class="c1"># 3.2 Binarize transfered image and fill holes to get BOLD mask. </span>
+    <span class="c1"># Binarize</span>
+    <span class="n">func_mask_bin</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(),</span>
+                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_mask&#39;</span><span class="p">)</span>
+    <span class="n">func_mask_bin</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s1">&#39;-bin&#39;</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">reg_anat_brain_to_func</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> 
+                <span class="n">func_mask_bin</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_mask_bin</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> 
+                <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;func_brain_mask&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wf</span>
+
 
 <span class="k">def</span> <span class="nf">normalize_motion_parameters</span><span class="p">(</span><span class="n">in_file</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -216,6 +295,15 @@
     <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">out_file</span><span class="p">,</span> <span class="n">motion_params</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">out_file</span>
+
+
+<span class="k">def</span> <span class="nf">get_mcflirt_rms_abs</span><span class="p">(</span><span class="n">rms_files</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">rms_files</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;abs.rms&#39;</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+            <span class="n">abs_file</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="k">if</span> <span class="s1">&#39;rel.rms&#39;</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+            <span class="n">rels_file</span> <span class="o">=</span> <span class="n">path</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">abs_file</span><span class="p">,</span> <span class="n">rels_file</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">create_scale_func_wf</span><span class="p">(</span><span class="n">scaling_factor</span><span class="p">,</span> <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;scale_func&#39;</span><span class="p">):</span>
@@ -586,7 +674,7 @@
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">out_split_func</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
                    <span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;motion_basefile&#39;</span><span class="p">)</span>
+        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;motion-basefile&#39;</span><span class="p">)</span>
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;basefile&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">cfg</span><span class="p">:</span>
@@ -716,9 +804,9 @@
 
         <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;desc-motion_bold&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">out_motion_A</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;max_displacement&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">out_md1d</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;movement_parameters&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">out_oned</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;coordinate_transformation&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">out_oned_matrix</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+            <span class="s1">&#39;max-displacement&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">out_md1d</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;movement-parameters&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">out_oned</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;coordinate-transformation&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">out_oned_matrix</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
         <span class="p">}</span>
 
     <span class="k">elif</span> <span class="n">opt</span> <span class="o">==</span> <span class="s1">&#39;mcflirt&#39;</span><span class="p">:</span>
@@ -733,7 +821,7 @@
         <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">,</span> <span class="s1">&#39;bold&#39;</span><span class="p">])</span>
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;motion_basefile&#39;</span><span class="p">)</span>
+        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;motion-basefile&#39;</span><span class="p">)</span>
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;ref_file&#39;</span><span class="p">)</span>
 
         <span class="n">normalize_motion_params</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">],</span>
@@ -744,11 +832,20 @@
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;par_file&#39;</span><span class="p">,</span>
                    <span class="n">normalize_motion_params</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
+        <span class="n">get_rms_abs</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;rms_files&#39;</span><span class="p">],</span>
+                                       <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;abs_file&#39;</span><span class="p">,</span>
+                                                     <span class="s1">&#39;rels_file&#39;</span><span class="p">],</span>
+                                       <span class="n">function</span><span class="o">=</span><span class="n">get_mcflirt_rms_abs</span><span class="p">),</span>
+                              <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;get_mcflirt_rms_abs_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;rms_files&#39;</span><span class="p">,</span>
+                   <span class="n">get_rms_abs</span><span class="p">,</span> <span class="s1">&#39;rms_files&#39;</span><span class="p">)</span>
+
         <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;desc-motion_bold&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;max_displacement&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;rms_files&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;movement_parameters&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">normalize_motion_params</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;coordinate_transformation&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;mat_file&#39;</span><span class="p">)</span>
+            <span class="s1">&#39;max-displacement&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">get_rms_abs</span><span class="p">,</span> <span class="s1">&#39;abs_file&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;rels-displacement&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">get_rms_abs</span><span class="p">,</span> <span class="s1">&#39;rels_file&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;movement-parameters&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">normalize_motion_params</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
         <span class="p">}</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
@@ -915,7 +1012,7 @@
 <span class="sd">     &quot;option_key&quot;: &quot;motion_correction_reference&quot;,</span>
 <span class="sd">     &quot;option_val&quot;: [&quot;mean&quot;, &quot;median&quot;, &quot;selected_volume&quot;],</span>
 <span class="sd">     &quot;inputs&quot;: [[&quot;desc-preproc_bold&quot;, &quot;bold&quot;]],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;motion_basefile&quot;]}</span>
+<span class="sd">     &quot;outputs&quot;: [&quot;motion-basefile&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">if</span> <span class="n">opt</span> <span class="o">!=</span> <span class="s1">&#39;mean&#39;</span> <span class="ow">and</span> <span class="n">opt</span> <span class="o">!=</span> <span class="s1">&#39;median&#39;</span> <span class="ow">and</span> <span class="n">opt</span> <span class="o">!=</span> <span class="s1">&#39;selected_volume&#39;</span><span class="p">:</span>
@@ -958,7 +1055,7 @@
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_get_RPI</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
 
     <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;motion_basefile&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_get_RPI</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+        <span class="s1">&#39;motion-basefile&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_get_RPI</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
     <span class="p">}</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
@@ -972,12 +1069,13 @@
 <span class="sd">     &quot;switch&quot;: &quot;None&quot;,</span>
 <span class="sd">     &quot;option_key&quot;: &quot;using&quot;,</span>
 <span class="sd">     &quot;option_val&quot;: [&quot;3dvolreg&quot;, &quot;mcflirt&quot;],</span>
-<span class="sd">     &quot;inputs&quot;: [[&quot;desc-preproc_bold&quot;, &quot;bold&quot;],</span>
-<span class="sd">                &quot;motion_basefile&quot;],</span>
+<span class="sd">     &quot;inputs&quot;: [([&quot;desc-preproc_bold&quot;, &quot;bold&quot;],</span>
+<span class="sd">                 &quot;motion-basefile&quot;)],</span>
 <span class="sd">     &quot;outputs&quot;: [&quot;desc-motion_bold&quot;,</span>
-<span class="sd">                 &quot;max_displacement&quot;,</span>
-<span class="sd">                 &quot;movement_parameters&quot;,</span>
-<span class="sd">                 &quot;coordinate_transformation&quot;]}</span>
+<span class="sd">                 &quot;max-displacement&quot;,</span>
+<span class="sd">                 &quot;rels-displacement&quot;,</span>
+<span class="sd">                 &quot;movement-parameters&quot;,</span>
+<span class="sd">                 &quot;coordinate-transformation&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span> <span class="o">=</span> <span class="n">motion_correct_connections</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span>
@@ -994,21 +1092,28 @@
 <span class="sd">     &quot;switch&quot;: &quot;None&quot;,</span>
 <span class="sd">     &quot;option_key&quot;: &quot;using&quot;,</span>
 <span class="sd">     &quot;option_val&quot;: [&quot;3dvolreg&quot;, &quot;mcflirt&quot;],</span>
-<span class="sd">     &quot;inputs&quot;: [[&quot;desc-preproc_bold&quot;, &quot;bold&quot;],</span>
-<span class="sd">                &quot;motion_basefile&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;max_displacement&quot;,</span>
-<span class="sd">                 &quot;movement_parameters&quot;,</span>
-<span class="sd">                 &quot;coordinate_transformation&quot;]}</span>
+<span class="sd">     &quot;inputs&quot;: [([&quot;desc-preproc_bold&quot;, &quot;bold&quot;],</span>
+<span class="sd">                 &quot;motion-basefile&quot;)],</span>
+<span class="sd">     &quot;outputs&quot;: [&quot;max-displacement&quot;,</span>
+<span class="sd">                 &quot;rels-displacement&quot;,</span>
+<span class="sd">                 &quot;movement-parameters&quot;,</span>
+<span class="sd">                 &quot;coordinate-transformation&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">wf</span><span class="p">,</span> <span class="n">wf_outputs</span> <span class="o">=</span> <span class="n">motion_correct_connections</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span>
                                                 <span class="n">opt</span><span class="p">)</span>
 
     <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;max_displacement&#39;</span><span class="p">:</span> <span class="n">wf_outputs</span><span class="p">[</span><span class="s1">&#39;max_displacement&#39;</span><span class="p">],</span>
-        <span class="s1">&#39;movement_parameters&#39;</span><span class="p">:</span> <span class="n">wf_outputs</span><span class="p">[</span><span class="s1">&#39;movement_parameters&#39;</span><span class="p">],</span>
-        <span class="s1">&#39;coordinate_transformation&#39;</span><span class="p">:</span> <span class="n">wf_outputs</span><span class="p">[</span><span class="s1">&#39;coordinate_transformation&#39;</span><span class="p">]</span>
+        <span class="s1">&#39;max-displacement&#39;</span><span class="p">:</span> <span class="n">wf_outputs</span><span class="p">[</span><span class="s1">&#39;max-displacement&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;movement-parameters&#39;</span><span class="p">:</span> <span class="n">wf_outputs</span><span class="p">[</span><span class="s1">&#39;movement-parameters&#39;</span><span class="p">]</span>
     <span class="p">}</span>
+
+    <span class="k">if</span> <span class="s1">&#39;coordinate-transformation&#39;</span> <span class="ow">in</span> <span class="n">wf_outputs</span><span class="p">:</span>
+        <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;coordinate-transformation&#39;</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="n">wf_outputs</span><span class="p">[</span><span class="s1">&#39;coordinate-transformation&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="s1">&#39;rels-displacement&#39;</span> <span class="ow">in</span> <span class="n">wf_outputs</span><span class="p">:</span>
+        <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;rels-displacement&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wf_outputs</span><span class="p">[</span><span class="s1">&#39;rels-displacement&#39;</span><span class="p">]</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
@@ -1021,8 +1126,8 @@
 <span class="sd">     &quot;switch&quot;: &quot;None&quot;,</span>
 <span class="sd">     &quot;option_key&quot;: &quot;using&quot;,</span>
 <span class="sd">     &quot;option_val&quot;: [&quot;3dvolreg&quot;, &quot;mcflirt&quot;],</span>
-<span class="sd">     &quot;inputs&quot;: [[&quot;desc-preproc_bold&quot;, &quot;bold&quot;],</span>
-<span class="sd">                &quot;motion_basefile&quot;],</span>
+<span class="sd">     &quot;inputs&quot;: [([&quot;desc-preproc_bold&quot;, &quot;bold&quot;],</span>
+<span class="sd">                 &quot;motion-basefile&quot;)],</span>
 <span class="sd">     &quot;outputs&quot;: [&quot;desc-motion_bold&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
@@ -1036,7 +1141,7 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">motion_estimate_filter</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">motion_estimate_filter</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    {&quot;name&quot;: &quot;motion_estimate_filter&quot;,</span>
 <span class="sd">     &quot;config&quot;: [&quot;functional_preproc&quot;, &quot;motion_estimates_and_correction&quot;,</span>
@@ -1044,17 +1149,17 @@
 <span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
 <span class="sd">     &quot;option_key&quot;: &quot;filter_type&quot;,</span>
 <span class="sd">     &quot;option_val&quot;: [&quot;notch&quot;, &quot;lowpass&quot;],</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;movement_parameters&quot;,</span>
-<span class="sd">                &quot;tr&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;movement_parameters&quot;,</span>
-<span class="sd">                 &quot;motion_filter_info&quot;,</span>
-<span class="sd">                 &quot;motion_filter_plot&quot;]}</span>
+<span class="sd">     &quot;inputs&quot;: [&quot;movement-parameters&quot;,</span>
+<span class="sd">                &quot;TR&quot;],</span>
+<span class="sd">     &quot;outputs&quot;: [&quot;movement-parameters&quot;,</span>
+<span class="sd">                 &quot;motion-filter-info&quot;,</span>
+<span class="sd">                 &quot;motion-filter-plot&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">notch_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;import numpy as np&#39;</span><span class="p">,</span>
                      <span class="s1">&#39;from scipy.signal import iirnotch, lfilter, firwin, freqz&#39;</span><span class="p">,</span>
                      <span class="s1">&#39;from matplotlib import pyplot as plt&#39;</span><span class="p">,</span>
-                     <span class="s1">&#39;from CPAC.func_wf.utils import degrees_to_mm, mm_to_degrees&#39;</span><span class="p">]</span>
+                     <span class="s1">&#39;from CPAC.func_preproc.utils import degrees_to_mm, mm_to_degrees&#39;</span><span class="p">]</span>
     <span class="n">notch</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;motion_params&#39;</span><span class="p">,</span>
                                           <span class="s1">&#39;filter_type&#39;</span><span class="p">,</span>
                                           <span class="s1">&#39;TR&#39;</span><span class="p">,</span>
@@ -1070,26 +1175,40 @@
                                  <span class="s1">&#39;filter_plot&#39;</span><span class="p">],</span>
                              <span class="n">function</span><span class="o">=</span><span class="n">notch_filter_motion</span><span class="p">,</span>
                              <span class="n">imports</span><span class="o">=</span><span class="n">notch_imports</span><span class="p">),</span>
-                    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;filter_motion_params&#39;</span><span class="p">)</span>
+                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;filter_motion_params_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
-    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">filter_type</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;filter_type&#39;</span><span class="p">]</span>
-    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fc_RR_min</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;breathing_rate_min&#39;</span><span class="p">]</span>
-    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fc_RR_max</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;breathing_rate_max&#39;</span><span class="p">]</span>
-    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">center_freq</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;center_frequency&#39;</span><span class="p">]</span>
-    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">freq_bw</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;filter_bandwidth&#39;</span><span class="p">]</span>
-    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">lowpass_cutoff</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;lowpass_cutoff&#39;</span><span class="p">]</span>
-    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">filter_order</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">motion_estimate_filter</span><span class="p">[</span><span class="s1">&#39;filter_order&#39;</span><span class="p">]</span>
+    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">filter_type</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">functional_preproc</span><span class="p">[</span>
+        <span class="s2">&quot;motion_estimates_and_correction&quot;</span><span class="p">][</span>
+        <span class="s2">&quot;motion_estimate_filter&quot;</span><span class="p">][</span><span class="s1">&#39;filter_type&#39;</span><span class="p">]</span>
+    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fc_RR_min</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">functional_preproc</span><span class="p">[</span>
+        <span class="s2">&quot;motion_estimates_and_correction&quot;</span><span class="p">][</span>
+        <span class="s2">&quot;motion_estimate_filter&quot;</span><span class="p">][</span><span class="s1">&#39;breathing_rate_min&#39;</span><span class="p">]</span>
+    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fc_RR_max</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">functional_preproc</span><span class="p">[</span>
+        <span class="s2">&quot;motion_estimates_and_correction&quot;</span><span class="p">][</span>
+        <span class="s2">&quot;motion_estimate_filter&quot;</span><span class="p">][</span><span class="s1">&#39;breathing_rate_max&#39;</span><span class="p">]</span>
+    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">center_freq</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">functional_preproc</span><span class="p">[</span>
+        <span class="s2">&quot;motion_estimates_and_correction&quot;</span><span class="p">][</span>
+        <span class="s2">&quot;motion_estimate_filter&quot;</span><span class="p">][</span><span class="s1">&#39;center_frequency&#39;</span><span class="p">]</span>
+    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">freq_bw</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">functional_preproc</span><span class="p">[</span>
+        <span class="s2">&quot;motion_estimates_and_correction&quot;</span><span class="p">][</span>
+        <span class="s2">&quot;motion_estimate_filter&quot;</span><span class="p">][</span><span class="s1">&#39;filter_bandwidth&#39;</span><span class="p">]</span>
+    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">lowpass_cutoff</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">functional_preproc</span><span class="p">[</span>
+        <span class="s2">&quot;motion_estimates_and_correction&quot;</span><span class="p">][</span>
+        <span class="s2">&quot;motion_estimate_filter&quot;</span><span class="p">][</span><span class="s1">&#39;lowpass_cutoff&#39;</span><span class="p">]</span>
+    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">filter_order</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">functional_preproc</span><span class="p">[</span>
+        <span class="s2">&quot;motion_estimates_and_correction&quot;</span><span class="p">][</span>
+        <span class="s2">&quot;motion_estimate_filter&quot;</span><span class="p">][</span><span class="s1">&#39;filter_order&#39;</span><span class="p">]</span>
 
-    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;movement_parameters&#39;</span><span class="p">)</span>
+    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;movement-parameters&#39;</span><span class="p">)</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;motion_params&#39;</span><span class="p">)</span>
 
-    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;tr&#39;</span><span class="p">)</span>
+    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;TR&#39;</span><span class="p">)</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;TR&#39;</span><span class="p">)</span>
 
     <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;motion_filter_info&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;filter_info&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;motion_filter_plot&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;filter_plot&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;movement_parameters&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;filtered_motion_params&#39;</span><span class="p">)</span>
+        <span class="s1">&#39;motion-filter-info&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;filter_info&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;motion-filter-plot&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;filter_plot&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;movement-parameters&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;filtered_motion_params&#39;</span><span class="p">)</span>
     <span class="p">}</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
@@ -1102,21 +1221,22 @@
 <span class="sd">     &quot;switch&quot;: &quot;None&quot;,</span>
 <span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
 <span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;desc-motion_bold&quot;,</span>
-<span class="sd">                &quot;space-bold_desc-brain_mask&quot;,</span>
-<span class="sd">                &quot;movement_parameters&quot;,</span>
-<span class="sd">                &quot;max_displacement&quot;,</span>
-<span class="sd">                &quot;coordinate_transformation&quot;,</span>
+<span class="sd">     &quot;inputs&quot;: [(&quot;desc-motion_bold&quot;,</span>
+<span class="sd">                 &quot;space-bold_desc-brain_mask&quot;,</span>
+<span class="sd">                 &quot;movement-parameters&quot;,</span>
+<span class="sd">                 &quot;max-displacement&quot;,</span>
+<span class="sd">                 &quot;rels-displacement&quot;,</span>
+<span class="sd">                 &quot;coordinate-transformation&quot;),</span>
 <span class="sd">                &quot;subject&quot;,</span>
 <span class="sd">                &quot;scan&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;framewise_displacement_power&quot;,</span>
-<span class="sd">                 &quot;framewise_displacement_jenkinson&quot;,</span>
+<span class="sd">     &quot;outputs&quot;: [&quot;framewise-displacement-power&quot;,</span>
+<span class="sd">                 &quot;framewise-displacement-jenkinson&quot;,</span>
 <span class="sd">                 &quot;dvars&quot;,</span>
-<span class="sd">                 &quot;power_params&quot;,</span>
-<span class="sd">                 &quot;motion_params&quot;]}</span>
+<span class="sd">                 &quot;power-params&quot;,</span>
+<span class="sd">                 &quot;motion-params&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="n">motion_prov</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_cpac_provenance</span><span class="p">(</span><span class="s1">&#39;movement_parameters&#39;</span><span class="p">)</span>
+    <span class="n">motion_prov</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_cpac_provenance</span><span class="p">(</span><span class="s1">&#39;movement-parameters&#39;</span><span class="p">)</span>
     <span class="n">motion_correct_tool</span> <span class="o">=</span> <span class="n">check_prov_for_motion_tool</span><span class="p">(</span><span class="n">motion_prov</span><span class="p">)</span>
 
     <span class="n">gen_motion_stats</span> <span class="o">=</span> <span class="n">motion_power_statistics</span><span class="p">(</span>
@@ -1137,33 +1257,38 @@
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
                <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;inputspec.motion_correct&#39;</span><span class="p">)</span>
 
-    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;space-bold_desc-brain_mask&quot;</span><span class="p">)</span>
+    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;space-bold_desc-brain_mask&#39;</span><span class="p">)</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
                <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;inputspec.mask&#39;</span><span class="p">)</span>
 
-    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;movement_parameters&#39;</span><span class="p">)</span>
+    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;movement-parameters&#39;</span><span class="p">)</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
                <span class="n">gen_motion_stats</span><span class="p">,</span>
                <span class="s1">&#39;inputspec.movement_parameters&#39;</span><span class="p">)</span>
 
-    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;max_displacement&#39;</span><span class="p">)</span>
+    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;max-displacement&#39;</span><span class="p">)</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
                <span class="n">gen_motion_stats</span><span class="p">,</span>
                <span class="s1">&#39;inputspec.max_displacement&#39;</span><span class="p">)</span>
 
-    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;coordinate_transformation&#39;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-               <span class="n">gen_motion_stats</span><span class="p">,</span>
-               <span class="s1">&#39;inputspec.transformations&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s1">&#39;rels-displacement&#39;</span><span class="p">):</span>
+        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;rels-displacement&#39;</span><span class="p">)</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">gen_motion_stats</span><span class="p">,</span>
+                   <span class="s1">&#39;inputspec.rels_displacement&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s1">&#39;coordinate-transformation&#39;</span><span class="p">):</span>
+        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;coordinate-transformation&#39;</span><span class="p">)</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">gen_motion_stats</span><span class="p">,</span>
+                   <span class="s1">&#39;inputspec.transformations&#39;</span><span class="p">)</span>
 
     <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;framewise_displacement_power&#39;</span><span class="p">:</span>
+        <span class="s1">&#39;framewise-displacement-power&#39;</span><span class="p">:</span>
             <span class="p">(</span><span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.FDP_1D&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;framewise_displacement_jenkinson&#39;</span><span class="p">:</span>
+        <span class="s1">&#39;framewise-displacement-jenkinson&#39;</span><span class="p">:</span>
             <span class="p">(</span><span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.FDJ_1D&#39;</span><span class="p">),</span>
         <span class="s1">&#39;dvars&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.DVARS_1D&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;power_params&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.power_params&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;motion_params&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_params&#39;</span><span class="p">)</span>
+        <span class="s1">&#39;power-params&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.power_params&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;motion-params&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_params&#39;</span><span class="p">)</span>
     <span class="p">}</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
@@ -1219,7 +1344,7 @@
                                        <span class="s1">&#39;surfaces&#39;</span><span class="p">,</span>
                                        <span class="s1">&#39;threshold&#39;</span><span class="p">,</span>
                                        <span class="s1">&#39;vertical_gradient&#39;</span><span class="p">]),</span>
-        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;BET_options&#39;</span><span class="p">)</span>
+        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;BET_options_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
     <span class="n">func_get_brain_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">BET</span><span class="p">(),</span>
                                   <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_get_brain_mask_BET_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -1341,7 +1466,7 @@
 
     <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;desc-motion_bold&quot;</span><span class="p">,</span> <span class="s2">&quot;desc-preproc_bold&quot;</span><span class="p">,</span>
                                      <span class="s2">&quot;bold&quot;</span><span class="p">])</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_skull_mean</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;func&#39;</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)])</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_skull_mean</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">([(</span><span class="n">func_skull_mean</span><span class="p">,</span> <span class="n">skullstrip_first_pass</span><span class="p">,</span>
                  <span class="p">[(</span><span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)]),</span>
@@ -1379,7 +1504,7 @@
 
     <span class="c1"># binarize anat mask, in case of it is not a binary mask.</span>
     <span class="n">anat_brain_mask_bin</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(),</span>
-                                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_brain_mask_bin&#39;</span><span class="p">)</span>
+                                  <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;anat_brain_mask_bin_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="n">anat_brain_mask_bin</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s1">&#39;-bin&#39;</span>
 
     <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;space-T1w_desc-brain_mask&#39;</span><span class="p">)</span>
@@ -1387,7 +1512,7 @@
 
     <span class="c1"># fill holes of anat mask</span>
     <span class="n">anat_mask_filled</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">MaskTool</span><span class="p">(),</span>
-                               <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_brain_mask_filled&#39;</span><span class="p">)</span>
+                               <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;anat_brain_mask_filled_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="n">anat_mask_filled</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fill_holes</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">anat_mask_filled</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
 
@@ -1396,17 +1521,17 @@
 
     <span class="c1"># init_bold_mask : input raw func</span>
     <span class="n">init_bold_mask</span> <span class="o">=</span> <span class="n">anat_refined_mask</span><span class="p">(</span><span class="n">init_bold_mask</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                       <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;init_bold_mask&#39;</span><span class="p">)</span>
+                                       <span class="n">wf_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;init_bold_mask_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
     <span class="n">func_deoblique</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">Refit</span><span class="p">(),</span>
-                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;raw_func_deoblique&#39;</span><span class="p">)</span>
+                             <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;raw_func_deoblique_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="n">func_deoblique</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">deoblique</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_deoblique</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
     <span class="n">func_reorient</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">Resample</span><span class="p">(),</span>
-                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;raw_func_reorient&#39;</span><span class="p">)</span>
+                            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;raw_func_reorient_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
     <span class="n">func_reorient</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">orientation</span> <span class="o">=</span> <span class="s1">&#39;RPI&#39;</span>
     <span class="n">func_reorient</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
@@ -1425,7 +1550,7 @@
 
     <span class="c1"># dilate init func brain mask</span>
     <span class="n">func_tmp_brain_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(),</span>
-                                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_tmp_brain_mask_dil&#39;</span><span class="p">)</span>
+                                  <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_tmp_brain_mask_dil_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="n">func_tmp_brain_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s1">&#39;-dilM&#39;</span>
 
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">init_bold_mask</span><span class="p">,</span> <span class="s1">&#39;outputspec.func_brain_mask&#39;</span><span class="p">,</span>
@@ -1433,7 +1558,8 @@
 
     <span class="c1"># refined_bold_mask : input motion corrected func</span>
     <span class="n">refined_bold_mask</span> <span class="o">=</span> <span class="n">anat_refined_mask</span><span class="p">(</span><span class="n">init_bold_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                                          <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;refined_bold_mask&#39;</span><span class="p">)</span>
+                                          <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;refined_bold_mask&#39;</span>
+                                                  <span class="sa">f</span><span class="s1">&#39;_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
     <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;desc-motion_bold&quot;</span><span class="p">,</span> <span class="s2">&quot;desc-preproc_bold&quot;</span><span class="p">,</span>
                                      <span class="s2">&quot;bold&quot;</span><span class="p">])</span>
@@ -1449,7 +1575,7 @@
     <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">functional_preproc</span><span class="p">[</span><span class="s1">&#39;func_masking&#39;</span><span class="p">][</span><span class="s1">&#39;Anatomical_Refined&#39;</span><span class="p">][</span>
         <span class="s1">&#39;anatomical_mask_dilation&#39;</span><span class="p">]:</span>
         <span class="n">anat_mask_dilate</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">MaskTool</span><span class="p">(),</span>
-                                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_mask_dilate&#39;</span><span class="p">)</span>
+                                   <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;anat_mask_dilate_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">anat_mask_dilate</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">dilate_inputs</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span>
         <span class="n">anat_mask_dilate</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
 
@@ -1464,7 +1590,7 @@
 
     <span class="c1"># get final func mask</span>
     <span class="n">func_mask_final</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">MultiImageMaths</span><span class="p">(),</span>
-                              <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_mask_final&#39;</span><span class="p">)</span>
+                              <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_mask_final_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="n">func_mask_final</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s2">&quot;-mul </span><span class="si">%s</span><span class="s2">&quot;</span>
 
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_tmp_brain_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
@@ -1482,7 +1608,6 @@
 
 <span class="k">def</span> <span class="nf">bold_mask_anatomical_based</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;Generate the BOLD mask by basing it off of the anatomical brain mask.</span>
-
 <span class="sd">    Adapted from DCAN Lab&#39;s BOLD mask method from the ABCD pipeline.</span>
 <span class="sd">        https://github.com/DCAN-Labs/DCAN-HCP/blob/master/fMRIVolume/scripts/DistortionCorrectionAndEPIToT1wReg_FLIRTBBRAndFreeSurferBBRbased.sh</span>
 
@@ -1584,8 +1709,8 @@
 <span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
 <span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
 <span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [[&quot;desc-motion_bold&quot;, &quot;desc-preproc_bold&quot;, &quot;bold&quot;],</span>
-<span class="sd">                &quot;space-bold_desc-brain_mask&quot;],</span>
+<span class="sd">     &quot;inputs&quot;: [([&quot;desc-motion_bold&quot;, &quot;desc-preproc_bold&quot;, &quot;bold&quot;],</span>
+<span class="sd">                 &quot;space-bold_desc-brain_mask&quot;)],</span>
 <span class="sd">     &quot;outputs&quot;: [&quot;desc-brain_bold&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
@@ -1643,8 +1768,8 @@
 <span class="sd">     &quot;switch&quot;: &quot;None&quot;,</span>
 <span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
 <span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;desc-brain_bold&quot;,</span>
-<span class="sd">                &quot;space-bold_desc-brain_mask&quot;],</span>
+<span class="sd">     &quot;inputs&quot;: [(&quot;desc-brain_bold&quot;,</span>
+<span class="sd">                 &quot;space-bold_desc-brain_mask&quot;)],</span>
 <span class="sd">     &quot;outputs&quot;: [&quot;desc-brain_bold&quot;,</span>
 <span class="sd">                 &quot;space-bold_desc-brain_mask&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -1672,6 +1797,7 @@
     <span class="p">}</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+
 </pre></div>
 
             <div class="clearer"></div>
@@ -1713,7 +1839,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.func_preproc.func_preproc</a></li> 
       </ul>

@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CPAC.nuisance.utils &#8212; C-PAC 1.8.0.dev Beta documentation</title>
+    <title>CPAC.nuisance.utils &#8212; C-PAC 1.8.0 Beta documentation</title>
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.nuisance.utils</a></li> 
       </ul>
@@ -455,7 +455,7 @@
                     <span class="c1"># perform the transform using ANTS</span>
                     <span class="n">collect_linear_transforms</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Merge</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_ants_transforms&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ventricles_key</span><span class="p">))</span>
 
-                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">transforms</span><span class="p">[</span><span class="s1">&#39;anat_to_mni_linear_xfm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">collect_linear_transforms</span><span class="p">,</span> <span class="s1">&#39;in1&#39;</span><span class="p">)))</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">transforms</span><span class="p">[</span><span class="s1">&#39;mni_to_anat_linear_xfm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">collect_linear_transforms</span><span class="p">,</span> <span class="s1">&#39;in1&#39;</span><span class="p">)))</span>
 
                     <span class="c1"># generate inverse transform flags, which depends on the number of transforms</span>
                     <span class="n">inverse_transform_flags</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;transform_list&#39;</span><span class="p">],</span>
@@ -478,12 +478,13 @@
 
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># perform the transform using FLIRT</span>
-                    <span class="n">lat_ven_mni_to_anat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FLIRT</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_flirt&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ventricles_key</span><span class="p">))</span>
-                    <span class="n">lat_ven_mni_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;nearestneighbour&#39;</span>
+                    <span class="n">lat_ven_mni_to_anat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ApplyWarp</span><span class="p">(),</span>
+                                                  <span class="n">name</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_fsl_applywarp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ventricles_key</span><span class="p">))</span>
+                    <span class="n">lat_ven_mni_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;nn&#39;</span>
 
-                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">transforms</span><span class="p">[</span><span class="s1">&#39;mni_to_anat_linear_xfm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;in_matrix_file&#39;</span><span class="p">)))</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">transforms</span><span class="p">[</span><span class="s1">&#39;mni_to_anat_linear_xfm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;field_file&#39;</span><span class="p">)))</span>
                     <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="s1">&#39;Ventricles&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)))</span>
-                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)))</span>
+                    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">mask_key</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;ref_file&#39;</span><span class="p">)))</span>
 
                     <span class="n">pipeline_resource_pool</span><span class="p">[</span><span class="n">ventricles_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">lat_ven_mni_to_anat</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
 
@@ -748,7 +749,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.nuisance.utils</a></li> 
       </ul>

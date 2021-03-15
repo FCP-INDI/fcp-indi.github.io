@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Setting Up A Pipeline Configuration &#8212; C-PAC 1.8.0.dev Beta documentation</title>
+    <title>Setting Up A Pipeline Configuration &#8212; C-PAC 1.8.0 Beta documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="../subject_list_config" title="Setting Up A Data Configuration File (Participant/Subject List)"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index" accesskey="U">Welcome to C-PAC’s user guide!</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Setting Up A Pipeline Configuration</a></li> 
       </ul>
@@ -229,6 +229,9 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">runFristonModel</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">runMotionSpike</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">spikeThreshold</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">smoothing_order</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">already_skullstripped</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">roiTSOutputs</span></code></p></li>
 </ul>
 <p>Mappings for all other C-PAC 1.7 keys can be found <a class="reference internal" href="1.7-1.8-nesting-mappings"><span class="doc">here</span></a>.</p>
 </div>
@@ -300,37 +303,37 @@
     <span class="c1"># - If running outside a container, this should be a full path to a directory.</span>
     <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/output</span>
 
+    <span class="c1"># (Optional) Path to a BIDS-Derivatives directory that already has outputs.</span>
+    <span class="c1">#   - This option is intended to ingress already-existing resources from an output</span>
+    <span class="c1">#     directory without writing new outputs back into the same directory.</span>
+    <span class="c1">#   - If provided, C-PAC will ingress the already-computed outputs from this directory and</span>
+    <span class="c1">#     continue the pipeline from where they leave off.</span>
+    <span class="c1">#   - If left as &#39;None&#39;, C-PAC will ingress any already-computed outputs from the</span>
+    <span class="c1">#     output directory you provide above in &#39;path&#39; instead, the default behavior.</span>
+    <span class="nt">source_outputs_dir</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>
+
+    <span class="c1"># Set to True to make C-PAC ingress the outputs from the primary output directory if they</span>
+    <span class="c1"># exist, even if a source_outputs_dir is provided</span>
+    <span class="c1">#   - Setting to False will pull from source_outputs_dir every time, over-writing any</span>
+    <span class="c1">#     calculated outputs in the main output directory</span>
+    <span class="c1">#   - C-PAC will still pull from source_outputs_dir if the main output directory is</span>
+    <span class="c1">#     empty, however</span>
+    <span class="nt">pull_source_once</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+
     <span class="c1"># Include extra versions and intermediate steps of functional preprocessing in the output directory.</span>
     <span class="nt">write_func_outputs</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">False</span>
 
     <span class="c1"># Include extra outputs in the output directory that may be of interest when more information is needed.</span>
     <span class="nt">write_debugging_outputs</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">False</span>
 
+    <span class="c1"># Output directory format and structure.</span>
+    <span class="c1"># Options: default, ndmg</span>
+    <span class="nt">output_tree</span><span class="p">:</span> <span class="s">&quot;default&quot;</span>
+
     <span class="c1"># Generate quality control pages containing preprocessing and derivative outputs.</span>
     <span class="nt">generate_quality_control_images</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
 
   <span class="nt">working_directory</span><span class="p">:</span>
-
-    <span class="c1"># Directory where C-PAC should store temporary and intermediate files.</span>
-    <span class="c1"># - This directory must be saved if you wish to re-run your pipeline from where you left off (if not completed).</span>
-    <span class="c1"># - NOTE: As it stores all intermediate files, this directory can grow to become very</span>
-    <span class="c1">#   large, especially for data with a large amount of TRs.</span>
-    <span class="c1"># - If running in a container (Singularity/Docker), you can simply set this to an arbitrary</span>
-    <span class="c1">#   name like &#39;/work&#39;, and then map (-B/-v) your desired output directory to that label.</span>
-    <span class="c1"># - If running outside a container, this should be a full path to a directory.</span>
-    <span class="c1"># - This can be written to &#39;/tmp&#39; if you do not intend to save your working directory.</span>
-    <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/tmp</span>
-
-    <span class="c1"># Deletes the contents of the Working Directory after running.</span>
-    <span class="c1"># This saves disk space, but any additional preprocessing or analysis will have to be completely re-run.</span>
-    <span class="nt">remove_working_dir</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
-
-  <span class="nt">log_directory</span><span class="p">:</span>
-
-    <span class="c1"># Whether to write log details of the pipeline run to the logging files.</span>
-    <span class="nt">run_logging</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
-
-    <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/logs</span>
 </pre></div>
 </div>
 <p>An example of a pipeline configuration YAML file can be found <a class="reference internal" href="default"><span class="doc">here</span></a>.  Tables explaining the keys and their potential values can be found on the individual pages for each of the outputs C-PAC is capable of producing. All pipeline setup configuration files should have the keys in the <a href="#id4"><span class="problematic" id="id5">:doc:`Output Settings &lt;/user/output_config&gt;`_</span></a> table defined.</p>
@@ -467,7 +470,7 @@
         <li class="right" >
           <a href="../subject_list_config" title="Setting Up A Data Configuration File (Participant/Subject List)"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index" >Welcome to C-PAC’s user guide!</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Setting Up A Pipeline Configuration</a></li> 
       </ul>

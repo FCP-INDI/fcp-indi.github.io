@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CPAC.generate_motion_statistics.generate_motion_statistics &#8212; C-PAC 1.8.0.dev Beta documentation</title>
+    <title>CPAC.generate_motion_statistics.generate_motion_statistics &#8212; C-PAC 1.8.0 Beta documentation</title>
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.generate_motion_statistics.generate_motion_statistics</a></li> 
       </ul>
@@ -216,6 +216,7 @@
                                                         <span class="s1">&#39;scan_id&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;movement_parameters&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;max_displacement&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;rels_displacement&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;motion_correct&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;mask&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;transformations&#39;</span><span class="p">]),</span>
@@ -261,7 +262,7 @@
     <span class="k">if</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;3dvolreg&#39;</span><span class="p">:</span>
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;transformations&#39;</span><span class="p">,</span> <span class="n">calculate_FDJ</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;mcflirt&#39;</span><span class="p">:</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;max_displacement&#39;</span><span class="p">,</span> <span class="n">calculate_FDJ</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;rels_displacement&#39;</span><span class="p">,</span> <span class="n">calculate_FDJ</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">calculate_FDJ</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;FDJ_1D&#39;</span><span class="p">)</span>
 
@@ -397,7 +398,7 @@
             <span class="n">T_rb_prev</span> <span class="o">=</span> <span class="n">T_rb</span>
 
     <span class="k">elif</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;mcflirt&#39;</span><span class="p">:</span>
-        <span class="n">rel_rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">in_file</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">rel_rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">in_file</span><span class="p">)</span>
         <span class="n">fd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">rel_rms</span><span class="p">)</span>
 
     <span class="n">out_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;FD_J.1D&#39;</span><span class="p">)</span>
@@ -441,9 +442,7 @@
         <span class="n">maxdisp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">max_displacement</span><span class="p">)</span>
 
     <span class="k">elif</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;mcflirt&#39;</span><span class="p">:</span>
-        <span class="n">maxdisp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">max_displacement</span><span class="p">[</span>
-                                 <span class="mi">0</span><span class="p">])</span>  <span class="c1"># TODO: mcflirt outputs absdisp, instead of maxdisp</span>
-        <span class="n">reldisp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">max_displacement</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">maxdisp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">max_displacement</span><span class="p">)</span>  <span class="c1"># TODO: mcflirt outputs absdisp, instead of maxdisp</span>
 
     <span class="n">abs_relative</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
     <span class="n">max_relative</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">abs_relative</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
@@ -653,7 +652,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.generate_motion_statistics.generate_motion_statistics</a></li> 
       </ul>

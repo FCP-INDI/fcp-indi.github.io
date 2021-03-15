@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Configuration without the GUI &#8212; C-PAC 1.8.0.dev Beta documentation</title>
+    <title>Configuration without the GUI &#8212; C-PAC 1.8.0 Beta documentation</title>
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Configuration without the GUI</a></li> 
       </ul>
     </div>  
@@ -53,32 +53,34 @@ The parameters provided in the GUI are described below:</p>
 <div class="section" id="configuration-without-the-gui">
 <h1>Configuration without the GUI<a class="headerlink" href="#configuration-without-the-gui" title="Permalink to this headline">¶</a></h1>
 <p>The following nested key/value pairs that will be set to these defaults if not defined in your <a class="reference internal" href="../pipelines/pipeline_config"><span class="doc">pipeline configuration YAML</span></a>:</p>
-<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span>      <span class="c1"># Mesh created along with skull stripping</span>
-      <span class="nt">mesh_boolean</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span>    <span class="c1"># this is a fork point</span>
+    <span class="c1">#   run: [On, Off] - this will run both and fork the pipeline</span>
+    <span class="nt">run</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">On</span><span class="p p-Indicator">]</span>
 
-      <span class="c1"># Create a surface outline image</span>
-      <span class="nt">outline</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
+    <span class="c1"># using: [&#39;PhaseDiff&#39;, &#39;Blip&#39;]</span>
+    <span class="c1">#   PhaseDiff - Perform field map correction using a single phase difference image, a subtraction of the two phase images from each echo. Default scanner for this method is SIEMENS.</span>
+    <span class="c1">#   Blip - Uses AFNI 3dQWarp to calculate the distortion unwarp for EPI field maps of opposite/same phase encoding direction.</span>
+    <span class="c1">#   NOTE:</span>
+    <span class="c1">#     this is NOT a fork point - instead, the technique used will depend on what type of distortion correction field data accompanies the dataset</span>
+    <span class="c1">#     for example, phase-difference field maps will lead to phase-difference distortion correction, and phase-encoding direction field maps will lead to blip-up/blip-down</span>
+    <span class="nt">using</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;PhaseDiff&#39;</span><span class="p p-Indicator">,</span> <span class="s">&#39;Blip&#39;</span><span class="p p-Indicator">]</span>
 
-      <span class="c1"># Add padding to the end of the image, improving BET.Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces</span>
-      <span class="nt">padding</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
+    <span class="c1"># option parameters</span>
+    <span class="nt">PhaseDiff</span><span class="p">:</span>
 
-      <span class="c1"># Integer value of head radius</span>
-      <span class="nt">radius</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+      <span class="c1"># Since the quality of the distortion heavily relies on the skull-stripping step, we provide a choice of method (&#39;AFNI&#39; for AFNI 3dSkullStrip or &#39;BET&#39; for FSL BET).</span>
+      <span class="c1"># Options: &#39;BET&#39; or &#39;AFNI&#39;</span>
+      <span class="nt">fmap_skullstrip_option</span><span class="p">:</span> <span class="s">&#39;BET&#39;</span>
 
-      <span class="c1"># Reduce bias and cleanup neck. Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces</span>
-      <span class="nt">reduce_bias</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
+      <span class="c1"># Set the fraction value for the skull-stripping of the magnitude file. Depending on the data, a tighter extraction may be necessary in order to prevent noisy voxels from interfering with preparing the field map.</span>
+      <span class="c1"># The default value is 0.5.</span>
+      <span class="nt">fmap_skullstrip_BET_frac</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.5</span>
 
-      <span class="c1"># Eyes and optic nerve cleanup. Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces</span>
-      <span class="nt">remove_eyes</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
+      <span class="c1"># Set the threshold value for the skull-stripping of the magnitude file. Depending on the data, a tighter extraction may be necessary in order to prevent noisy voxels from interfering with preparing the field map.</span>
+      <span class="c1"># The default value is 0.6.</span>
+      <span class="nt">fmap_skullstrip_AFNI_threshold</span><span class="p">:</span>  <span class="l l-Scalar l-Scalar-Plain">0.6</span>
 
-      <span class="c1"># Robust brain center estimation. Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces</span>
-      <span class="nt">robust</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
-
-      <span class="c1"># Create a skull image</span>
-      <span class="nt">skull</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
-
-      <span class="c1"># Gets additional skull and scalp surfaces by running bet2 and betsurf. This is mutually exclusive with reduce_bias, robust, padding, remove_eyes</span>
-      <span class="nt">surfaces</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
+ <span class=" -Error"> </span><span class="nt">func_masking</span><span class="p">:</span>
 </pre></div>
 </div>
 </div>
@@ -123,7 +125,7 @@ The parameters provided in the GUI are described below:</p>
         <li class="right" >
           <a href="../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Configuration without the GUI</a></li> 
       </ul>
     </div>

@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Functional Preprocessing &#8212; C-PAC 1.8.0.dev Beta documentation</title>
+    <title>Functional Preprocessing &#8212; C-PAC 1.8.0 Beta documentation</title>
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="anat" title="Anatomical Preprocessing"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index" >Welcome to C-PAC’s user guide!</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="preprocessing" accesskey="U">Pre-Processing Steps</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Functional Preprocessing</a></li> 
@@ -81,20 +81,45 @@
 <div class="section" id="configuration-without-the-gui">
 <span id="func-init-without-gui"></span><h3>Configuration Without the GUI<a class="headerlink" href="#configuration-without-the-gui" title="Permalink to this headline">¶</a></h3>
 <p>The following nested key/value pairs that will be set to these defaults if not defined in your <a class="reference internal" href="pipelines/pipeline_config"><span class="doc">pipeline configuration YAML</span></a>:</p>
-<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span>      <span class="nt">boundary_based_registration</span><span class="p">:</span>
-        <span class="c1"># this is a fork point</span>
-        <span class="c1">#   run: [On, Off] - this will run both and fork the pipeline</span>
-        <span class="nt">run</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">On</span><span class="p p-Indicator">]</span>
-        <span class="c1"># It is not necessary to change this path unless you intend to use non-standard MNI registration.</span>
-        <span class="nt">bbr_schedule</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/usr/share/fsl/5.0/etc/flirtsch/bbr.sch</span>
-      <span class="c1">#   instead of applying the anatomical T1-to-template transform to the functional data that has been</span>
-      <span class="c1">#   coregistered to anatomical/T1 space</span>
-      <span class="nt">run</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span>  <span class="nt">functional_registration</span><span class="p">:</span>
 
-      <span class="c1"># using: [&#39;ANTS&#39;, &#39;FSL&#39;, &#39;FSL-linear&#39;]</span>
-   <span class=" -Error"> </span><span class="nt">scaling_factor</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+    <span class="nt">coregistration</span><span class="p">:</span>
+      <span class="c1"># functional (BOLD/EPI) registration to anatomical (structural/T1)</span>
 
- <span class=" -Error"> </span><span class="nt">despiking</span><span class="p">:</span>
+      <span class="nt">func_input_prep</span><span class="p">:</span>
+
+        <span class="nt">Mean Functional</span><span class="p">:</span>
+
+          <span class="c1"># Run ANTs’ N4 Bias Field Correction on the input BOLD (EPI)</span>
+          <span class="c1"># this can increase tissue contrast which may improve registration quality in some data</span>
+          <span class="nt">n4_correct_func</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="nt">functional_preproc</span><span class="p">:</span>
+
+  <span class="nt">run</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">On</span>
+
+  <span class="nt">truncation</span><span class="p">:</span>
+
+    <span class="c1"># First timepoint to include in analysis.</span>
+    <span class="c1"># Default is 0 (beginning of timeseries).</span>
+    <span class="c1"># First timepoint selection in the scan parameters in the data configuration file, if present, will over-ride this selection.</span>
+    <span class="c1"># Note: the selection here applies to all scans of all participants.</span>
+    <span class="nt">start_tr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+
+    <span class="c1"># Last timepoint to include in analysis.</span>
+    <span class="c1"># Default is None or End (end of timeseries).</span>
+    <span class="c1"># Last timepoint selection in the scan parameters in the data configuration file, if present, will over-ride this selection.</span>
+    <span class="c1"># Note: the selection here applies to all scans of all participants.</span>
+    <span class="nt">stop_tr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>
+
+  <span class="nt">scaling</span><span class="p">:</span>
+
+    <span class="c1"># Scale functional raw data, usually used in rodent pipeline</span>
+    <span class="nt">run</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
+
+    <span class="c1"># Scale the size of the dataset voxels by the factor.</span>
+    <span class="nt">scaling_factor</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+
+  <span class="nt">despiking</span><span class="p">:</span>
 
     <span class="c1"># Run AFNI 3dDespike</span>
     <span class="c1"># this is a fork point</span>
@@ -123,7 +148,7 @@
       <span class="nt">AFNI-3dvolreg</span><span class="p">:</span>
 
         <span class="c1"># This option is useful when aligning high-resolution datasets that may need more alignment than a few voxels.</span>
-        <span class="nt">functional_volreg_twopass</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
+        <span class="nt">functional_volreg_twopass</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">On</span>
 
       <span class="c1"># Choose motion correction reference. Options: mean, median, selected volume</span>
       <span class="nt">motion_correction_reference</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;mean&#39;</span><span class="p p-Indicator">]</span>
@@ -147,19 +172,34 @@
       <span class="c1"># Number of filter coefficients.</span>
       <span class="nt">filter_order</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">4</span>
 
-      <span class="c1"># Dataset-wide respiratory rate data from breathing belt required.</span>
-      <span class="c1"># mutually exclusive with cutoff, center frequency, and bandwidth options further below</span>
+      <span class="c1"># Dataset-wide respiratory rate data from breathing belt.</span>
+      <span class="c1"># Notch filter requires either:</span>
+      <span class="c1">#     &quot;breathing_rate_min&quot; and &quot;breathing_rate_max&quot;</span>
+      <span class="c1"># or</span>
+      <span class="c1">#     &quot;center_frequency&quot; and &quot;filter_bandwitdh&quot;.</span>
+      <span class="c1"># Lowpass filter requires either:</span>
+      <span class="c1">#     &quot;breathing_rate_min&quot;</span>
+      <span class="c1"># or</span>
+      <span class="c1">#     &quot;lowpass_cutoff&quot;.</span>
+      <span class="c1"># If &quot;breathing_rate_min&quot; (for lowpass and notch filter)</span>
+      <span class="c1"># and &quot;breathing_rate_max&quot; (for notch filter) are set,</span>
+      <span class="c1"># the values set in &quot;lowpass_cutoff&quot; (for lowpass filter),</span>
+      <span class="c1"># &quot;center_frequency&quot; and &quot;filter_bandwidth&quot; (for notch filter)</span>
+      <span class="c1"># options are ignored.</span>
 
       <span class="c1"># Lowest Breaths-Per-Minute in dataset.</span>
-      <span class="c1"># Required for both notch and lowpass filters.</span>
+      <span class="c1"># For both notch and lowpass filters.</span>
       <span class="nt">breathing_rate_min</span><span class="p">:</span>
 
       <span class="c1"># Highest Breaths-Per-Minute in dataset.</span>
-      <span class="c1"># Required for the notch filter.</span>
+      <span class="c1"># For notch filter.</span>
       <span class="nt">breathing_rate_max</span><span class="p">:</span>
 
       <span class="c1"># notch filter direct customization parameters</span>
-      <span class="c1"># mutually exclusive with breathing_rate options above</span>
+
+      <span class="c1"># mutually exclusive with breathing_rate options above.</span>
+      <span class="c1"># If breathing_rate_min and breathing_rate_max are provided,</span>
+      <span class="c1"># the following parameters will be ignored.</span>
 
       <span class="c1"># the center frequency of the notch filter</span>
       <span class="nt">center_frequency</span><span class="p">:</span>
@@ -167,53 +207,14 @@
       <span class="c1"># the width of the notch filter</span>
       <span class="nt">filter_bandwidth</span><span class="p">:</span>
 
-      <span class="c1"># lowpass filter direct customization parameters</span>
-      <span class="c1"># mutually exclusive with breathing_rate options above</span>
+      <span class="c1"># lowpass filter direct customization parameter</span>
+
+      <span class="c1"># mutually exclusive with breathing_rate options above.</span>
+      <span class="c1"># If breathing_rate_min is provided, the following</span>
+      <span class="c1"># parameter will be ignored.</span>
 
       <span class="c1"># the frequency cutoff of the filter</span>
       <span class="nt">lowpass_cutoff</span><span class="p">:</span>
-
-  <span class="nt">distortion_correction</span><span class="p">:</span>
-
-    <span class="c1"># this is a fork point</span>
-    <span class="c1">#   run: [On, Off] - this will run both and fork the pipeline</span>
-    <span class="nt">run</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">On</span><span class="p p-Indicator">]</span>
-
-    <span class="c1"># using: [&#39;PhaseDiff&#39;, &#39;Blip&#39;]</span>
-    <span class="c1">#   PhaseDiff - Perform field map correction using a single phase difference image, a subtraction of the two phase images from each echo. Default scanner for this method is SIEMENS.</span>
-    <span class="c1">#   Blip - Uses AFNI 3dQWarp to calculate the distortion unwarp for EPI field maps of opposite/same phase encoding direction.</span>
-    <span class="c1">#   NOTE:</span>
-    <span class="c1">#     this is NOT a fork point - instead, the technique used will depend on what type of distortion correction field data accompanies the dataset</span>
-    <span class="c1">#     for example, phase-difference field maps will lead to phase-difference distortion correction, and phase-encoding direction field maps will lead to blip-up/blip-down</span>
-    <span class="nt">using</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;PhaseDiff&#39;</span><span class="p p-Indicator">,</span> <span class="s">&#39;Blip&#39;</span><span class="p p-Indicator">]</span>
-
-    <span class="c1"># option parameters</span>
-    <span class="nt">PhaseDiff</span><span class="p">:</span>
-
-      <span class="c1"># Since the quality of the distortion heavily relies on the skull-stripping step, we provide a choice of method (&#39;AFNI&#39; for AFNI 3dSkullStrip or &#39;BET&#39; for FSL BET).</span>
-      <span class="c1"># Options: &#39;BET&#39; or &#39;AFNI&#39;</span>
-      <span class="nt">fmap_skullstrip_option</span><span class="p">:</span> <span class="s">&#39;BET&#39;</span>
-
-      <span class="c1"># Set the fraction value for the skull-stripping of the magnitude file. Depending on the data, a tighter extraction may be necessary in order to prevent noisy voxels from interfering with preparing the field map.</span>
-      <span class="c1"># The default value is 0.5.</span>
-      <span class="nt">fmap_skullstrip_BET_frac</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.5</span>
-
-      <span class="c1"># Set the threshold value for the skull-stripping of the magnitude file. Depending on the data, a tighter extraction may be necessary in order to prevent noisy voxels from interfering with preparing the field map.</span>
-      <span class="c1"># The default value is 0.6.</span>
-      <span class="nt">fmap_skullstrip_AFNI_threshold</span><span class="p">:</span>  <span class="l l-Scalar l-Scalar-Plain">0.6</span>
-
-  <span class="nt">func_masking</span><span class="p">:</span>
-
-    <span class="c1"># using: [&#39;AFNI&#39;, &#39;FSL&#39;, &#39;FSL_AFNI&#39;, &#39;Anatomical_Refined&#39;, &#39;Anatomical_Based&#39;]</span>
-    <span class="c1"># this is a fork point</span>
-    <span class="nt">using</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;AFNI&#39;</span><span class="p p-Indicator">]</span>
-
-    <span class="nt">FSL-BET</span><span class="p">:</span>
-
-      <span class="c1"># Apply to 4D FMRI data, if bold_bet_functional_mean_boolean: Off.</span>
-      <span class="c1"># Mutually exclusive with functional, reduce_bias, robust, padding, remove_eyes, surfaces</span>
-      <span class="c1"># It must be &#39;on&#39; if select &#39;reduce_bias&#39;, &#39;robust&#39;, &#39;padding&#39;, &#39;remove_eyes&#39;, or &#39;bet_surfaces&#39; on</span>
-      <span class="nt">functional_mean_boolean</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
 </pre></div>
 </div>
 <p id="motion-estimate-filter-valid-options">For <code class="docutils literal notranslate"><span class="pre">motion_estimate_filter</span></code>, if <code class="docutils literal notranslate"><span class="pre">breathing_rate_min</span></code> and <code class="docutils literal notranslate"><span class="pre">breathing_rate_max</span></code> are provided, the filter design attributes (<code class="docutils literal notranslate"><span class="pre">center_frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">filter_bandwidth</span></code>, <code class="docutils literal notranslate"><span class="pre">lowpass_cutoff</span></code>) are automatically configured. But if you provide these directly, you don’t need the breathing rates. If all all parameters are provided, the filter design attributes will be ignored in favor of the <code class="docutils literal notranslate"><span class="pre">breathing_rate_*</span></code> attributes. A configuration must match at least one row in the following table:</p>
@@ -300,13 +301,14 @@
 <div class="section" id="id1">
 <h3>Configuration Without the GUI<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>The following nested key/value pairs that will be set to these defaults if not defined in your <a class="reference internal" href="pipelines/pipeline_config"><span class="doc">pipeline configuration YAML</span></a>:</p>
-<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span>    <span class="nt">scaling_factor</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">functional_preproc</span><span class="p">:</span>
 
-      <span class="l l-Scalar l-Scalar-Plain"># Choose motion correction reference. Options</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">mean, median, selected volume</span>
-      <span class="l l-Scalar l-Scalar-Plain">motion_correction_reference</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;mean&#39;</span><span class="p p-Indicator">]</span>
+  <span class="nt">slice_timing_correction</span><span class="p">:</span>
 
-      <span class="c1"># Choose motion correction reference volume</span>
-      <span class="nt">motion_correction_reference_volume</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+    <span class="c1"># Interpolate voxel time courses so they are sampled at the same time points.</span>
+    <span class="c1"># this is a fork point</span>
+    <span class="c1">#   run: [On, Off] - this will run both and fork the pipeline</span>
+    <span class="nt">run</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">On</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 </div>
@@ -380,36 +382,36 @@ Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-enco
 <div class="section" id="id2">
 <h3>Configuration Without the GUI<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <p>The following nested key/value pairs that will be set to these defaults if not defined in your <a class="reference internal" href="pipelines/pipeline_config"><span class="doc">pipeline configuration YAML</span></a>:</p>
-<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span>    <span class="nt">scaling_factor</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">functional_preproc</span><span class="p">:</span>
 
-      <span class="l l-Scalar l-Scalar-Plain"># Set the threshold value controling the brain vs non-brain voxels.</span>
-      <span class="l l-Scalar l-Scalar-Plain">frac</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0.3</span>
+  <span class="nt">distortion_correction</span><span class="p">:</span>
 
-      <span class="l l-Scalar l-Scalar-Plain"># Mesh created along with skull stripping</span>
-      <span class="l l-Scalar l-Scalar-Plain">mesh_boolean</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
+    <span class="c1"># this is a fork point</span>
+    <span class="c1">#   run: [On, Off] - this will run both and fork the pipeline</span>
+    <span class="nt">run</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">On</span><span class="p p-Indicator">]</span>
 
-      <span class="l l-Scalar l-Scalar-Plain"># Create a surface outline image</span>
-      <span class="l l-Scalar l-Scalar-Plain">outline</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
+    <span class="c1"># using: [&#39;PhaseDiff&#39;, &#39;Blip&#39;]</span>
+    <span class="c1">#   PhaseDiff - Perform field map correction using a single phase difference image, a subtraction of the two phase images from each echo. Default scanner for this method is SIEMENS.</span>
+    <span class="c1">#   Blip - Uses AFNI 3dQWarp to calculate the distortion unwarp for EPI field maps of opposite/same phase encoding direction.</span>
+    <span class="c1">#   NOTE:</span>
+    <span class="c1">#     this is NOT a fork point - instead, the technique used will depend on what type of distortion correction field data accompanies the dataset</span>
+    <span class="c1">#     for example, phase-difference field maps will lead to phase-difference distortion correction, and phase-encoding direction field maps will lead to blip-up/blip-down</span>
+    <span class="nt">using</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;PhaseDiff&#39;</span><span class="p p-Indicator">,</span> <span class="s">&#39;Blip&#39;</span><span class="p p-Indicator">]</span>
 
-      <span class="l l-Scalar l-Scalar-Plain"># Add padding to the end of the image, improving BET.Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces</span>
-      <span class="l l-Scalar l-Scalar-Plain">padding</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
+    <span class="c1"># option parameters</span>
+    <span class="nt">PhaseDiff</span><span class="p">:</span>
 
-      <span class="l l-Scalar l-Scalar-Plain"># Integer value of head radius</span>
-      <span class="l l-Scalar l-Scalar-Plain">radius</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+      <span class="c1"># Since the quality of the distortion heavily relies on the skull-stripping step, we provide a choice of method (&#39;AFNI&#39; for AFNI 3dSkullStrip or &#39;BET&#39; for FSL BET).</span>
+      <span class="c1"># Options: &#39;BET&#39; or &#39;AFNI&#39;</span>
+      <span class="nt">fmap_skullstrip_option</span><span class="p">:</span> <span class="s">&#39;BET&#39;</span>
 
-      <span class="l l-Scalar l-Scalar-Plain"># Reduce bias and cleanup neck. Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces</span>
-      <span class="l l-Scalar l-Scalar-Plain">reduce_bias</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
+      <span class="c1"># Set the fraction value for the skull-stripping of the magnitude file. Depending on the data, a tighter extraction may be necessary in order to prevent noisy voxels from interfering with preparing the field map.</span>
+      <span class="c1"># The default value is 0.5.</span>
+      <span class="nt">fmap_skullstrip_BET_frac</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.5</span>
 
-      <span class="l l-Scalar l-Scalar-Plain"># Eyes and optic nerve cleanup. Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces</span>
-      <span class="l l-Scalar l-Scalar-Plain">remove_eyes</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
-
-      <span class="l l-Scalar l-Scalar-Plain"># Robust brain center estimation. Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces</span>
-      <span class="l l-Scalar l-Scalar-Plain">robust</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
-
-      <span class="l l-Scalar l-Scalar-Plain"># Create a skull image</span>
-      <span class="l l-Scalar l-Scalar-Plain">skull</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
-
-      <span class="l l-Scalar l-Scalar-Plain"># Gets additional skull and scalp surfaces by running bet2 and betsurf. This is mutually exclusive with reduce_bias, robust, padding, remove_eyes</span>
+      <span class="c1"># Set the threshold value for the skull-stripping of the magnitude file. Depending on the data, a tighter extraction may be necessary in order to prevent noisy voxels from interfering with preparing the field map.</span>
+      <span class="c1"># The default value is 0.6.</span>
+      <span class="nt">fmap_skullstrip_AFNI_threshold</span><span class="p">:</span>  <span class="l l-Scalar l-Scalar-Plain">0.6</span>
 </pre></div>
 </div>
 </div>
@@ -430,7 +432,26 @@ Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-enco
 <div class="section" id="id3">
 <h3>Configuration Without the GUI<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <p>The following nested key/value pairs that will be set to these defaults if not defined in your <a class="reference internal" href="pipelines/pipeline_config"><span class="doc">pipeline configuration YAML</span></a>:</p>
-<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span>    <span class="nt">registration</span><span class="p">:</span>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">registration_workflows</span><span class="p">:</span>
+
+  <span class="nt">functional_registration</span><span class="p">:</span>
+
+    <span class="nt">coregistration</span><span class="p">:</span>
+      <span class="c1"># functional (BOLD/EPI) registration to anatomical (structural/T1)</span>
+
+      <span class="nt">run</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">On</span>
+
+      <span class="nt">func_input_prep</span><span class="p">:</span>
+
+        <span class="c1"># Choose whether to use the mean of the functional/EPI as the input to functional-to-anatomical registration or one of the volumes from the functional 4D timeseries that you choose.</span>
+        <span class="c1"># input: [&#39;Mean Functional&#39;, &#39;Selected_Functional_Volume&#39;]</span>
+        <span class="nt">input</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;Mean_Functional&#39;</span><span class="p p-Indicator">]</span>
+
+        <span class="nt">Selected Functional Volume</span><span class="p">:</span>
+
+          <span class="c1"># Only for when &#39;Use as Functional-to-Anatomical Registration Input&#39; is set to &#39;Selected Functional Volume&#39;.</span>
+          <span class="c1">#Input the index of which volume from the functional 4D timeseries input file you wish to use as the input for functional-to-anatomical registration.</span>
+          <span class="nt">func_reg_input_volume</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
 
       <span class="nt">boundary_based_registration</span><span class="p">:</span>
         <span class="c1"># this is a fork point</span>
@@ -441,31 +462,13 @@ Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-enco
         <span class="c1"># It is not necessary to change this path unless you intend to use non-standard MNI registration.</span>
         <span class="nt">bbr_schedule</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/usr/share/fsl/5.0/etc/flirtsch/bbr.sch</span>
 
-    <span class="nt">EPI_registration</span><span class="p">:</span>
+<span class="nt">functional_preproc</span><span class="p">:</span>
 
-      <span class="c1"># directly register the mean functional to an EPI template</span>
-      <span class="c1"># ex. selecting both [&#39;ANTS&#39;, &#39;FSL&#39;] will run both and fork the pipeline</span>
-      <span class="nt">using</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;ANTS&#39;</span><span class="p p-Indicator">]</span>
+  <span class="nt">func_masking</span><span class="p">:</span>
 
-      <span class="c1"># EPI template for direct functional-to-template registration</span>
-      <span class="c1"># (bypassing coregistration and the anatomical-to-template transforms)</span>
-      <span class="nt">EPI_template</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">s3://fcp-indi/resources/cpac/resources/epi_hbn.nii.gz</span>
-
-      <span class="c1"># EPI template mask.</span>
-      <span class="nt">EPI_template_mask</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>
-
-      <span class="nt">ANTs</span><span class="p">:</span>
-
-        <span class="c1"># EPI registration configuration - synonymous with T1_registration</span>
-        <span class="c1"># parameters under anatomical registration above</span>
-        <span class="nt">parameters</span><span class="p">:</span>
-    <span class="nt">scaling_factor</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
-
-
-      <span class="l l-Scalar l-Scalar-Plain"># Apply thresholding to segmented brain image and mask</span>
-      <span class="l l-Scalar l-Scalar-Plain">threshold</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
-
-      <span class="l l-Scalar l-Scalar-Plain"># Vertical gradient in fractional intensity threshold (-1,1)</span>
+    <span class="c1"># using: [&#39;AFNI&#39;, &#39;FSL&#39;, &#39;FSL_AFNI&#39;, &#39;Anatomical_Refined&#39;, &#39;Anatomical_Based&#39;]</span>
+    <span class="c1"># this is a fork point</span>
+    <span class="nt">using</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;AFNI&#39;</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 </div>
@@ -495,50 +498,50 @@ Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-enco
 <div class="section" id="id4">
 <h3>Configuration Without the GUI<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <p>The following nested key/value pairs that will be set to these defaults if not defined in your <a class="reference internal" href="pipelines/pipeline_config"><span class="doc">pipeline configuration YAML</span></a>:</p>
-<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span>    <span class="nt">scaling_factor</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">functional_preproc</span><span class="p">:</span>
 
+    <span class="nt">FSL-BET</span><span class="p">:</span>
 
-    <span class="nt">Anatomical_Refined</span><span class="p">:</span>
+      <span class="c1"># Apply to 4D FMRI data, if bold_bet_functional_mean_boolean : Off.</span>
+      <span class="c1"># Mutually exclusive with functional, reduce_bias, robust, padding, remove_eyes, surfaces</span>
+      <span class="c1"># It must be &#39;on&#39; if select &#39;reduce_bias&#39;, &#39;robust&#39;, &#39;padding&#39;, &#39;remove_eyes&#39;, or &#39;bet_surfaces&#39; on</span>
+      <span class="nt">functional_mean_boolean</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
 
-      <span class="c1"># Choose whether or not to dilate the anatomical mask if you choose &#39;Anatomical_Refined&#39; as the functional masking option. It will dilate one voxel if enabled.</span>
-      <span class="nt">anatomical_mask_dilation</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">False</span>
+      <span class="c1"># Set the threshold value controling the brain vs non-brain voxels.</span>
+      <span class="nt">frac</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.3</span>
 
+      <span class="c1"># Mesh created along with skull stripping</span>
+      <span class="nt">mesh_boolean</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
 
-<span class="nt">nuisance_corrections</span><span class="p">:</span>
+      <span class="c1"># Create a surface outline image</span>
+      <span class="nt">outline</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
 
-  <span class="nt">1-ICA-AROMA</span><span class="p">:</span>
+      <span class="c1"># Add padding to the end of the image, improving BET.Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces</span>
+      <span class="nt">padding</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
 
-    <span class="c1"># this is a fork point</span>
-    <span class="c1">#   run: [On, Off] - this will run both and fork the pipeline</span>
-    <span class="nt">run</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">On</span><span class="p p-Indicator">]</span>
+      <span class="c1"># Integer value of head radius</span>
+      <span class="nt">radius</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
 
-    <span class="c1"># Types of denoising strategy:</span>
-    <span class="c1">#   nonaggr: nonaggressive-partial component regression</span>
-    <span class="c1">#   aggr:    aggressive denoising</span>
-    <span class="nt">denoising_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">nonaggr</span>
+      <span class="c1"># Reduce bias and cleanup neck. Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces</span>
+      <span class="nt">reduce_bias</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
 
-  <span class="nt">2-nuisance_regression</span><span class="p">:</span>
+      <span class="c1"># Eyes and optic nerve cleanup. Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces</span>
+      <span class="nt">remove_eyes</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
 
-    <span class="c1"># this is a fork point</span>
-    <span class="c1">#   run: [On, Off] - this will run both and fork the pipeline</span>
-    <span class="nt">run</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">On</span><span class="p p-Indicator">]</span>
+      <span class="c1"># Robust brain center estimation. Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces</span>
+      <span class="nt">robust</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
 
-    <span class="c1"># Select which nuisance signal corrections to apply</span>
-    <span class="nt">Regressors</span><span class="p">:</span>
+      <span class="c1"># Create a skull image</span>
+      <span class="nt">skull</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
 
-      <span class="p p-Indicator">-</span>  <span class="nt">Name</span><span class="p">:</span> <span class="s">&#39;default&#39;</span>
+      <span class="c1"># Gets additional skull and scalp surfaces by running bet2 and betsurf. This is mutually exclusive with reduce_bias, robust, padding, remove_eyes</span>
+      <span class="nt">surfaces</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
 
-         <span class="nt">Motion</span><span class="p">:</span>
-           <span class="nt">include_delayed</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-           <span class="nt">include_squared</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-           <span class="nt">include_delayed_squared</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+      <span class="c1"># Apply thresholding to segmented brain image and mask</span>
+      <span class="nt">threshold</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
 
-         <span class="nt">aCompCor</span><span class="p">:</span>
-           <span class="nt">summary</span><span class="p">:</span>
-             <span class="nt">method</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">DetrendPC</span>
-             <span class="nt">components</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">5</span>
-           <span class="nt">tissues</span><span class="p">:</span>
-             <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">WhiteMatter</span>
+      <span class="c1"># Vertical gradient in fractional intensity threshold (-1,1)</span>
+      <span class="nt">vertical_gradient</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.0</span>
 </pre></div>
 </div>
 </div>
@@ -563,70 +566,95 @@ Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-enco
 <div class="section" id="id5">
 <h3>Configuration Without the GUI<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <p>The following nested key/value pairs that will be set to these defaults if not defined in your <a class="reference internal" href="pipelines/pipeline_config"><span class="doc">pipeline configuration YAML</span></a>:</p>
-<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span>    <span class="nt">registration</span><span class="p">:</span>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">registration_workflows</span><span class="p">:</span>
 
-      <span class="nt">boundary_based_registration</span><span class="p">:</span>
+  <span class="nt">functional_registration</span><span class="p">:</span>
+
+    <span class="nt">EPI_registration</span><span class="p">:</span>
+
+      <span class="c1"># directly register the mean functional to an EPI template</span>
+      <span class="c1">#   instead of applying the anatomical T1-to-template transform to the functional data that has been</span>
+      <span class="c1">#   coregistered to anatomical/T1 space</span>
+      <span class="nt">run</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
+
+      <span class="c1"># using: [&#39;ANTS&#39;, &#39;FSL&#39;, &#39;FSL-linear&#39;]</span>
+      <span class="c1"># this is a fork point</span>
+      <span class="c1"># ex. selecting both [&#39;ANTS&#39;, &#39;FSL&#39;] will run both and fork the pipeline</span>
+      <span class="nt">using</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;ANTS&#39;</span><span class="p p-Indicator">]</span>
+
+      <span class="c1"># EPI template for direct functional-to-template registration</span>
+      <span class="c1"># (bypassing coregistration and the anatomical-to-template transforms)</span>
+      <span class="nt">EPI_template</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">s3://fcp-indi/resources/cpac/resources/epi_hbn.nii.gz</span>
+
+      <span class="c1"># EPI template mask.</span>
+      <span class="nt">EPI_template_mask</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>
+
+      <span class="nt">ANTs</span><span class="p">:</span>
+
+        <span class="c1"># EPI registration configuration - synonymous with T1_registration</span>
+        <span class="c1"># parameters under anatomical registration above</span>
+        <span class="nt">parameters</span><span class="p">:</span>
 
           <span class="p p-Indicator">-</span> <span class="nt">collapse-output-transforms</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
           <span class="p p-Indicator">-</span> <span class="nt">dimensionality</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3</span>
-          <span class="p p-Indicator">-</span> <span class="nt">initial-moving-transform</span><span class="p">:</span>
+          <span class="p p-Indicator">-</span> <span class="nt">initial-moving-transform </span><span class="p">:</span>
              <span class="nt">initializationFeature</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
 
           <span class="p p-Indicator">-</span> <span class="nt">transforms</span><span class="p">:</span>
              <span class="p p-Indicator">-</span> <span class="nt">Rigid</span><span class="p">:</span>
-                 <span class="nt">gradientStep</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.1</span>
-                 <span class="nt">metric</span><span class="p">:</span>
-                   <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">MI</span>
+                 <span class="nt">gradientStep </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.1</span>
+                 <span class="nt">metric </span><span class="p">:</span>
+                   <span class="nt">type </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">MI</span>
                    <span class="nt">metricWeight</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
-                   <span class="nt">numberOfBins</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">32</span>
-                   <span class="nt">samplingStrategy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Regular</span>
-                   <span class="nt">samplingPercentage</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.25</span>
+                   <span class="nt">numberOfBins </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">32</span>
+                   <span class="nt">samplingStrategy </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Regular</span>
+                   <span class="nt">samplingPercentage </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.25</span>
                  <span class="nt">convergence</span><span class="p">:</span>
-                   <span class="nt">iteration</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1000x500x250x100</span>
-                   <span class="nt">convergenceThreshold</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1e-08</span>
-                   <span class="nt">convergenceWindowSize</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
-                 <span class="nt">smoothing-sigmas</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3.0x2.0x1.0x0.0</span>
-                 <span class="nt">shrink-factors</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8x4x2x1</span>
-                 <span class="nt">use-histogram-matching</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+                   <span class="nt">iteration </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1000x500x250x100</span>
+                   <span class="nt">convergenceThreshold </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1e-08</span>
+                   <span class="nt">convergenceWindowSize </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+                 <span class="nt">smoothing-sigmas </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3.0x2.0x1.0x0.0</span>
+                 <span class="nt">shrink-factors </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8x4x2x1</span>
+                 <span class="nt">use-histogram-matching </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
 
              <span class="p p-Indicator">-</span> <span class="nt">Affine</span><span class="p">:</span>
-                 <span class="nt">gradientStep</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.1</span>
-                 <span class="nt">metric</span><span class="p">:</span>
-                   <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">MI</span>
+                 <span class="nt">gradientStep </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.1</span>
+                 <span class="nt">metric </span><span class="p">:</span>
+                   <span class="nt">type </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">MI</span>
                    <span class="nt">metricWeight</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
-                   <span class="nt">numberOfBins</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">32</span>
-                   <span class="nt">samplingStrategy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Regular</span>
-                   <span class="nt">samplingPercentage</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.25</span>
+                   <span class="nt">numberOfBins </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">32</span>
+                   <span class="nt">samplingStrategy </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Regular</span>
+                   <span class="nt">samplingPercentage </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.25</span>
                  <span class="nt">convergence</span><span class="p">:</span>
-                   <span class="nt">iteration</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1000x500x250x100</span>
-                   <span class="nt">convergenceThreshold</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1e-08</span>
-                   <span class="nt">convergenceWindowSize</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
-                 <span class="nt">smoothing-sigmas</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3.0x2.0x1.0x0.0</span>
-                 <span class="nt">shrink-factors</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8x4x2x1</span>
-                 <span class="nt">use-histogram-matching</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+                   <span class="nt">iteration </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1000x500x250x100</span>
+                   <span class="nt">convergenceThreshold </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1e-08</span>
+                   <span class="nt">convergenceWindowSize </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+                 <span class="nt">smoothing-sigmas </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3.0x2.0x1.0x0.0</span>
+                 <span class="nt">shrink-factors </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8x4x2x1</span>
+                 <span class="nt">use-histogram-matching </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
 
              <span class="p p-Indicator">-</span> <span class="nt">SyN</span><span class="p">:</span>
-                 <span class="nt">gradientStep</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.1</span>
-                 <span class="nt">updateFieldVarianceInVoxelSpace</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3.0</span>
-                 <span class="nt">totalFieldVarianceInVoxelSpace</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.0</span>
+                 <span class="nt">gradientStep </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.1</span>
+                 <span class="nt">updateFieldVarianceInVoxelSpace </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3.0</span>
+                 <span class="nt">totalFieldVarianceInVoxelSpace </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.0</span>
                  <span class="nt">metric</span><span class="p">:</span>
-                   <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">CC</span>
+                   <span class="nt">type </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">CC</span>
                    <span class="nt">metricWeight</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
-                   <span class="nt">radius</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">4</span>
+                   <span class="nt">radius </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">4</span>
                  <span class="nt">convergence</span><span class="p">:</span>
-                   <span class="nt">iteration</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">100x100x70x20</span>
-                   <span class="nt">convergenceThreshold</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1e-09</span>
-                   <span class="nt">convergenceWindowSize</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">15</span>
-                 <span class="nt">smoothing-sigmas</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3.0x2.0x1.0x0.0</span>
-                 <span class="nt">shrink-factors</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">6x4x2x1</span>
-                 <span class="nt">use-histogram-matching</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
-                 <span class="nt">winsorize-image-intensities</span><span class="p">:</span>
-                   <span class="nt">lowerQuantile</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.01</span>
-                   <span class="nt">upperQuantile</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.99</span>
+                   <span class="nt">iteration </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">100x100x70x20</span>
+                   <span class="nt">convergenceThreshold </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1e-09</span>
+                   <span class="nt">convergenceWindowSize </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">15</span>
+                 <span class="nt">smoothing-sigmas </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3.0x2.0x1.0x0.0</span>
+                 <span class="nt">shrink-factors </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">6x4x2x1</span>
+                 <span class="nt">use-histogram-matching </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+                 <span class="nt">winsorize-image-intensities </span><span class="p">:</span>
+                   <span class="nt">lowerQuantile </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.01</span>
+                   <span class="nt">upperQuantile </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.99</span>
 
         <span class="c1"># Interpolation method for writing out transformed EPI images.</span>
         <span class="c1"># Possible values: Linear, BSpline, LanczosWindowedSinc</span>
-      <span class=" -Error">  </span><span class="nt">interpolation</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">LanczosWindowedSinc</span>
+        <span class="nt">interpolation</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">LanczosWindowedSinc</span>
 
       <span class="nt">FSL-FNIRT</span><span class="p">:</span>
 
@@ -719,30 +747,6 @@ Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-enco
         <span class="c1"># Identity matrix used during FSL-based resampling of functional-space data throughout the pipeline.</span>
         <span class="c1"># It is not necessary to change this path unless you intend to use a different template.</span>
         <span class="nt">identity_matrix</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/usr/share/fsl/5.0/etc/flirtsch/ident.mat</span>
-
-
-<span class="nt">functional_preproc</span><span class="p">:</span>
-
-  <span class="nt">run</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">On</span>
-
-  <span class="nt">truncation</span><span class="p">:</span>
-
-    <span class="c1"># First timepoint to include in analysis.</span>
-    <span class="c1"># Default is 0 (beginning of timeseries).</span>
-    <span class="c1"># First timepoint selection in the scan parameters in the data configuration file, if present, will over-ride this selection.</span>
-    <span class="c1"># Note: the selection here applies to all scans of all participants.</span>
-    <span class="nt">start_tr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
-
-    <span class="c1"># Last timepoint to include in analysis.</span>
-    <span class="c1"># Default is None or End (end of timeseries).</span>
-    <span class="c1"># Last timepoint selection in the scan parameters in the data configuration file, if present, will over-ride this selection.</span>
-    <span class="c1"># Note: the selection here applies to all scans of all participants.</span>
-    <span class="nt">stop_tr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>
-
-  <span class="nt">scaling</span><span class="p">:</span>
-
-    <span class="c1"># Scale functional raw data, usually used in rodent pipeline</span>
-    <span class="nt">run</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
 </pre></div>
 </div>
 </div>
@@ -851,7 +855,7 @@ Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-enco
         <li class="right" >
           <a href="anat" title="Anatomical Preprocessing"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.0.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index" >Welcome to C-PAC’s user guide!</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="preprocessing" >Pre-Processing Steps</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Functional Preprocessing</a></li> 

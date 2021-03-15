@@ -31,7 +31,7 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 10-11,76-131
+   :lines: 10-11,81-136
 
 Setting up SGE
 """""""""""""""

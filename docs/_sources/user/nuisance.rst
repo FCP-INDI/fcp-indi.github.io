@@ -136,7 +136,7 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 1001-1158
+   :lines: 1022-1023,1035-1181
 
 An example of nuisance regressors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -38,8 +38,7 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 602-619,815-847,855-936
-
+   :lines: 602-606,609-610,615-619,815-936
 
 .. _motion_estimate_filter_valid_options:
 
@@ -84,7 +83,7 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 812-814,844-850
+   :lines: 815-816,848-853
 
 Through the Data Configuration
 """"""""""""""""""""""""""""""
@@ -170,7 +169,7 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 812-814,916-944
+   :lines: 815-816,938-965
 
 Functional to Anatomical Registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -187,6 +186,15 @@ Functional to Anatomical Registration
 #. **Functional Volume to Use as Input (Selected Functional Volume only) - [integer]:** Only for when 'Use as Functional-to-Anatomical Registration Input' is set to 'Selected Functional Volume'. Input the index of which volume from the functional 4D timeseries input file you wish to use as the input for functional-to-anatomical registration.
 
 #. **Functional Masking - [AFNI, FSL, FSL_AFNI, Anatomical_Refined]:** Choose which tool to be used in functional masking - AFNI (3dAutoMask), FSL (BET), FSL_AFNI (BET+3dAutoMask) or Anatomical_Refined (generate functional mask by registering anatomical mask to functional space). Default is AFNI.
+
+Configuration Without the GUI
+"""""""""""""""""""""""""""""
+
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 482-483,602-614,621-635,815-816,967-971
 
 Configuring FSL BET options:
 """"""""""""""""""""""""""""
@@ -231,7 +239,7 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 479-480,599-631,812-813,946-998
+   :lines: 815-816,973-1014
 
 Functional to Template Registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -264,4 +272,4 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 479-480,599-600,633-809
+   :lines: 482-483,602-603,636-812

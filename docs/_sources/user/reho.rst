@@ -38,7 +38,7 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 1283-1293
+   :lines: 1303-1313
 
 References
 ^^^^^^^^^^

@@ -28,6 +28,15 @@ Configuring CPAC to run initial preprocessing:
 
 #. **N4 Bias Field Correction - [On,Off]:** ANTs N4BiasFieldCorrection - a variant of the popular N3 (nonparametric nonuniform normalization) retrospective bias correction algorithm. Default is Off.
 
+Configuration Without the GUI
+""""""""""""""""""""""""""""""
+
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 197-209
+
 Configuring ACPC Alignment options:
 """"""""""""""""""""""""""""""""""""""
 **Note:** These options are pre-set for ACPC Alignment's default values. These do not need to be modified unless you are looking to optimize the results of ACPC alignment for your particular dataset.
@@ -38,6 +47,14 @@ Configuring ACPC Alignment options:
 #. **ACPC Aligned Skull Template - [path]:** Skull template to be used for ACPC alignment. It is not necessary to change this path unless you intend to use a non-standard template.
 #. **ACPC Aligned Brain Template - [path]:** Brain template to be used for ACPC alignment. For human data, it can be 'None'. It is not necessary to change this path unless you intend to use a non-standard template.
 
+Configuration Without the GUI
+""""""""""""""""""""""""""""""
+
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 197-198,207-226
 
 Skull-Stripping
 ^^^^^^^^^^^^^^^
@@ -61,6 +78,15 @@ Configuring CPAC to run Skull-Stripping:
 #. **Already skull-stripped - [On,Off]:** If inputs are already skull stripped (i.e. the structural input data is brain-only) then you can toggle this option to off.
 
 #. **Which tool for skull-stripping - [FSL, AFNI, niworkflows-ants]:** Choose if you’d like to use FSL BET, AFNI 3dSkullStrip, or run all options in parallel.
+
+Configuration Without the GUI
+""""""""""""""""""""""""""""""
+
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 197-198,228-232
 
 Configuring AFNI 3dSkullStrip options:
 """"""""""""""""""""""""""""""""""""""
@@ -104,6 +130,15 @@ Configuring AFNI 3dSkullStrip options:
 
 #. **blur_fwhm - [2]:** Blur datasets after spatial normalization. Default value is 2.
 
+Configuration Without the GUI
+""""""""""""""""""""""""""""""
+
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 197-198,228-229,234-298
+
 Configuring FSL BET options:
 """"""""""""""""""""""""""""
 **Note:** These options are pre-set for FSL BET's default values. These do not need to be modified unless you are looking to optimize the results of skull-stripping for your particular dataset.
@@ -136,6 +171,15 @@ Configuring FSL BET options:
 
 #. **Robust brain center - [Off, On]:** Robust brain center estimation. Mutually exclusive with functional, reduce_bias, robust, padding, remove_eyes, surfaces.
 
+Configuration Without the GUI
+""""""""""""""""""""""""""""""
+
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 197-198,228-229,300-339
+
 Configuring niworkflows-ants options:
 """""""""""""""""""""""""""""""""""""
 **Note:** These templates are used during niworkflows-ants skull stripping. e.g. OASIS template can be downloaded `here <https://s3-eu-west-1.amazonaws.com/pfigshare-u-files/3133832/Oasis.zip>`_.
@@ -148,6 +192,14 @@ Configuring niworkflows-ants options:
 
 #. **niworkflows_ants_regmask_path:** Set the brain extraction registration mask, used for registration to limit the metric computation to a specific region. e.g. OASIStemplate/T_template0_BrainCerebellumRegistrationMask.nii.gz
 
+Configuration Without the GUI
+""""""""""""""""""""""""""""""
+
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 197-198,228-229,346-358
 
 Anatomical Registration
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -194,7 +246,7 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 192-353
+   :lines: 482-600
 
 Anatomical Tissue Segmentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -298,7 +350,7 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 356-476
+   :lines: 361-479
 
 References
 ^^^^^^^^^^

@@ -7,23 +7,27 @@
 - [Guidelines](#guidelines)
     - [Building](#building)
         - [Let CircleCI build your drafts / works-in-progress](#let-circleci-build-your-drafts--works-in-progress)
-        - [Build locally](#build-locally)
+        - [Build locally (C-PAC ≥ v1.8.0)](#build-locally-c-pac-≥-v180)
 - [Flowcharts](#flowcharts)
 - [References and citations](#references-and-citations)
 - [Environment notes](#environment-notes)
 
 <!-- /TOC -->
 
+<a id="markdown-branches" name="branches"></a>
 ## Branches
 
 Please, always base changes on the `source` branch. `master` branch will be overwritten by the CI deployment.
 
+<a id="markdown-versions" name="versions"></a>
 ### Versions
 
+<a id="markdown-nightly" name="nightly"></a>
 #### `nightly`
 
 Pushes to `source` will rebuild docs at https://fcp-indi.github.io/docs/nightly
 
+<a id="markdown-c-pac-release-tags" name="c-pac-release-tags"></a>
 #### C-PAC release tags
 Tags in the format `v.*-source` will build docs for the given version.
 
@@ -37,6 +41,7 @@ Steps to build a release:
 5. (Force) push to the remote tag (`git push origin v`version`-source`).
 6. CircleCI should deploy the versioned documentation. If the version tag is the newest, it should also overwrite `latest` with these documents. 
 
+<a id="markdown-guidelines" name="guidelines"></a>
 ## Guidelines
 
 - Only write a document once, and liberally use the [reStructured Text `.. include::` directive](https://docutils.sourceforge.io/docs/ref/rst/directives.html#include) to include that document where appropriate.
@@ -54,8 +59,10 @@ Steps to build a release:
   "
   ```
 
+<a id="markdown-building" name="building"></a>
 ### Building
 
+<a id="markdown-let-circleci-build-your-drafts--works-in-progress" name="let-circleci-build-your-drafts--works-in-progress"></a>
 #### Let CircleCI build your drafts / works-in-progress
 * Build environment will match actual docs build environment
 * CircleCI takes ~2 minutes to build
@@ -66,7 +73,8 @@ Steps to build a release:
 1. Merge your draft / work-in-progress into your fork's `source` branch. Make sure you push to your fork and not the main repository's `source` branch.
 1. Your fork will publish at `https://[your_GitHub_username].github.io/fcp-indi.github.com/`.
 
-#### Build locally
+<a id="markdown-build-locally-c-pac-≥-v180" name="build-locally-c-pac-≥-v180"></a>
+#### Build locally (C-PAC ≥ v1.8.0)
 This documentation aspires to rely on a [single source of truth](https://en.wikipedia.org/wiki/Single_source_of_truth) where possible.  To this end, building this documentation requires an installation of the version of [C-PAC](https://github.com/FCP-INDI/C-PAC) that is being documented.
 
 Steps to build this documentation locally:
@@ -93,6 +101,7 @@ Steps to build this documentation locally:
 1. Locally install [C-PAC](https://github.com/FCP-INDI/C-PAC) from source.
 1. Run `./bin/build $VERSION` where `$VERSION` is the version to build (`nightly`, `latest`, or [<span title='Semantic Versioning'>semver</span>](https://semver.org/) for production, but this string can be anything you want locally). ![example version](./images/example_version.png)
 
+<a id="markdown-flowcharts" name="flowcharts"></a>
 ## Flowcharts
 
 - SVGs exported from Lucidchart have scaling coded in in `width` and `height` XML attributes. Add the XML attributes `preserveAspectRatio="xMinYMin meet"` and `viewBox` to the SVG element in the actual SVG files:
@@ -110,6 +119,7 @@ where `{width}` and `{height}` are the values already present in the existing `w
     <object data="../_static/path/to/chart.svg" type="image/svg+xml"></object>
 ```
 
+<a id="markdown-references-and-citations" name="references-and-citations"></a>
 ## References and citations
 
 [sphinxcontrib-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/) is installed and configured. This extension creates links between the citations and the reference in the reference list and formats citations in referenced BibTeX files using built-in or [custom styles](https://github.com/FCP-INDI/fcp-indi.github.com/blob/source/docs/_sources/references/style.py). To use this Sphinx extension, 
@@ -160,6 +170,7 @@ The rendered file should look something like
 > 
 > <a name="ref1" href="#backref1">[1]</a> Craddock, C., Sikka, S., Cheung, B., Khanuja, R., Ghosh, S. S., Yan, C., Li, Q., Lurie, D., Vogelstein, J., Burns, R., Colcombe, S., Mennes, M., Kelly, C., Di Martino, A., Castellanos, F. X., and Milham, M. 2013. [Towards automated analysis of connectomes: the Configurable Pipeline for the Analysis of Connectomes (C-PAC).](http://www.frontiersin.org/neuroinformatics/10.3389/conf.fninf.2013.09.00042/full) *Frontiers in neuroinformatics* 42. doi:[10.3389/conf.fninf.2013.09.00042](https://dx.doi.org/10.3389/conf.fninf.2013.09.00042)
 
+<a id="markdown-environment-notes" name="environment-notes"></a>
 ## Environment notes
 * Because [C-PAC](https://github.com/FCP-INDI/C-PAC.git) and [cpac](https://github.com/FCP-INDI/cpac.git) have conflicting commandline commands, we first run any `cpac` commands in a virtual environment and spoof the `command-output` directive with `code-block` like 
    ```RST

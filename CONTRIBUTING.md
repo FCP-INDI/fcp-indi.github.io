@@ -1,3 +1,19 @@
+<!-- TOC -->
+
+- [Branches](#branches)
+    - [Versions](#versions)
+        - [`nightly`](#nightly)
+        - [C-PAC release tags](#c-pac-release-tags)
+- [Guidelines](#guidelines)
+    - [Building](#building)
+        - [Let CircleCI build your drafts / works-in-progress](#let-circleci-build-your-drafts--works-in-progress)
+        - [Build locally](#build-locally)
+- [Flowcharts](#flowcharts)
+- [References and citations](#references-and-citations)
+- [Environment notes](#environment-notes)
+
+<!-- /TOC -->
+
 ## Branches
 
 Please, always base changes on the `source` branch. `master` branch will be overwritten by the CI deployment.

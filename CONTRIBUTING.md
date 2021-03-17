@@ -37,15 +37,45 @@ Steps to build a release:
   '
   "
   ```
-- Let CircleCI build your drafts / works-in-progress
-    * Build environment will match actual docs build environment
-    * CircleCI takes ~2 minutes to build
-    1. Fork https://github.com/FCP-INDI/fcp-indi.github.com
-    1. In your fork's settings, set the GitHub Pages `source` to `master` branch
-        ![GitHub Pages settings example screenshot](./images/github-pages-settings-example.png)
-    1. Add your project on CircleCI
-    1. Merge your draft / work-in-progress into your fork's `source` branch. Make sure you push to your fork and not the main repository's `source` branch.
-    1. Your fork will publish at `https://[your_GitHub_username].github.io/fcp-indi.github.com/`.
+
+### Building
+
+#### Let CircleCI build your drafts / works-in-progress
+* Build environment will match actual docs build environment
+* CircleCI takes ~2 minutes to build
+1. Fork https://github.com/FCP-INDI/fcp-indi.github.com
+1. In your fork's settings, set the GitHub Pages `source` to `master` branch
+    ![GitHub Pages settings example screenshot](./images/github-pages-settings-example.png)
+1. Add your project on CircleCI
+1. Merge your draft / work-in-progress into your fork's `source` branch. Make sure you push to your fork and not the main repository's `source` branch.
+1. Your fork will publish at `https://[your_GitHub_username].github.io/fcp-indi.github.com/`.
+
+#### Build locally
+This documentation aspires to rely on a [single source of truth](https://en.wikipedia.org/wiki/Single_source_of_truth) where possible.  To this end, building this documentation requires an installation of the version of [C-PAC](https://github.com/FCP-INDI/C-PAC) that is being documented.
+
+Steps to build this documentation locally:
+1. Clone this repository.
+1. _(optional)_ <details><summary>Locally replicate the step "👊 Running cpac commands" from [.circleci/config](./.circleci/config) to generate [cpac](https://pypi.org/project/cpac/) usage strings.</summary>
+    Either perform this "👊 Running cpac commands" step in a separate Python environment or uninstall cpac after generating the usage string(s).
+    1. _(optional)_ Create an environment for cpac and activate this environment.
+    1. `pip install cpac`
+    1. If you don't have a local container for the version of C-PAC you're documenting, `cpac pull` to download the latest or `cpac pull --tag $TAG` to pull a specific version.
+    1. Generate ReStructuredText documents with cpac usage strings:
+       ```BASH
+        mkdir -p docs/_sources/user/cpac
+        printf ".. code-block:: console\n\n   $ cpac --help\n\n" > docs/_sources/user/cpac/help.rst
+        cpac --help | sed -e "s/.*/   &/" >> docs/_sources/user/cpac/help.rst
+        mkdir -p docs/_sources/user/run
+        printf "Usage: cpac run\n\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\n.. code-block:: console\n\n   $ cpac run --help\n\n" > docs/_sources/user/run/help.rst
+        cpac run --help | sed -e "s/.*/   &/" >> docs/_sources/user/run/help.rst
+        mkdir -p docs/_sources/user/utils
+        printf "Usage: cpac utils\n\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\`\n.. code-block:: console\n\n   $ cpac utils --help\n\n" > docs/_sources/user/utils/help.rst
+        cpac utils --help | sed -e "s/.*/   &/" >> docs/_sources/user/utils/help.rst
+        ```
+    1. `deactivate` your cpac environment if you used a separate environment or `pip uninstall cpac`.
+    </details>
+1. Locally install [C-PAC](https://github.com/FCP-INDI/C-PAC) from source.
+1. Run `./bin/build $VERSION` where `$VERSION` is the version to build (`nightly`, `latest`, or [<span title='Semantic Versioning'>semver</span>](https://semver.org/) for production, but this string can be anything you want locally). ![example version](./images/example_version.png)
 
 ## Flowcharts
 

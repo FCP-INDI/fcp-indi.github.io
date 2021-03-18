@@ -7,7 +7,9 @@ C-PAC Quickstart
 
 .. include:: cpac.rst
 
-For instructions to run in Docker or Singularity without installing cpac (Python package), see :doc:`All Run Options </user/running>`
+For instructions to run C-PAC in Docker or Singularity without installing cpac (Python package), see :doc:`All Run Options </user/running>`
+
+.. include:: brainlife.io_app.rst
 
 Default Pipeline
 ----------------

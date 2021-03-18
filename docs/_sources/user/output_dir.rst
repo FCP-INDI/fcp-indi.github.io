@@ -20,6 +20,10 @@ The output structure of C-PAC ≥ 1.8.0 is based on `the Brain Imaging Data Stru
                    ├── anat
                    └── func
 
+.. note::
+
+   If any nodes use more memory at runtime than C-PAC estimates, C-PAC will report those instances near the end of the log in the terminal and in a log file called ``callback.log.resource_overusage.txt`` (beginning in v1.8.0). Please `report excessive memory usage <https://github.com/FCP-INDI/C-PAC/issues/new>`_ to the C-PAC team.
+
 .. _1.7-outputs:
 
 C-PAC ≤ 1.7.2

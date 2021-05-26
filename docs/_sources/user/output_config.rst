@@ -31,10 +31,7 @@ Output Settings
 
 #. **Enable Quality Control Interface - [On, Off]:** Generate quality control pages containing preprocessing and derivative outputs.
 
-Configuration Without the GUI
-""""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML

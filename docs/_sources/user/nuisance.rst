@@ -129,10 +129,7 @@ Configuring Temporal Filtering Options
 
 .. _nuisance-no-gui:
 
-Configuration Without the GUI
-"""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML

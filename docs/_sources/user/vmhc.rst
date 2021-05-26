@@ -45,10 +45,7 @@ Configuring CPAC to run VMHC
 
 #. **FLIRT Configuration File - [path]:** Included as part of the 'Image Resource Files' package available on the Install page of the User Guide. It is not necessary to change this path unless you intend to use a non-standard symmetric template.
 
-Configuration Without the GUI
-""""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML

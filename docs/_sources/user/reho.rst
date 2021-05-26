@@ -31,10 +31,7 @@ Configuring CPAC to Run ReHo
 
 #. **Voxel Cluster Size - [7,19,27]:** Number of neighboring voxels used when calculating ReHo. 7 (Faces), 19 (Faces + Edges), or 27 (Faces + Edges + Corners).
 
-Configuration Without the GUI
-""""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML

@@ -11,10 +11,7 @@ The parameters provided in the GUI are described below:
 6. Dwell to asymmetric ratio-[float]: This is the ratio between the Dwell time, as referenced above and the asymmetric time. Here, the default value is 0.93902439.
 7. Phase encoding direction-[string]: This is the position of the voxels in the input image, and can have values of x/y/z or -x/-y/-z. This is predominantly a trail and error based parameter.
 
-Configuration without the GUI
-"""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML

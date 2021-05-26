@@ -24,10 +24,7 @@ Configuring CPAC to Run PyPEER
 
 #. **Motion Scrubbing Threshold:** The threshold for motion (in mm) to use for motion scrubbing, if it is selected. PyPEER employs the Power (2012) measurement for framewise displacement.
 
-Configuration Without the GUI
-""""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML

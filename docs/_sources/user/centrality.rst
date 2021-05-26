@@ -57,10 +57,7 @@ Configuring C-PAC to Run Network Centrality
 
 Note that only centrality measures that have binarized/weighted checked on this screen will be run.
 
-Configuration Without the GUI
-""""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML

@@ -22,10 +22,7 @@ Configuring CPAC to Run Longitudinal Preprocessing Pipeline
 #. **Thread Pool - [integer]:**  Number of threads in a thread pool. More threads can speed up the longitudinal template creation process. Default is 2.
 #. **Convergence Threshold - [integer]:** Convergence threshold of longitudinal template. Default is -1, which uses numpy.finfo(np.float64).eps.
 
-Configuration Without the GUI
-"""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML

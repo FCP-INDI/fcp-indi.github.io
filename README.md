@@ -1,4 +1,4 @@
-# fcp-indi.github.com
+# fcp-indi.github.io
 
 GitHub Pages repo for FCP-INDI
 

@@ -47,7 +47,7 @@ Steps to build a release:
 - Only write a document once, and liberally use the [reStructured Text `.. include::` directive](https://docutils.sourceforge.io/docs/ref/rst/directives.html#include) to include that document where appropriate.
 - Use absolute paths for `.. include::`s. That way the path will resolve correctly regardless of differences in nesting levels.
 - Include any source documents that you want built in at least one [`toctree`](https://www.sphinx-doc.org/en/1.8/usage/restructuredtext/directives.html#directive-toctree). Use the `:hidden:` option if you don't want it linked in an actual table of contents in the document with the `toctree`.
-- Use consistent section title indicators throughout a sourcetree. [fcp-indi.github.com/docs/user](https://fcp-indi.github.com/docs/user) currently has the following hierarchy (top to bottom):
+- Use consistent section title indicators throughout a sourcetree. [fcp-indi.github.io/docs/user](https://fcp-indi.github.io/docs/user) currently has the following hierarchy (top to bottom):
   ```
   =
   ^
@@ -66,12 +66,12 @@ Steps to build a release:
 #### Let CircleCI build your drafts / works-in-progress
 * Build environment will match actual docs build environment
 * CircleCI takes ~2 minutes to build
-1. Fork https://github.com/FCP-INDI/fcp-indi.github.com
+1. Fork https://github.com/FCP-INDI/fcp-indi.github.io
 1. In your fork's settings, set the GitHub Pages `source` to `master` branch
     ![GitHub Pages settings example screenshot](./images/github-pages-settings-example.png)
 1. Add your project on CircleCI
 1. Merge your draft / work-in-progress into your fork's `source` branch. Make sure you push to your fork and not the main repository's `source` branch.
-1. Your fork will publish at `https://[your_GitHub_username].github.io/fcp-indi.github.com/`.
+1. Your fork will publish at `https://[your_GitHub_username].github.io/fcp-indi.github.io/`.
 
 <a id="markdown-build-locally-c-pac-≥-v180" name="build-locally-c-pac-≥-v180"></a>
 #### Build locally (C-PAC ≥ v1.8.0)
@@ -122,14 +122,14 @@ where `{width}` and `{height}` are the values already present in the existing `w
 <a id="markdown-references-and-citations" name="references-and-citations"></a>
 ## References and citations
 
-[sphinxcontrib-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/) is installed and configured. This extension creates links between the citations and the reference in the reference list and formats citations in referenced BibTeX files using built-in or [custom styles](https://github.com/FCP-INDI/fcp-indi.github.com/blob/source/docs/_sources/references/style.py). To use this Sphinx extension, 
+[sphinxcontrib-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/) is installed and configured. This extension creates links between the citations and the reference in the reference list and formats citations in referenced BibTeX files using built-in or [custom styles](https://github.com/FCP-INDI/fcp-indi.github.io/blob/source/docs/_sources/references/style.py). To use this Sphinx extension, 
 
-1. Include your citations in a BibTeX file (see the `*.bib` files in [docs/_sources/references](https://github.com/FCP-INDI/fcp-indi.github.com/blob/source/docs/_sources/references) for examples).
+1. Include your citations in a BibTeX file (see the `*.bib` files in [docs/_sources/references](https://github.com/FCP-INDI/fcp-indi.github.io/blob/source/docs/_sources/references) for examples).
 2. Using the key (the text between the opening `{` and the first `,` in a BibTeX entry) use the ReStructuredText syntax `` :cite:`key` `` to cite your reference in a ReStructuredText file.
 3. Include a `.. bibliography::` directive somewhere on any page that you want to use this extension to format references and create two-way links between the references and citations. Specify the (one) BibTeX file for this reference list any formatting for the reference list in this directive. Both `:cite:` and `.. bibliography::` need to be rendered on the same page for the links to generate.
 4. If you will (or might) use more than one `.. bibliography::` directive on a single rendered page (including `.. include::` directives), choose a prefix for the keys and include that prefix in both the `:cite:` role (like `` :cite:`prefix-key` ``) and the bibliography directive (like `:keyprefix: prefix-`).
 5. If you want to include a header over a reference list, use the `.. rubric::` directive above its `.. bibliography` directive.
-6. If the entry type (e.g., `book`, `article`, `misc`) of any of the entries in your BibTeX file(s) is not included in [docs/_sources/references/style.py](https://github.com/FCP-INDI/fcp-indi.github.com/blob/source/docs/_sources/references/style.py), add a `get_{entry_type}_template` [Pybtex](https://pybtex.org) method to `CPAC_DocsStyle`.
+6. If the entry type (e.g., `book`, `article`, `misc`) of any of the entries in your BibTeX file(s) is not included in [docs/_sources/references/style.py](https://github.com/FCP-INDI/fcp-indi.github.io/blob/source/docs/_sources/references/style.py), add a `get_{entry_type}_template` [Pybtex](https://pybtex.org) method to `CPAC_DocsStyle`.
 
 For example, if you have a BibTeX file called `cpac_citation.bib` that contains
 
@@ -182,5 +182,5 @@ The rendered file should look something like
       :shell:
       :ellipsis: 0,9
    ```
-* :heavy_plus_sign: Check [`.circleci/config.yml`](https://github.com/FCP-INDI/fcp-indi.github.com/blob/source/.circleci/config.yml) of the branch you're working from for build dependencies.
+* :heavy_plus_sign: Check [`.circleci/config.yml`](https://github.com/FCP-INDI/fcp-indi.github.io/blob/source/.circleci/config.yml) of the branch you're working from for build dependencies.
 * :octocat: Set an environment variable `GITHUBTOKEN` to a [personal access token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line) to increase [your API rate limit](https://developer.github.com/v3/#rate-limiting) from 60 to 5000 requests per hour (for getting [release notes from GitHub](https://github.com/FCP-INDI/C-PAC/releases)).

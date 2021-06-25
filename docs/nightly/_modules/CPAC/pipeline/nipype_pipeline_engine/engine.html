@@ -5,12 +5,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CPAC.pipeline.nipype_pipeline_engine.engine &#8212; C-PAC 1.8.0 Beta documentation</title>
-    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <title>CPAC.pipeline.nipype_pipeline_engine.engine &#8212; C-PAC 1.8.1 Beta documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/classic.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css" />
     
-    <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
     <script src="../../../../_static/jquery.js"></script>
     <script src="../../../../_static/underscore.js"></script>
     <script src="../../../../_static/doctools.js"></script>
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="../../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.1 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.pipeline.nipype_pipeline_engine.engine</a></li> 
       </ul>
@@ -40,15 +40,24 @@
             
   <h1>Source code for CPAC.pipeline.nipype_pipeline_engine.engine</h1><div class="highlight"><pre>
 <span></span><span class="sd">&#39;&#39;&#39;Module to import Nipype Pipeline engine and override some Classes.</span>
-<span class="sd">See https://fcp-indi.github.com/docs/developer/nodes</span>
+<span class="sd">See https://fcp-indi.github.io/docs/developer/nodes</span>
 <span class="sd">for C-PAC-specific documentation.</span>
 <span class="sd">See https://nipype.readthedocs.io/en/latest/api/generated/nipype.pipeline.engine.html</span>
-<span class="sd">for Nipype&#39;s documentation.&#39;&#39;&#39;</span>  <span class="c1"># noqa E501</span>
+<span class="sd">for Nipype&#39;s documentation.</span>
+<span class="sd">&#39;&#39;&#39;</span>  <span class="c1"># noqa E501</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">Parameter</span><span class="p">,</span> <span class="n">Signature</span><span class="p">,</span> <span class="n">signature</span>
+<span class="kn">from</span> <span class="nn">nibabel</span> <span class="kn">import</span> <span class="n">load</span>
 <span class="kn">from</span> <span class="nn">nipype.pipeline</span> <span class="kn">import</span> <span class="n">engine</span> <span class="k">as</span> <span class="n">pe</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partialmethod</span>
+<span class="kn">from</span> <span class="nn">nipype.pipeline.engine.utils</span> <span class="kn">import</span> <span class="n">load_resultfile</span> <span class="k">as</span> <span class="n">_load_resultfile</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">prod</span>
+<span class="kn">from</span> <span class="nn">traits.trait_base</span> <span class="kn">import</span> <span class="n">Undefined</span>
+<span class="kn">from</span> <span class="nn">traits.trait_handlers</span> <span class="kn">import</span> <span class="n">TraitListObject</span>
 
 <span class="c1"># set global default mem_gb</span>
 <span class="n">DEFAULT_MEM_GB</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="n">UNDEFINED_SIZE</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">8.9e7</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_doctest_skiplines</span><span class="p">(</span><span class="n">docstring</span><span class="p">,</span> <span class="n">lines_to_skip</span><span class="p">):</span>
@@ -58,13 +67,13 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    docstring: str</span>
+<span class="sd">    docstring : str</span>
 
-<span class="sd">    lines_to_skip: set or list</span>
+<span class="sd">    lines_to_skip : set or list</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    docstring: str</span>
+<span class="sd">    docstring : str</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -90,17 +99,215 @@
         <span class="p">{</span><span class="s2">&quot;    &gt;&gt;&gt; realign.inputs.in_files = &#39;functional.nii&#39;&quot;</span><span class="p">}</span>
     <span class="p">)</span>
 
-    <span class="fm">__init__</span> <span class="o">=</span> <span class="n">partialmethod</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="o">.</span><span class="fm">__init__</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="n">DEFAULT_MEM_GB</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Node.__init__"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Node.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="n">DEFAULT_MEM_GB</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="n">mem_gb</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;mem_x&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;mem_x&#39;</span><span class="p">])</span></div>
+
+    <span class="n">orig_sig_params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">signature</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+    <span class="fm">__init__</span><span class="o">.</span><span class="n">__signature__</span> <span class="o">=</span> <span class="n">Signature</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;mem_gb&#39;</span> <span class="k">else</span> <span class="p">(</span>
+            <span class="s1">&#39;mem_gb&#39;</span><span class="p">,</span>
+            <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;mem_gb&#39;</span><span class="p">,</span> <span class="n">Parameter</span><span class="o">.</span><span class="n">POSITIONAL_OR_KEYWORD</span><span class="p">,</span>
+                      <span class="n">default</span><span class="o">=</span><span class="n">DEFAULT_MEM_GB</span><span class="p">)</span>
+        <span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">orig_sig_params</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+</span> <span class="p">[</span>
+            <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;mem_x&#39;</span><span class="p">,</span> <span class="n">Parameter</span><span class="o">.</span><span class="n">KEYWORD_ONLY</span><span class="p">),</span>
+            <span class="n">orig_sig_params</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">])</span>
+
+    <span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(?&lt;!\s):&#39;</span><span class="p">,</span> <span class="s1">&#39; :&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+        <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(),</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        mem_gb : int or float</span>
+<span class="sd">            Estimate (in GB) of constant memory to allocate for this</span>
+<span class="sd">            node.</span>
+
+<span class="sd">        mem_x : 2-tuple</span>
+<span class="sd">            (``multiplier``, ``input_file``)</span>
+<span class="sd">            (int or float, str)</span>
+
+<span class="sd">            **Note**</span>
+<span class="sd">            This parameter (``mem_x``) is likely to change in a future</span>
+<span class="sd">            release as we incorporate more factors into memory</span>
+<span class="sd">            estimates.</span>
+
+<span class="sd">            See also: `⚡️ Setting data- and operation-dependent memory-estimates &lt;https://github.com/FCP-INDI/C-PAC/issues/1509&gt;`_</span>
+<span class="sd">                GitHub epic of issues related to improving Node</span>
+<span class="sd">                memory estimates based on the data and operations</span>
+<span class="sd">                involved.</span>
+
+<span class="sd">            Multiplier for memory allocation such that ``multiplier``</span>
+<span class="sd">            times x * y * z * t of 4-D file at ``input_file`` plus</span>
+<span class="sd">            ``self._mem_gb`` equals the total memory allocation for</span>
+<span class="sd">            the node. ``input_file`` can be a Node input string or</span>
+<span class="sd">            an actual path.&#39;&#39;&#39;</span><span class="p">]))</span>  <span class="c1"># noqa E501</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mem_gb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get estimated memory (GB)&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="p">,</span> <span class="s2">&quot;estimated_memory_gb&quot;</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">nipype</span> <span class="kn">import</span> <span class="n">logging</span>
+            <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;nipype.workflow&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mem_gb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="o">.</span><span class="n">estimated_memory_gb</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s1">&#39;Setting &quot;estimated_memory_gb&quot; on Interfaces has been &#39;</span>
+                <span class="s2">&quot;deprecated as of nipype 1.0, please use Node.mem_gb.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">,</span> <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_mem_x</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">mem_x_path</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1"> in Node </span><span class="se">\&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mem_x_path</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">):</span>
+                <span class="c1"># constant + mem_x[0] * t</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_mem_x</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;The memory estimate for Node &#39;</span>
+                                    <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; depends on the input &quot;</span>
+                                    <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39; but no such file or &quot;</span>
+                                    <span class="s1">&#39;directory&#39;</span><span class="p">,</span> <span class="n">mem_x_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_gb</span>
+
+    <span class="k">def</span> <span class="nf">_check_mem_x_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mem_x_path</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Method to check if a supplied multiplicand path exists.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mem_x_path : str, iterable, Undefined or None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">mem_x_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grab_first_path</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mem_x_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Undefined</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span>
+                <span class="n">mem_x_path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_grab_first_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mem_x_path</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Method to grab the first path if multiple paths for given</span>
+<span class="sd">        multiplicand input</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mem_x_path : str, iterable, Undefined or None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str, Undefined or None</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">,</span> <span class="n">TraitListObject</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">mem_x_path</span> <span class="o">=</span> <span class="n">mem_x_path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">)</span> <span class="k">else</span> <span class="n">Undefined</span>
+        <span class="k">return</span> <span class="n">mem_x_path</span>
+
+    <span class="k">def</span> <span class="nf">_apply_mem_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">multiplicand</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Method to calculate and memoize a Node&#39;s estimated memory</span>
+<span class="sd">        footprint.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        multiplicand : str, int or None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        number</span>
+<span class="sd">            estimated memory usage (GB)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mem_x_path</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">):</span>
+                    <span class="n">multiplicand</span> <span class="o">=</span> <span class="n">get_data_size</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_grab_first_path</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mem_gb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_gb</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">multiplicand</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_gb</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mem_x</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get (memory multiplier, input file) tuple. Returns ``None``</span>
+<span class="sd">        if already consumed or not set.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
 
-<div class="viewcode-block" id="MapNode"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.MapNode">[docs]</a><span class="k">class</span> <span class="nc">MapNode</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">):</span>
+<div class="viewcode-block" id="MapNode"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.MapNode">[docs]</a><span class="k">class</span> <span class="nc">MapNode</span><span class="p">(</span><span class="n">Node</span><span class="p">,</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">):</span>
     <span class="vm">__doc__</span> <span class="o">=</span> <span class="n">_doctest_skiplines</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s1">&#39;mem_gb=</span><span class="si">{</span><span class="n">DEFAULT_MEM_GB</span><span class="si">}</span><span class="se">\n\n</span><span class="s1">n_procs=1</span><span class="se">\n\n</span><span class="si">{</span><span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="o">.</span><span class="vm">__doc__</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+        <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">,</span>
         <span class="p">{</span><span class="s2">&quot;    ...                           &#39;functional3.nii&#39;]&quot;</span><span class="p">}</span>
     <span class="p">)</span>
 
-    <span class="fm">__init__</span> <span class="o">=</span> <span class="n">partialmethod</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="o">.</span><span class="fm">__init__</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="n">DEFAULT_MEM_GB</span><span class="p">,</span>
-                             <span class="n">n_procs</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+<div class="viewcode-block" id="MapNode.__init__"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.MapNode.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="fm">__init__</span><span class="o">.</span><span class="n">__signature__</span> <span class="o">=</span> <span class="n">Signature</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;mem_gb&#39;</span> <span class="k">else</span> <span class="p">(</span>
+            <span class="s1">&#39;mem_gb&#39;</span><span class="p">,</span>
+            <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;mem_gb&#39;</span><span class="p">,</span> <span class="n">Parameter</span><span class="o">.</span><span class="n">POSITIONAL_OR_KEYWORD</span><span class="p">,</span>
+                      <span class="n">default</span><span class="o">=</span><span class="n">DEFAULT_MEM_GB</span><span class="p">)</span>
+        <span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">signature</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span></div>
+
+
+<span class="k">class</span> <span class="nc">Workflow</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_configure_exec_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Ensure that each node knows where to get inputs from&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">input_source</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">in_edges</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">get_edge_data</span><span class="p">(</span><span class="o">*</span><span class="n">edge</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">sourceinfo</span><span class="p">,</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;connect&quot;</span><span class="p">]:</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">input_source</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">output_dir</span><span class="p">(),</span>
+                                     <span class="s2">&quot;result_</span><span class="si">%s</span><span class="s2">.pklz&quot;</span> <span class="o">%</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+                        <span class="n">sourceinfo</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">node</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">&#39;mem_x&#39;</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span>
+                            <span class="n">node</span><span class="o">.</span><span class="n">mem_x</span><span class="p">,</span> <span class="nb">tuple</span>
+                        <span class="p">)</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">mem_x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">field</span><span class="p">:</span>
+                            <span class="n">input_resultfile</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">input_source</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">input_resultfile</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_resultfile</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                                    <span class="n">input_resultfile</span> <span class="o">=</span> <span class="n">input_resultfile</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                                <span class="k">try</span><span class="p">:</span>
+                                    <span class="c1"># memoize node._mem_gb if path</span>
+                                    <span class="c1"># already exists</span>
+                                    <span class="n">multiplicand_path</span> <span class="o">=</span> <span class="n">_load_resultfile</span><span class="p">(</span>
+                                        <span class="n">input_resultfile</span>
+                                    <span class="p">)</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">]</span>
+                                    <span class="n">node</span><span class="o">.</span><span class="n">_apply_mem_x</span><span class="p">(</span><span class="n">multiplicand_path</span><span class="p">)</span>
+                                <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+                                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_largest_func&#39;</span><span class="p">):</span>
+                                        <span class="n">node</span><span class="o">.</span><span class="n">_apply_mem_x</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_largest_func</span><span class="p">)</span>
+                                    <span class="k">else</span><span class="p">:</span>
+                                        <span class="c1"># TODO: handle S3 files</span>
+                                        <span class="c1"># 1e8 is a small estimate</span>
+                                        <span class="n">node</span><span class="o">.</span><span class="n">_apply_mem_x</span><span class="p">(</span><span class="n">UNDEFINED_SIZE</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_data_size</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Function to return the size of a functional image (x * y * z * t)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filepath : str or path</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">prod</span><span class="p">(</span><span class="n">load</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 </pre></div>
 
             <div class="clearer"></div>
@@ -142,7 +349,7 @@
         <li class="right" >
           <a href="../../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.0 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.1 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.pipeline.nipype_pipeline_engine.engine</a></li> 
       </ul>
@@ -150,7 +357,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

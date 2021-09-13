@@ -52,7 +52,8 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 1316-1343
+   :start-at: voxel_mirrored_homotopic_connectivity:
+   :end-before: network_centrality
 
 References
 ^^^^^^^^^^

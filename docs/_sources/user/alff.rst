@@ -44,7 +44,8 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 1290-1300
+   :start-at: amplitude_low_frequency_fluctuation:
+   :end-before: regional_homogeneity:
 
 References
 ^^^^^^^^^^

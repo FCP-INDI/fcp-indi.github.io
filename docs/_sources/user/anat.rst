@@ -35,7 +35,8 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 197-209
+   :start-at: anatomical_preproc:
+   :end-before: Run ACPC alignment before non-local means filtering or N4 bias
 
 Configuring ACPC Alignment options:
 """"""""""""""""""""""""""""""""""""""
@@ -54,7 +55,12 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 197-198,207-226
+   :start-at: anatomical_preproc:
+   :lines: 1
+
+.. literalinclude:: /references/default_pipeline.yml  
+   :start-at: acpc_alignment:
+   :end-before: brain_extraction:
 
 Skull-Stripping
 ^^^^^^^^^^^^^^^
@@ -86,7 +92,12 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 197-198,228-232
+   :start-at: anatomical_preproc:
+   :lines: 1
+
+.. literalinclude:: /references/default_pipeline.yml
+   :start-at: brain_extraction:
+   :end-at: using: ['3dSkullStrip']
 
 Configuring AFNI 3dSkullStrip options:
 """"""""""""""""""""""""""""""""""""""
@@ -137,7 +148,18 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 197-198,228-229,234-298
+   :start-at: anatomical_preproc:
+   :lines: 1
+
+
+.. literalinclude:: /references/default_pipeline.yml
+   :start-at: brain_extraction:
+   :lines: 1
+
+
+.. literalinclude:: /references/default_pipeline.yml
+   :start-at: AFNI-3dSkullStrip:
+   :end-before: FSL-BET:
 
 Configuring FSL BET options:
 """"""""""""""""""""""""""""
@@ -178,7 +200,18 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 197-198,228-229,300-339
+   :start-at: anatomical_preproc:
+   :lines: 1
+
+
+.. literalinclude:: /references/default_pipeline.yml
+   :start-at: brain_extraction:
+   :lines: 1
+
+
+.. literalinclude:: /references/default_pipeline.yml
+   :start-at: FSL-BET:
+   :end-before: UNet:
 
 Configuring niworkflows-ants options:
 """""""""""""""""""""""""""""""""""""
@@ -199,7 +232,18 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 197-198,228-229,346-358
+   :start-at: anatomical_preproc:
+   :lines: 1
+
+
+.. literalinclude:: /references/default_pipeline.yml
+   :start-at: brain_extraction:
+   :lines: 1
+
+
+.. literalinclude:: /references/default_pipeline.yml
+   :start-at: niworkflows-ants:
+   :end-before: FreeSurfer-BET:
 
 Anatomical Registration
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -246,7 +290,8 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 482-600
+   :start-at: registration_workflows:
+   :end-before: functional_registration:
 
 Anatomical Tissue Segmentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -350,7 +395,8 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 361-479
+   :start-at: segmentation:
+   :end-before: registration_workflows:
 
 References
 ^^^^^^^^^^

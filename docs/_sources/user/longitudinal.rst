@@ -29,7 +29,8 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 162-194
+   :start-at: longitudinal_template_generation:
+   :end-before: anatomical_preproc:
 
 References
 ^^^^^^^^^^

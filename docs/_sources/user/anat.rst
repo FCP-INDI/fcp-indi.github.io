@@ -24,7 +24,8 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 152-159
+   :start-at: surface_analysis:
+   :end-before: longitudinal_template_generation:
 
 Initial Preprocessing
 ^^^^^^^^^^^^^^^^^^^^^

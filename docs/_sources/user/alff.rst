@@ -37,10 +37,7 @@ Configuring CPAC to Run ALFF and f/ALFF
 
 #. **f/ALFF Low-Pass Cutoff - [decimal]:** Frequency cutoff (in Hz) for the low-pass filter used when calculating f/ALFF
 
-Configuration Without the GUI
-""""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML

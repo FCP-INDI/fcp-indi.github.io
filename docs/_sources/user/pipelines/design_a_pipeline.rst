@@ -1,7 +1,7 @@
 Design A Pipeline
 -----------------
 
-.. warning::
+.. note::
 
     The C-PAC pipeline configuration was changed to a nested format with import capabilities in v1.8.0.
     

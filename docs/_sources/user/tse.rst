@@ -1,7 +1,6 @@
 Timeseries Extraction
 =====================
-C-PAC lets you easily export BOLD timeseries in a number of different ways. This can be useful for those wishing to undertake advanced analysis not included in C-PAC, but still take advantage of its robust pre-processing features. For instructions on how to use these seeds within C-PAC
-, please see :doc:`Seed-based Correlation Analysis </user/sca>`.
+C-PAC lets you easily export BOLD timeseries in a number of different ways. This can be useful for those wishing to undertake advanced analysis not included in C-PAC, but still take advantage of its robust pre-processing features. For instructions on how to use these seeds within C-PAC, please see :doc:`Seed-based Correlation Analysis </user/sca>`.
 
 ROI Timeseries Extraction allows you to export the timeseries for one or more regions of interest (ROIs). This is done by calculating the average timeseries across all voxels within an ROI. As such, C-PAC will output one timeseries for each ROI specified by you.
 
@@ -27,10 +26,9 @@ Configuring ROI Time Series Extraction
 
 #. **Outputs - [CSV, NUMPY]:** Choose to save voxelwise time series extraction outputs as a csv file or a Numpy array.  Voxelwise TSE outputs are saved as a text file and 1D file by default.  ROI Average TSE outputs are saved as a tab-delimited value file ('roi_stats.csv') only.
 
-Configuration Without the GUI
-""""""""""""""""""""""""""""""
+.. include:: /user/pipelines/without_gui.rst
 
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/roi_paths.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML

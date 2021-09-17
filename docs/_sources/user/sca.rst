@@ -47,10 +47,9 @@ Before SCA can be calculated, you **must** first extract a seed time series from
 
 #. **Normalize Time Series (Dual Regression) - [On, Off]:**  Normalize each time series before running Dual Regression.
 
-Configuration Without the GUI
-""""""""""""""""""""""""""""""
+.. include:: /user/pipelines/without_gui.rst
 
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/roi_paths.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML

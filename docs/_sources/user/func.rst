@@ -32,9 +32,7 @@ Initial Preprocessing
 
 .. _func_init_without_gui:
 
-Configuration Without the GUI
-"""""""""""""""""""""""""""""
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
@@ -76,10 +74,7 @@ You can configure your slice time correction settings through the C-PAC pipeline
 
 Note that if a scan parameters file was used to construct the participant list, the parameters defined in this file will override the settings used here.
 
-Configuration Without the GUI
-"""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
@@ -162,10 +157,7 @@ The C-PAC pipeline configuration builder provides options for configuring the Di
 
 #. **Phase encoding direction - [string]:** This is the position of the voxels in the input image, and can have values of x/y/z or -x/-y/-z.
 
-Configuration Without the GUI
-"""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
@@ -187,10 +179,7 @@ Functional to Anatomical Registration
 
 #. **Functional Masking - [AFNI, FSL, FSL_AFNI, Anatomical_Refined]:** Choose which tool to be used in functional masking - AFNI (3dAutoMask), FSL (BET), FSL_AFNI (BET+3dAutoMask) or Anatomical_Refined (generate functional mask by registering anatomical mask to functional space). Default is AFNI.
 
-Configuration Without the GUI
-"""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
@@ -231,11 +220,7 @@ Configuring FSL BET options:
 
 #. **Robust brain center - [Off, On]:** Robust brain center estimation. Mutually exclusive with functional, reduce_bias, robust, padding, remove_eyes, surfaces.
 
-
-Configuration Without the GUI
-"""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
@@ -265,10 +250,7 @@ Functional to Template Registration
 
 #. **ANTs Registration Parameters :** Clicking on the setting icon will bring up a dialog where you can set 'antsRegistration' parameters.
 
-Configuration Without the GUI
-"""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML

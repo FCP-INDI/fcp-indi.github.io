@@ -17,10 +17,7 @@ Configuring CPAC to run surface analysis:
 
 #. **FreeSurfer - [On,Off]:** FreeSurfer recon-all. Default is Off.
 
-Configuration Without the GUI
-""""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
@@ -49,10 +46,7 @@ Configuring CPAC to run initial preprocessing:
 
 #. **N4 Bias Field Correction - [On,Off]:** ANTs N4BiasFieldCorrection - a variant of the popular N3 (nonparametric nonuniform normalization) retrospective bias correction algorithm. Default is Off.
 
-Configuration Without the GUI
-""""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
@@ -68,10 +62,7 @@ Configuring ACPC Alignment options:
 #. **ACPC Aligned Skull Template - [path]:** Skull template to be used for ACPC alignment. It is not necessary to change this path unless you intend to use a non-standard template.
 #. **ACPC Aligned Brain Template - [path]:** Brain template to be used for ACPC alignment. For human data, it can be 'None'. It is not necessary to change this path unless you intend to use a non-standard template.
 
-Configuration Without the GUI
-""""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
@@ -100,10 +91,7 @@ Configuring CPAC to run Skull-Stripping:
 
 #. **Which tool for skull-stripping - [FSL, AFNI, niworkflows-ants]:** Choose if you’d like to use FSL BET, AFNI 3dSkullStrip, or run all options in parallel.
 
-Configuration Without the GUI
-""""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
@@ -151,10 +139,7 @@ Configuring AFNI 3dSkullStrip options:
 
 #. **blur_fwhm - [2]:** Blur datasets after spatial normalization. Default value is 2.
 
-Configuration Without the GUI
-""""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
@@ -192,10 +177,7 @@ Configuring FSL BET options:
 
 #. **Robust brain center - [Off, On]:** Robust brain center estimation. Mutually exclusive with functional, reduce_bias, robust, padding, remove_eyes, surfaces.
 
-Configuration Without the GUI
-""""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
@@ -213,10 +195,7 @@ Configuring niworkflows-ants options:
 
 #. **niworkflows_ants_regmask_path:** Set the brain extraction registration mask, used for registration to limit the metric computation to a specific region. e.g. OASIStemplate/T_template0_BrainCerebellumRegistrationMask.nii.gz
 
-Configuration Without the GUI
-""""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
@@ -260,10 +239,7 @@ Configuring CPAC to Run Anatomical Registration
 
 #. **Interpolation Method - [trilinear, sinc, spline]:** Interpolation method for writing out transformed anatomical images. FSL registration tools only. Options are trilinear, sinc, or spline.
 
-Configuration Without the GUI
-"""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
@@ -364,10 +340,7 @@ Configuring CPAC to Run Anatomical Tissue Segmentation
 #. **Right White Matter Label Value - [integer]:** Label value corresponding to Right White Matter in multiatlas file. It is not necessary to change this values unless your CSF/GM/WM label values are different from `Freesurfer Color Lookup Table. <https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT>`_
 
 
-Configuration Without the GUI
-"""""""""""""""""""""""""""""
-
-The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+.. include:: /user/pipelines/without_gui.rst
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML

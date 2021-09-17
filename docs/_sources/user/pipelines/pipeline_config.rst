@@ -36,6 +36,7 @@ Definitions
 * Template
     .. include:: /glossary/template.rst
         :start-line: 3
+
 .. rubric:: Reference
 
 .. bibliography:: /references/glossary.bib
@@ -75,7 +76,7 @@ Pipeline configuration files, like the data settings and data configuration file
    :language: YAML
    :lines: 10-51
 
-An example of a pipeline configuration YAML file can be found :doc:`here </user/pipelines/default>`.  Tables explaining the keys and their potential values can be found on the individual pages for each of the outputs C-PAC is capable of producing. All pipeline setup configuration files should have the keys in the :doc:`Output Settings </user/output_config>`_ table defined.
+An example of a pipeline configuration YAML file can be found :doc:`here </user/pipelines/default>`.  Tables explaining the keys and their potential values can be found on the individual pages for each of the outputs C-PAC is capable of producing. All pipeline setup configuration files should have the keys in the :doc:`Output Settings </user/output_config>` table defined.
 
 String values can include the simplest form of `POSIX parameter expansion <https://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_02>` (``${parameter}``). Two special variables are included for these types of parameters:
 
@@ -93,7 +94,7 @@ If ``FROM`` is defined (see above), any undefined keys will be inferred from the
 
 Why a list?
 '''''''''''
-You may notice as you learn about the settings for various outputs that many of the values for C-PAC's configurable settings are stored in lists (i.e., multiple values are separated by commas and surrounded by square brackets).  Such lists containing 1s and 0s (for 'True' and 'False' respectively) allow you to toggle on multiple options at the same time, and branch a pipeline into two different analysis strategies. See the `developer documentation <http://fcp-indi.github.io/docs/developer/workflows/cpac_pipeline.html>`_ for more information about how lists are used in C-PAC.
+You may notice as you learn about the settings for various outputs that many of the values for C-PAC's configurable settings are stored in lists (i.e., multiple values are separated by commas and surrounded by square brackets).  Such lists containing ``On``s and ``Off``s (for ``True`` and ``False`` respectively) allow you to toggle on multiple options at the same time, and branch a pipeline into two different analysis strategies. See the `developer documentation <http://fcp-indi.github.io/docs/developer/workflows/cpac_pipeline.html>`_ for more information about how lists are used in C-PAC.
 
 Configurable Settings
 ------------------------------

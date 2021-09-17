@@ -5,6 +5,27 @@
 
     <div class="flowchart-container"><object data="../_static/flowcharts/anatomical.svg" type="image/svg+xml"></object></div>
 
+Surface Analysis
+^^^^^^^^^^^^^^^^
+
+Surface analysis runs FreeSurfer recon-all and generates CSF, WM, GM masks, pial surface mesh, smoothed surface mesh, spherical surface mesh, white matter surface mesh, sulcal depth surface maps, cortical thickness surface maps and cortical volume surface maps.
+
+Configuring CPAC to run surface analysis:
+"""""""""""""""""""""""""""""""""""""""""
+
+.. figure:: /_images/anat_surface.png
+
+#. **FreeSurfer - [On,Off]:** FreeSurfer recon-all. Default is Off.
+
+Configuration Without the GUI
+""""""""""""""""""""""""""""""
+
+The following nested key/value pairs that will be set to these defaults if not defined in your :doc:`pipeline configuration YAML </user/pipelines/pipeline_config>`:
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :lines: 152-159
+
 Initial Preprocessing
 ^^^^^^^^^^^^^^^^^^^^^
 

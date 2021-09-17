@@ -9,6 +9,15 @@ If you have a question that is not answered in the User Guide or encounter an is
 
 View Crash Files
 ^^^^^^^^^^^^^^^^
+
+C-PAC ≥1.8.0
+************
+
+As of C-PAC v1.8.0, crash files are plain text files and can be read with any text editor.
+
+CPAC ≤1.7.2
+***********
+
 If you have the :ref:`cpac Python package <cpac-python-package>`, you can simply run 
 
 .. code-block:: console

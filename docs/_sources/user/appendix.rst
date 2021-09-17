@@ -411,7 +411,7 @@ Installing C-PAC
 """"""""""""""""
 Congratulations, you are now ready to install C-PAC itself!
 
-C-PAC is available for download from the `C-PAC Homepage <http://fcp-indi.github.com/>`__. Click the button labeled "Download as tar.gz". Unpack the downloaded archive and navigate to the new directory. To install C-PAC, run the command ``sudo python setup.py install``. C-PAC will be installed alongside your other python packages. If this fails, check to make sure that you have all the dependencies installed.  You may also install C-PAC using the commands below:
+C-PAC is available for download from the `C-PAC Homepage <http://fcp-indi.github.io/>`__. Click the button labeled "Download as tar.gz". Unpack the downloaded archive and navigate to the new directory. To install C-PAC, run the command ``sudo python setup.py install``. C-PAC will be installed alongside your other python packages. If this fails, check to make sure that you have all the dependencies installed.  You may also install C-PAC using the commands below:
 
  .. code-block:: console
 
@@ -432,7 +432,7 @@ Once you are able to successfully ``import CPAC`` it is safe to delete any setup
 
 Updating C-PAC
 """"""""""""""
-C-PAC is being actively developed, and new versions (containing bug fixes and new features) are often released. To update to the latest version, simply download it from the `C-PAC Homepage <http://fcp-indi.github.com/>`__ and repeat the instructions in the `Installing C-PAC` section above. A list of previous versions and the changes they contain is available on the :doc:`Release Notes Page </user/rnotes>`.
+C-PAC is being actively developed, and new versions (containing bug fixes and new features) are often released. To update to the latest version, simply download it from the `C-PAC Homepage <http://fcp-indi.github.io/>`__ and repeat the instructions in the `Installing C-PAC` section above. A list of previous versions and the changes they contain is available on the :doc:`Release Notes Page </user/rnotes>`.
 
 .. note::
 

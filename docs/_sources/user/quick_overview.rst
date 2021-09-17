@@ -1,7 +1,7 @@
 Let's Go!
 ---------
 
-#. The recommended way to run C-PAC is through the use of a container such as Docker or Singularity. Using these containers can be facilitated by :doc:`cpac`.
+#. The recommended way to run C-PAC is through the use of a container such as Docker or Singularity. Using these containers can be facilitated by :doc:`cpac`. C-PAC is also available as a |brainlife.io/app|.
 
 #. Containers are completely pre-built environments that help ensure reproducibility (same exact library versions, behavior, etc.).
 
@@ -16,3 +16,6 @@ Let's Go!
 #. C-PAC can also pull input data from the cloud (AWS S3 buckets), so you can pull public data from any of the open-data releases immediately.
 
 #. More information regarding all of these points are available below, and throughout the rest of the User Guide.
+
+.. |brainlife.io/app| image:: https://img.shields.io/badge/brainlife.io-app-green.svg
+   :target: https://brainlife.io/app/5f3593e84615e04651bf9364

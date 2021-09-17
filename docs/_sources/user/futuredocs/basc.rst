@@ -29,7 +29,7 @@ Computation and Analysis Considerations
 
 #. The group stability matrix is fed into a clustering algorithm to derive stable clusters. 
 
-The figure below (taken from Garcia-Garcia et al.) shows a visual representation of these steps. For more detail on how CPAC computes these steps, please see the `BASC Page of the developer documentation <http://fcp-indi.github.com/docs/developer/workflows/basc.html>`_.
+The figure below (taken from Garcia-Garcia et al.) shows a visual representation of these steps. For more detail on how CPAC computes these steps, please see the `BASC Page of the developer documentation <http://fcp-indi.github.io/docs/developer/workflows/basc.html>`_.
 
 .. figure:: /_images/basc_manu_schematic.png
 

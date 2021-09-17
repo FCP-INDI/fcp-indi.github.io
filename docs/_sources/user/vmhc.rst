@@ -15,7 +15,7 @@ The schematic above (adapted from Gee et al., 2011) illustrates how VMHC compare
 
 Computation and Analysis Considerations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-VMHC assumes symmetric morphology between hemispheres. As this assumption does not hold for real brains, images must be transformed before VMHC can be calculated. In CPAC, anatomical images are transformed to fit a symmetric template. Functional data is then transformed to fit the new symmetrical anatomical image. VMHC is computed as the functional connectivity between any pair of symmetric interhemispheric voxels. For more details on how CPAC computes these steps, please see the `VMHC Page of the developer documentation <http://fcp-indi.github.com/docs/developer/workflows/vmhc.html>`_. 
+VMHC assumes symmetric morphology between hemispheres. As this assumption does not hold for real brains, images must be transformed before VMHC can be calculated. In CPAC, anatomical images are transformed to fit a symmetric template. Functional data is then transformed to fit the new symmetrical anatomical image. VMHC is computed as the functional connectivity between any pair of symmetric interhemispheric voxels. For more details on how CPAC computes these steps, please see the `VMHC Page of the developer documentation <http://fcp-indi.github.io/docs/developer/workflows/vmhc.html>`_. 
 
 It is worth noting that VMHC is somewhat affected by the level of spatial smoothing used. Specifically, smoothing improves the correspondence between homotopic regions and results in greater VMHC strength across subjects. Importantly however, smoothing does not affect the overall pattern of VMHC.
 

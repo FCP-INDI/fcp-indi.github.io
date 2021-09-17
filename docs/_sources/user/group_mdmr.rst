@@ -17,7 +17,7 @@ Computation steps for CWAS are listed below as described by Shehzad and colleagu
 
 #. The significance of these similarities and differences is assessed with a permutation test. This identifies brain regions whose whole-brain pattern of connectivity is significantly predicted by a particular phenotypic variable.
 
-The figure below (taken from Shehzad et al., 2010) outlines these steps. For more detail on how C-PAC handles these computations, please see the `CWAS section of the developer documentation <http://fcp-indi.github.com/docs/developer/workflows/cwas.html>`_.
+The figure below (taken from Shehzad et al., 2010) outlines these steps. For more detail on how C-PAC handles these computations, please see the `CWAS section of the developer documentation <http://fcp-indi.github.io/docs/developer/workflows/cwas.html>`_.
 
 .. figure:: /_images/cwas_shehzad_schematic.png
 

@@ -1,5 +1,33 @@
 Check Your Outputs
-=============================
+==================
+
+.. _1.8-outputs:
+
+C-PAC ≥ 1.8.0
+^^^^^^^^^^^^^
+
+The output structure of C-PAC ≥ 1.8.0 is based on `the Brain Imaging Data Structure v1.6.0-dev BIDS Derivatives specification <https://bids-specification.readthedocs.io/en/latest/05-derivatives/01-introduction.html>`_. The output directory structure is a simple tree like
+
+.. code-block:: text
+
+   └── pipeline-name
+       ├── log
+       │   └── pipeline_pipeline-name
+       │       └── subject_session
+       └── output
+           └── cpac_pipeline-name
+               └── subject_session
+                   ├── anat
+                   └── func
+
+.. note::
+
+   If any nodes use more memory at runtime than C-PAC estimates, C-PAC will report those instances near the end of the log in the terminal and in a log file called ``callback.log.resource_overusage.txt`` (beginning in v1.8.0). Please `report excessive memory usage <https://github.com/FCP-INDI/C-PAC/issues/new>`_ to the C-PAC team.
+
+.. _1.7-outputs:
+
+C-PAC ≤ 1.7.2
+^^^^^^^^^^^^^
 
 A standard C-PAC run output directory for one participant-session is shown below. A directory like this will exist for each participant-session in the run.
 
@@ -12,7 +40,7 @@ This is with all derivatives enabled, and the output, smoothing, and z-scoring o
 .. figure:: /_images/output_dir_default.png
 
 Descriptions
-^^^^^^^^^^^^^^^^^^^
+------------
 
 The output directory folders below are produced during a default run. If you enabled the additional outputs and have the full directory, proceed to the "Full Directory" section further below for descriptions of these extra outputs.
 
@@ -73,7 +101,7 @@ The output directory folders below are produced during a default run. If you ena
 * **QC-interface_{scan}_{nuisance/preprocessing strategy}.html**: :doc:`QC Interface HTML page </user/qc_interface>` for each scan and nuisance/preprocessing strategy combination.
 
 Sub-Directories
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------
 
 Each folder in the output directory may have a different amount of sub-directories, depending on how many functional scans specified in the data configuration, or how many pipeline customizations and forked strategies you specified in the pipeline configuration. For example, if there are multiple functional scans, you'll see a folder for each one if you enter any of the functional-derived outputs' folders, as seen below:
 
@@ -88,7 +116,8 @@ And sub-directories for each ROI provided for a derivative that may take in mult
 .. figure:: /_images/output_dir_masks.png
 
 Full Directory
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------
+
 The C-PAC output directory is considerably larger when "Extra Functional Outputs", "Debugging Outputs", and both Smoothed/Non-smoothed and both z-score standardized/raw outputs are all enabled.
 
 In addition to the output directories described above under "Descriptions", the following outputs are also written to the output directory when all of the output options mentioned above are enabled:
@@ -142,7 +171,7 @@ In addition to the output directories described above under "Descriptions", the 
 * **reho**: The direct output of ReHo, before warping to standard space.
 
 Visual Quality Control
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
 C-PAC's data quality control (QC) interface allows you to take a quick glance at the overall quality of your results (registration quality, signal-to-noise ratio, movement plots, computed derivative histograms, etc.). In its current form, the QC interface is a collection of HTML pages - one for each participant-scan-nuisance regression strategy combination, and they can be found in the Output Directory under each participant's directory level.
 
@@ -151,7 +180,7 @@ C-PAC's data quality control (QC) interface allows you to take a quick glance at
 In future releases, more visualizations will be introduced, and the QC pages will be integrated into an easy-to-use dashboard that is updated throughout the process of your C-PAC run, and also provides information on the status of the pipeline. As always, we greatly appreciate any ideas, suggestions, or items on your wishlist and `take them into consideration <https://groups.google.com/forum/#!forum/cpax_forum>`_.
 
 Quick Look
-^^^^^^^^^^
+----------
 
 **Skull-stripping and Segmentation Quality**
 

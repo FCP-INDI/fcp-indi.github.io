@@ -61,7 +61,8 @@ Note that only centrality measures that have binarized/weighted checked on this 
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 1346-1413
+   :start-at: network_centrality:
+   :end-before: # PACKAGE INTEGRATIONS
 
 References
 ^^^^^^^^^^

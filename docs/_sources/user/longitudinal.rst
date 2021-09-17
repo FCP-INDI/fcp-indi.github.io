@@ -26,7 +26,8 @@ Configuring CPAC to Run Longitudinal Preprocessing Pipeline
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 162-194
+   :start-at: longitudinal_template_generation:
+   :end-before: anatomical_preproc:
 
 References
 ^^^^^^^^^^

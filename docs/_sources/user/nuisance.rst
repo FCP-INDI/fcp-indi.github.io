@@ -133,7 +133,13 @@ Configuring Temporal Filtering Options
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 1022-1023,1035-1181
+   :start-at: nuisance_corrections:
+   :lines: 1
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: 2-nuisance_regression:
+   :end-before: # OUTPUTS AND DERIVATIVES
 
 An example of nuisance regressors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

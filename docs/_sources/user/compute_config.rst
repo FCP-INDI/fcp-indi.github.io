@@ -28,7 +28,13 @@ Computer Settings
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 10-11,81-136
+   :start-at: pipeline_setup:
+   :lines: 1
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: system_config:
+   :end-before: Amazon-AWS:
 
 Setting up SGE
 """""""""""""""

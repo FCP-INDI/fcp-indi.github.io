@@ -28,7 +28,7 @@ Configuring CPAC to Run PyPEER
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 1416-1451
+   :start-at: PyPEER:
 
 References
 ^^^^^^^^^^

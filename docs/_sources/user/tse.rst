@@ -32,4 +32,5 @@ Configuring ROI Time Series Extraction
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 1217-1262
+   :start-at: timeseries_extraction:
+   :end-before: seed_based_correlation_analysis:

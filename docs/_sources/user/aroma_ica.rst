@@ -40,7 +40,8 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 1022-1033
+   :start-at: nuisance_corrections:
+   :end-before: 2-nuisance_regression:
 
 EXTERNAL RESOURCES:
 ^^^^^^^^^^^^^^^^^^^

@@ -15,4 +15,5 @@ The parameters provided in the GUI are described below:
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 940-967
+   :start-at: distortion_correction:
+   :end-before: func_masking:

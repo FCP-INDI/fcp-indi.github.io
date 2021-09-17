@@ -35,4 +35,10 @@ Output Settings
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 10-80,138-149
+   :start-at: pipeline_setup:
+   :end-before: system_config:
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: Amazon-AWS:
+   :end-before: # PREPROCESSING

@@ -36,7 +36,23 @@ Initial Preprocessing
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 602-606,609-610,615-619,815-936
+   :start-at: registration_workflows:
+   :lines: 1
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: functional_registration:
+   :end-before: boundary_based_registration:
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: functional_preproc:
+   :end-before: slice_timing_correction:
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: motion_estimates_and_correction:
+   :end-before: distortion_correction:
 
 .. _motion_estimate_filter_valid_options:
 
@@ -78,7 +94,13 @@ Note that if a scan parameters file was used to construct the participant list, 
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 815-816,848-853
+   :start-at: functional_preproc:
+   :lines: 1
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: slice_timing_correction:
+   :end-before: motion_estimates_and_correction:
 
 Through the Data Configuration
 """"""""""""""""""""""""""""""
@@ -161,7 +183,13 @@ The C-PAC pipeline configuration builder provides options for configuring the Di
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 815-816,938-965
+   :start-at: functional_preproc:
+   :lines: 1
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: distortion_correction:
+   :end-before: func_masking:
 
 Functional to Anatomical Registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -183,7 +211,28 @@ Functional to Anatomical Registration
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 482-483,602-614,621-635,815-816,967-971
+   :start-at: registration_workflows:
+   :lines: 1
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: functional_registration:
+   :end-before: reference:
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: func_input_prep:
+   :end-before: EPI_registration:
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: functional_preproc:
+   :lines: 1
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: func_masking:
+   :end-before: FSL-BET:
 
 Configuring FSL BET options:
 """"""""""""""""""""""""""""
@@ -224,7 +273,13 @@ Configuring FSL BET options:
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 815-816,973-1014
+   :start-at: functional_preproc:
+   :lines: 1
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: FSL-BET:
+   :end-before: FSL_AFNI:
 
 Functional to Template Registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -254,4 +309,15 @@ Functional to Template Registration
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 482-483,602-603,636-812
+   :start-at: registration_workflows:
+   :lines: 1
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: functional_registration:
+   :lines: 1
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: EPI_registration:
+   :end-before: ANTs_pipelines:

@@ -53,7 +53,8 @@ Before SCA can be calculated, you **must** first extract a seed time series from
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 1265-1287
+   :start-at: seed_based_correlation_analysis:
+   :end-before: amplitude_low_frequency_fluctuation
 
 References
 ^^^^^^^^^^

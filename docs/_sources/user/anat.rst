@@ -21,7 +21,8 @@ Configuring CPAC to run surface analysis:
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 152-159
+   :start-at: surface_analysis:
+   :end-before: longitudinal_template_generation:
 
 Initial Preprocessing
 ^^^^^^^^^^^^^^^^^^^^^
@@ -50,7 +51,8 @@ Configuring CPAC to run initial preprocessing:
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 197-209
+   :start-at: anatomical_preproc:
+   :end-before: Run ACPC alignment before non-local means filtering or N4 bias
 
 Configuring ACPC Alignment options:
 """"""""""""""""""""""""""""""""""""""
@@ -66,7 +68,12 @@ Configuring ACPC Alignment options:
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 197-198,207-226
+   :start-at: anatomical_preproc:
+   :lines: 1
+
+.. literalinclude:: /references/default_pipeline.yml  
+   :start-at: acpc_alignment:
+   :end-before: brain_extraction:
 
 Skull-Stripping
 ^^^^^^^^^^^^^^^
@@ -95,7 +102,12 @@ Configuring CPAC to run Skull-Stripping:
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 197-198,228-232
+   :start-at: anatomical_preproc:
+   :lines: 1
+
+.. literalinclude:: /references/default_pipeline.yml
+   :start-at: brain_extraction:
+   :end-at: using: ['3dSkullStrip']
 
 Configuring AFNI 3dSkullStrip options:
 """"""""""""""""""""""""""""""""""""""
@@ -143,7 +155,18 @@ Configuring AFNI 3dSkullStrip options:
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 197-198,228-229,234-298
+   :start-at: anatomical_preproc:
+   :lines: 1
+
+
+.. literalinclude:: /references/default_pipeline.yml
+   :start-at: brain_extraction:
+   :lines: 1
+
+
+.. literalinclude:: /references/default_pipeline.yml
+   :start-at: AFNI-3dSkullStrip:
+   :end-before: FSL-BET:
 
 Configuring FSL BET options:
 """"""""""""""""""""""""""""
@@ -181,7 +204,18 @@ Configuring FSL BET options:
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 197-198,228-229,300-339
+   :start-at: anatomical_preproc:
+   :lines: 1
+
+
+.. literalinclude:: /references/default_pipeline.yml
+   :start-at: brain_extraction:
+   :lines: 1
+
+
+.. literalinclude:: /references/default_pipeline.yml
+   :start-at: FSL-BET:
+   :end-before: UNet:
 
 Configuring niworkflows-ants options:
 """""""""""""""""""""""""""""""""""""
@@ -199,7 +233,18 @@ Configuring niworkflows-ants options:
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 197-198,228-229,346-358
+   :start-at: anatomical_preproc:
+   :lines: 1
+
+
+.. literalinclude:: /references/default_pipeline.yml
+   :start-at: brain_extraction:
+   :lines: 1
+
+
+.. literalinclude:: /references/default_pipeline.yml
+   :start-at: niworkflows-ants:
+   :end-before: FreeSurfer-BET:
 
 Anatomical Registration
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -243,7 +288,8 @@ Configuring CPAC to Run Anatomical Registration
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 482-600
+   :start-at: registration_workflows:
+   :end-before: functional_registration:
 
 Anatomical Tissue Segmentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -344,7 +390,8 @@ Configuring CPAC to Run Anatomical Tissue Segmentation
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 361-479
+   :start-at: segmentation:
+   :end-before: registration_workflows:
 
 References
 ^^^^^^^^^^

@@ -35,7 +35,8 @@ Configuring CPAC to Run ReHo
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 1303-1313
+   :start-at: regional_homogeneity:
+   :end-before: voxel_mirrored_homotopic_connectivity:
 
 References
 ^^^^^^^^^^

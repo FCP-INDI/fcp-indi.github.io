@@ -42,7 +42,8 @@ The following nested key/value pairs that will be set to these defaults if not d
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :lines: 1184-1214
+   :start-at: # OUTPUTS AND DERIVATIVES
+   :end-at: output: ['z-scored']
 
 External Resources
 ^^^^^^^^^^^^^^^^^^

@@ -98,28 +98,41 @@
 </ol>
 <section id="configuration-without-the-gui">
 <h3>Configuration Without the GUI<a class="headerlink" href="#configuration-without-the-gui" title="Permalink to this headline">¶</a></h3>
-<p>The following nested key/value pairs that will be set to these defaults if not defined in your <a class="reference internal" href="pipelines/pipeline_config"><span class="doc">pipeline configuration YAML</span></a>:</p>
-<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span>    <span class="c1"># Standard Lateral Ventricles Binary Mask</span>
-    <span class="c1"># used in CSF mask refinement for CSF signal-related regressions</span>
-    <span class="nt">lateral_ventricles_mask</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">$FSLDIR/data/atlases/HarvardOxford/HarvardOxford-lateral-ventricles-thr25-2mm.nii.gz</span>
+<p>The following nested key/value pairs will be set to these defaults if not defined in your <a class="reference internal" href="pipelines/pipeline_config"><span class="doc">pipeline configuration YAML</span></a>.</p>
+<p>Unlike most lines in a C-PAC pipeline configuration file, the keys under <code class="docutils literal notranslate"><span class="pre">*_roi_paths</span></code> are user-definable.</p>
+<p>If you exclude <code class="docutils literal notranslate"><span class="pre">*_roi_paths</span></code> from your pipeline configuration, the default atlases and analyses will be used.</p>
+<p>If you include <code class="docutils literal notranslate"><span class="pre">*_roi_paths</span></code>, <strong>only the atlases and analyses provided</strong> will be used, unless you add the optional key/value pair <code class="docutils literal notranslate"><span class="pre">roi_paths_fully_specified:</span> <span class="pre">False</span></code> in the relevant section, in which case the default atlases and analyses will be updated with the atlases and analyses specified in your pipeline config. For example,</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">timeseries_extraction</span><span class="p">:</span>
+    <span class="nt">roi_paths_fully_specified</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">False</span>
 
-    <span class="c1"># Whether to run frequency filtering before or after nuisance regression.</span>
-    <span class="c1"># Options: &#39;After&#39; or &#39;Before&#39;</span>
-    <span class="nt">bandpass_filtering_order</span><span class="p">:</span> <span class="s">&#39;After&#39;</span>
+<span class="nt">seed_based_correlation_analysis</span><span class="p">:</span>
+    <span class="nt">roi_paths_fully_specified</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">False</span>
+</pre></div>
+</div>
+<p>would keep any default atlases not respecified in your pipeline configuration.</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">seed_based_correlation_analysis</span><span class="p">:</span>
 
-    <span class="c1"># Process and refine masks used to produce regressors and time series for</span>
-    <span class="c1"># regression.</span>
-    <span class="nt">regressor_masks</span><span class="p">:</span>
+  <span class="c1"># SCA - Seed-Based Correlation Analysis</span>
+  <span class="c1"># For each extracted ROI Average time series, CPAC will generate a whole-brain correlation map.</span>
+  <span class="c1"># It should be noted that for a given seed/ROI, SCA maps for ROI Average time series will be the same.</span>
+  <span class="nt">run</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
 
-      <span class="nt">erode_anatomical_brain_mask</span><span class="p">:</span>
+  <span class="c1"># Enter paths to region-of-interest (ROI) NIFTI files (.nii or .nii.gz) to be used for seed-based correlation analysis, and then select which types of analyses to run.</span>
+  <span class="c1"># Denote which analyses to run for each ROI path by listing the names below. For example, if you wish to run Avg and MultReg, you would enter: &#39;/path/to/ROI.nii.gz&#39;: Avg, MultReg</span>
+  <span class="c1"># available analyses:</span>
+  <span class="c1">#   /path/to/atlas.nii.gz: Avg, DualReg, MultReg</span>
+  <span class="nt">sca_roi_paths</span><span class="p">:</span>
+    <span class="nt">/cpac_templates/PNAS_Smith09_rsn10.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">DualReg</span>
+    <span class="nt">/cpac_templates/CC400.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg, MultReg</span>
+    <span class="nt">/cpac_templates/ez_mask_pad.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg, MultReg</span>
+    <span class="nt">/cpac_templates/aal_mask_pad.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg, MultReg</span>
+    <span class="nt">/cpac_templates/CC200.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg, MultReg</span>
+    <span class="nt">/cpac_templates/tt_mask_pad.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg, MultReg</span>
+    <span class="nt">/cpac_templates/ho_mask_pad.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg, MultReg</span>
+    <span class="nt">/cpac_templates/rois_3mm.nii.gz</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Avg, MultReg</span>
 
-        <span class="c1"># Erode binarized anatomical brain mask. If choosing True, please also set seg_csf_use_erosion: True; regOption: niworkflows-ants.</span>
-        <span class="nt">run</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
-
-        <span class="c1"># Erosion proportion, if using erosion.</span>
-        <span class="c1"># Default proportion is 0 for anatomical brain mask.</span>
-        <span class="c1"># Recommend that do not use erosion in both proportion and millimeter method.</span>
-        <span class="nt">brain_mask_erosion_prop </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+  <span class="c1"># Normalize each time series before running Dual Regression SCA.</span>
+  <span class="nt">norm_timeseries_for_DR</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
 </pre></div>
 </div>
 </section>
@@ -156,7 +169,7 @@
   <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index">User Guide</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="index#the-c-pac-mission">The C-PAC Mission</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index#latest-release-version-1-8-0-beta-mar-13-2021">Latest Release: Version 1.8.0 Beta (Mar 13, 2021)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index#latest-release-version-1-8-1-beta-sep-17-2021">Latest Release: Version 1.8.1 Beta (Sep 17, 2021)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index#the-c-pac-team">The C-PAC Team</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index#funding-acknowledgements">Funding Acknowledgements</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="index#user-guide-index">User Guide Index</a><ul class="current">
@@ -204,7 +217,7 @@
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -238,7 +251,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

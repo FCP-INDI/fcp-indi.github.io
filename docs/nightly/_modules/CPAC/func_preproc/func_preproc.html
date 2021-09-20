@@ -1536,8 +1536,54 @@
 
         <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;desc-preproc_bold&quot;</span><span class="p">,</span> <span class="s2">&quot;bold&quot;</span><span class="p">])</span>
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_skull_mean</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_skull_mean</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                   <span class="n">func_get_brain_mask</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+        <span class="n">out_node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="p">(</span><span class="n">func_skull_mean</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">functional_preproc</span><span class="p">[</span><span class="s1">&#39;func_masking&#39;</span><span class="p">][</span><span class="s1">&#39;FSL-BET&#39;</span><span class="p">][</span>
+            <span class="s1">&#39;functional_mean_thr&#39;</span><span class="p">][</span><span class="s1">&#39;run&#39;</span><span class="p">]:</span>
+            <span class="c1"># T=$(fslstats ${subject}_tmean.nii.gz -p 98)</span>
+            <span class="n">threshold_T</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageStats</span><span class="p">(),</span>
+                                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_mean_skull_thr_value_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+                                    <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">])</span>
+            <span class="n">threshold_T</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">op_string</span> <span class="o">=</span> <span class="s2">&quot;-p </span><span class="si">%f</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">functional_preproc</span><span class="p">[</span><span class="s1">&#39;func_masking&#39;</span><span class="p">][</span><span class="s1">&#39;FSL-BET&#39;</span><span class="p">][</span><span class="s1">&#39;functional_mean_thr&#39;</span><span class="p">][</span><span class="s1">&#39;threshold_value&#39;</span><span class="p">])</span>
+            
+            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_skull_mean</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">threshold_T</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+            
+            <span class="c1"># z=$(echo &quot;$T / 10&quot; | bc -l)</span>
+            <span class="k">def</span> <span class="nf">form_thr_string</span><span class="p">(</span><span class="n">thr</span><span class="p">):</span>
+                <span class="n">threshold_z</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">thr</span><span class="o">/</span><span class="mi">10</span><span class="p">))</span>
+                <span class="k">return</span> <span class="s1">&#39;-thr </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">threshold_z</span><span class="p">)</span>
+
+            <span class="n">form_thr_string</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;thr&#39;</span><span class="p">],</span>
+                                            <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_str&#39;</span><span class="p">],</span>
+                                            <span class="n">function</span><span class="o">=</span><span class="n">form_thr_string</span><span class="p">),</span>
+                                            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;form_thr_string_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">threshold_T</span><span class="p">,</span> <span class="s1">&#39;out_stat&#39;</span><span class="p">,</span> <span class="n">form_thr_string</span><span class="p">,</span> <span class="s1">&#39;thr&#39;</span><span class="p">)</span>
+
+            <span class="c1"># fslmaths ${subject}_tmean.nii.gz -thr ${z} ${subject}_tmean_thr.nii.gz</span>
+            <span class="n">func_skull_mean_thr</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(),</span>
+                                            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_mean_skull_thr_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_skull_mean</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">func_skull_mean_thr</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">form_thr_string</span><span class="p">,</span> <span class="s1">&#39;out_str&#39;</span><span class="p">,</span> <span class="n">func_skull_mean_thr</span><span class="p">,</span> <span class="s1">&#39;op_string&#39;</span><span class="p">)</span>
+            
+            <span class="n">out_node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="p">(</span><span class="n">func_skull_mean_thr</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">functional_preproc</span><span class="p">[</span><span class="s1">&#39;func_masking&#39;</span><span class="p">][</span><span class="s1">&#39;FSL-BET&#39;</span><span class="p">][</span>
+            <span class="s1">&#39;functional_mean_bias_correction&#39;</span><span class="p">]:</span>
+
+            <span class="c1"># fast --nopve -B ${subject}_tmean_thr.nii.gz</span>
+            <span class="n">func_mean_skull_fast</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">FAST</span><span class="p">(),</span>
+                                                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_mean_skull_fast_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">func_mean_skull_fast</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">no_pve</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">func_mean_skull_fast</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">output_biascorrected</span> <span class="o">=</span> <span class="kc">True</span>
+            
+            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">out_node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_mean_skull_fast</span><span class="p">,</span> <span class="s1">&#39;in_files&#39;</span><span class="p">)</span>
+            
+            <span class="n">out_node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="p">(</span><span class="n">func_mean_skull_fast</span><span class="p">,</span> <span class="s1">&#39;restored_image&#39;</span><span class="p">)</span>
+
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">out_node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">func_get_brain_mask</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
     <span class="k">else</span><span class="p">:</span>
         <span class="n">func_get_brain_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">functional</span> <span class="o">=</span> <span class="kc">True</span>
@@ -2310,7 +2356,7 @@
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../../search" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -2337,7 +2383,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

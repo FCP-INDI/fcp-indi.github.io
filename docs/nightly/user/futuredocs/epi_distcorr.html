@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Configuration without the GUI &#8212; C-PAC 1.8.1 Beta documentation</title>
+    <title>Configuration Without the GUI &#8212; C-PAC 1.8.1 Beta documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/classic.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
@@ -29,7 +29,7 @@
           <a href="../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index">C-PAC 1.8.1 Beta documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Configuration without the GUI</a></li> 
+        <li class="nav-item nav-item-this"><a href="">Configuration Without the GUI</a></li> 
       </ul>
     </div>  
 
@@ -52,35 +52,36 @@ The parameters provided in the GUI are described below:</p>
 6. Dwell to asymmetric ratio-[float]: This is the ratio between the Dwell time, as referenced above and the asymmetric time. Here, the default value is 0.93902439.
 7. Phase encoding direction-[string]: This is the position of the voxels in the input image, and can have values of x/y/z or -x/-y/-z. This is predominantly a trail and error based parameter.</p>
 <section id="configuration-without-the-gui">
-<h1>Configuration without the GUI<a class="headerlink" href="#configuration-without-the-gui" title="Permalink to this headline">¶</a></h1>
-<p>The following nested key/value pairs that will be set to these defaults if not defined in your <a class="reference internal" href="../pipelines/pipeline_config"><span class="doc">pipeline configuration YAML</span></a>:</p>
-<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">functional_preproc</span><span class="p">:</span>
+<h1>Configuration Without the GUI<a class="headerlink" href="#configuration-without-the-gui" title="Permalink to this headline">¶</a></h1>
+<p>The following nested key/value pairs will be set to these defaults if not defined in your <a class="reference internal" href="../pipelines/pipeline_config"><span class="doc">pipeline configuration YAML</span></a>.</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span>  <span class="nt">distortion_correction</span><span class="p">:</span>
 
-  <span class="nt">run</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">On</span>
+    <span class="c1"># this is a fork point</span>
+    <span class="c1">#   run: [On, Off] - this will run both and fork the pipeline</span>
+    <span class="nt">run</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">On</span><span class="p p-Indicator">]</span>
 
-  <span class="nt">truncation</span><span class="p">:</span>
+    <span class="c1"># using: [&#39;PhaseDiff&#39;, &#39;Blip&#39;]</span>
+    <span class="c1">#   PhaseDiff - Perform field map correction using a single phase difference image, a subtraction of the two phase images from each echo. Default scanner for this method is SIEMENS.</span>
+    <span class="c1">#   Blip - Uses AFNI 3dQWarp to calculate the distortion unwarp for EPI field maps of opposite/same phase encoding direction.</span>
+    <span class="c1">#   NOTE:</span>
+    <span class="c1">#     this is NOT a fork point - instead, the technique used will depend on what type of distortion correction field data accompanies the dataset</span>
+    <span class="c1">#     for example, phase-difference field maps will lead to phase-difference distortion correction, and phase-encoding direction field maps will lead to blip-up/blip-down</span>
+    <span class="nt">using</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;PhaseDiff&#39;</span><span class="p p-Indicator">,</span> <span class="s">&#39;Blip&#39;</span><span class="p p-Indicator">]</span>
 
-    <span class="c1"># First timepoint to include in analysis.</span>
-    <span class="c1"># Default is 0 (beginning of timeseries).</span>
-    <span class="c1"># First timepoint selection in the scan parameters in the data configuration file, if present, will over-ride this selection.</span>
-    <span class="c1"># Note: the selection here applies to all scans of all participants.</span>
-    <span class="nt">start_tr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+    <span class="c1"># option parameters</span>
+    <span class="nt">PhaseDiff</span><span class="p">:</span>
 
-    <span class="c1"># Last timepoint to include in analysis.</span>
-    <span class="c1"># Default is None or End (end of timeseries).</span>
-    <span class="c1"># Last timepoint selection in the scan parameters in the data configuration file, if present, will over-ride this selection.</span>
-    <span class="c1"># Note: the selection here applies to all scans of all participants.</span>
-    <span class="nt">stop_tr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">None</span>
+      <span class="c1"># Since the quality of the distortion heavily relies on the skull-stripping step, we provide a choice of method (&#39;AFNI&#39; for AFNI 3dSkullStrip or &#39;BET&#39; for FSL BET).</span>
+      <span class="c1"># Options: &#39;BET&#39; or &#39;AFNI&#39;</span>
+      <span class="nt">fmap_skullstrip_option</span><span class="p">:</span> <span class="s">&#39;BET&#39;</span>
 
-  <span class="nt">scaling</span><span class="p">:</span>
+      <span class="c1"># Set the fraction value for the skull-stripping of the magnitude file. Depending on the data, a tighter extraction may be necessary in order to prevent noisy voxels from interfering with preparing the field map.</span>
+      <span class="c1"># The default value is 0.5.</span>
+      <span class="nt">fmap_skullstrip_BET_frac</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.5</span>
 
-    <span class="c1"># Scale functional raw data, usually used in rodent pipeline</span>
-    <span class="nt">run</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Off</span>
-
-    <span class="c1"># Scale the size of the dataset voxels by the factor.</span>
-    <span class="nt">scaling_factor</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
-
-  <span class="nt">despiking</span><span class="p">:</span>
+      <span class="c1"># Set the threshold value for the skull-stripping of the magnitude file. Depending on the data, a tighter extraction may be necessary in order to prevent noisy voxels from interfering with preparing the field map.</span>
+      <span class="c1"># The default value is 0.6.</span>
+      <span class="nt">fmap_skullstrip_AFNI_threshold</span><span class="p">:</span>  <span class="l l-Scalar l-Scalar-Plain">0.6</span>
 </pre></div>
 </div>
 </section>
@@ -106,7 +107,7 @@ The parameters provided in the GUI are described below:</p>
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -126,13 +127,13 @@ The parameters provided in the GUI are described below:</p>
           <a href="../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index">C-PAC 1.8.1 Beta documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Configuration without the GUI</a></li> 
+        <li class="nav-item nav-item-this"><a href="">Configuration Without the GUI</a></li> 
       </ul>
     </div>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

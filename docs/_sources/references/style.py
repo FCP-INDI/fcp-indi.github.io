@@ -51,7 +51,7 @@ class CPAC_DocsStyle(Style):
                 ] if e.fields.get('url') else
                 self.format_title(e, 'title')
             ],
-            sentence[join(sep=' ')[
+            join(sep=' ')[
                 optional[tag('em')[join(sep=', ')[
                     self.format_title(e, 'journal', as_sentence=False),
                     optional_field('volume')
@@ -60,7 +60,7 @@ class CPAC_DocsStyle(Style):
                     ':' if e.fields.get('volume') else '',
                     optional_field("number")
                 ] if e.fields.get('number') else ''],
-            ]],
+            ],
             optional[join(sep='')[
                 ', pp. ', optional_field('pages')
             ] if e.fields.get('pages') else ''],

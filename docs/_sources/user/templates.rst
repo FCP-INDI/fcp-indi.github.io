@@ -1,6 +1,3 @@
-Templates
-=========
-
 C-PAC images include the following templates:
 
 .. list-table::

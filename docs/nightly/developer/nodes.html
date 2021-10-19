@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Nodes &#8212; C-PAC 1.8.1 Beta documentation</title>
+    <title>Nodes &#8212; C-PAC 1.8.2..dev Beta documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="pipeline" title="Pipeline Development"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.1 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.2..dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index" accesskey="U">Welcome to CPAC’s developer documentation!</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Nodes</a></li> 
       </ul>
@@ -97,7 +97,7 @@ re-executed.</p>
 </dd>
 <dt><a class="reference internal" href="#CPAC.pipeline.nipype_pipeline_engine.Node.mem_gb" title="CPAC.pipeline.nipype_pipeline_engine.Node.mem_gb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mem_gb</span></code></a></dt><dd><p>Get estimated memory (GB)</p>
 </dd>
-<dt><a class="reference internal" href="#CPAC.pipeline.nipype_pipeline_engine.Node.mem_x" title="CPAC.pipeline.nipype_pipeline_engine.Node.mem_x"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mem_x</span></code></a></dt><dd><p>Get (memory multiplier, input file) tuple.</p>
+<dt><a class="reference internal" href="#CPAC.pipeline.nipype_pipeline_engine.Node.mem_x" title="CPAC.pipeline.nipype_pipeline_engine.Node.mem_x"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mem_x</span></code></a></dt><dd><p>Get dict of ‘multiplier’ (memory multiplier), ‘file’ (input file) and multiplier mode (spatial * temporal, spatial only or temporal only).</p>
 </dd>
 <dt><a class="reference internal" href="#CPAC.pipeline.nipype_pipeline_engine.Node.n_procs" title="CPAC.pipeline.nipype_pipeline_engine.Node.n_procs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_procs</span></code></a></dt><dd><p>Get the estimated number of processes/threads</p>
 </dd>
@@ -224,8 +224,10 @@ multiprocessing pool</p>
 <dt><strong>mem_gb</strong><span class="classifier">int or float</span></dt><dd><p>Estimate (in GB) of constant memory to allocate for this
 node.</p>
 </dd>
-<dt><strong>mem_x</strong><span class="classifier">2-tuple</span></dt><dd><p>(<code class="docutils literal notranslate"><span class="pre">multiplier</span></code>, <code class="docutils literal notranslate"><span class="pre">input_file</span></code>)
+<dt><strong>mem_x</strong><span class="classifier">2-tuple or 3-tuple</span></dt><dd><p>(<code class="docutils literal notranslate"><span class="pre">multiplier</span></code>, <code class="docutils literal notranslate"><span class="pre">input_file</span></code>)
 (int or float, str)</p>
+<p>(<code class="docutils literal notranslate"><span class="pre">multiplier</span></code>, <code class="docutils literal notranslate"><span class="pre">input_file</span></code>, <code class="docutils literal notranslate"><span class="pre">mode</span></code>)
+(int or float, str, str)</p>
 <p><strong>Note</strong>
 This parameter (<code class="docutils literal notranslate"><span class="pre">mem_x</span></code>) is likely to change in a future
 release as we incorporate more factors into memory
@@ -237,10 +239,14 @@ involved.</p>
 </dd>
 </dl>
 <p>Multiplier for memory allocation such that <code class="docutils literal notranslate"><span class="pre">multiplier</span></code>
-times x * y * z * t of 4-D file at <code class="docutils literal notranslate"><span class="pre">input_file</span></code> plus
+times <code class="docutils literal notranslate"><span class="pre">mode</span></code> of 4-D file at <code class="docutils literal notranslate"><span class="pre">input_file</span></code> plus
 <code class="docutils literal notranslate"><span class="pre">self._mem_gb</span></code> equals the total memory allocation for
 the node. <code class="docutils literal notranslate"><span class="pre">input_file</span></code> can be a Node input string or
 an actual path.</p>
+<p><code class="docutils literal notranslate"><span class="pre">mode</span></code> can be any one of
+* ‘xyzt’ (spatial * temporal) (default if not specified)
+* ‘xyz’ (spatial)
+* ‘t’ (temporal)</p>
 </dd>
 </dl>
 </dd>
@@ -332,8 +338,9 @@ cached results are up-to-date.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="CPAC.pipeline.nipype_pipeline_engine.Node.mem_x">
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">mem_x</span></span><a class="headerlink" href="#CPAC.pipeline.nipype_pipeline_engine.Node.mem_x" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get (memory multiplier, input file) tuple. Returns <code class="docutils literal notranslate"><span class="pre">None</span></code>
-if already consumed or not set.</p>
+<dd><p>Get dict of ‘multiplier’ (memory multiplier), ‘file’ (input file)
+and multiplier mode (spatial * temporal, spatial only or
+temporal only). Returns <code class="docutils literal notranslate"><span class="pre">None</span></code> if already consumed or not set.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -429,7 +436,7 @@ updates the hash without re-running.</p>
 </dd>
 <dt><a class="reference internal" href="#CPAC.pipeline.nipype_pipeline_engine.MapNode.mem_gb" title="CPAC.pipeline.nipype_pipeline_engine.MapNode.mem_gb"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mem_gb</span></code></a></dt><dd><p>Get estimated memory (GB)</p>
 </dd>
-<dt><a class="reference internal" href="#CPAC.pipeline.nipype_pipeline_engine.MapNode.mem_x" title="CPAC.pipeline.nipype_pipeline_engine.MapNode.mem_x"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mem_x</span></code></a></dt><dd><p>Get (memory multiplier, input file) tuple.</p>
+<dt><a class="reference internal" href="#CPAC.pipeline.nipype_pipeline_engine.MapNode.mem_x" title="CPAC.pipeline.nipype_pipeline_engine.MapNode.mem_x"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mem_x</span></code></a></dt><dd><p>Get dict of ‘multiplier’ (memory multiplier), ‘file’ (input file) and multiplier mode (spatial * temporal, spatial only or temporal only).</p>
 </dd>
 <dt><a class="reference internal" href="#CPAC.pipeline.nipype_pipeline_engine.MapNode.n_procs" title="CPAC.pipeline.nipype_pipeline_engine.MapNode.n_procs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_procs</span></code></a></dt><dd><p>Get the estimated number of processes/threads</p>
 </dd>
@@ -562,8 +569,10 @@ multiprocessing pool</p>
 <dt><strong>mem_gb</strong><span class="classifier">int or float</span></dt><dd><p>Estimate (in GB) of constant memory to allocate for this
 node.</p>
 </dd>
-<dt><strong>mem_x</strong><span class="classifier">2-tuple</span></dt><dd><p>(<code class="docutils literal notranslate"><span class="pre">multiplier</span></code>, <code class="docutils literal notranslate"><span class="pre">input_file</span></code>)
+<dt><strong>mem_x</strong><span class="classifier">2-tuple or 3-tuple</span></dt><dd><p>(<code class="docutils literal notranslate"><span class="pre">multiplier</span></code>, <code class="docutils literal notranslate"><span class="pre">input_file</span></code>)
 (int or float, str)</p>
+<p>(<code class="docutils literal notranslate"><span class="pre">multiplier</span></code>, <code class="docutils literal notranslate"><span class="pre">input_file</span></code>, <code class="docutils literal notranslate"><span class="pre">mode</span></code>)
+(int or float, str, str)</p>
 <p><strong>Note</strong>
 This parameter (<code class="docutils literal notranslate"><span class="pre">mem_x</span></code>) is likely to change in a future
 release as we incorporate more factors into memory
@@ -575,10 +584,14 @@ involved.</p>
 </dd>
 </dl>
 <p>Multiplier for memory allocation such that <code class="docutils literal notranslate"><span class="pre">multiplier</span></code>
-times x * y * z * t of 4-D file at <code class="docutils literal notranslate"><span class="pre">input_file</span></code> plus
+times <code class="docutils literal notranslate"><span class="pre">mode</span></code> of 4-D file at <code class="docutils literal notranslate"><span class="pre">input_file</span></code> plus
 <code class="docutils literal notranslate"><span class="pre">self._mem_gb</span></code> equals the total memory allocation for
 the node. <code class="docutils literal notranslate"><span class="pre">input_file</span></code> can be a Node input string or
 an actual path.</p>
+<p><code class="docutils literal notranslate"><span class="pre">mode</span></code> can be any one of
+* ‘xyzt’ (spatial * temporal) (default if not specified)
+* ‘xyz’ (spatial)
+* ‘t’ (temporal)</p>
 </dd>
 </dl>
 </dd>
@@ -676,8 +689,9 @@ cached results are up-to-date.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="CPAC.pipeline.nipype_pipeline_engine.MapNode.mem_x">
 <em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">mem_x</span></span><a class="headerlink" href="#CPAC.pipeline.nipype_pipeline_engine.MapNode.mem_x" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get (memory multiplier, input file) tuple. Returns <code class="docutils literal notranslate"><span class="pre">None</span></code>
-if already consumed or not set.</p>
+<dd><p>Get dict of ‘multiplier’ (memory multiplier), ‘file’ (input file)
+and multiplier mode (spatial * temporal, spatial only or
+temporal only). Returns <code class="docutils literal notranslate"><span class="pre">None</span></code> if already consumed or not set.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1313,7 +1327,7 @@ generate an interactive HTML chart.</p>
         <li class="right" >
           <a href="pipeline" title="Pipeline Development"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.1 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.2..dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index" >Welcome to CPAC’s developer documentation!</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Nodes</a></li> 
       </ul>

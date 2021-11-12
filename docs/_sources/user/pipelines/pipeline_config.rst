@@ -127,3 +127,9 @@ Derivatives
 * :doc:`Amplitude of Low Frequency Fluctuations (ALFF) and fractional ALFF (fALFF) </user/alff>` - Measure the power of slow fluctuations in brain activity.
 * :doc:`Regional Homogeneity (ReHo) </user/reho>` - Measure the similarity of activity patterns across neighboring voxels.
 * :doc:`Network Centrality </user/centrality>` - Analyze the structure of functional networks.
+
+Quality Control
+'''''''''''''''
+
+* :doc:`QC Pages </user/qc_interface>` - Visual Data Quality Control
+* :doc:`XCP QC files </user/xcpqc>` - eXtensible Connectivity Pipeline-style quality control files

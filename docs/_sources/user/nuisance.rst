@@ -141,6 +141,18 @@ Configuring Temporal Filtering Options
    :start-at: 2-nuisance_regression:
    :end-before: # OUTPUTS AND DERIVATIVES
 
+An example of a custom regressor with one file:
+
+.. code-block:: YAML
+
+   nuisance_corrections:
+     2-nuisance_regression:
+       Regressors:
+         - Name: 'first_custom_regressor'
+           Custom:
+             - file: custom_signal.1D
+               convolve: true
+
 An example of nuisance regressors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

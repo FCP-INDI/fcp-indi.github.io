@@ -9,45 +9,61 @@ date = words[field('year'), optional_field('month')]
 
 
 class CPAC_DocsStyle(Style):
+    """
+    Custom style for sphinxcontrib-bibtex references [1] in C-PAC documentation.
+
+    References
+    ----------
+    .. [1] Troffaes, M.C.M. 2021. Custom Formatting, Sorting, and Labelling. *sphinxcontrib-bibtex 1.0.0 documentation*. https://sphinxcontrib-bibtex.readthedocs.io/en/1.0.0/usage.html#custom-formatting-sorting-and-labelling
+    """  # pylint: disable=line-too-long  # noqa: E501
+    # pylint: disable=no-value-for-parameter,invalid-name
     def __init__(self, *args, **kwargs):
+        # pylint: disable=unused-argument
         super().__init__(
             abbreviate_names=True,
             name_style=LastFirst,
             sorting_style=NoSort
         )
 
-    def format_doi(self, doi):
+    def format_doi(self, e):
+        """
+        Parameters
+        ----------
+        e : str
+          digital object identifier
+        """
         return join(sep=':')[
             words['doi'],
             href[join(sep='/')[
-                'https://dx.doi.org', doi
-            ], doi]
+                'https://dx.doi.org',
+                e
+            ], e]
         ]
 
-    def get_article_template(self, entry):
+    def get_article_template(self, e):
         template = toplevel[optional[
             sentence[self.format_names('author')]],
             optional[sentence[date]],
             optional[
                 href[
                     field('url'),
-                    self.format_title(entry, 'title')
-                ] if entry.fields.get('url') else
-                self.format_title(entry, 'title')
+                    self.format_title(e, 'title')
+                ] if e.fields.get('url') else
+                self.format_title(e, 'title')
             ],
-            sentence[join(sep=' ')[
+            join(sep=' ')[
                 optional[tag('em')[join(sep=', ')[
-                    self.format_title(entry, 'journal', as_sentence=False),
+                    self.format_title(e, 'journal', as_sentence=False),
                     optional_field('volume')
                 ]]],
                 optional[join(sep='')[
-                    ':' if entry.fields.get('volume') else '',
+                    ':' if e.fields.get('volume') else '',
                     optional_field("number")
-                ] if entry.fields.get('number') else ''],
-            ]],
+                ] if e.fields.get('number') else ''],
+            ],
             optional[join(sep='')[
                 ', pp. ', optional_field('pages')
-            ] if entry.fields.get('pages') else ''],
+            ] if e.fields.get('pages') else ''],
             optional[self.format_doi(optional_field('doi'))],
             sentence[optional_field('note')],
         ]
@@ -73,20 +89,44 @@ class CPAC_DocsStyle(Style):
         ]
         return template
 
-    def get_misc_template(self, entry):
+    def get_incollection_template(self, e):
+        template = toplevel[optional[
+            sentence[self.format_names('author')]],
+            optional[sentence[date]],
+            optional[sentence[href[
+                field('url'),
+                optional[tag('em')[self.format_title(e, 'title')]]
+            ]] if e.fields.get('url') else optional[sentence[
+                tag('em')[self.format_title(e, 'title')]
+            ]]],
+            optional[sentence[
+                tag('em')[self.format_title(e, 'booktitle')]
+            ]],
+            optional[sentence[
+                join(sep=': ')[
+                    optional_field('address'),
+                    optional_field('publisher')
+                ],
+            ]],
+            sentence[optional_field('note')],
+        ]
+        return template
+
+    def get_misc_template(self, e):
         template = toplevel[
             optional[sentence[self.format_names('author')]],
             optional[sentence[
                 optional[field('howpublished')],
                 optional[date],
             ]],
-            optional[sentence[join(sep=', ')[href[
-                optional_field('url'),
-                optional[self.format_title(entry, 'title', as_sentence=False)]]
-                if entry.fields.get('url') else optional[
-                    self.format_title(entry, 'title')
+            optional[sentence[join(sep=', ')[
+                href[
+                    optional_field('url'),
+                    optional[self.format_title(e, 'title', as_sentence=False)]
+                ] if e.fields.get('url') else optional[
+                    self.format_title(e, 'title')
                 ],
-                optional[tag('em')[self.format_title(entry, 'journal')]],
+                optional[tag('em')[self.format_title(e, 'journal')]],
             ]]],
             sentence[optional_field('note')],
         ]

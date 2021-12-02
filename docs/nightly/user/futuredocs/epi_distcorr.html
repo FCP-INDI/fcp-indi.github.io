@@ -4,7 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Configuration Without the GUI &#8212; C-PAC 1.8.2.dev Beta documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
@@ -60,12 +60,10 @@ The parameters provided in the GUI are described below:</p>
     <span class="c1">#   run: [On, Off] - this will run both and fork the pipeline</span>
     <span class="nt">run</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">On</span><span class="p p-Indicator">]</span>
 
-    <span class="c1"># using: [&#39;PhaseDiff&#39;, &#39;Blip&#39;]</span>
+    <span class="c1"># using: [&#39;PhaseDiff&#39;, &#39;Blip&#39;, &#39;Blip-FSL-TOPUP&#39;]</span>
     <span class="c1">#   PhaseDiff - Perform field map correction using a single phase difference image, a subtraction of the two phase images from each echo. Default scanner for this method is SIEMENS.</span>
     <span class="c1">#   Blip - Uses AFNI 3dQWarp to calculate the distortion unwarp for EPI field maps of opposite/same phase encoding direction.</span>
-    <span class="c1">#   NOTE:</span>
-    <span class="c1">#     this is NOT a fork point - instead, the technique used will depend on what type of distortion correction field data accompanies the dataset</span>
-    <span class="c1">#     for example, phase-difference field maps will lead to phase-difference distortion correction, and phase-encoding direction field maps will lead to blip-up/blip-down</span>
+    <span class="c1">#   Blip-FSL-TOPUP - Uses FSL TOPUP to calculate the distortion unwarp for EPI field maps of opposite/same phase encoding direction.</span>
     <span class="nt">using</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;PhaseDiff&#39;</span><span class="p p-Indicator">,</span> <span class="s">&#39;Blip&#39;</span><span class="p p-Indicator">]</span>
 
     <span class="c1"># option parameters</span>
@@ -82,6 +80,50 @@ The parameters provided in the GUI are described below:</p>
       <span class="c1"># Set the threshold value for the skull-stripping of the magnitude file. Depending on the data, a tighter extraction may be necessary in order to prevent noisy voxels from interfering with preparing the field map.</span>
       <span class="c1"># The default value is 0.6.</span>
       <span class="nt">fmap_skullstrip_AFNI_threshold</span><span class="p">:</span>  <span class="l l-Scalar l-Scalar-Plain">0.6</span>
+      
+    <span class="nt">Blip-FSL-TOPUP</span><span class="p">:</span>
+      
+      <span class="c1"># (approximate) resolution (in mm) of warp basis for the different sub-sampling levels, default 10</span>
+      <span class="nt">warpres</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+      
+      <span class="c1"># sub-sampling scheme, default 1</span>
+      <span class="nt">subsamp</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+      
+      <span class="c1"># FWHM (in mm) of gaussian smoothing kernel, default 8</span>
+      <span class="nt">fwhm</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8</span>
+      
+      <span class="c1"># Max # of non-linear iterations, default 5</span>
+      <span class="nt">miter</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">5</span>
+      
+      <span class="c1"># Weight of regularisation, default depending on --ssqlambda and --regmod switches. See user documentation.</span>
+      <span class="nt">lambda</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+      
+      <span class="c1"># If set (=1), lambda is weighted by current ssq, default 1</span>
+      <span class="nt">ssqlambda</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+      
+      <span class="c1"># Model for regularisation of warp-field [membrane_energy bending_energy], default bending_energy</span>
+      <span class="nt">regmod</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">bending_energy</span>
+      
+      <span class="c1"># Estimate movements if set, default 1 (true)</span>
+      <span class="nt">estmov</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+      
+      <span class="c1"># Minimisation method 0=Levenberg-Marquardt, 1=Scaled Conjugate Gradient, default 0 (LM)</span>
+      <span class="nt">minmet</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+      
+      <span class="c1"># Order of spline, 2-&gt;Qadratic spline, 3-&gt;Cubic spline. Default=3</span>
+      <span class="nt">splineorder</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3</span>
+      
+      <span class="c1"># Precision for representing Hessian, double or float. Default double</span>
+      <span class="nt">numprec</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">double</span>
+      
+      <span class="c1"># Image interpolation model, linear or spline. Default spline</span>
+      <span class="nt">interp</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">spline</span>
+      
+      <span class="c1"># If set (=1), the images are individually scaled to a common mean, default 0 (false)</span>
+      <span class="nt">scale</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+      
+      <span class="c1"># If set (=1), the calculations are done in a different grid, default 1 (true)</span>
+      <span class="nt">regrid</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
 </pre></div>
 </div>
 </section>
@@ -133,7 +175,7 @@ The parameters provided in the GUI are described below:</p>
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.1.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

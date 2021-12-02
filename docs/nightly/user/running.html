@@ -4,7 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Running C-PAC &#8212; C-PAC 1.8.2.dev Beta documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
@@ -241,9 +241,11 @@
 <span class="go">              [--aws_input_creds AWS_INPUT_CREDS]</span>
 <span class="go">              [--aws_output_creds AWS_OUTPUT_CREDS] [--n_cpus N_CPUS]</span>
 <span class="go">              [--mem_mb MEM_MB] [--mem_gb MEM_GB]</span>
+<span class="go">              [--num_ants_threads NUM_ANTS_THREADS]</span>
 <span class="go">              [--save_working_dir [SAVE_WORKING_DIR]] [--disable_file_logging]</span>
 <span class="go">              [--participant_label PARTICIPANT_LABEL [PARTICIPANT_LABEL ...]]</span>
-<span class="go">              [--participant_ndx PARTICIPANT_NDX] [-v]</span>
+<span class="go">              [--participant_ndx PARTICIPANT_NDX] [--T1w_label T1W_LABEL]</span>
+<span class="go">              [--bold_label BOLD_LABEL [BOLD_LABEL ...]] [-v]</span>
 <span class="go">              [--bids_validator_config BIDS_VALIDATOR_CONFIG]</span>
 <span class="go">              [--skip_bids_validator] [--anat_only] [--tracking_opt-out]</span>
 <span class="go">              [--monitoring]</span>
@@ -288,15 +290,15 @@
 <span class="go">                        output of a preprocessing individual pipeline.</span>
 <span class="go">  --data_config_file DATA_CONFIG_FILE</span>
 <span class="go">                        Yaml file containing the location of the data that is</span>
-<span class="go">                        to be processed. Can be generated from the CPAC gui.</span>
-<span class="go">                        This file is not necessary if the data in bids_dir is</span>
-<span class="go">                        organized according to the BIDS format. This enables</span>
-<span class="go">                        support for legacy data organization and cloud based</span>
-<span class="go">                        storage. A bids_dir must still be specified when using</span>
-<span class="go">                        this option, but its value will be ignored. Use the</span>
-<span class="go">                        format s3://bucket/path/to/data_config_file to read</span>
-<span class="go">                        data directly from an S3 bucket. This may require AWS</span>
-<span class="go">                        S3 credentials specified via the --aws_input_creds</span>
+<span class="go">                        to be processed. This file is not necessary if the</span>
+<span class="go">                        data in bids_dir is organized according to the BIDS</span>
+<span class="go">                        format. This enables support for legacy data</span>
+<span class="go">                        organization and cloud based storage. A bids_dir must</span>
+<span class="go">                        still be specified when using this option, but its</span>
+<span class="go">                        value will be ignored. Use the format</span>
+<span class="go">                        s3://bucket/path/to/data_config_file to read data</span>
+<span class="go">                        directly from an S3 bucket. This may require AWS S3</span>
+<span class="go">                        credentials specified via the --aws_input_creds</span>
 <span class="go">                        option.</span>
 <span class="go">  --preconfig PRECONFIG</span>
 <span class="go">                        Name of the pre-configured pipeline to run.</span>
@@ -326,6 +328,12 @@
 <span class="go">                        take precedence. This flag also takes precedence over</span>
 <span class="go">                        maximum_memory_per_participant in the pipeline</span>
 <span class="go">                        configuration file.</span>
+<span class="go">  --num_ants_threads NUM_ANTS_THREADS</span>
+<span class="go">                        The number of cores to allocate to ANTS-based</span>
+<span class="go">                        anatomical registration per participant. Multiple</span>
+<span class="go">                        cores can greatly speed up this preprocessing step.</span>
+<span class="go">                        This number cannot be greater than the number of cores</span>
+<span class="go">                        per participant.</span>
 <span class="go">  --save_working_dir [SAVE_WORKING_DIR]</span>
 <span class="go">                        Save the contents of the working directory.</span>
 <span class="go">  --disable_file_logging</span>
@@ -337,8 +345,7 @@
 <span class="go">                        the BIDS spec (so it does not include &quot;sub-&quot;). If this</span>
 <span class="go">                        parameter is not provided all participants should be</span>
 <span class="go">                        analyzed. Multiple participants can be specified with</span>
-<span class="go">                        a space separated list. To work correctly this should</span>
-<span class="go">                        come at the end of the command line.</span>
+<span class="go">                        a space separated list.</span>
 <span class="go">  --participant_ndx PARTICIPANT_NDX</span>
 <span class="go">                        The index of the participant that should be analyzed.</span>
 <span class="go">                        This corresponds to the index of the participant in</span>
@@ -350,6 +357,35 @@
 <span class="go">                        the value &quot;-1&quot; to indicate that the participant index</span>
 <span class="go">                        should be read from the AWS_BATCH_JOB_ARRAY_INDEX</span>
 <span class="go">                        environment variable.</span>
+<span class="go">  --T1w_label T1W_LABEL</span>
+<span class="go">                        C-PAC only runs one T1w per participant-session at a</span>
+<span class="go">                        time, at this time. Use this flag to specify any BIDS</span>
+<span class="go">                        entity (e.g., &quot;acq-VNavNorm&quot;) or sequence of BIDS</span>
+<span class="go">                        entities (e.g., &quot;acq-VNavNorm_run-1&quot;) to specify which</span>
+<span class="go">                        of multiple T1w files to use. Specify &quot;--T1w_label</span>
+<span class="go">                        T1w&quot; to choose the T1w file with the fewest BIDS</span>
+<span class="go">                        entities (i.e., the final option of [*_acq-</span>
+<span class="go">                        VNavNorm_T1w.nii.gz, *_acq-HCP_T1w.nii.gz,</span>
+<span class="go">                        *_T1w.nii.gz&quot;]). C-PAC will choose the first T1w it</span>
+<span class="go">                        finds if the user does not provide this flag, or if</span>
+<span class="go">                        multiple T1w files match the --T1w_label provided. If</span>
+<span class="go">                        multiple T2w files are present and a comparable filter</span>
+<span class="go">                        is possible, T2w files will be filtered as well. If no</span>
+<span class="go">                        T2w files match this --T1w_label, T2w files will be</span>
+<span class="go">                        processed as if no --T1w_label were provided.</span>
+<span class="go">  --bold_label BOLD_LABEL [BOLD_LABEL ...]</span>
+<span class="go">                        To include a specified subset of available BOLD files,</span>
+<span class="go">                        use this flag to specify any BIDS entity (e.g., &quot;task-</span>
+<span class="go">                        rest&quot;) or sequence of BIDS entities (e.g. &quot;task-</span>
+<span class="go">                        rest_run-1&quot;). To specify the bold file with the fewest</span>
+<span class="go">                        BIDS entities in the file name, specify &quot;--bold_label</span>
+<span class="go">                        bold&quot;. Multiple `--bold_label`s can be specified with</span>
+<span class="go">                        a space-separated list. If multiple `--bold_label`s</span>
+<span class="go">                        are provided (e.g., &quot;--bold_label task-rest_run-1</span>
+<span class="go">                        task-rest_run-2&quot;, each scan that includes all BIDS</span>
+<span class="go">                        entities specified in any of the provided</span>
+<span class="go">                        `--bold_label`s will be analyzed. If this parameter is</span>
+<span class="go">                        not provided all BOLD scans should be analyzed.</span>
 <span class="go">  -v, --version         show program&#39;s version number and exit</span>
 <span class="go">  --bids_validator_config BIDS_VALIDATOR_CONFIG</span>
 <span class="go">                        JSON file specifying configuration of bids-validator:</span>
@@ -375,8 +411,8 @@
 <span class="go">  ----------------------------  --------------------  ------</span>
 <span class="go">  /home/circleci/build          /home/circleci/build  rw</span>
 <span class="go">  /home/circleci/build          /tmp                  rw</span>
-<span class="go">  /home/circleci/build/log      /logs                 rw</span>
 <span class="go">  /home/circleci/build/outputs  /output               rw</span>
+<span class="go">  /home/circleci/build/log      /crash                rw</span>
 <span class="go">Logging messages will refer to the Docker paths.</span>
 
 <span class="go">Usage: run.py utils [OPTIONS] COMMAND [ARGS]...</span>
@@ -631,7 +667,11 @@
   <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index">User Guide</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="index#the-c-pac-mission">The C-PAC Mission</a></li>
-<li class="toctree-l2"><a class="reference internal" href="index#latest-release-version-1-8-1-beta-sep-17-2021">Latest Release: Version 1.8.1 Beta (Sep 17, 2021)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index#latest-release-version-1-8-2-beta-dec-02-2021">Latest Release: Version 1.8.2 Beta (Dec 02, 2021)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index#added">Added</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index#changed">Changed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index#deprecated">Deprecated</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index#fixed">Fixed</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index#the-c-pac-team">The C-PAC Team</a></li>
 <li class="toctree-l2"><a class="reference internal" href="index#funding-acknowledgements">Funding Acknowledgements</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="index#user-guide-index">User Guide Index</a><ul class="current">
@@ -709,7 +749,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.1.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

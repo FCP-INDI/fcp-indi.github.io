@@ -39,17 +39,17 @@
           <div class="body" role="main">
             
   <h1>Source code for CPAC.timeseries.timeseries_analysis</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">CPAC.pipeline</span> <span class="kn">import</span> <span class="n">nipype_pipeline_engine</span> <span class="k">as</span> <span class="n">pe</span>
-<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
-
-<span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="kn">import</span> <span class="n">fsl</span>
-<span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="kn">import</span> <span class="n">afni</span>
-<span class="kn">from</span> <span class="nn">nipype</span> <span class="kn">import</span> <span class="n">logging</span>
-
+<span></span><span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="kn">import</span> <span class="n">afni</span><span class="p">,</span> <span class="n">fsl</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces.utility</span> <span class="kn">import</span> <span class="n">Function</span>
 
+<span class="kn">from</span> <span class="nn">CPAC.connectome.connectivity_matrix</span> <span class="kn">import</span> <span class="n">create_connectome_afni</span><span class="p">,</span> \
+                                                <span class="n">create_connectome_nilearn</span><span class="p">,</span> \
+                                                <span class="n">get_connectome_method</span>
+<span class="kn">from</span> <span class="nn">CPAC.pipeline</span> <span class="kn">import</span> <span class="n">nipype_pipeline_engine</span> <span class="k">as</span> <span class="n">pe</span>
 <span class="kn">from</span> <span class="nn">CPAC.utils.datasource</span> <span class="kn">import</span> <span class="n">create_roi_mask_dataflow</span><span class="p">,</span> \
-    <span class="n">create_spatial_map_dataflow</span><span class="p">,</span> <span class="n">resample_func_roi</span>
+                                  <span class="n">create_spatial_map_dataflow</span><span class="p">,</span> \
+                                  <span class="n">resample_func_roi</span>
 
 
 <div class="viewcode-block" id="get_voxel_timeseries"><a class="viewcode-back" href="../../../developer/workflows/timeseries#CPAC.timeseries.get_voxel_timeseries">[docs]</a><span class="k">def</span> <span class="nf">get_voxel_timeseries</span><span class="p">(</span><span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;voxel_timeseries&#39;</span><span class="p">):</span>
@@ -814,9 +814,12 @@
 <span class="sd">                 &quot;space-template_bold&quot;]],</span>
 <span class="sd">     &quot;outputs&quot;: [&quot;desc-Mean_timeseries&quot;,</span>
 <span class="sd">                 &quot;desc-ndmg_correlations&quot;,</span>
-<span class="sd">                 &quot;atlas_name&quot;]}</span>
+<span class="sd">                 &quot;atlas_name&quot;,</span>
+<span class="sd">                 &quot;desc-PearsonAfni_connectome&quot;,</span>
+<span class="sd">                 &quot;desc-PartialAfni_connectome&quot;,</span>
+<span class="sd">                 &quot;desc-PearsonNilearn_connectome&quot;,</span>
+<span class="sd">                 &quot;desc-PartialNilearn_connectome&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-
     <span class="n">resample_functional_roi</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_func&#39;</span><span class="p">,</span>
                                                             <span class="s1">&#39;in_roi&#39;</span><span class="p">,</span>
                                                             <span class="s1">&#39;realignment&#39;</span><span class="p">,</span>
@@ -865,7 +868,47 @@
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">resample_functional_roi</span><span class="p">,</span> <span class="s1">&#39;out_func&#39;</span><span class="p">,</span>
                <span class="n">roi_timeseries</span><span class="p">,</span> <span class="s1">&#39;inputspec.rest&#39;</span><span class="p">)</span>
 
-    <span class="c1"># create the graphs</span>
+    <span class="c1"># create the graphs:</span>
+    <span class="c1"># - connectivity matrix</span>
+    <span class="n">matrix_outputs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">cm_measure</span> <span class="ow">in</span> <span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;timeseries_extraction&#39;</span><span class="p">,</span> <span class="s1">&#39;connectivity_matrix&#39;</span><span class="p">,</span>
+                          <span class="s1">&#39;measure&#39;</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">cm_tool</span> <span class="ow">in</span> <span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;timeseries_extraction&#39;</span><span class="p">,</span> <span class="s1">&#39;connectivity_matrix&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;using&#39;</span><span class="p">]:</span>
+            <span class="n">implementation</span> <span class="o">=</span> <span class="n">get_connectome_method</span><span class="p">(</span><span class="n">cm_measure</span><span class="p">,</span> <span class="n">cm_tool</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">implementation</span> <span class="ow">is</span> <span class="bp">NotImplemented</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">cm_tool</span> <span class="o">==</span> <span class="s1">&#39;Nilearn&#39;</span><span class="p">:</span>
+                <span class="n">timeseries_correlation</span> <span class="o">=</span> <span class="n">create_connectome_nilearn</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;connectomeNilearn</span><span class="si">{</span><span class="n">cm_measure</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">cm_tool</span> <span class="o">==</span> <span class="s2">&quot;AFNI&quot;</span><span class="p">:</span>
+                <span class="n">timeseries_correlation</span> <span class="o">=</span> <span class="n">create_connectome_afni</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;connectomeAfni</span><span class="si">{</span><span class="n">cm_measure</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
+                    <span class="n">method</span><span class="o">=</span><span class="n">cm_measure</span><span class="p">,</span>
+                    <span class="n">pipe_num</span><span class="o">=</span><span class="n">pipe_num</span>
+                <span class="p">)</span>
+                <span class="n">brain_mask_node</span><span class="p">,</span> <span class="n">brain_mask_out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span>
+                    <span class="s1">&#39;space-template_desc-brain_bold&#39;</span><span class="p">])</span>
+                <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">brain_mask_node</span><span class="p">,</span> <span class="n">brain_mask_out</span><span class="p">,</span>
+                           <span class="n">timeseries_correlation</span><span class="p">,</span> <span class="s1">&#39;inputspec.mask&#39;</span><span class="p">)</span>
+
+            <span class="n">timeseries_correlation</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">cm_measure</span>
+            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">([</span>
+                <span class="p">(</span><span class="n">roi_dataflow</span><span class="p">,</span> <span class="n">timeseries_correlation</span><span class="p">,</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="s1">&#39;outputspec.out_name&#39;</span><span class="p">,</span> <span class="s1">&#39;inputspec.atlas_name&#39;</span><span class="p">)]),</span>
+                <span class="p">(</span><span class="n">resample_functional_roi</span><span class="p">,</span> <span class="n">timeseries_correlation</span><span class="p">,</span> <span class="p">[</span>
+                    <span class="p">(</span><span class="s1">&#39;out_roi&#39;</span><span class="p">,</span> <span class="s1">&#39;inputspec.in_rois&#39;</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s1">&#39;out_func&#39;</span><span class="p">,</span> <span class="s1">&#39;inputspec.in_file&#39;</span><span class="p">)])])</span>
+
+            <span class="n">output_desc</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="n">cm_measure</span><span class="p">,</span> <span class="n">cm_tool</span><span class="p">])</span>
+            <span class="n">matrix_outputs</span><span class="p">[</span><span class="sa">f</span><span class="s1">&#39;desc-</span><span class="si">{</span><span class="n">output_desc</span><span class="si">}</span><span class="s1">_connectome&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">timeseries_correlation</span><span class="p">,</span> <span class="s1">&#39;outputspec.out_file&#39;</span><span class="p">)</span>
+
+    <span class="c1"># - NDMG</span>
     <span class="kn">from</span> <span class="nn">CPAC.utils.ndmg_utils</span> <span class="kn">import</span> <span class="n">ndmg_create_graphs</span>
 
     <span class="n">ndmg_graph_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span>
@@ -886,7 +929,8 @@
     <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">&#39;desc-Mean_timeseries&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">roi_timeseries</span><span class="p">,</span> <span class="s1">&#39;outputspec.roi_csv&#39;</span><span class="p">),</span>
         <span class="s1">&#39;desc-ndmg_correlations&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">ndmg_graph</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;atlas_name&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">roi_dataflow</span><span class="p">,</span> <span class="s1">&#39;outputspec.out_name&#39;</span><span class="p">)</span>
+        <span class="s1">&#39;atlas_name&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">roi_dataflow</span><span class="p">,</span> <span class="s1">&#39;outputspec.out_name&#39;</span><span class="p">),</span>
+        <span class="o">**</span><span class="n">matrix_outputs</span>
     <span class="p">}</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
@@ -975,12 +1019,12 @@
 <span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
 <span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
 <span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [([&quot;space-template_desc-cleaned_bold&quot;,</span>
+<span class="sd">     &quot;inputs&quot;: [[&quot;space-template_desc-cleaned_bold&quot;,</span>
 <span class="sd">                  &quot;space-template_desc-brain_bold&quot;,</span>
 <span class="sd">                  &quot;space-template_desc-motion_bold&quot;,</span>
 <span class="sd">                  &quot;space-template_desc-preproc_bold&quot;,</span>
 <span class="sd">                  &quot;space-template_bold&quot;],</span>
-<span class="sd">                 &quot;space-template_desc-bold_mask&quot;)],</span>
+<span class="sd">                 &quot;space-template_desc-bold_mask&quot;],</span>
 <span class="sd">     &quot;outputs&quot;: [&quot;desc-SpatReg_timeseries&quot;,</span>
 <span class="sd">                 &quot;atlas_name&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -1088,7 +1132,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.1.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

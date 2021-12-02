@@ -815,9 +815,9 @@
     <span class="n">register_func_to_anat_use_T2</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
     <span class="n">inputspec</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;func&#39;</span><span class="p">,</span>
-                                                        <span class="s1">&#39;T1_brain&#39;</span><span class="p">,</span>
-                                                        <span class="s1">&#39;T2_head&#39;</span><span class="p">,</span>
-                                                        <span class="s1">&#39;T2_brain&#39;</span><span class="p">]),</span>
+                                                       <span class="s1">&#39;T1_brain&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;T2_head&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;T2_brain&#39;</span><span class="p">]),</span>
                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
 
     <span class="n">outputspec</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;func_to_anat_linear_xfm_nobbreg&#39;</span><span class="p">,</span> 
@@ -2199,7 +2199,8 @@
 <span class="sd">     &quot;option_val&quot;: &quot;ANTS&quot;,</span>
 <span class="sd">     &quot;inputs&quot;: [([&quot;desc-brain_T1w&quot;, &quot;space-longitudinal_desc-brain_T1w&quot;],</span>
 <span class="sd">                 [&quot;space-T1w_desc-brain_mask&quot;,</span>
-<span class="sd">                  &quot;space-longitudinal_desc-brain_mask&quot;],</span>
+<span class="sd">                  &quot;space-longitudinal_desc-brain_mask&quot;,</span>
+<span class="sd">                  &quot;space-T1w_desc-acpcbrain_mask&quot;],</span>
 <span class="sd">                 [&quot;desc-restore_T1w&quot;, &quot;desc-preproc_T1w&quot;, &quot;desc-reorient_T1w&quot;, &quot;T1w&quot;,</span>
 <span class="sd">                  &quot;space-longitudinal_desc-reorient_T1w&quot;]),</span>
 <span class="sd">                &quot;T1w-template&quot;,</span>
@@ -2287,7 +2288,8 @@
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">ants</span><span class="p">,</span> <span class="s1">&#39;inputspec.reference_head&#39;</span><span class="p">)</span>
 
     <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;space-T1w_desc-brain_mask&quot;</span><span class="p">,</span>
-                                     <span class="s2">&quot;space-longitudinal_desc-brain_mask&quot;</span><span class="p">])</span>
+                                     <span class="s2">&quot;space-longitudinal_desc-brain_mask&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;space-T1w_desc-acpcbrain_mask&quot;</span><span class="p">])</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">ants</span><span class="p">,</span> <span class="s1">&#39;inputspec.input_mask&#39;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s1">&#39;T1w-brain-template-mask&#39;</span><span class="p">):</span>
@@ -2463,14 +2465,15 @@
 <span class="sd">     &quot;option_key&quot;: [&quot;registration_workflows&quot;, &quot;anatomical_registration&quot;, </span>
 <span class="sd">                    &quot;overwrite_transform&quot;, &quot;using&quot;],</span>
 <span class="sd">     &quot;option_val&quot;: &quot;FSL&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;desc-restore-brain_T1w&quot;, </span>
-<span class="sd">                [&quot;desc-brain_T1w&quot;, &quot;space-longitudinal_desc-brain_T1w&quot;],</span>
-<span class="sd">                [&quot;desc-restore_T1w&quot;, &quot;desc-preproc_T1w&quot;, &quot;desc-reorient_T1w&quot;, &quot;T1w&quot;],</span>
-<span class="sd">                [&quot;desc-preproc_T1w&quot;, &quot;desc-reorient_T1w&quot;, &quot;T1w&quot;],</span>
-<span class="sd">                &quot;space-T1w_desc-brain_mask&quot;,</span>
-<span class="sd">                &quot;T1w-template&quot;,</span>
-<span class="sd">                &quot;from-T1w_to-template_mode-image_xfm&quot;,</span>
-<span class="sd">                &quot;from-template_to-T1w_mode-image_xfm&quot;],</span>
+<span class="sd">     &quot;inputs&quot;: [(&quot;desc-restore-brain_T1w&quot;, </span>
+<span class="sd">                 [&quot;desc-brain_T1w&quot;, &quot;space-longitudinal_desc-brain_T1w&quot;],</span>
+<span class="sd">                 [&quot;desc-restore_T1w&quot;, &quot;desc-preproc_T1w&quot;, &quot;desc-reorient_T1w&quot;, &quot;T1w&quot;],</span>
+<span class="sd">                 [&quot;desc-preproc_T1w&quot;, &quot;desc-reorient_T1w&quot;, &quot;T1w&quot;],</span>
+<span class="sd">                 &quot;space-T1w_desc-brain_mask&quot;,</span>
+<span class="sd">                 &quot;T1w-template&quot;,</span>
+<span class="sd">                 &quot;from-T1w_to-template_mode-image_xfm&quot;,</span>
+<span class="sd">                 &quot;from-template_to-T1w_mode-image_xfm&quot;,</span>
+<span class="sd">                 &quot;space-template_desc-brain_T1w&quot;)],</span>
 <span class="sd">     &quot;outputs&quot;: [&quot;space-template_desc-brain_T1w&quot;,</span>
 <span class="sd">                 &quot;space-template_desc-head_T1w&quot;,</span>
 <span class="sd">                 &quot;space-template_desc-T1w_mask&quot;,</span>
@@ -2686,8 +2689,9 @@
 <span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
 <span class="sd">     &quot;option_key&quot;: [&quot;func_input_prep&quot;, &quot;input&quot;],</span>
 <span class="sd">     &quot;option_val&quot;: &quot;Selected_Functional_Volume&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;desc-brain_bold&quot;,</span>
-<span class="sd">                &quot;desc-motion_bold&quot;],</span>
+<span class="sd">     &quot;inputs&quot;: [(&quot;desc-brain_bold&quot;,</span>
+<span class="sd">                 [&quot;desc-motion_bold&quot;, &quot;bold&quot;],</span>
+<span class="sd">                 &quot;desc-reginput_bold&quot;)],</span>
 <span class="sd">     &quot;outputs&quot;: [&quot;desc-reginput_bold&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
@@ -2707,7 +2711,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># TODO check which file is functional_skull_leaf</span>
         <span class="c1"># TODO add a function to choose brain or skull?</span>
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;desc-motion_bold&quot;</span><span class="p">)</span>
+        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;desc-motion_bold&quot;</span><span class="p">,</span> <span class="s2">&quot;bold&quot;</span><span class="p">])</span>
 
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">get_func_volume</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
 
@@ -2813,7 +2817,7 @@
             <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s2">&quot;fieldmap_mask&quot;</span><span class="p">):</span>
         <span class="n">diff_complete</span> <span class="o">=</span> <span class="kc">True</span>
     
-    <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s1">&#39;T2w&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s1">&#39;T2w&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">cfg</span><span class="o">.</span><span class="n">anatomical_preproc</span><span class="p">[</span><span class="s1">&#39;run_t2&#39;</span><span class="p">]:</span>
         <span class="c1"># monkey data</span>
         <span class="n">func_to_anat</span> <span class="o">=</span> <span class="n">create_register_func_to_anat_use_T2</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> 
                                                     <span class="sa">f</span><span class="s1">&#39;func_to_anat_FLIRT_&#39;</span>
@@ -2847,7 +2851,6 @@
         <span class="n">func_to_anat</span> <span class="o">=</span> <span class="n">create_register_func_to_anat</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">diff_complete</span><span class="p">,</span>
                                                     <span class="sa">f</span><span class="s1">&#39;func_to_anat_FLIRT_&#39;</span>
                                                     <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="c1"># func_to_anat.inputs.inputspec.interp = &#39;trilinear&#39;</span>
         
         <span class="n">func_to_anat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">dof</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span>
         <span class="s1">&#39;functional_registration&#39;</span><span class="p">][</span><span class="s1">&#39;coregistration&#39;</span><span class="p">][</span><span class="s1">&#39;dof&#39;</span><span class="p">]</span>
@@ -2858,13 +2861,13 @@
         <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-reginput_bold&#39;</span><span class="p">)</span>
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_to_anat</span><span class="p">,</span> <span class="s1">&#39;inputspec.func&#39;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span><span class="s1">&#39;functional_registration&#39;</span><span class="p">][</span>
-        <span class="s1">&#39;coregistration&#39;</span><span class="p">][</span><span class="s1">&#39;reference&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;brain&#39;</span><span class="p">:</span>
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-brain_T1w&#39;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span><span class="s1">&#39;functional_registration&#39;</span><span class="p">][</span>
-        <span class="s1">&#39;coregistration&#39;</span><span class="p">][</span><span class="s1">&#39;reference&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;restore-brain&#39;</span><span class="p">:</span>
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-restore-brain_T1w&#39;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_to_anat</span><span class="p">,</span> <span class="s1">&#39;inputspec.anat&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span><span class="s1">&#39;functional_registration&#39;</span><span class="p">][</span>
+            <span class="s1">&#39;coregistration&#39;</span><span class="p">][</span><span class="s1">&#39;reference&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;brain&#39;</span><span class="p">:</span>
+            <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-brain_T1w&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span><span class="s1">&#39;functional_registration&#39;</span><span class="p">][</span>
+            <span class="s1">&#39;coregistration&#39;</span><span class="p">][</span><span class="s1">&#39;reference&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;restore-brain&#39;</span><span class="p">:</span>
+            <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-restore-brain_T1w&#39;</span><span class="p">)</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_to_anat</span><span class="p">,</span> <span class="s1">&#39;inputspec.anat&#39;</span><span class="p">)</span>
 
 
     <span class="k">if</span> <span class="n">diff_complete</span><span class="p">:</span>
@@ -2880,7 +2883,7 @@
         <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;fieldmap_mask&quot;</span><span class="p">)</span>
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_to_anat</span><span class="p">,</span> <span class="s1">&#39;inputspec.fieldmapmask&#39;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s1">&#39;T2w&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s1">&#39;T2w&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">cfg</span><span class="o">.</span><span class="n">anatomical_preproc</span><span class="p">[</span><span class="s1">&#39;run_t2&#39;</span><span class="p">]:</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;space-T1w_desc-mean_bold&#39;</span><span class="p">:</span>
                 <span class="p">(</span><span class="n">func_to_anat</span><span class="p">,</span> <span class="s1">&#39;outputspec.anat_func_nobbreg&#39;</span><span class="p">),</span>
@@ -2911,7 +2914,8 @@
 
         <span class="n">func_to_anat_bbreg</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">bbr_wm_mask_args</span> <span class="o">=</span> \
             <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span><span class="s1">&#39;functional_registration&#39;</span><span class="p">][</span>
-                <span class="s1">&#39;coregistration&#39;</span><span class="p">][</span><span class="s1">&#39;boundary_based_registration&#39;</span><span class="p">][</span><span class="s1">&#39;bbr_wm_mask_args&#39;</span><span class="p">]</span>
+                <span class="s1">&#39;coregistration&#39;</span><span class="p">][</span><span class="s1">&#39;boundary_based_registration&#39;</span><span class="p">][</span>
+                <span class="s1">&#39;bbr_wm_mask_args&#39;</span><span class="p">]</span>
 
         <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-reginput_bold&#39;</span><span class="p">)</span>
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_to_anat_bbreg</span><span class="p">,</span> <span class="s1">&#39;inputspec.func&#39;</span><span class="p">)</span>
@@ -2938,10 +2942,12 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span><span class="s1">&#39;functional_registration&#39;</span><span class="p">][</span>
                 <span class="s1">&#39;coregistration&#39;</span><span class="p">][</span><span class="s1">&#39;boundary_based_registration&#39;</span><span class="p">][</span><span class="s1">&#39;bbr_wm_map&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;probability_map&#39;</span><span class="p">:</span>
-                <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;label-WM_probseg&quot;</span><span class="p">,</span> <span class="s2">&quot;label-WM_mask&quot;</span><span class="p">])</span>
+                <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;label-WM_probseg&quot;</span><span class="p">,</span> 
+                                                 <span class="s2">&quot;label-WM_mask&quot;</span><span class="p">])</span>
             <span class="k">elif</span> <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span><span class="s1">&#39;functional_registration&#39;</span><span class="p">][</span>
                 <span class="s1">&#39;coregistration&#39;</span><span class="p">][</span><span class="s1">&#39;boundary_based_registration&#39;</span><span class="p">][</span><span class="s1">&#39;bbr_wm_map&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;partial_volume_map&#39;</span><span class="p">:</span>
-                <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;label-WM_pveseg&quot;</span><span class="p">,</span> <span class="s2">&quot;label-WM_mask&quot;</span><span class="p">])</span>
+                <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;label-WM_pveseg&quot;</span><span class="p">,</span> 
+                                                 <span class="s2">&quot;label-WM_mask&quot;</span><span class="p">])</span>
             <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span>
                        <span class="n">func_to_anat_bbreg</span><span class="p">,</span> <span class="s1">&#39;inputspec.anat_wm_segmentation&#39;</span><span class="p">)</span>
 
@@ -3152,7 +3158,7 @@
 <span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
 <span class="sd">     &quot;option_key&quot;: [&quot;apply_transform&quot;, &quot;using&quot;],</span>
 <span class="sd">     &quot;option_val&quot;: &quot;abcd&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [([&quot;desc-cleaned_bold&quot;, &quot;desc-brain_bold&quot;,</span>
+<span class="sd">     &quot;inputs&quot;: [[&quot;desc-cleaned_bold&quot;, &quot;desc-brain_bold&quot;,</span>
 <span class="sd">                  &quot;desc-motion_bold&quot;, &quot;desc-preproc_bold&quot;, &quot;bold&quot;],</span>
 <span class="sd">                 &quot;bold&quot;,</span>
 <span class="sd">                 &quot;motion-basefile&quot;,</span>
@@ -3160,10 +3166,11 @@
 <span class="sd">                 &quot;from-T1w_to-template_mode-image_xfm&quot;,</span>
 <span class="sd">                 &quot;from-bold_to-T1w_mode-image_desc-linear_xfm&quot;,</span>
 <span class="sd">                 &quot;from-bold_to-template_mode-image_xfm&quot;,</span>
+<span class="sd">                 &quot;blip-warp&quot;,</span>
 <span class="sd">                 &quot;desc-preproc_T1w&quot;,</span>
 <span class="sd">                 &quot;space-template_res-bold_desc-brain_T1w&quot;,</span>
 <span class="sd">                 &quot;space-template_desc-bold_mask&quot;,</span>
-<span class="sd">                 &quot;T1w-brain-template-funcreg&quot;)],</span>
+<span class="sd">                 &quot;T1w-brain-template-funcreg&quot;],</span>
 <span class="sd">     &quot;outputs&quot;: [&quot;space-template_desc-brain_bold&quot;,</span>
 <span class="sd">                 &quot;space-template_desc-scout_bold&quot;,</span>
 <span class="sd">                 &quot;space-template_desc-head_bold&quot;]}</span>
@@ -3180,11 +3187,18 @@
     <span class="n">convert_func_to_anat_linear_warp</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_relwarp</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">convert_func_to_anat_linear_warp</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">relwarp</span> <span class="o">=</span> <span class="kc">True</span>
     
-    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;from-bold_to-T1w_mode-image_desc-linear_xfm&#39;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">convert_func_to_anat_linear_warp</span><span class="p">,</span> <span class="s1">&#39;premat&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s1">&#39;blip-warp&#39;</span><span class="p">):</span>
+        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;from-bold_to-T1w_mode-image_desc-linear_xfm&#39;</span><span class="p">)</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">convert_func_to_anat_linear_warp</span><span class="p">,</span> <span class="s1">&#39;postmat&#39;</span><span class="p">)</span>
+
+        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;blip-warp&#39;</span><span class="p">)</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">convert_func_to_anat_linear_warp</span><span class="p">,</span> <span class="s1">&#39;warp1&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;from-bold_to-T1w_mode-image_desc-linear_xfm&#39;</span><span class="p">)</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">convert_func_to_anat_linear_warp</span><span class="p">,</span> <span class="s1">&#39;premat&#39;</span><span class="p">)</span>
     
-    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-preproc_T1w&#39;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">convert_func_to_anat_linear_warp</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
+        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-preproc_T1w&#39;</span><span class="p">)</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">convert_func_to_anat_linear_warp</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
 
     <span class="c1"># https://github.com/DCAN-Labs/DCAN-HCP/blob/master/fMRIVolume/scripts/OneStepResampling.sh#L140</span>
     <span class="c1"># convertwarp --relout --rel --warp1=${fMRIToStructuralInput} --warp2=${StructuralToStandard} --ref=${WD}/${T1wImageFile}.${FinalfMRIResolution} --out=${OutputTransform}</span>
@@ -4283,7 +4297,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.1.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

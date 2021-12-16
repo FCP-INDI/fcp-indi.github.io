@@ -1,12 +1,6 @@
-eXtensible Connectivity Pipeline-style quality control files
-============================================================
+XCP quality control files
+=========================
 
-.. automodule:: CPAC.qc.xcp
-    :members:
+As part of the ReproBrainChart (RBC) project, C-PAC includes quality control summary files (``desc-xcp_quality``) for each ``desc-preproc_bold`` output based on the `eXtensible Connectivity Pipeline (XCP) quality control dictionary <https://xcpengine.readthedocs.io/qualitycontrol.html>`_.
 
-.. rubric:: References
-
-.. bibliography:: /references/xcpqc_citation.bib
-   :style: cpac_docs_style
-   :cited:
-   :keyprefix: cite-
+.. seealso:: :doc:`</developer/xcpqc>`

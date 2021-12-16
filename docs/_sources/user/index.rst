@@ -101,6 +101,7 @@ User Guide Index
 .. toctree::
    :maxdepth: 2
    :includehidden:
+   :titlesonly:
 
    1. C-PAC Quickstart <quick>
    2. Specify Your Data <subject_list_config>

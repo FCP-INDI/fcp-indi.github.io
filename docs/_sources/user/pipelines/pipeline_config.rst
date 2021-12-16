@@ -74,7 +74,7 @@ Pipeline configuration files, like the data settings and data configuration file
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML
-   :start_at: pipeline_setup:
+   :start-at: pipeline_setup:
    :end-before: working_directory:
 
 An example of a pipeline configuration YAML file can be found :doc:`here </user/pipelines/default>`.  Tables explaining the keys and their potential values can be found on the individual pages for each of the outputs C-PAC is capable of producing. All pipeline setup configuration files should have the keys in the :doc:`Output Settings </user/output_config>` table defined.
@@ -100,8 +100,9 @@ You may notice as you learn about the settings for various outputs that many of 
 .. toctree::
    :maxdepth: 2
 
-   <configurable-settings>
-   <data-environment>
-   <pre-and-post>
-   <derivatives>
-   <quality>
+   preconfig
+   configurable-settings
+   data-environment
+   pre-and-post
+   derivatives
+   quality

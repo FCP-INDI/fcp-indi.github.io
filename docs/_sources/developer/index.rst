@@ -13,12 +13,14 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
+   :titlesonly:
 
    installation
    pipeline
    nodes
    workflow_documentation
    workflows/index
+   xcpqc
    testing
 
 Indices and tables

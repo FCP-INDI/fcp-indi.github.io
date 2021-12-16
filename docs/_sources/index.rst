@@ -10,6 +10,7 @@ Contents:
 
 .. toctree::
    :maxdepth: 1
+   :titlesonly:
 
    User Guide <user/index>
    Developer Documentation <developer/index>

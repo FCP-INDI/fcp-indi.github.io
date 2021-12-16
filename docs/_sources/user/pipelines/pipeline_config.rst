@@ -97,39 +97,11 @@ Why a list?
 '''''''''''
 You may notice as you learn about the settings for various outputs that many of the values for C-PAC's configurable settings are stored in lists (i.e., multiple values are separated by commas and surrounded by square brackets).  Such lists containing ``On``s and ``Off``s (for ``True`` and ``False`` respectively) allow you to toggle on multiple options at the same time, and branch a pipeline into two different analysis strategies. See the `developer documentation <http://fcp-indi.github.io/docs/developer/workflows/cpac_pipeline.html>`_ for more information about how lists are used in C-PAC.
 
-Configurable Settings
-------------------------------
+.. toctree::
+   :maxdepth: 2
 
-.. raw:: html
-
-    <div class="flowchart-container"><object data="../_static/flowcharts/pipeline-individual.svg" type="image/svg+xml"></object></div>
-
-Data Management and Environment Settings
-'''''''''''''''''''''''''''''''''''''''''
-
-* :doc:`Computer Settings </user/compute_config>`
-* :doc:`Output Settings </user/output_config>`
-
-Pre- and post-processing
-'''''''''''''''''''''''''
-
-* :doc:`Anatomical Preprocessing </user/anat>`
-* :doc:`Functional Preprocessing </user/func>`
-* :doc:`Nuisance Corrections </user/nuisance>`
-* :doc:`Time Series Extraction </user/tse>`
-* :doc:`After Warp Settings </user/after_warp>`
-
-Derivatives
-'''''''''''
-
-* :doc:`Seed-based Correlation Analysis (SCA) and Dual Regression </user/sca>` - Analyze the connectivity between brain regions.
-* :doc:`Voxel-mirrored Homotopic Connectivity (VMHC) </user/vmhc>` - Investigate connectivity between hemispheres.
-* :doc:`Amplitude of Low Frequency Fluctuations (ALFF) and fractional ALFF (fALFF) </user/alff>` - Measure the power of slow fluctuations in brain activity.
-* :doc:`Regional Homogeneity (ReHo) </user/reho>` - Measure the similarity of activity patterns across neighboring voxels.
-* :doc:`Network Centrality </user/centrality>` - Analyze the structure of functional networks.
-
-Quality Control
-'''''''''''''''
-
-* :doc:`QC Pages </user/qc_interface>` - Visual Data Quality Control
-* :doc:`XCP QC files </user/xcpqc>` - eXtensible Connectivity Pipeline-style quality control files
+   <configurable-settings>
+   <data-environment>
+   <pre-and-post>
+   <derivatives>
+   <quality>

@@ -1,5 +1,3 @@
-:orphan:
-
 Computer Settings
 -----------------
 .. figure:: /_images/compute_gui.png

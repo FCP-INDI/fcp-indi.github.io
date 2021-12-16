@@ -1,5 +1,5 @@
 """This script takes a version string as a commandline argument and updates
-the links in `docs/{version}` that point to code in the `master` branch of
+the links in `docs/{version}` that point to code in the `main` branch of
 FCP-INDI/C-PAC to code in the tagged version.
 
 Usage
@@ -14,15 +14,15 @@ from glob import glob
 
 
 def set_version(version):
-    # Look for links to master branch
+    # Look for links to main branch
     patterns = [
-        'FCP-INDI/C-PAC/blob/master',
-        'FCP-INDI/C-PAC/master'
+        'FCP-INDI/C-PAC/blob/main',
+        'FCP-INDI/C-PAC/main'
     ]
     for filepath in glob(f'docs/{version}/**', recursive=True):
         if 'release_notes' not in filepath and os.path.isfile(filepath):
             try:
-                # Replace links to master branch with links to specified branch
+                # Replace links to main branch with links to specified branch
                 with open(filepath, 'r') as openfile:
                     file = openfile.read().replace(
                         patterns[0], 'FCP-INDI/C-PAC/blob/{}'.format(version)

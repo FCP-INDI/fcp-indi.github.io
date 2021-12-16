@@ -1,4 +1,4 @@
-.. C-PAC documentation master file, created by
+.. C-PAC documentation main file, created by
    sphinx-quickstart on Fri Jul 20 16:32:55 2012.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.

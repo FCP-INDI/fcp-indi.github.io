@@ -1,13 +1,13 @@
 <!-- TOC -->
 
 - [Branches](#branches)
-    - [Versions](#versions)
-        - [`nightly`](#nightly)
-        - [C-PAC release tags](#c-pac-release-tags)
+  - [Versions](#versions)
+    - [`nightly`](#nightly)
+    - [C-PAC release tags](#c-pac-release-tags)
 - [Guidelines](#guidelines)
-    - [Building](#building)
-        - [Let CircleCI build your drafts / works-in-progress](#let-circleci-build-your-drafts--works-in-progress)
-        - [Build locally (C-PAC ≥ v1.8.0)](#build-locally-c-pac-≥-v180)
+  - [Building](#building)
+    - [Let CircleCI build your drafts / works-in-progress](#let-circleci-build-your-drafts--works-in-progress)
+    - [Build locally (C-PAC ≥ v1.8.0)](#build-locally-c-pac-≥-v180)
 - [Flowcharts](#flowcharts)
 - [References and citations](#references-and-citations)
 - [Environment notes](#environment-notes)
@@ -17,7 +17,7 @@
 <a id="markdown-branches" name="branches"></a>
 ## Branches
 
-Please, always base changes on the `source` branch. `master` branch will be overwritten by the CI deployment.
+Please, always base changes on the `source` branch. `main` branch will be overwritten by the CI deployment.
 
 <a id="markdown-versions" name="versions"></a>
 ### Versions
@@ -67,7 +67,7 @@ Steps to build a release:
 * Build environment will match actual docs build environment
 * CircleCI takes ~2 minutes to build
 1. Fork https://github.com/FCP-INDI/fcp-indi.github.io
-1. In your fork's settings, set the GitHub Pages `source` to `master` branch
+1. In your fork's settings, set the GitHub Pages `source` to `main` branch
     ![GitHub Pages settings example screenshot](./images/github-pages-settings-example.png)
 1. Add your project on CircleCI
 1. Merge your draft / work-in-progress into your fork's `source` branch. Make sure you push to your fork and not the main repository's `source` branch.

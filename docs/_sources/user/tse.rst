@@ -24,7 +24,7 @@ Configuring ROI Time Series Extraction
 
 #. **Realignment - [ROI to func, func to ROI]:** Choose functional time-series and ROI realignment method. 'ROI to func' will realign the atlas/ROI to functional space (fast). 'func to ROI' will realign the functional time series to the atlas/ROI space. NOTE: in rare cases, realigning the ROI to the functional space may result in small misalignments for very small ROIs - please double check your data if you see issues.
 
-#. **Outputs - [CSV, NUMPY]:** Choose to save voxelwise time series extraction outputs as a csv file or a Numpy array.  Voxelwise TSE outputs are saved as a text file and 1D file by default.  ROI Average TSE outputs are saved as a tab-delimited value file ('roi_stats.csv') only.
+#. **Connectivity Matrix:** A connectivity matrix can be generated via nilearn :cite:`cite-Abra14,cite-nile21,cite-nile21a` or AFNI for the ``Avg`` timeseries output.
 
 .. include:: /user/pipelines/without_gui.rst
 
@@ -34,3 +34,10 @@ Configuring ROI Time Series Extraction
    :language: YAML
    :start-at: timeseries_extraction:
    :end-before: seed_based_correlation_analysis:
+
+.. rubric References
+
+.. bibliography:: /references/tse.bib
+   :style: cpac_docs_style
+   :cited:
+   :keyprefix: cite-

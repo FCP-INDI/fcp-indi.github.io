@@ -1,8 +1,6 @@
 eXtensible Connectivity Pipeline-style quality control files
 ============================================================
 
-.. seealso:: :doc:`</user/xcpqc>`
-
 .. automodule:: CPAC.qc.xcp
     :members:
 

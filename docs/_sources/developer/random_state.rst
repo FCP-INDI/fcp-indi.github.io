@@ -12,5 +12,10 @@ to :py:func:`CPAC.pipeline.random_state.seed.random_seed_flags`.
 
 .. autofunction:: CPAC.pipeline.random_state.seed.random_seed_flags
 
+.. autoclass:: nipype.interfaces.base.core.Interface
+   :special-members: __init__
+   :members:
+   :inherited-members:
+
 .. |nipype.interfaces.base.core.Interface| replace:: :py:class:`nipype.interfaces.base.core.Interface`
 .. _nipype.interfaces.base.core.Interface: https://nipype.readthedocs.io/en/1.5.1/devel/interface_specs.html

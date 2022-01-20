@@ -13,21 +13,21 @@ Design A Pipeline
 
 C-PAC offers a graphical interface you can use to quickly and easily modify the default pipeline or create your own from scratch: `https://fcp-indi.github.io/C-PAC_GUI/ <https://fcp-indi.github.io/C-PAC_GUI/>`_
 
-.. note::
+    .. note::
 
-   Currently the GUI creates a C-PAC v1.6.0 pipeline configuration file. This syntax persisted through v1.7.2 but is deprecated with the release of v1.8.0.
+    Currently the GUI creates a C-PAC v1.6.0 pipeline configuration file. This syntax persisted through v1.7.2 but is deprecated with the release of v1.8.0.
 
-   If given a pipeline file in the older syntax, C-PAC v1.8 will attempt to convert the pipeline configuration file to the new syntax, saving the converted file in your output directory.
+    If given a pipeline file in the older syntax, C-PAC v1.8 will attempt to convert the pipeline configuration file to the new syntax, saving the converted file in your output directory.
 
-   An update to the GUI to create v1.8.0 syntax configuration files is underway.
+    An update to the GUI to create v1.8.0 syntax configuration files is underway.
 
-   The newer (v1.8) syntax will not work with older versions of C-PAC.
+    The newer (v1.8) syntax will not work with older versions of C-PAC.
 
-   See :ref:`using_a_text_editor` for configuring a custom pipeline without the GUI.
-   
-   .. seealso::
-   
-      :doc:`Details about mapping the older syntax to the new. </user/pipelines/1.7-1.8-nesting-mappings>`
+    See :ref:`using_a_text_editor` for configuring a custom pipeline without the GUI.
+    
+.. seealso::
+
+    :doc:`Details about mapping the older syntax to the new. </user/pipelines/1.7-1.8-nesting-mappings>`
 
 .. figure:: /_images/gui_home1.png
 

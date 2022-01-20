@@ -39,12 +39,14 @@ Definitions
 
 .. rubric:: Reference
 
-.. bibliography:: /references/glossary.bib
-   :style: cpac_docs_style
-   :cited:
-   :keyprefix: glossary-
+    .. bibliography:: /references/glossary.bib
+       :style: cpac_docs_style
+       :cited:
+       :keyprefix: glossary-
+
 
 .. include:: design_a_pipeline.rst
+
 
 .. _using_a_text_editor:
 
@@ -109,6 +111,7 @@ Data Management and Environment Settings
 
 * :doc:`Computer Settings </user/compute_config>`
 * :doc:`Output Settings </user/output_config>`
+* :doc:`Random State </user/pipelines/random_state>`
 
 Pre- and post-processing
 '''''''''''''''''''''''''

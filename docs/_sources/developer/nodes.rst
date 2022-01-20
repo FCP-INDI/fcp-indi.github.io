@@ -1,7 +1,6 @@
 *****
 Nodes
 *****
-
 .. _mem_gb:
 
 .. _n_procs:
@@ -32,6 +31,11 @@ For nodes that will use a varying amount of memory depending on the node's input
    :inherited-members:
 
 .. autoclass:: CPAC.pipeline.nipype_pipeline_engine.MapNode
+   :special-members: __init__
+   :members:
+   :inherited-members:
+
+.. autoclass:: CPAC.utils.interfaces.function.Function
    :special-members: __init__
    :members:
    :inherited-members:

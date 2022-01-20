@@ -26,7 +26,7 @@ For nodes that will use a varying amount of memory depending on the node's input
 .. note::
    ``mem_x`` is a new parameter in C-PAC v1.8.1 and subject to change in future releases as we continue to `develop methods for setting data- and operation-dependent memory estimates <https://github.com/FCP-INDI/C-PAC/issues/1509>`_.
 
-
+---
 
 .. autoclass:: CPAC.pipeline.nipype_pipeline_engine.Node
    :special-members: __init__
@@ -46,10 +46,9 @@ For nodes that will use a varying amount of memory depending on the node's input
 
 
 .. seealso::
-   
    `Nipype: Interface Specifications <https://nipype.readthedocs.io/en/1.5.1/devel/interface_specs.html>`_
 
-
+----
 
 .. autoclass:: CPAC.utils.interfaces.function.Function
    :special-members: __init__

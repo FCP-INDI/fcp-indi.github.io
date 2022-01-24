@@ -75,9 +75,15 @@ class CPAC_DocsStyle(Style):
             optional[sentence[date]],
             optional[sentence[href[
                 field('url'),
-                optional[tag('em')[self.format_title(entry, 'title')]]
+                optional[tag('em')[join(sep=', ')[
+                    self.format_title(entry, 'title', as_sentence=False),
+                    optional_field('edition')
+                ]]]
             ]]] if entry.fields.get('url') else optional[sentence[
-                tag('em')[self.format_title(entry, 'title')]
+                tag('em')[join(sep=', ')[
+                    self.format_title(entry, 'title', as_sentence=False),
+                    optional_field('edition')
+                ]]
             ]],
             optional[sentence[
                 join(sep=': ')[
@@ -89,19 +95,20 @@ class CPAC_DocsStyle(Style):
         ]
         return template
 
-    def get_incollection_template(self, e):
+    def get_incollection_template(self, entry):
         template = toplevel[optional[
             sentence[self.format_names('author')]],
             optional[sentence[date]],
             optional[sentence[href[
                 field('url'),
-                optional[tag('em')[self.format_title(e, 'title')]]
-            ]] if e.fields.get('url') else optional[sentence[
-                tag('em')[self.format_title(e, 'title')]
-            ]]],
-            optional[sentence[
-                tag('em')[self.format_title(e, 'booktitle')]
+                self.format_title(entry, 'title')
+            ]]] if entry.fields.get('url') else optional[sentence[
+                self.format_title(entry, 'title')
             ]],
+            optional[tag('em')[join(sep=', ')[
+                self.format_title(entry, 'booktitle', as_sentence=False),
+                optional_field('edition')
+            ]]],
             optional[sentence[
                 join(sep=': ')[
                     optional_field('address'),

@@ -329,6 +329,8 @@ for t in gh_tags:
 
 .. toctree::
    :hidden:
+   :titlesonly:
+   :maxdepth: 1
 
    /user/release_notes/{latest}.rst
 """.format(latest=str(t))
@@ -347,6 +349,8 @@ all_release_notes = """
 
 .. toctree::
    :hidden:
+   :titlesonly:
+   :maxdepth: 1
 
    {}
 

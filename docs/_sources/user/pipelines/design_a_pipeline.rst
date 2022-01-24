@@ -25,9 +25,9 @@ C-PAC offers a graphical interface you can use to quickly and easily modify the 
 
     See :ref:`using_a_text_editor` for configuring a custom pipeline without the GUI.
     
-.. seealso::
-
-    :doc:`Details about mapping the older syntax to the new. </user/pipelines/1.7-1.8-nesting-mappings>`
+   .. seealso::
+   
+       :doc:`Details about mapping the older syntax to the new. </user/pipelines/1.7-1.8-nesting-mappings>`
 
 .. figure:: /_images/gui_home1.png
 
@@ -52,6 +52,7 @@ Or you can provide it to the C-PAC Singularity container like so:
             -B /tmp:/tmp \
             -B /Users/You/Documents:/configs \
             fcpindi_c-pac_latest-{date}-{hash value}.img s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant --pipeline_file /configs/pipeline_config.yml
+
 **Reporting errors and getting help**
 
 Please report errors on the `C-PAC github page issue tracker <https://github.com/FCP-INDI/C-PAC/issues>`_. Please use the `C-PAC google group <https://groups.google.com/forum/#!forum/cpax_forum>`_ for help using C-PAC and this application.

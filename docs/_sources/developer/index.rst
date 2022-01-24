@@ -3,15 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. title:: Developer Documentation
+Developer Documentation
+=======================
 
 Welcome to CPAC's developer documentation!
-==========================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
+   :titlesonly:
 
    installation
    pipeline
@@ -19,10 +21,11 @@ Contents:
    random_state
    workflow_documentation
    workflows/index
+   xcpqc
    testing
 
 Indices and tables
-==================
+^^^^^^^^^^^^^^^^^^
 
 * :ref:`genindex`
 * :ref:`modindex`

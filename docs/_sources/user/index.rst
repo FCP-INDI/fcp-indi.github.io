@@ -3,8 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+User Documentation
+==================
+
 Welcome to C-PAC's user guide!
-==============================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The C-PAC Mission
 ^^^^^^^^^^^^^^^^^
@@ -98,6 +101,7 @@ User Guide Index
 .. toctree::
    :maxdepth: 2
    :includehidden:
+   :titlesonly:
 
    1. C-PAC Quickstart <quick>
    2. Specify Your Data <subject_list_config>

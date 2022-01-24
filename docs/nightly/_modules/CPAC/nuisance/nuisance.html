@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CPAC.nuisance.nuisance &#8212; C-PAC 1.8.2.dev Beta documentation</title>
+    <title>CPAC.nuisance.nuisance &#8212; C-PAC 1.8.3.dev Beta documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/classic.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.2.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.3.dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.nuisance.nuisance</a></li> 
       </ul>
@@ -74,8 +74,42 @@
 <span class="kn">from</span> <span class="nn">CPAC.seg_preproc.utils</span> <span class="kn">import</span> <span class="n">erosion</span><span class="p">,</span> <span class="n">mask_erosion</span>
 
 <span class="kn">from</span> <span class="nn">CPAC.utils.datasource</span> <span class="kn">import</span> <span class="n">check_for_s3</span>
-<span class="kn">from</span> <span class="nn">.bandpass</span> <span class="kn">import</span> <span class="p">(</span><span class="n">bandpass_voxels</span><span class="p">,</span> <span class="n">afni_1dBandpass</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">CPAC.utils.utils</span> <span class="kn">import</span> <span class="n">check_prov_for_regtool</span>
+<span class="kn">from</span> <span class="nn">.bandpass</span> <span class="kn">import</span> <span class="p">(</span><span class="n">bandpass_voxels</span><span class="p">,</span> <span class="n">afni_1dBandpass</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">choose_nuisance_blocks</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">generate_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Function to handle selecting appropriate blocks based on</span>
+<span class="sd">    existing config and resource pool</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cfg : CPAC.utils.configuration.Configuration</span>
+
+<span class="sd">    generate_only : boolean</span>
+<span class="sd">        generate but don&#39;t run</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    nuisance : list</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">nuisance</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">to_template_cfg</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span><span class="s1">&#39;functional_registration&#39;</span><span class="p">][</span>
+        <span class="s1">&#39;func_registration_to_template&#39;</span><span class="p">]</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;desc-preproc_bold&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;desc-preproc_bold&quot;</span><span class="p">,</span> <span class="s2">&quot;bold&quot;</span><span class="p">]),</span>
+           <span class="s1">&#39;single_step_resampling&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;desc-preproc_bold&quot;</span><span class="p">,</span> <span class="s2">&quot;desc-stc_bold&quot;</span><span class="p">),</span>
+           <span class="s1">&#39;abcd&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;desc-preproc_bold&quot;</span><span class="p">,</span> <span class="s2">&quot;bold&quot;</span><span class="p">)</span>
+           <span class="p">}[</span><span class="n">to_template_cfg</span><span class="p">[</span><span class="s1">&#39;apply_transform&#39;</span><span class="p">][</span><span class="s1">&#39;using&#39;</span><span class="p">]]</span>
+    <span class="k">if</span> <span class="s1">&#39;T1_template&#39;</span> <span class="ow">in</span> <span class="n">to_template_cfg</span><span class="p">[</span><span class="s1">&#39;target_template&#39;</span><span class="p">][</span><span class="s1">&#39;using&#39;</span><span class="p">]:</span>
+        <span class="n">nuisance</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">nuisance_regressors_generation</span><span class="p">,</span> <span class="n">out</span><span class="p">))</span>
+    <span class="k">if</span> <span class="s1">&#39;EPI_template&#39;</span> <span class="ow">in</span> <span class="n">to_template_cfg</span><span class="p">[</span><span class="s1">&#39;target_template&#39;</span><span class="p">][</span><span class="s1">&#39;using&#39;</span><span class="p">]:</span>
+        <span class="n">nuisance</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">nuisance_regressors_generation_EPItemplate</span><span class="p">,</span> <span class="n">out</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">generate_only</span><span class="p">:</span>
+        <span class="n">nuisance</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">nuisance_regression</span><span class="p">,</span> <span class="n">out</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">nuisance</span>
 
 
 <span class="k">def</span> <span class="nf">erode_mask</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">segmentmap</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -150,29 +184,37 @@
                     <span class="n">custom_file_paths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">censor_file_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Gathers the various nuisance regressors together into a single tab separated values file that is an appropriate for</span>
-<span class="sd">    input into 3dTproject</span>
+<span class="sd">    Gathers the various nuisance regressors together into a single tab-</span>
+<span class="sd">    separated values file that is an appropriate for input into</span>
+<span class="sd">    3dTproject</span>
 
-<span class="sd">    :param functional_file_path: path to file that the regressors are being calculated for, is used to calculate</span>
-<span class="sd">           the length of the regressors for error checking and in particular for calculating spike regressors</span>
-<span class="sd">    :param output_file_path: path to output TSV that will contain the various nuisance regressors as columns</span>
-<span class="sd">    :param grey_matter_summary_file_path: path to TSV that includes summary of grey matter time courses, e.g. output of</span>
+<span class="sd">    :param functional_file_path: path to file that the regressors are</span>
+<span class="sd">        being calculated for, is used to calculate the length of the</span>
+<span class="sd">        regressors for error checking and in particular for calculating</span>
+<span class="sd">        spike regressors</span>
+<span class="sd">    :param output_file_path: path to output TSV that will contain the</span>
+<span class="sd">        various nuisance regressors as columns</span>
+<span class="sd">    :param grey_matter_summary_file_path: path to TSV that includes</span>
+<span class="sd">        summary of grey matter time courses, e.g. output of</span>
 <span class="sd">        mask_summarize_time_course</span>
-<span class="sd">    :param white_matter_summary_file_path: path to TSV that includes summary of white matter time courses, e.g. output</span>
-<span class="sd">        of mask_summarize_time_course</span>
-<span class="sd">    :param csf_summary_file_path: path to TSV that includes summary of csf time courses, e.g. output</span>
-<span class="sd">        of mask_summarize_time_course</span>
-<span class="sd">    :param acompcor_file_path: path to TSV that includes acompcor time courses, e.g. output</span>
-<span class="sd">        of mask_summarize_time_course</span>
-<span class="sd">    :param tcompcor_file_path: path to TSV that includes tcompcor time courses, e.g. output</span>
-<span class="sd">        of mask_summarize_time_course</span>
-<span class="sd">    :param global_summary_file_path: path to TSV that includes summary of global time courses, e.g. output</span>
-<span class="sd">        of mask_summarize_time_course</span>
-<span class="sd">    :param motion_parameters_file_path: path to TSV that includes motion parameters</span>
+<span class="sd">    :param white_matter_summary_file_path: path to TSV that includes</span>
+<span class="sd">        summary of white matter time courses, e.g. output of</span>
+<span class="sd">        mask_summarize_time_course</span>
+<span class="sd">    :param csf_summary_file_path: path to TSV that includes summary of</span>
+<span class="sd">        csf time courses, e.g. output of mask_summarize_time_course</span>
+<span class="sd">    :param acompcor_file_path: path to TSV that includes acompcor time</span>
+<span class="sd">        courses, e.g. output of mask_summarize_time_course</span>
+<span class="sd">    :param tcompcor_file_path: path to TSV that includes tcompcor time</span>
+<span class="sd">        courses, e.g. output of mask_summarize_time_course</span>
+<span class="sd">    :param global_summary_file_path: path to TSV that includes summary</span>
+<span class="sd">        of global time courses, e.g. output of mask_summarize_time_course</span>
+<span class="sd">    :param motion_parameters_file_path: path to TSV that includes</span>
+<span class="sd">        motion parameters</span>
 <span class="sd">    :param custom_file_paths: path to CSV/TSV files to use as regressors</span>
-<span class="sd">    :param censor_file_path: path to TSV with a single column with 1&#39;s for indices that should be retained and 0&#39;s</span>
-<span class="sd">              for indices that should be censored</span>
-<span class="sd">    :return:</span>
+<span class="sd">    :param censor_file_path: path to TSV with a single column with &#39;1&#39;s</span>
+<span class="sd">        for indices that should be retained and &#39;0&#39;s for indices that</span>
+<span class="sd">        should be censored</span>
+<span class="sd">    :return: out_file (str), censor_indices (list)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Basic checks for the functional image</span>
@@ -353,6 +395,7 @@
             <span class="n">column_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">custom_file_path</span><span class="p">)</span>
             <span class="n">nuisance_regressors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">custom_regressor</span><span class="p">)</span>
 
+    <span class="n">censor_indices</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="c1"># Add spike regressors</span>
     <span class="k">if</span> <span class="n">selector</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Censor&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;method&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;SpikeRegression&#39;</span><span class="p">:</span>
 
@@ -453,7 +496,7 @@
         <span class="n">nuisance_regressors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">nuisance_regressors</span><span class="p">)</span>
         <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">ofd</span><span class="p">,</span> <span class="n">nuisance_regressors</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%.18f</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">output_file_path</span>
+    <span class="k">return</span> <span class="n">output_file_path</span><span class="p">,</span> <span class="n">censor_indices</span>
 
 
 <div class="viewcode-block" id="create_regressor_workflow"><a class="viewcode-back" href="../../../developer/workflows/nuisance#CPAC.nuisance.create_regressor_workflow">[docs]</a><span class="k">def</span> <span class="nf">create_regressor_workflow</span><span class="p">(</span><span class="n">nuisance_selectors</span><span class="p">,</span>
@@ -675,6 +718,8 @@
 <span class="sd">            Path of residual file in nifti format</span>
 <span class="sd">        outputspec.regressors_file_path : string (TSV file)</span>
 <span class="sd">            Path of TSV file of regressors used. Column name indicates the regressors included .</span>
+<span class="sd">        outputspec.censor_indices : list</span>
+<span class="sd">            Indices of censored volumes</span>
 
 <span class="sd">    Nuisance Procedure:</span>
 
@@ -738,11 +783,11 @@
         <span class="s1">&#39;tr&#39;</span><span class="p">,</span>
     <span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
 
-    <span class="n">outputspec</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;regressors_file_path&#39;</span><span class="p">]),</span>
-                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
+    <span class="n">outputspec</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span>
+        <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;regressors_file_path&#39;</span><span class="p">,</span> <span class="s1">&#39;censor_indices&#39;</span><span class="p">]),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
 
     <span class="n">functional_mean</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">TStat</span><span class="p">(),</span>
-                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;functional_mean&#39;</span><span class="p">)</span>
+                              <span class="n">name</span><span class="o">=</span><span class="s1">&#39;functional_mean&#39;</span><span class="p">)</span>
 
     <span class="n">functional_mean</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="s1">&#39;-mean&#39;</span>
     <span class="n">functional_mean</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
@@ -1397,7 +1442,7 @@
                      <span class="s1">&#39;motion_parameters_file_path&#39;</span><span class="p">,</span>
                      <span class="s1">&#39;custom_file_paths&#39;</span><span class="p">,</span>
                      <span class="s1">&#39;censor_file_path&#39;</span><span class="p">],</span>
-        <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
+        <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="s1">&#39;censor_indices&#39;</span><span class="p">],</span>
         <span class="n">function</span><span class="o">=</span><span class="n">gather_nuisance</span><span class="p">,</span>
         <span class="n">as_module</span><span class="o">=</span><span class="kc">True</span>
     <span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;build_nuisance_regressors&quot;</span><span class="p">)</span>
@@ -1468,8 +1513,9 @@
                 <span class="n">voxel_nuisance_regressors_merge</span><span class="p">,</span> <span class="s2">&quot;in</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
             <span class="p">)</span>
 
-    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">build_nuisance_regressors</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                        <span class="n">outputspec</span><span class="p">,</span> <span class="s1">&#39;regressors_file_path&#39;</span><span class="p">)</span>
+    <span class="n">nuisance_wf</span><span class="o">.</span><span class="n">connect</span><span class="p">([(</span><span class="n">build_nuisance_regressors</span><span class="p">,</span> <span class="n">outputspec</span><span class="p">,</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="s1">&#39;regressors_file_path&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;censor_indices&#39;</span><span class="p">,</span> <span class="s1">&#39;censor_indices&#39;</span><span class="p">)])])</span>
 
     <span class="k">return</span> <span class="n">nuisance_wf</span></div>
 
@@ -2159,7 +2205,7 @@
 <span class="sd">                 &quot;from-T1w_to-template_mode-image_desc-linear_xfm&quot;),</span>
 <span class="sd">                &quot;lateral-ventricles-mask&quot;,</span>
 <span class="sd">                &quot;TR&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;regressors&quot;]}</span>
+<span class="sd">     &quot;outputs&quot;: [&quot;regressors&quot;, &quot;censor-indices&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">use_ants</span> <span class="o">=</span> <span class="kc">None</span>
@@ -2265,7 +2311,8 @@
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">regressors</span><span class="p">,</span> <span class="s1">&#39;inputspec.tr&#39;</span><span class="p">)</span>
 
     <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;regressors&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">regressors</span><span class="p">,</span> <span class="s1">&#39;outputspec.regressors_file_path&#39;</span><span class="p">)</span>
+        <span class="s1">&#39;regressors&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">regressors</span><span class="p">,</span> <span class="s1">&#39;outputspec.regressors_file_path&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;censor-indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">regressors</span><span class="p">,</span> <span class="s1">&#39;outputspec.censor_indices&#39;</span><span class="p">)</span>
     <span class="p">}</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
@@ -2290,12 +2337,12 @@
 <span class="sd">                 &quot;desc-cleaned_bold&quot;,</span>
 <span class="sd">                 &quot;regressors&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    
+
     <span class="n">regressor_prov</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_cpac_provenance</span><span class="p">(</span><span class="s1">&#39;regressors&#39;</span><span class="p">)</span>
     <span class="n">regressor_strat_name</span> <span class="o">=</span> <span class="n">regressor_prov</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-    
+
     <span class="k">for</span> <span class="n">regressor_dct</span> <span class="ow">in</span> <span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;nuisance_corrections&#39;</span><span class="p">][</span><span class="s1">&#39;2-nuisance_regression&#39;</span><span class="p">][</span>
-        <span class="s1">&#39;Regressors&#39;</span><span class="p">]:</span>
+            <span class="s1">&#39;Regressors&#39;</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">regressor_dct</span><span class="p">[</span><span class="s1">&#39;Name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">regressor_strat_name</span><span class="p">:</span>
             <span class="n">opt</span> <span class="o">=</span> <span class="n">regressor_dct</span>
             <span class="k">break</span>
@@ -2369,10 +2416,10 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;desc-preproc_bold&quot;</span><span class="p">)</span>
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">nuis</span><span class="p">,</span> <span class="s1">&#39;inputspec.functional_file_path&#39;</span><span class="p">)</span>
-        
+
         <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">nuis</span><span class="p">,</span> <span class="s1">&#39;outputspec.residual_file_path&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;desc-cleaned_bold&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">nuis</span><span class="p">,</span> <span class="s1">&#39;outputspec.residual_file_path&#39;</span><span class="p">)</span>
+            <span class="s1">&#39;desc-cleaned_bold&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">nuis</span><span class="p">,</span> <span class="s1">&#39;outputspec.residual_file_path&#39;</span><span class="p">),</span>
         <span class="p">}</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
@@ -2563,7 +2610,7 @@
 <span class="sd">                 &quot;from-bold_to-EPItemplate_mode-image_desc-linear_xfm&quot;),</span>
 <span class="sd">                &quot;lateral-ventricles-mask&quot;,</span>
 <span class="sd">                &quot;TR&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;regressors&quot;]}</span>
+<span class="sd">     &quot;outputs&quot;: [&quot;regressors&quot;, &quot;censor-indices&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">xfm_prov</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_cpac_provenance</span><span class="p">(</span>
@@ -2651,7 +2698,8 @@
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">regressors</span><span class="p">,</span> <span class="s1">&#39;inputspec.tr&#39;</span><span class="p">)</span>
 
     <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;regressors&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">regressors</span><span class="p">,</span> <span class="s1">&#39;outputspec.regressors_file_path&#39;</span><span class="p">)</span>
+        <span class="s1">&#39;regressors&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">regressors</span><span class="p">,</span> <span class="s1">&#39;outputspec.regressors_file_path&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;censor-indices&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">regressors</span><span class="p">,</span> <span class="s1">&#39;outputspec.censor_indices&#39;</span><span class="p">)</span>
     <span class="p">}</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
@@ -2666,13 +2714,15 @@
             <p class="logo"><a href="../../../index">
               <img class="logo" src="../../../_static/cpac_logo_vertical.png" alt="Logo"/>
             </a></p>
-  <h3><a href="../../../index">Table of Contents</a></h3>
-  <ul>
+  <div>
+    <h3><a href="../../../index">Table of Contents</a></h3>
+    <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../user/index">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer/index">Welcome to CPAC’s developer documentation!</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer/index#indices-and-tables">Indices and tables</a></li>
 </ul>
 
+  </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
@@ -2696,7 +2746,7 @@
         <li class="right" >
           <a href="../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.2.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.3.dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.nuisance.nuisance</a></li> 
       </ul>
@@ -2704,7 +2754,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

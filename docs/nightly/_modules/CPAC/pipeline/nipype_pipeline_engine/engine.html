@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CPAC.pipeline.nipype_pipeline_engine.engine &#8212; C-PAC 1.8.2.dev Beta documentation</title>
+    <title>CPAC.pipeline.nipype_pipeline_engine.engine &#8212; C-PAC 1.8.3.dev Beta documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/classic.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css" />
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="../../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.2.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.3.dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.pipeline.nipype_pipeline_engine.engine</a></li> 
       </ul>
@@ -40,7 +40,7 @@
             
   <h1>Source code for CPAC.pipeline.nipype_pipeline_engine.engine</h1><div class="highlight"><pre>
 <span></span><span class="sd">&#39;&#39;&#39;Module to import Nipype Pipeline engine and override some Classes.</span>
-<span class="sd">See https://fcp-indi.github.com/docs/developer/nodes</span>
+<span class="sd">See https://fcp-indi.github.io/docs/developer/nodes</span>
 <span class="sd">for C-PAC-specific documentation.</span>
 <span class="sd">See https://nipype.readthedocs.io/en/latest/api/generated/nipype.pipeline.engine.html</span>
 <span class="sd">for Nipype&#39;s documentation.</span>
@@ -48,11 +48,14 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">logging</span> <span class="kn">import</span> <span class="n">getLogger</span>
 <span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">Parameter</span><span class="p">,</span> <span class="n">Signature</span><span class="p">,</span> <span class="n">signature</span>
 <span class="kn">from</span> <span class="nn">nibabel</span> <span class="kn">import</span> <span class="n">load</span>
 <span class="kn">from</span> <span class="nn">nipype</span> <span class="kn">import</span> <span class="n">logging</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.utility</span> <span class="kn">import</span> <span class="n">Function</span>
 <span class="kn">from</span> <span class="nn">nipype.pipeline</span> <span class="kn">import</span> <span class="n">engine</span> <span class="k">as</span> <span class="n">pe</span>
 <span class="kn">from</span> <span class="nn">nipype.pipeline.engine.utils</span> <span class="kn">import</span> <span class="n">load_resultfile</span> <span class="k">as</span> <span class="n">_load_resultfile</span>
+<span class="kn">from</span> <span class="nn">nipype.utils.functions</span> <span class="kn">import</span> <span class="n">getsource</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">prod</span>
 <span class="kn">from</span> <span class="nn">traits.trait_base</span> <span class="kn">import</span> <span class="n">Undefined</span>
 <span class="kn">from</span> <span class="nn">traits.trait_handlers</span> <span class="kn">import</span> <span class="n">TraitListObject</span>
@@ -60,6 +63,8 @@
 <span class="c1"># set global default mem_gb</span>
 <span class="n">DEFAULT_MEM_GB</span> <span class="o">=</span> <span class="mf">2.0</span>
 <span class="n">UNDEFINED_SIZE</span> <span class="o">=</span> <span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">42</span><span class="p">,</span> <span class="mi">42</span><span class="p">,</span> <span class="mi">1200</span><span class="p">)</span>
+
+<span class="n">random_state_logger</span> <span class="o">=</span> <span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;random&#39;</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_doctest_skiplines</span><span class="p">(</span><span class="n">docstring</span><span class="p">,</span> <span class="n">lines_to_skip</span><span class="p">):</span>
@@ -102,8 +107,11 @@
     <span class="p">)</span>
 
 <div class="viewcode-block" id="Node.__init__"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Node.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="n">DEFAULT_MEM_GB</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">CPAC.pipeline.random_state</span> <span class="kn">import</span> <span class="n">random_seed</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="n">mem_gb</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;nipype.workflow&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">random_seed</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed_applied</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="k">if</span> <span class="s1">&#39;mem_x&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;mem_x&#39;</span><span class="p">],</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
@@ -174,6 +182,61 @@
 <span class="sd">            * &#39;xyzt&#39; (spatial * temporal) (default if not specified)</span>
 <span class="sd">            * &#39;xyz&#39; (spatial)</span>
 <span class="sd">            * &#39;t&#39; (temporal)&#39;&#39;&#39;</span><span class="p">]))</span>  <span class="c1"># noqa E501</span>
+
+    <span class="k">def</span> <span class="nf">_add_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flags</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        flags : list or tuple</span>
+<span class="sd">            If a list, add ``flags`` to ``self.inputs.flags`` or</span>
+<span class="sd">            ``self.inputs.args``</span>
+
+<span class="sd">            If a tuple, remove ``flags[1]`` from and add ``flags[0]``</span>
+<span class="sd">            to ``self.inputs.flags`` or ``self.inputs.args``</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">def</span> <span class="nf">prep_flags</span><span class="p">(</span><span class="n">attr</span><span class="p">):</span>
+            <span class="n">to_remove</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">flags</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">to_remove</span> <span class="o">+=</span> <span class="n">flags</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">new_flags</span> <span class="o">=</span> <span class="n">flags</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_flags</span> <span class="o">=</span> <span class="n">flags</span>
+            <span class="n">old_flags</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old_flags</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">to_remove</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="o">-</span><span class="n">x</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">to_remove</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="sa">f</span><span class="s1">&#39; </span><span class="si">{</span><span class="n">flag</span><span class="si">}</span><span class="s1"> &#39;</span> <span class="ow">in</span> <span class="n">old_flags</span><span class="p">:</span>
+                        <span class="n">old_flags</span> <span class="o">=</span> <span class="n">old_flags</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; </span><span class="si">{</span><span class="n">flag</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="n">old_flags</span> <span class="o">=</span> <span class="p">[</span><span class="n">old_flags</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">old_flags</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">new_flags</span> <span class="o">=</span> <span class="p">[</span><span class="n">flag</span> <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">old_flags</span> <span class="k">if</span>
+                             <span class="n">flag</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">to_remove</span><span class="p">]</span> <span class="o">+</span> <span class="n">new_flags</span>
+            <span class="k">if</span> <span class="n">attr</span> <span class="o">==</span> <span class="s1">&#39;args&#39;</span><span class="p">:</span>
+                <span class="n">new_flags</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_flags</span><span class="p">)</span>
+                <span class="k">while</span> <span class="s1">&#39;  &#39;</span> <span class="ow">in</span> <span class="n">new_flags</span><span class="p">:</span>
+                    <span class="n">new_flags</span> <span class="o">=</span> <span class="n">new_flags</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;  &#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">new_flags</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="s1">&#39;flags&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">flags</span> <span class="o">=</span> <span class="n">prep_flags</span><span class="p">(</span><span class="s1">&#39;flags&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">prep_flags</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_apply_random_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Apply flags for the first matched interface&#39;&#39;&#39;</span>
+        <span class="c1"># pylint: disable=import-outside-toplevel</span>
+        <span class="kn">from</span> <span class="nn">CPAC.pipeline.random_state</span> <span class="kn">import</span> <span class="n">random_seed_flags</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="p">,</span> <span class="n">Function</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">rsf</span><span class="p">,</span> <span class="n">flags</span> <span class="ow">in</span> <span class="n">random_seed_flags</span><span class="p">()[</span><span class="s1">&#39;functions&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">function_str</span> <span class="o">==</span> <span class="n">getsource</span><span class="p">(</span><span class="n">rsf</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">function_str</span> <span class="o">=</span> <span class="n">flags</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">function_str</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">seed_applied</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">return</span>
+        <span class="k">for</span> <span class="n">rsf</span><span class="p">,</span> <span class="n">flags</span> <span class="ow">in</span> <span class="n">random_seed_flags</span><span class="p">()[</span><span class="s1">&#39;interfaces&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="p">,</span> <span class="n">rsf</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_flags</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">seed_applied</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">return</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">mem_gb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -316,12 +379,21 @@
         <span class="sd">&quot;&quot;&quot;Get dict of &#39;multiplier&#39; (memory multiplier), &#39;file&#39; (input file)</span>
 <span class="sd">        and multiplier mode (spatial * temporal, spatial only or</span>
 <span class="sd">        temporal only). Returns ``None`` if already consumed or not set.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span>
-        <span class="k">return</span> <span class="kc">None</span></div>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Node.run"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Node.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updatehash</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_random_seed</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed_applied</span><span class="p">:</span>
+                <span class="n">random_state_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span>
+                                         <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">  # (Atropos constant)&#39;</span> <span class="o">%</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="s1">&#39;atropos&#39;</span> <span class="ow">in</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">updatehash</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="MapNode"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.MapNode">[docs]</a><span class="k">class</span> <span class="nc">MapNode</span><span class="p">(</span><span class="n">Node</span><span class="p">,</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">):</span>
+    <span class="c1"># pylint: disable=empty-docstring</span>
     <span class="vm">__doc__</span> <span class="o">=</span> <span class="n">_doctest_skiplines</span><span class="p">(</span>
         <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">,</span>
         <span class="p">{</span><span class="s2">&quot;    ...                           &#39;functional3.nii&#39;]&quot;</span><span class="p">}</span>
@@ -432,13 +504,15 @@
             <p class="logo"><a href="../../../../index">
               <img class="logo" src="../../../../_static/cpac_logo_vertical.png" alt="Logo"/>
             </a></p>
-  <h3><a href="../../../../index">Table of Contents</a></h3>
-  <ul>
+  <div>
+    <h3><a href="../../../../index">Table of Contents</a></h3>
+    <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../user/index">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../developer/index">Welcome to CPAC’s developer documentation!</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../developer/index#indices-and-tables">Indices and tables</a></li>
 </ul>
 
+  </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
@@ -462,7 +536,7 @@
         <li class="right" >
           <a href="../../../../py-modindex" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.2.dev Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.3.dev Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../../index" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">CPAC.pipeline.nipype_pipeline_engine.engine</a></li> 
       </ul>
@@ -470,7 +544,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.1.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

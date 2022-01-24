@@ -1,0 +1,295 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CPAC.pipeline.random_state.seed &#8212; C-PAC 1.8.3.dev Beta documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/classic.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css" />
+    
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="../../../../genindex" />
+    <link rel="search" title="Search" href="../../../../search" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.3.dev Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CPAC.pipeline.random_state.seed</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for CPAC.pipeline.random_state.seed</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;Functions to set, check, and log random seed&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">logging</span> <span class="kn">import</span> <span class="n">getLogger</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.ants.registration</span> <span class="kn">import</span> <span class="n">Registration</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.ants.segmentation</span> <span class="kn">import</span> <span class="n">Atropos</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.freesurfer.preprocess</span> <span class="kn">import</span> <span class="n">ApplyVolTransform</span><span class="p">,</span> <span class="n">ReconAll</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.fsl.maths</span> <span class="kn">import</span> <span class="n">MathsCommand</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.fsl.utils</span> <span class="kn">import</span> <span class="n">ImageMaths</span>
+
+<span class="kn">from</span> <span class="nn">CPAC.registration.utils</span> <span class="kn">import</span> <span class="n">hardcoded_reg</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.ants</span> <span class="kn">import</span> <span class="n">AI</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.monitoring.custom_logging</span> <span class="kn">import</span> <span class="n">set_up_logger</span>
+
+<span class="n">_seed</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;seed&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">random_random_seed</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;Returns a random postive integer up to 2147483647</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    None</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    random_seed : int</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; 0 &lt; random_random_seed() &lt;= np.iinfo(np.int32).max</span>
+<span class="sd">    True</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">random_seed</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;Function to access current random seed</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    None</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    seed : int or None</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">_seed</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;random&#39;</span><span class="p">:</span>
+        <span class="n">_seed</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">random_random_seed</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">_seed</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="random_seed_flags"><a class="viewcode-back" href="../../../../developer/random_state#CPAC.pipeline.random_state.seed.random_seed_flags">[docs]</a><span class="k">def</span> <span class="nf">random_seed_flags</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;Function to return dictionary of flags with current random seed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    None</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict of {&#39;functions&#39;: {function: function}, &#39;interfaces&#39;: {list or tuple}}</span>
+<span class="sd">        Developer note: sequence matters here! Only the first match</span>
+<span class="sd">        will be applied!</span>
+
+<span class="sd">        In the &#39;functions&#39; sub-dictionary, each key should be a function</span>
+<span class="sd">        used in a :py:class:`CPAC.utils.interfaces.function.Function`,</span>
+<span class="sd">        and each value should be a function that takes a single</span>
+<span class="sd">        parameter (a function) to apply to the key-function such that,</span>
+<span class="sd">        once the value-function is applied, the random seed is applied</span>
+<span class="sd">        when the key-function is run.</span>
+
+<span class="sd">        In the &#39;interfaces&#39; sub-dictionary, each key should be an</span>
+<span class="sd">        :py:class:`nipype.interfaces.base.core.Interface`, and each</span>
+<span class="sd">        value should be either a list of strings to add to the</span>
+<span class="sd">        interface&#39;s flags/args or a tuple of (list of strings to add to,</span>
+<span class="sd">        list of strings to remove from) the interface&#39;s flags/args.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; list(random_seed_flags().keys())</span>
+<span class="sd">    [&#39;functions&#39;, &#39;interfaces&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; all([isinstance(random_seed_flags()[key], dict) for key in [</span>
+<span class="sd">    ...     &#39;functions&#39;, &#39;interfaces&#39;]])</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; rs = set_up_random_state(&#39;random&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; list(random_seed_flags().keys())</span>
+<span class="sd">    [&#39;functions&#39;, &#39;interfaces&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; all([isinstance(random_seed_flags()[key], dict) for key in [</span>
+<span class="sd">    ...     &#39;functions&#39;, &#39;interfaces&#39;]])</span>
+<span class="sd">    True</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">seed</span> <span class="o">=</span> <span class="n">random_seed</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;functions&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s1">&#39;interfaces&#39;</span><span class="p">:</span> <span class="p">{}}</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;functions&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="c1"># function: lambda function to apply to function source</span>
+            <span class="n">hardcoded_reg</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">fn_string</span><span class="p">:</span> <span class="n">fn_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                <span class="s1">&#39;regcmd = [&quot;antsRegistration&quot;]&#39;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s1">&#39;regcmd = [&quot;antsRegistration&quot;, &quot;--random-seed&quot;, </span><span class="se">\&quot;</span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="se">\&quot;</span><span class="s1">]&#39;</span>
+            <span class="p">)</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;interfaces&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="c1"># interface: [flags to apply]</span>
+            <span class="c1"># OR</span>
+            <span class="c1"># interface: ([flags to apply], [flags to remove])</span>
+            <span class="c1">#</span>
+            <span class="c1"># ANTs</span>
+            <span class="c1"># NOTE: Atropos gives the option &quot;Initialize internal random number</span>
+            <span class="c1">#       generator with a random seed. Otherwise, initialize with a</span>
+            <span class="c1">#       constant seed number,&quot; so for Atropos nodes, the built-in</span>
+            <span class="c1">#       Atropos constant seed is used if a seed is specified for</span>
+            <span class="c1">#       C-PAC</span>
+            <span class="n">AI</span><span class="p">:</span> <span class="n">_reusable_flags</span><span class="p">()[</span><span class="s1">&#39;ANTs&#39;</span><span class="p">],</span>
+            <span class="n">Registration</span><span class="p">:</span> <span class="n">_reusable_flags</span><span class="p">()[</span><span class="s1">&#39;ANTs&#39;</span><span class="p">],</span>
+            <span class="n">Atropos</span><span class="p">:</span> <span class="p">([</span><span class="s1">&#39;--use-random-seed 0&#39;</span><span class="p">],</span>
+                      <span class="p">[</span><span class="n">flag</span> <span class="k">for</span> <span class="n">one</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39; 1&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span>
+                      <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;--use-random-seed</span><span class="si">{</span><span class="n">one</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;-r</span><span class="si">{</span><span class="n">one</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]]),</span>
+            <span class="c1"># FreeSurfer</span>
+            <span class="n">ReconAll</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;-norandomness&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;-rng-seed </span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">],</span>
+            <span class="n">ApplyVolTransform</span><span class="p">:</span> <span class="n">_reusable_flags</span><span class="p">()[</span><span class="s1">&#39;FSL&#39;</span><span class="p">],</span>
+            <span class="c1"># FSL</span>
+            <span class="n">ImageMaths</span><span class="p">:</span> <span class="n">_reusable_flags</span><span class="p">()[</span><span class="s1">&#39;FSL&#39;</span><span class="p">],</span>
+            <span class="n">MathsCommand</span><span class="p">:</span> <span class="n">_reusable_flags</span><span class="p">()[</span><span class="s1">&#39;FSL&#39;</span><span class="p">]</span>
+        <span class="p">}</span>
+    <span class="p">}</span></div>
+
+
+<span class="k">def</span> <span class="nf">_reusable_flags</span><span class="p">():</span>
+    <span class="n">seed</span> <span class="o">=</span> <span class="n">random_seed</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;ANTs&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;--random-seed </span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">],</span>
+        <span class="s1">&#39;FSL&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s1">&#39;-seed </span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">]</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">set_up_random_state</span><span class="p">(</span><span class="n">seed</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Set global random seed</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    seed : int, &#39;random&#39;, or None</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    seed: int or None</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; isinstance(set_up_random_state(&#39;random&#39;), int)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; set_up_random_state(&#39;rando&#39;)</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">    ValueError: Valid random seeds are positive integers up to 2147483647, &quot;random&quot;, or None, not rando</span>
+<span class="sd">    &gt;&gt;&gt; set_up_random_state(100)</span>
+<span class="sd">    100</span>
+<span class="sd">    &gt;&gt;&gt; set_up_random_state(0)</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">    ValueError: Valid random seeds are positive integers up to 2147483647, &quot;random&quot;, or None, not 0</span>
+<span class="sd">    &gt;&gt;&gt; set_up_random_state(None)</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>  <span class="c1"># noqa E501  # pylint: disable=line-too-long</span>
+    <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">seed</span> <span class="o">==</span> <span class="s1">&#39;random&#39;</span><span class="p">:</span>
+            <span class="n">seed</span> <span class="o">=</span> <span class="n">random_random_seed</span><span class="p">()</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">seed</span> <span class="o">!=</span> <span class="s1">&#39;random&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
+        <span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Valid random seeds are positive integers up to &#39;</span>
+                             <span class="sa">f</span><span class="s1">&#39;2147483647, &quot;random&quot;, or None, not </span><span class="si">{</span><span class="n">seed</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">_seed</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="n">_seed</span><span class="p">[</span><span class="s1">&#39;seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">seed</span>
+    <span class="k">return</span> <span class="n">random_seed</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">set_up_random_state_logger</span><span class="p">(</span><span class="n">log_dir</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Prepare C-PAC for logging random seed use.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    log_dir : str</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">set_up_logger</span><span class="p">(</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">log_dir</span><span class="o">=</span><span class="n">log_dir</span><span class="p">)</span>
+    <span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;random&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;seed: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">random_seed</span><span class="p">())</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index">
+              <img class="logo" src="../../../../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../../../../index">Table of Contents</a></h3>
+    <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../user/index">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index">Welcome to CPAC’s developer documentation!</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.3.dev Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CPAC.pipeline.random_state.seed</a></li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, C-PAC Team.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+    <script defer src="https://fcp-indi.github.io/scripts/versionList.js"></script>
+
+  </body>
+</html>

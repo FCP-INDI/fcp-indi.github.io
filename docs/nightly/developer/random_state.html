@@ -1,0 +1,184 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Random State &#8212; C-PAC 1.8.3.dev Beta documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="../genindex" />
+    <link rel="search" title="Search" href="../search" />
+    <link rel="next" title="Workflow Documentation" href="workflow_documentation" />
+    <link rel="prev" title="Nodes" href="nodes" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="workflow_documentation" title="Workflow Documentation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="nodes" title="Nodes"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.3.dev Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index" accesskey="U">Welcome to CPAC’s developer documentation!</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Random State</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="random-state">
+<h1>Random State<a class="headerlink" href="#random-state" title="Permalink to this headline">¶</a></h1>
+<p>When performing reproducibility/variability experiments, it is important to isolate sources of variability. One such source is random state.</p>
+<p>Users can fix the random state of C-PAC’s execution by specifying a random seed. When adding a Node that should accept a user-specified random seed, add</p>
+<ul class="simple">
+<li><p>the <a class="reference internal" href="nodes#nipype.interfaces.base.core.Interface" title="nipype.interfaces.base.core.Interface"><code class="xref py py-class docutils literal notranslate"><span class="pre">nipype.interfaces.base.core.Interface</span></code></a> and the corresponding flags to add/remove to set the random seed, or</p></li>
+<li><p>in the case of a <a class="reference internal" href="nodes#CPAC.utils.interfaces.function.Function" title="CPAC.utils.interfaces.function.Function"><code class="xref py py-class docutils literal notranslate"><span class="pre">CPAC.utils.interfaces.function.Function</span></code></a> Node, the Function node’s function and a function to apply to that function definition to set the random seed</p></li>
+</ul>
+<p>to <a class="reference internal" href="#CPAC.pipeline.random_state.seed.random_seed_flags" title="CPAC.pipeline.random_state.seed.random_seed_flags"><code class="xref py py-func docutils literal notranslate"><span class="pre">CPAC.pipeline.random_state.seed.random_seed_flags</span></code></a>.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="CPAC.pipeline.random_state.seed.random_seed_flags">
+<span class="sig-prename descclassname"><span class="pre">CPAC.pipeline.random_state.seed.</span></span><span class="sig-name descname"><span class="pre">random_seed_flags</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/CPAC/pipeline/random_state/seed#random_seed_flags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CPAC.pipeline.random_state.seed.random_seed_flags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to return dictionary of flags with current random seed.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>None</strong></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt>dict of {‘functions’: {function: function}, ‘interfaces’: {list or tuple}}</dt><dd><p>Developer note: sequence matters here! Only the first match
+will be applied!</p>
+<p>In the ‘functions’ sub-dictionary, each key should be a function
+used in a <a class="reference internal" href="nodes#CPAC.utils.interfaces.function.Function" title="CPAC.utils.interfaces.function.Function"><code class="xref py py-class docutils literal notranslate"><span class="pre">CPAC.utils.interfaces.function.Function</span></code></a>,
+and each value should be a function that takes a single
+parameter (a function) to apply to the key-function such that,
+once the value-function is applied, the random seed is applied
+when the key-function is run.</p>
+<p>In the ‘interfaces’ sub-dictionary, each key should be an
+<a class="reference internal" href="nodes#nipype.interfaces.base.core.Interface" title="nipype.interfaces.base.core.Interface"><code class="xref py py-class docutils literal notranslate"><span class="pre">nipype.interfaces.base.core.Interface</span></code></a>, and each
+value should be either a list of strings to add to the
+interface’s flags/args or a tuple of (list of strings to add to,
+list of strings to remove from) the interface’s flags/args.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">random_seed_flags</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="go">[&#39;functions&#39;, &#39;interfaces&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">random_seed_flags</span><span class="p">()[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span>
+<span class="gp">... </span>    <span class="s1">&#39;functions&#39;</span><span class="p">,</span> <span class="s1">&#39;interfaces&#39;</span><span class="p">]])</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rs</span> <span class="o">=</span> <span class="n">set_up_random_state</span><span class="p">(</span><span class="s1">&#39;random&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">random_seed_flags</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="go">[&#39;functions&#39;, &#39;interfaces&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">random_seed_flags</span><span class="p">()[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span>
+<span class="gp">... </span>    <span class="s1">&#39;functions&#39;</span><span class="p">,</span> <span class="s1">&#39;interfaces&#39;</span><span class="p">]])</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index">
+              <img class="logo" src="../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../index">Table of Contents</a></h3>
+    <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../user/index">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index">Welcome to CPAC’s developer documentation!</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation">Installing CPAC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipeline">Pipeline Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nodes">Nodes</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Random State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow_documentation">Workflow Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows/index">Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows/index#indices-and-tables">Indices and tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing">Testing CPAC</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="workflow_documentation" title="Workflow Documentation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="nodes" title="Nodes"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.3.dev Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index" >Welcome to CPAC’s developer documentation!</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Random State</a></li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, C-PAC Team.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+    <script defer src="https://fcp-indi.github.io/scripts/versionList.js"></script>
+
+  </body>
+</html>

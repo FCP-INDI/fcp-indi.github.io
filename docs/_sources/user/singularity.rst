@@ -3,13 +3,13 @@ Run on Singularity
 
 For those who wish to avoid the administrator rights requirements often associated with Docker usage (or the security hazards when used on a shared computing system), `Singularity <https://singularityhub.github.io/singularityhub-docs/>`_ is a good option. Singularity is a container solution just like Docker, except it is designed specifically to offer secure deployment on shared cluster environments.
 
-You can pull a Singularity container much like how you would pull a Docker container, except you are pulling from `Singularity Hub <https://singularityhub.github.io/singularityhub-docs/>`_:
+You can pull a Singularity container much like how you would pull a Docker container:
 
 .. code-block:: console
 
-    singularity pull shub://FCP-INDI/C-PAC
+    singularity pull docker://fcpindi/c-pac:latest
 
-This will produce a Singularity container image in your current directory, named something like ``FCP-INDI-C-PAC-master-latest.simg``.
+This will produce a Singularity container image in your current directory, named something like ``c-pac_latest.sif``. You can instead specify the local filename you want before the ``docker://`` URI.
 
 Running a Singularity image is similar to running a Docker image, except ``-B`` maps local directories to a location in the Singularity image instead of ``-v``:
 

@@ -25,9 +25,9 @@ C-PAC offers a graphical interface you can use to quickly and easily modify the 
 
     See :ref:`using_a_text_editor` for configuring a custom pipeline without the GUI.
     
-.. seealso::
-
-    :doc:`Details about mapping the older syntax to the new. </user/pipelines/1.7-1.8-nesting-mappings>`
+   .. seealso::
+   
+       :doc:`Details about mapping the older syntax to the new. </user/pipelines/1.7-1.8-nesting-mappings>`
 
 .. figure:: /_images/gui_home1.png
 

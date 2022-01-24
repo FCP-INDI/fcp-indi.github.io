@@ -127,6 +127,7 @@ Derivatives
 
 .. toctree::
    :maxdepth: 2
+   :hidden:
 
    preconfig
    configurable-settings
@@ -136,7 +137,8 @@ Derivatives
    quality
 
 
-.. rubric:: Reference
+Reference
+---------
 
 
 .. bibliography:: /references/glossary.bib

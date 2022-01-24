@@ -16,6 +16,7 @@ Contents:
    installation
    pipeline
    nodes
+   random_state
    workflow_documentation
    workflows/index
    testing

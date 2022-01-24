@@ -84,6 +84,11 @@ This pipeline is designed to increase reproducibility with the preprocessing res
 * `https://github.com/poldracklab/fmriprep <https://github.com/poldracklab/fmriprep>`_
 * `https://www.nature.com/articles/s41592-018-0235-4 <https://www.nature.com/articles/s41592-018-0235-4>`_
 
+rbc-options: ReproBrainChart Options Pipeline
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_rbc-options.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_rbc-options.yml>`_
+
 benchmark-ANTS: C-PAC Benchmark with ANTs Registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

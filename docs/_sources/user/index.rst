@@ -59,10 +59,12 @@ The C-PAC Team
    Cameron Craddock (Co-Principal Investigator)
    Steven Giavasis (Lead Developer)
    Jon Clucas (Developer)
-   Hecheng Jin (Developer)
-   Xinhui Li (Developer)
+   Teresa George (Developer)
+   Amy Gutierrez (Developer)
 
    **Project Alumni:**
+   Hecheng Jin
+   Xinhui Li
    Anibal Solon Heinsfeld
    Nanditha Rajamani
    Alison Walensky

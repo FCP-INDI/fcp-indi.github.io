@@ -575,3 +575,15 @@ rst_epilog = """
 """.format(
     versions=', '.join(gh_tags[:5])
 )
+
+def setup(app):
+    from CPAC.utils.monitoring import custom_logging
+
+    # initilaize class to make factory functions available to Sphinx
+    ml = custom_logging.MockLogger('test', 'test.log', 0, '/tmp')
+    for method in [
+        method for method in
+        set(dir(ml)) - set(dir(custom_logging.MockLogger)) if
+        method not in ['name', 'handlers']
+    ]:
+        setattr(custom_logging.MockLogger, method, getattr(ml, method))

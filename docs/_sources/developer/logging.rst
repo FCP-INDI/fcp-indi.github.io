@@ -1,7 +1,7 @@
 Logging
 =======
 
-Most C-PAC logging is handled by the built-in Python ``logging`` library. When logging, take care to choose an appropriate ``getLogger`` function or method. While :py:func:`CPAC.utils.monitoring.custom_logging.getLogger` and `:py:meth:nipype.utils.logger.Logging.getLogger` each fall back on `:py:func:logging.getLogger`,
+Most C-PAC logging is handled by the built-in Python ``logging`` library. When logging, take care to choose an appropriate ``getLogger`` function or method. While :py:func:`CPAC.utils.monitoring.custom_logging.getLogger` and ``nipype.utils.logger.Logging.getLogger`` each fall back on ``logging.getLogger``,
 
 .. raw:: html
 

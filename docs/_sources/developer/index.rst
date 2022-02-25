@@ -19,6 +19,7 @@ Contents:
    pipeline
    nodes
    random_state
+   logging
    workflow_documentation
    workflows/index
    xcpqc

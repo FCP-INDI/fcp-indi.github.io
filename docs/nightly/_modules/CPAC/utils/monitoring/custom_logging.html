@@ -1,0 +1,230 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CPAC.utils.monitoring.custom_logging &#8212; C-PAC 1.8.4.dev Beta documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/classic.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css" />
+    
+    <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+    <script src="../../../../_static/jquery.js"></script>
+    <script src="../../../../_static/underscore.js"></script>
+    <script src="../../../../_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="../../../../genindex" />
+    <link rel="search" title="Search" href="../../../../search" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.4.dev Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CPAC.utils.monitoring.custom_logging</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for CPAC.utils.monitoring.custom_logging</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;Funtions for logging.&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">CPAC.utils.docs</span> <span class="kn">import</span> <span class="n">docstring_parameter</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.monitoring.config</span> <span class="kn">import</span> <span class="n">MOCK_LOGGERS</span>
+
+
+<div class="viewcode-block" id="getLogger"><a class="viewcode-back" href="../../../../developer/logging#CPAC.utils.monitoring.custom_logging.getLogger">[docs]</a><span class="k">def</span> <span class="nf">getLogger</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>  <span class="c1"># pylint: disable=invalid-name</span>
+    <span class="sd">&quot;&quot;&quot;Function to get a mock logger if one exists, falling back on</span>
+<span class="sd">    real loggers.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    logger : CPAC.utils.monitoring.custom_logging.MockLogger or logging.Logger</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">MOCK_LOGGERS</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">MOCK_LOGGERS</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
+
+
+<span class="c1"># pylint: disable=too-few-public-methods</span>
+<span class="k">class</span> <span class="nc">MockHandler</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39;Handler for MockLogger.&#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">baseFilename</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseFilename</span> <span class="o">=</span> <span class="n">baseFilename</span>  <span class="c1"># pylint: disable=invalid-name</span>
+
+
+<span class="c1"># pylint: disable=too-few-public-methods</span>
+<div class="viewcode-block" id="MockLogger"><a class="viewcode-back" href="../../../../developer/logging#CPAC.utils.monitoring.custom_logging.MockLogger">[docs]</a><span class="k">class</span> <span class="nc">MockLogger</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39;Mock logging.Logger to provide the same API without keeping the</span>
+<span class="sd">    logger in memory.&#39;&#39;&#39;</span>
+<div class="viewcode-block" id="MockLogger.__init__"><a class="viewcode-back" href="../../../../developer/logging#CPAC.utils.monitoring.custom_logging.MockLogger.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">level</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handlers</span> <span class="o">=</span> <span class="p">[</span><span class="n">MockHandler</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">))]</span>
+        <span class="n">MOCK_LOGGERS</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">for</span> <span class="n">loglevel</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;debug&#39;</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="s1">&#39;warning&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="s1">&#39;critical&#39;</span><span class="p">]:</span>
+            <span class="c1"># set up log methods for all built-in levels</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loglevel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factory_log</span><span class="p">(</span><span class="n">loglevel</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">_factory_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Generate a log method like `self.log(message)` for a given</span>
+<span class="sd">        built-in level.&quot;&quot;&quot;</span>
+        <span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">)</span>
+        <span class="k">def</span> <span class="nf">_log</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Log a message if logging level &gt;= {level}. See `Logging Levels &lt;https://docs.python.org/3/library/logging.html#levels&gt;`_ for a list of levels.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">&gt;=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">level</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
+                                                        <span class="n">logging</span><span class="o">.</span><span class="n">NOTSET</span><span class="p">):</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handlers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">baseFilename</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">log_file</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">log_file</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_log</span>
+
+<div class="viewcode-block" id="MockLogger.delete"><a class="viewcode-back" href="../../../../developer/logging#CPAC.utils.monitoring.custom_logging.MockLogger.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Delete the mock logger from memory.&#39;&#39;&#39;</span>
+        <span class="k">del</span> <span class="n">MOCK_LOGGERS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">set_up_logger</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mock</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Function to initialize a logger</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        logger name (for subsequent calls to ``logging.getLogger``) to</span>
+<span class="sd">        write to the same log file)</span>
+
+<span class="sd">    filename : str, optional</span>
+<span class="sd">        filename to write log to. If not specified, filename will be</span>
+<span class="sd">        the same as ``name`` with the extension ``log``</span>
+
+<span class="sd">    level : str, optional</span>
+<span class="sd">        one of ``{critical, error, warning, info, debug, notset}``,</span>
+<span class="sd">        case-insensitive</span>
+
+<span class="sd">    log_dir : str, optional</span>
+
+<span class="sd">    mock : bool, optional</span>
+<span class="sd">        if ``True``, return a ``CPAC.utils.monitoring.MockLogger``</span>
+<span class="sd">        instead of a ``logging.Logger``</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    logger : logging.Handler</span>
+<span class="sd">        initialized logging Handler</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; lg = set_up_logger(&#39;test&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; lg.handlers[0].baseFilename.split(&#39;/&#39;)[-1]</span>
+<span class="sd">    &#39;test.log&#39;</span>
+<span class="sd">    &gt;&gt;&gt; lg.level</span>
+<span class="sd">    0</span>
+<span class="sd">    &gt;&gt;&gt; lg = set_up_logger(&#39;second_test&#39;, &#39;specific_filename.custom&#39;, &#39;debug&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; lg.handlers[0].baseFilename.split(&#39;/&#39;)[-1]</span>
+<span class="sd">    &#39;specific_filename.custom&#39;</span>
+<span class="sd">    &gt;&gt;&gt; lg.level</span>
+<span class="sd">    10</span>
+<span class="sd">    &gt;&gt;&gt; lg = set_up_logger(&#39;third_test&#39;, mock=True)</span>
+<span class="sd">    &gt;&gt;&gt; getLogger(&#39;third_test&#39;) == lg</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; &#39;third_test&#39; in MOCK_LOGGERS</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; lg.delete()</span>
+<span class="sd">    &gt;&gt;&gt; &#39;third_test&#39; in MOCK_LOGGERS</span>
+<span class="sd">    False</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">.log&#39;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">level</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">NOTSET</span>
+    <span class="k">if</span> <span class="n">log_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">log_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">mock</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">MockLogger</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+    <span class="n">handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">logger</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index">
+              <img class="logo" src="../../../../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../../../../index">Table of Contents</a></h3>
+    <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../user/index">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer/index">Developer Documentation</a></li>
+</ul>
+
+  </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index">C-PAC 1.8.4.dev Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">CPAC.utils.monitoring.custom_logging</a></li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, C-PAC Team.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+    <script defer src="https://fcp-indi.github.io/scripts/versionList.js"></script>
+
+  </body>
+</html>

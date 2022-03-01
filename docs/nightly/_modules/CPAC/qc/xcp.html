@@ -516,10 +516,40 @@
     <span class="k">return</span> <span class="n">qc_xcp_native</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="qc_xcp_template"><a class="viewcode-back" href="../../../developer/xcpqc#CPAC.qc.xcp.qc_xcp_template">[docs]</a><span class="k">def</span> <span class="nf">qc_xcp_template</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="c1"># pylint: disable=invalid-name, unused-argument</span>
+<div class="viewcode-block" id="qc_xcp_template"><a class="viewcode-back" href="../../../developer/xcpqc#CPAC.qc.xcp.qc_xcp_template">[docs]</a><span class="k">def</span> <span class="nf">qc_xcp_template</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handle either T1 or EPI template XCP-QC.&quot;&quot;&quot;</span>
+    <span class="n">qc_file</span><span class="p">,</span> <span class="n">original</span><span class="p">,</span> <span class="n">final</span><span class="p">,</span> <span class="n">t1w_bold</span> <span class="o">=</span> <span class="n">_prep_qc_xcp</span><span class="p">(</span><span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span>
+                                                      <span class="n">space</span><span class="p">)</span>
+    <span class="n">final</span><span class="p">[</span><span class="s1">&#39;func&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">node_data</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;space-</span><span class="si">{</span><span class="n">space</span><span class="si">}</span><span class="s1">_desc-preproc_bold&#39;</span><span class="p">)</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">node_data</span><span class="p">(</span><span class="n">reference</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">node</span><span class="p">,</span> <span class="n">template</span><span class="o">.</span><span class="n">out</span><span class="p">,</span> <span class="n">qc_file</span><span class="p">,</span> <span class="s1">&#39;template&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_connect_xcp</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">qc_file</span><span class="p">,</span> <span class="n">original</span><span class="p">,</span> <span class="n">final</span><span class="p">,</span> <span class="n">t1w_bold</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s1">&#39;space-</span><span class="si">{</span><span class="n">space</span><span class="si">}</span><span class="s1">_desc-bold_mask&#39;</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s1">&#39;space-</span><span class="si">{</span><span class="n">space</span><span class="si">}</span><span class="s1">_desc-xcp_quality&#39;</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">)</span></div>
+
+
+<span class="c1"># pylint: disable=invalid-name, unused-argument</span>
+<div class="viewcode-block" id="qc_xcp_EPItemplate"><a class="viewcode-back" href="../../../developer/xcpqc#CPAC.qc.xcp.qc_xcp_EPItemplate">[docs]</a><span class="k">def</span> <span class="nf">qc_xcp_EPItemplate</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    {&#39;name&#39;: &#39;qc_xcp_template&#39;,</span>
+<span class="sd">    {&#39;name&#39;: &#39;qc_xcp_EPItemplate&#39;,</span>
+<span class="sd">     &#39;config&#39;: [&#39;pipeline_setup&#39;, &#39;output_directory&#39;, &#39;quality_control&#39;],</span>
+<span class="sd">     &#39;switch&#39;: [&#39;generate_xcpqc_files&#39;],</span>
+<span class="sd">     &#39;option_key&#39;: &#39;None&#39;,</span>
+<span class="sd">     &#39;option_val&#39;: &#39;None&#39;,</span>
+<span class="sd">     &#39;inputs&#39;: [(&#39;bold&#39;, &#39;subject&#39;, &#39;scan&#39;, &#39;T1w&#39;, &#39;EPI-template&#39;,</span>
+<span class="sd">                &#39;space-T1w_desc-mean_bold&#39;,</span>
+<span class="sd">                &#39;space-EPItemplate_desc-preproc_bold&#39;, &#39;desc-preproc_T1w&#39;,</span>
+<span class="sd">                &#39;space-EPItemplate_desc-bold_mask&#39;)],</span>
+<span class="sd">     &#39;outputs&#39;: [&#39;space-EPItemplate_desc-xcp_quality&#39;]}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">qc_xcp_template</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="s1">&#39;EPItemplate&#39;</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span>
+                           <span class="s1">&#39;EPI-template&#39;</span><span class="p">)</span></div>
+
+
+<span class="c1"># pylint: disable=invalid-name, unused-argument</span>
+<div class="viewcode-block" id="qc_xcp_T1template"><a class="viewcode-back" href="../../../developer/xcpqc#CPAC.qc.xcp.qc_xcp_T1template">[docs]</a><span class="k">def</span> <span class="nf">qc_xcp_T1template</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    {&#39;name&#39;: &#39;qc_xcp_T1template&#39;,</span>
 <span class="sd">     &#39;config&#39;: [&#39;pipeline_setup&#39;, &#39;output_directory&#39;, &#39;quality_control&#39;],</span>
 <span class="sd">     &#39;switch&#39;: [&#39;generate_xcpqc_files&#39;],</span>
 <span class="sd">     &#39;option_key&#39;: &#39;None&#39;,</span>
@@ -530,15 +560,8 @@
 <span class="sd">                &#39;space-template_desc-bold_mask&#39;)],</span>
 <span class="sd">     &#39;outputs&#39;: [&#39;space-template_desc-xcp_quality&#39;]}</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">space</span> <span class="o">=</span> <span class="s1">&#39;template&#39;</span>
-    <span class="n">qc_file</span><span class="p">,</span> <span class="n">original</span><span class="p">,</span> <span class="n">final</span><span class="p">,</span> <span class="n">t1w_bold</span> <span class="o">=</span> <span class="n">_prep_qc_xcp</span><span class="p">(</span><span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span>
-                                                      <span class="n">space</span><span class="p">)</span>
-    <span class="n">final</span><span class="p">[</span><span class="s1">&#39;func&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">node_data</span><span class="p">(</span><span class="s1">&#39;space-template_desc-preproc_bold&#39;</span><span class="p">)</span>
-    <span class="n">template</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">node_data</span><span class="p">(</span><span class="s1">&#39;T1w-brain-template-funcreg&#39;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">node</span><span class="p">,</span> <span class="n">template</span><span class="o">.</span><span class="n">out</span><span class="p">,</span> <span class="n">qc_file</span><span class="p">,</span> <span class="s1">&#39;template&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">_connect_xcp</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">qc_file</span><span class="p">,</span> <span class="n">original</span><span class="p">,</span> <span class="n">final</span><span class="p">,</span> <span class="n">t1w_bold</span><span class="p">,</span>
-                        <span class="s1">&#39;space-template_desc-bold_mask&#39;</span><span class="p">,</span>
-                        <span class="s1">&#39;space-template_desc-xcp_quality&#39;</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">qc_xcp_template</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="s1">&#39;template&#39;</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span>
+                           <span class="s1">&#39;T1w-brain-template-funcreg&#39;</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">_repeat_shorter</span><span class="p">(</span><span class="n">images</span><span class="p">):</span>

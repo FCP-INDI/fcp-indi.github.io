@@ -18,6 +18,8 @@ C-PAC automatically creates a JSON-like file called ``callback.log`` (via the fu
    * specified maximum number of threads per Node, and
    * threads used at runtime.
 
+A ``callback.log`` can be provided to the pipeline configuration file (see :ref:`/user/compute_config`) or with the commandline flag ``--runtime_usage``. If a callback log is provided in the pipeline configuration, nodes with names that match nodes recorded in that pipeline log will have their memory estimates overridden by the values in the callback log plus a buffer percent (provided with the ``--runtime_buffer`` flag or in the pipeline configuration file).
+
 When a developer creates or modifies a Node in C-PAC, a ``mem_gb`` and ``n_procs`` argument should be provided unless the respective defaults of 0.2 and None (number of available system cores) are expected to be sufficient. When testing, the ``mem_gb`` and ``n_procs`` arguments should be adjusted if the observed memory and/or thread usage of a Node exceeds the estimate.
 
 For nodes that will use a varying amount of memory depending on the node's input data, the optional parameter ``mem_x`` takes a tuple of ``(memory multiplier, input file, multiplier mode)`` where ``memory multiplier`` is a number and ``input file`` is the string name of the Node input to multiply such that the memory estimate returned by the ``mem_gb`` attribute is the ``mem_gb`` argument plus ``memory multiplier`` times the dimensions of the ``input file`` as specified in the ``multiplier mode`` (``xyzt`` (spatial × temporal; default), ``xyz`` (spatial), or just ``t`` (temporal)).

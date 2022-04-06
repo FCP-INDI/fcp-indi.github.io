@@ -8,6 +8,8 @@ Computer Settings
 
 #. **Maximum Cores Per Participant - [integer]:** Number of cores (on a single machine) or slots on a node (cluster/grid) per subject. Slots are cores on a cluster/grid node. 'Number of Cores Per Participant' multiplied by 'Number of Participants to Run Simultaneously' must not be greater than the total number of cores. Dedicating more than one core/CPU per participant will direct C-PAC to parallelize the motion correction and time series registration transform application steps, for a speed increase.
 
+#. **Raise Insufficient - [True, False]:** If True (default), C-PAC will raise an error before trying to run a pipeline if it estimates the given data and pipeline configuration will exceed the memory or core limits. If False, C-PAC will raise a warning and continue to run the pipeline even if it estimates the given data and pipeline configuration will exceed the memory or core limits.
+
 #. **Observed Usage**
     #. **Callback log - [text]:** The path to a callback log file from a previous run, including any resource-management parameters that will be applied in this run, like ``n_cpus`` and ``num_ants_threads``. This file is used override memory estimates with previously observed memory usage. Can be overridden with the commandline flag ``--runtime_usage``.
     #. **Buffer - [percent]:** A percent of the previously observed memory usage that is to be added to the memory estimate. Default: 10. Can be overridden with the commandline flag ``--runtime_buffer``.

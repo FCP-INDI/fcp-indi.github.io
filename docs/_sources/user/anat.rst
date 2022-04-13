@@ -355,7 +355,7 @@ Configuring CPAC to Run Anatomical Tissue Segmentation
 
 #. **Erosion - [On, Off]:** Whether or not to use erosion to erode binarized tissue masks.
 
-#. **Erosion Proportion - [float]:** Set the erosion proportion, if use erosion to erode binarized tissue masks. The default is 0.6.
+#. **Erosion Proportion - [float]:** Set the target volume ratio, if using erosion to erode binarized tissue masks. The default is 0.6.
 
 .. figure:: /_images/seg_gui_2.png
 

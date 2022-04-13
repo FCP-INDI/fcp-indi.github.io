@@ -58,6 +58,15 @@
 <ol class="arabic simple">
 <li><p><strong>Maximum Memory Per Participant (GB) - [number]:</strong>  The maximum amount of memory each participant’s workflow can allocate. Use this to place an upper bound of memory usage. <strong>Warning: ‘Memory Per Participant’ multiplied by ‘Number of Participants to Run Simultaneously’ must not be more than the total amount of RAM. Conversely, using too little RAM can impede the speed of a pipeline run. It is recommended that you set this to a value that when multiplied by ‘Number of Participants to Run Simultaneously’ is as much RAM you can safely allocate.</strong></p></li>
 <li><p><strong>Maximum Cores Per Participant - [integer]:</strong> Number of cores (on a single machine) or slots on a node (cluster/grid) per subject. Slots are cores on a cluster/grid node. ‘Number of Cores Per Participant’ multiplied by ‘Number of Participants to Run Simultaneously’ must not be greater than the total number of cores. Dedicating more than one core/CPU per participant will direct C-PAC to parallelize the motion correction and time series registration transform application steps, for a speed increase.</p></li>
+<li><p><strong>Raise Insufficient - [True, False]:</strong> If True (default), C-PAC will raise an error before trying to run a pipeline if it estimates the given data and pipeline configuration will exceed the memory or core limits. If False, C-PAC will raise a warning and continue to run the pipeline even if it estimates the given data and pipeline configuration will exceed the memory or core limits.</p></li>
+<li><dl class="simple">
+<dt><strong>Observed Usage:</strong> The resource usage of each node depends on many factors, including the data, the pipeline configuration, and the system. To run many subjects with optimimzed resource estimation, first run a single subject with the desired number of cores and with a generous memory limit. Then, provide the <code class="docutils literal notranslate"><span class="pre">callback.log</span></code> generated from that initial run when you run the rest of the subjects.</dt><dd><ol class="arabic simple">
+<li><p><strong>Callback log - [text]:</strong> The path to a callback log file from a previous run, including any resource-management parameters that will be applied in this run, like <code class="docutils literal notranslate"><span class="pre">n_cpus</span></code> and <code class="docutils literal notranslate"><span class="pre">num_ants_threads</span></code>. This file is used override memory estimates with previously observed memory usage. Can be overridden with the commandline flag <code class="docutils literal notranslate"><span class="pre">--runtime_usage</span></code>.</p></li>
+<li><p><strong>Buffer - [percent]:</strong> A percent of the previously observed memory usage that is to be added to the memory estimate. Default: 10. Can be overridden with the commandline flag <code class="docutils literal notranslate"><span class="pre">--runtime_buffer</span></code>.</p></li>
+</ol>
+</dd>
+</dl>
+</li>
 <li><p><strong>Number of Participants to Run Simultaneously - [integer]:</strong> This number depends on computing resources.</p></li>
 <li><p><strong>Number of Cores for Anatomical Registration (ANTS) - [integer]:</strong> This number depends on computing resources.</p></li>
 <li><p><strong>FSL directory - [path]:</strong> Full path to the FSL version to be used by CPAC. If you have specified an FSL path in your .bashrc file, this path will be set automatically.</p></li>
@@ -108,6 +117,19 @@
 <span class="w">    </span><span class="c1"># - It is recommended that you set this to a value that when multiplied by</span><span class="w"></span>
 <span class="w">    </span><span class="c1">#   &#39;Number of Participants to Run Simultaneously&#39; is as much RAM you can safely allocate.</span><span class="w"></span>
 <span class="w">    </span><span class="nt">maximum_memory_per_participant</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1"># Prior to running a pipeline C-PAC makes a rough estimate of a worst-case-scenario maximum concurrent memory usage with high-resoltion data, raising an exception describing the recommended minimum memory allocation for the given configuration.</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># Turning this option off will allow pipelines to run without allocating the recommended minimum, allowing for more efficient runs at the risk of out-of-memory crashes (use at your own risk)</span><span class="w"></span>
+<span class="w">    </span><span class="nt">raise_insufficient</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">On</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1"># A callback.log file from a previous run can be provided to estimate memory usage based on that run.</span><span class="w"></span>
+<span class="w">    </span><span class="nt">observed_usage</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># Path to callback log file with previously observed usage.</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># Can be overridden with the commandline flag `--runtime_usage`.</span><span class="w"></span>
+<span class="w">      </span><span class="nt">callback_log</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># Percent. E.g., `buffer: 10` would estimate 1.1 * the observed memory usage from the callback log provided in &quot;usage&quot;.</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># Can be overridden with the commandline flag `--runtime_buffer`.</span><span class="w"></span>
+<span class="w">      </span><span class="nt">buffer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w"></span>
 
 <span class="w">    </span><span class="c1"># The maximum amount of cores (on a single machine) or slots on a node (on a cluster/grid)</span><span class="w"></span>
 <span class="w">    </span><span class="c1"># to allocate per participant.</span><span class="w"></span>
@@ -280,7 +302,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

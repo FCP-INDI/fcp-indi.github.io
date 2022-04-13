@@ -67,6 +67,25 @@
 <span class="n">random_state_logger</span> <span class="o">=</span> <span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;random&#39;</span><span class="p">)</span>
 
 
+<span class="k">def</span> <span class="nf">_check_mem_x_path</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Function to check if a supplied multiplier path exists.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mem_x_path : str, iterable, Undefined or None</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">mem_x_path</span> <span class="o">=</span> <span class="n">_grab_first_path</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">mem_x_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Undefined</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span>
+            <span class="n">mem_x_path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+
 <span class="k">def</span> <span class="nf">_doctest_skiplines</span><span class="p">(</span><span class="n">docstring</span><span class="p">,</span> <span class="n">lines_to_skip</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Function to add &#39;  # doctest: +SKIP&#39; to the end of docstring lines</span>
@@ -100,40 +119,62 @@
     <span class="p">])</span>
 
 
+<span class="k">def</span> <span class="nf">_grab_first_path</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Function to grab the first path if multiple paths for given</span>
+<span class="sd">    multiplier input</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mem_x_path : str, iterable, Undefined or None</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str, Undefined or None</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">TraitListObject</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="n">mem_x_path</span> <span class="o">=</span> <span class="n">mem_x_path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">)</span> <span class="k">else</span> <span class="n">Undefined</span>
+    <span class="k">return</span> <span class="n">mem_x_path</span>
+
+
 <div class="viewcode-block" id="Node"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Node">[docs]</a><span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
+    <span class="c1"># pylint: disable=empty-docstring,too-many-instance-attributes</span>
     <span class="vm">__doc__</span> <span class="o">=</span> <span class="n">_doctest_skiplines</span><span class="p">(</span>
         <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">,</span>
         <span class="p">{</span><span class="s2">&quot;    &gt;&gt;&gt; realign.inputs.in_files = &#39;functional.nii&#39;&quot;</span><span class="p">}</span>
     <span class="p">)</span>
 
 <div class="viewcode-block" id="Node.__init__"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Node.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="n">DEFAULT_MEM_GB</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># pylint: disable=import-outside-toplevel</span>
         <span class="kn">from</span> <span class="nn">CPAC.pipeline.random_state</span> <span class="kn">import</span> <span class="n">random_seed</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="n">mem_gb</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;nipype.workflow&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">random_seed</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seed_applied</span> <span class="o">=</span> <span class="kc">False</span>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_data_shape</span> <span class="o">=</span> <span class="n">Undefined</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose_logger</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="s1">&#39;mem_x&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;mem_x&#39;</span><span class="p">],</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
         <span class="p">):</span>
-            <span class="n">mem_x</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;mem_x&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
                 <span class="p">(</span>
-                    <span class="n">mem_x</span><span class="p">[</span><span class="s1">&#39;multiplier&#39;</span><span class="p">],</span>
-                    <span class="n">mem_x</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">],</span>
-                    <span class="n">mem_x</span><span class="p">[</span><span class="s1">&#39;mode&#39;</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">[</span><span class="s1">&#39;multiplier&#39;</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">[</span><span class="s1">&#39;mode&#39;</span><span class="p">]</span>
                 <span class="p">)</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;mem_x&#39;</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">mem_x</span><span class="p">[</span><span class="s1">&#39;mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;xyzt&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">[</span><span class="s1">&#39;mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;xyzt&#39;</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;mem_x&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
                     <span class="p">(</span>
-                        <span class="n">mem_x</span><span class="p">[</span><span class="s1">&#39;multiplier&#39;</span><span class="p">],</span>
-                        <span class="n">mem_x</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">[</span><span class="s1">&#39;multiplier&#39;</span><span class="p">],</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span>
                     <span class="p">)</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;mem_x&#39;</span><span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">mem_x</span><span class="p">[</span><span class="s1">&#39;multiplier&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;mem_x&#39;</span><span class="p">]</span>
-                    <span class="n">mem_x</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">,</span> <span class="n">mem_x</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">[</span><span class="s1">&#39;multiplier&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;mem_x&#39;</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">)</span>
         <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;skip_timeout&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
 
     <span class="n">orig_sig_params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">signature</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
@@ -181,7 +222,7 @@
 <span class="sd">            ``mode`` can be any one of</span>
 <span class="sd">            * &#39;xyzt&#39; (spatial * temporal) (default if not specified)</span>
 <span class="sd">            * &#39;xyz&#39; (spatial)</span>
-<span class="sd">            * &#39;t&#39; (temporal)&#39;&#39;&#39;</span><span class="p">]))</span>  <span class="c1"># noqa: E501</span>
+<span class="sd">            * &#39;t&#39; (temporal)&#39;&#39;&#39;</span><span class="p">]))</span>  <span class="c1"># noqa: E501  # pylint: disable=line-too-long</span>
 
     <span class="k">def</span> <span class="nf">_add_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flags</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&#39;&#39;&#39;</span>
@@ -221,6 +262,84 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">prep_flags</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">_apply_mem_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">multiplicand</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Method to calculate and memoize a Node&#39;s estimated memory</span>
+<span class="sd">        footprint.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        multiplicand : str or int or float or list thereof or</span>
+<span class="sd">                       3-or-4-tuple or None</span>
+<span class="sd">            Any of</span>
+<span class="sd">            * path to file(s) with shape to multiply by multiplier</span>
+<span class="sd">            * multiplicand</span>
+<span class="sd">            * shape of image to consider with mode</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        number</span>
+<span class="sd">            estimated memory usage (GB)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">def</span> <span class="nf">parse_multiplicand</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">):</span>
+            <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">            Returns an numeric value for a multiplicand if</span>
+<span class="sd">            multipland is a string or None.</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            muliplicand : any</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            int or float</span>
+<span class="sd">            &#39;&#39;&#39;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">verbose_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> multiplicand: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                          <span class="n">multiplicand</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">max</span><span class="p">([</span><span class="n">parse_multiplicand</span><span class="p">(</span><span class="n">part</span><span class="p">)</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">multiplicand</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="n">multiplicand</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="mi">3</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">4</span> <span class="ow">and</span>
+                <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">multiplicand</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="k">return</span> <span class="n">get_data_size</span><span class="p">(</span>
+                    <span class="n">multiplicand</span><span class="p">,</span>
+                    <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mode&#39;</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">_check_mem_x_path</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">get_data_size</span><span class="p">(</span>
+                    <span class="n">_grab_first_path</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">),</span>
+                    <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mode&#39;</span><span class="p">))</span>
+            <span class="k">return</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">verbose_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">.mem_x: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">mem_x</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">multiplicand</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">multiplicand</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x_file</span><span class="p">()</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_gb&#39;</span><span class="p">,</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_mem_gb</span> <span class="o">+</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;multiplier&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span>
+                <span class="n">parse_multiplicand</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">)))</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_gb</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> is estimated to use </span><span class="si">%.3f</span><span class="s1"> GB (</span><span class="si">%s</span><span class="s1">).&#39;</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_mem_gb</span><span class="p">,</span>
+                        <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">)</span>
+                    <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">verbose_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">._mem_gb: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">_mem_gb</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_gb</span>
+
     <span class="k">def</span> <span class="nf">_apply_random_seed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;Apply flags for the first matched interface&#39;&#39;&#39;</span>
         <span class="c1"># pylint: disable=import-outside-toplevel</span>
@@ -252,126 +371,17 @@
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_mem_x</span><span class="p">()</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">mem_x_path</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">])</span>
-            <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">attribute_error</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1"> in Node </span><span class="se">\&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mem_x_path</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">):</span>
+                    <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">attribute_error</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1"> in Node </span><span class="se">\&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\&#39;</span><span class="s1">&#39;</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="nn">attribute_error</span>
+            <span class="k">if</span> <span class="n">_check_mem_x_path</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">):</span>
                 <span class="c1"># constant + mem_x[0] * t</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_mem_x</span><span class="p">()</span>
             <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;The memory estimate for Node &#39;</span>
                                     <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; depends on the input &quot;</span>
                                     <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39; but &quot;</span>
                                     <span class="s1">&#39;no such file or directory&#39;</span><span class="p">,</span> <span class="n">mem_x_path</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_gb</span>
-
-    <span class="k">def</span> <span class="nf">_check_mem_x_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mem_x_path</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Method to check if a supplied multiplier path exists.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        mem_x_path : str, iterable, Undefined or None</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        bool</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="n">mem_x_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_grab_first_path</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">mem_x_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Undefined</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span>
-                <span class="n">mem_x_path</span><span class="p">)</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="k">def</span> <span class="nf">_grab_first_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mem_x_path</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Method to grab the first path if multiple paths for given</span>
-<span class="sd">        multiplier input</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        mem_x_path : str, iterable, Undefined or None</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        str, Undefined or None</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="nb">isinstance</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span>
-            <span class="nb">isinstance</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">,</span> <span class="n">TraitListObject</span><span class="p">)</span> <span class="ow">or</span>
-            <span class="nb">isinstance</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
-        <span class="p">):</span>
-            <span class="n">mem_x_path</span> <span class="o">=</span> <span class="n">mem_x_path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mem_x_path</span><span class="p">)</span> <span class="k">else</span> <span class="n">Undefined</span>
-        <span class="k">return</span> <span class="n">mem_x_path</span>
-
-    <span class="k">def</span> <span class="nf">_mem_x_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;file&#39;</span><span class="p">))</span>
-
-    <span class="k">def</span> <span class="nf">_apply_mem_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">multiplicand</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Method to calculate and memoize a Node&#39;s estimated memory</span>
-<span class="sd">        footprint.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        multiplier : str or int or float or list thereof or 4-tuple or None</span>
-<span class="sd">            Any of</span>
-<span class="sd">            * path to file(s) with shape to multiply by multiplier</span>
-<span class="sd">            * multiplicand</span>
-<span class="sd">            * shape of image to consider with mode</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        number</span>
-<span class="sd">            estimated memory usage (GB)</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-        <span class="k">def</span> <span class="nf">parse_multiplicand</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">):</span>
-            <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">            Returns an numeric value for a multiplicand if</span>
-<span class="sd">            multipland is a string or None.</span>
-
-<span class="sd">            Parameters</span>
-<span class="sd">            ----------</span>
-<span class="sd">            muliplicand : any</span>
-
-<span class="sd">            Returns</span>
-<span class="sd">            -------</span>
-<span class="sd">            int or float</span>
-<span class="sd">            &#39;&#39;&#39;</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="n">parse_multiplicand</span><span class="p">(</span><span class="n">part</span><span class="p">)</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">multiplicand</span><span class="p">])</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
-                <span class="k">return</span> <span class="n">multiplicand</span>
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="nb">isinstance</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span>
-                <span class="mi">3</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">4</span> <span class="ow">and</span>
-                <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">multiplicand</span><span class="p">)</span>
-            <span class="p">):</span>
-                <span class="k">return</span> <span class="n">get_data_size</span><span class="p">(</span>
-                    <span class="n">multiplicand</span><span class="p">,</span>
-                    <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mode&#39;</span><span class="p">))</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_mem_x_path</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">get_data_size</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_grab_first_path</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">),</span>
-                    <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mode&#39;</span><span class="p">))</span>
-            <span class="k">return</span> <span class="mi">1</span>
-
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">multiplicand</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">multiplicand</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x_file</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_mem_gb</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_mem_gb</span> <span class="o">+</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">[</span><span class="s1">&#39;multiplier&#39;</span><span class="p">]</span> <span class="o">*</span>  <span class="c1"># pylint: disable=no-member</span>
-                <span class="n">parse_multiplicand</span><span class="p">(</span><span class="n">multiplicand</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_gb</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                        <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> is estimated to use </span><span class="si">%.3f</span><span class="s1"> GB (</span><span class="si">%s</span><span class="s1">).&#39;</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_mem_gb</span><span class="p">,</span>
-                        <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">)</span>
-                    <span class="p">)</span>
-            <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-                <span class="k">pass</span>
-            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_gb</span>
 
     <span class="nd">@property</span>
@@ -381,7 +391,23 @@
 <span class="sd">        temporal only). Returns ``None`` if already consumed or not set.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">_mem_x_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;file&#39;</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Node.override_mem_gb"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Node.override_mem_gb">[docs]</a>    <span class="k">def</span> <span class="nf">override_mem_gb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_mem_gb</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Override the Node&#39;s memory estimate with a new value.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        new_mem_gb : int or float</span>
+<span class="sd">            new memory estimate in GB</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">):</span>
+            <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_gb&#39;</span><span class="p">,</span> <span class="n">new_mem_gb</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="Node.run"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Node.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updatehash</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">super</span><span class="p">(),</span> <span class="s1">&#39;__doc__&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_apply_random_seed</span><span class="p">()</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed_applied</span><span class="p">:</span>
@@ -411,9 +437,34 @@
 
 
 <div class="viewcode-block" id="Workflow"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Workflow">[docs]</a><span class="k">class</span> <span class="nc">Workflow</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Controls the setup and execution of a pipeline of processes.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Workflow.__init__"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Workflow.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">base_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a workflow object.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : alphanumeric string</span>
+<span class="sd">            unique identifier for the workflow</span>
+<span class="sd">        base_dir : string, optional</span>
+<span class="sd">            path to workflow storage</span>
+<span class="sd">        debug : boolean, optional</span>
+<span class="sd">            enable verbose debug-level logging</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">base_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span> <span class="o">=</span> <span class="n">debug</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose_logger</span> <span class="o">=</span> <span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;engine&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">debug</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nodes_cache</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nested_workflows_cache</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span></div>
+
     <span class="k">def</span> <span class="nf">_configure_exec_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Ensure that each node knows where to get inputs from&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">_debug</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span>  <span class="c1"># pylint: disable=protected-access</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">verbose_logger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose_logger</span>
             <span class="n">node</span><span class="o">.</span><span class="n">input_source</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">in_edges</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
                 <span class="n">data</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">get_edge_data</span><span class="p">(</span><span class="o">*</span><span class="n">edge</span><span class="p">)</span>
@@ -543,7 +594,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

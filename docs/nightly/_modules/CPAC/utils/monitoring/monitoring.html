@@ -41,14 +41,16 @@
   <h1>Source code for CPAC.utils.monitoring.monitoring</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">import</span> <span class="nn">socketserver</span>
 <span class="kn">import</span> <span class="nn">threading</span>
 
+<span class="kn">from</span> <span class="nn">traits.trait_base</span> <span class="kn">import</span> <span class="n">Undefined</span>
+
 <span class="kn">from</span> <span class="nn">CPAC.pipeline</span> <span class="kn">import</span> <span class="n">nipype_pipeline_engine</span> <span class="k">as</span> <span class="n">pe</span>
+<span class="kn">from</span> <span class="nn">.custom_logging</span> <span class="kn">import</span> <span class="n">getLogger</span>
 
 
 <span class="c1"># Log initial information from all the nodes</span>
@@ -65,7 +67,7 @@
 
 
 <span class="k">def</span> <span class="nf">log_nodes_initial</span><span class="p">(</span><span class="n">workflow</span><span class="p">):</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;callback&#39;</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;callback&#39;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">recurse_nodes</span><span class="p">(</span><span class="n">workflow</span><span class="p">):</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
 
@@ -94,7 +96,7 @@
 
     <span class="kn">import</span> <span class="nn">nipype.pipeline.engine.nodes</span> <span class="k">as</span> <span class="nn">nodes</span>
 
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;callback&#39;</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;callback&#39;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">MapNode</span><span class="p">):</span>
         <span class="k">return</span>
@@ -117,6 +119,12 @@
         <span class="s1">&#39;estimated_memory_gb&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">mem_gb</span><span class="p">,</span>
         <span class="s1">&#39;num_threads&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">n_procs</span><span class="p">,</span>
     <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">&#39;input_data_shape&#39;</span><span class="p">)</span> <span class="ow">and</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">input_data_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Undefined</span>
+    <span class="p">):</span>
+        <span class="n">status_dict</span><span class="p">[</span><span class="s1">&#39;input_data_shape&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">input_data_shape</span>
 
     <span class="k">if</span> <span class="n">status_dict</span><span class="p">[</span><span class="s1">&#39;start&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">status_dict</span><span class="p">[</span><span class="s1">&#39;finish&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">status_dict</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
@@ -260,7 +268,7 @@
 
     <div class="footer" role="contentinfo">
         &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

@@ -9,6 +9,7 @@
     - [Let CircleCI build your drafts / works-in-progress](#let-circleci-build-your-drafts--works-in-progress)
     - [Build locally (C-PAC ≥ v1.8.0)](#build-locally-c-pac-≥-v180)
 - [Flowcharts](#flowcharts)
+- [Tutorials](#tutorials)
 - [References and citations](#references-and-citations)
 - [Environment notes](#environment-notes)
 
@@ -118,6 +119,11 @@ where `{width}` and `{height}` are the values already present in the existing `w
 
     <object data="../_static/path/to/chart.svg" type="image/svg+xml"></object>
 ```
+
+<a id="markdown-tutorials" name="tutorials"></a>
+## Tutorials
+
+See [FCP-INDI/C-PAC_tutorials/CONTRIBUTING.md](https://github.com/FCP-INDI/C-PAC_tutorials/blob/main/CONTRIBUTING.md) for how to contribute tutorials. Add them to the TOC tree in that repository or in any TOC tree in this repository with a relative path beginning `/user/tutorials/` (e.g., `/user/tutorials/observed_usage` for [`observed_usage.ipynb`](https://github.com/FCP-INDI/C-PAC_tutorials/blob/main/observed_usage.ipynb)).
 
 <a id="markdown-references-and-citations" name="references-and-citations"></a>
 ## References and citations

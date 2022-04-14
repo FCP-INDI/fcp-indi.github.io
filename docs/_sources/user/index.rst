@@ -113,6 +113,7 @@ User Guide Index
    6. All Run Options <running>
    7. Run Group Analysis <group_analysis>
    8. Check Your Outputs <output_dir>
-   9. Troubleshoot <help>
-   10. Release Notes <rnotes>
-   11. Appendix <appendix>
+   9. Tutorials <tutorials/index>
+   10. Troubleshoot <help>
+   11. Release Notes <rnotes>
+   12. Appendix <appendix>

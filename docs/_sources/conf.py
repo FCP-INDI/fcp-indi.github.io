@@ -148,6 +148,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinxcontrib.programoutput',
     'exec',
+    'nbsphinx',
     'numpydoc']
 
 # Add any paths that contain templates here, relative to this directory.

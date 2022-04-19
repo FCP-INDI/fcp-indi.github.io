@@ -56,15 +56,17 @@ The C-PAC Team
 
    **Primary Development Team:**
    Michael Milham (Founder, Co-Principal Investigator)
-   Cameron Craddock (Co-Principal Investigator)
    Steven Giavasis (Lead Developer)
    Jon Clucas (Developer)
    Teresa George (Developer)
    Amy Gutierrez (Developer)
+   Greg Kiar (Developer)
 
    **Project Alumni:**
+   Cameron Craddock (Co-Principal Investigator)
    Hecheng Jin
    Xinhui Li
+   Lei Ai
    Anibal Solon Heinsfeld
    Nanditha Rajamani
    Alison Walensky

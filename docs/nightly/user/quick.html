@@ -15,6 +15,7 @@
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
     <link rel="index" title="Index" href="../genindex" />
     <link rel="search" title="Search" href="../search" />
@@ -105,7 +106,8 @@
 <span class="go">usage: cpac [-h] [--version] [-o OPT] [-B CUSTOM_BINDING]</span>
 <span class="go">            [--platform {docker,singularity}] [--image IMAGE] [--tag TAG]</span>
 <span class="go">            [--working_dir PATH] [-v] [-vv]</span>
-<span class="go">            {run,group,utils,pull,upgrade,crash} ...</span>
+<span class="go">            {run,utils,version,group,pull,upgrade,enter,bash,shell,parse-resources,parse_resources,crash}</span>
+<span class="go">            ...</span>
 
 <span class="go">cpac: a Python package that simplifies using C-PAC &lt;http://fcp-indi.github.io&gt; containerized images.</span>
 
@@ -130,8 +132,40 @@
 
 <span class="go">     cpac run --help</span>
 
+<span class="go">Known issues:</span>
+<span class="go">- Some Docker containers unexpectedly persist after cpac finishes. To clear them, run</span>
+<span class="go">    1. `docker ps` to list the containers</span>
+<span class="go">  For each C-PAC conatainer that persists, run</span>
+<span class="go">    2. `docker attach &lt;container_name&gt;`</span>
+<span class="go">    3. `exit`</span>
+<span class="go">- https://github.com/FCP-INDI/cpac/issues</span>
+
 <span class="go">positional arguments:</span>
-<span class="go">  {run,group,utils,pull,upgrade,crash}</span>
+<span class="go">  {run,utils,version,group,pull,upgrade,enter,bash,shell,parse-resources,parse_resources,crash}</span>
+<span class="go">    run                 Run C-PAC. See</span>
+<span class="go">                        &quot;cpac [--platform {docker,singularity}] [--image IMAGE] [--tag TAG] run --help&quot;</span>
+<span class="go">                        for more information.</span>
+<span class="go">    utils               Run C-PAC commandline utilities. See</span>
+<span class="go">                        &quot;cpac [--platform {docker,singularity}] [--image IMAGE] [--tag TAG] utils --help&quot;</span>
+<span class="go">                        for more information.</span>
+<span class="go">    version             Print the version of C-PAC that cpac is using.</span>
+<span class="go">    group               Run a group level analysis in C-PAC. See</span>
+<span class="go">                        &quot;cpac [--platform {docker,singularity}] [--image IMAGE] [--tag TAG] group --help&quot;</span>
+<span class="go">                        for more information.</span>
+<span class="go">    pull (upgrade)      Upgrade your local C-PAC version to the latest version</span>
+<span class="go">                        by pulling from Docker Hub or other repository.</span>
+<span class="go">                        Use with &quot;--image&quot; and/or &quot;--tag&quot; to specify an image</span>
+<span class="go">                        other than the default &quot;fcpindi/c-pac:latest&quot; to pull.</span>
+<span class="go">    enter (bash, shell)</span>
+<span class="go">                        Enter a new C-PAC container via BASH.</span>
+<span class="go">    parse-resources (parse_resources)</span>
+<span class="go">                        When provided with a `callback.log` file, this utility can sort through</span>
+<span class="go">                        the memory `runtime` usage, `estimate`, and associated `efficiency`, to</span>
+<span class="go">                        identify the `n` tasks with the `highest` or `lowest` of each of these</span>
+<span class="go">                        categories.</span>
+<span class="go">                        &quot;parse-resources&quot; is intended to be run outside a C-PAC container.</span>
+<span class="go">                        See &quot;cpac parse-resources --help&quot; for more information.</span>
+<span class="go">    crash               Convert a crash pickle to plain text (C-PAC &lt; 1.8.0).</span>
 
 <span class="go">optional arguments:</span>
 <span class="go">  -h, --help            show this help message and exit</span>
@@ -208,13 +242,19 @@
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cpac run --help
 
 <span class="go">Loading 🐳 Docker</span>
-<span class="go">Loading 🐳 fcpindi/c-pac:latest with these directory bindings:</span>
-<span class="go">  local                         Docker                mode</span>
-<span class="go">  ----------------------------  --------------------  ------</span>
-<span class="go">  /home/circleci/build          /home/circleci/build  rw</span>
-<span class="go">  /home/circleci/build          /tmp                  rw</span>
-<span class="go">  /home/circleci/build/outputs  /output               rw</span>
-<span class="go">  /home/circleci/build/log      /logs                 rw</span>
+<span class="go">Could not create /output. Binding /output to /home/circleci/build/output instead.</span>
+<span class="go">Could not create /crash. Binding /crash to /home/circleci/build/crash instead.</span>
+<span class="go">Could not create /logs. Binding /logs to /home/circleci/build/logs instead.</span>
+<span class="go">Loading 🐳 fcpindi/c-pac:latest as &quot;circleci (3434)&quot; with these directory bindings:</span>
+<span class="go">  local                        Docker                mode</span>
+<span class="go">  ---------------------------  --------------------  ------</span>
+<span class="go">  /etc/passwd                  /etc/passwd           ro</span>
+<span class="go">  /home/circleci/.cpac         /home/circleci/.cpac  rw</span>
+<span class="go">  /home/circleci/build         /home/circleci/build  rw</span>
+<span class="go">  /home/circleci/build/output  /output               rw</span>
+<span class="go">  /home/circleci/build/crash   /crash                rw</span>
+<span class="go">  /home/circleci/build/logs    /logs                 rw</span>
+<span class="go">  /tmp                         /tmp                  rw</span>
 <span class="go">Logging messages will refer to the Docker paths.</span>
 
 <span class="go">usage: run.py [-h] [--pipeline_file PIPELINE_FILE] [--group_file GROUP_FILE]</span>
@@ -396,13 +436,19 @@
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>cpac utils --help
 
 <span class="go">Loading 🐳 Docker</span>
-<span class="go">Loading 🐳 fcpindi/c-pac:latest with these directory bindings:</span>
-<span class="go">  local                         Docker                mode</span>
-<span class="go">  ----------------------------  --------------------  ------</span>
-<span class="go">  /home/circleci/build          /home/circleci/build  rw</span>
-<span class="go">  /home/circleci/build          /tmp                  rw</span>
-<span class="go">  /home/circleci/build/log      /logs                 rw</span>
-<span class="go">  /home/circleci/build/outputs  /output               rw</span>
+<span class="go">Could not create /logs. Binding /logs to /home/circleci/build/logs instead.</span>
+<span class="go">Could not create /output. Binding /output to /home/circleci/build/output instead.</span>
+<span class="go">Could not create /crash. Binding /crash to /home/circleci/build/crash instead.</span>
+<span class="go">Loading 🐳 fcpindi/c-pac:latest as &quot;circleci (3434)&quot; with these directory bindings:</span>
+<span class="go">  local                        Docker                mode</span>
+<span class="go">  ---------------------------  --------------------  ------</span>
+<span class="go">  /etc/passwd                  /etc/passwd           ro</span>
+<span class="go">  /home/circleci/.cpac         /home/circleci/.cpac  rw</span>
+<span class="go">  /home/circleci/build         /home/circleci/build  rw</span>
+<span class="go">  /home/circleci/build/logs    /logs                 rw</span>
+<span class="go">  /home/circleci/build/output  /output               rw</span>
+<span class="go">  /home/circleci/build/crash   /crash                rw</span>
+<span class="go">  /tmp                         /tmp                  rw</span>
 <span class="go">Logging messages will refer to the Docker paths.</span>
 
 <span class="go">Usage: run.py utils [OPTIONS] COMMAND [ARGS]...</span>
@@ -621,8 +667,9 @@
 <li class="toctree-l2"><a class="reference internal" href="running">6. All Run Options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="group_analysis">7. Run Group Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="output_dir">8. Check Your Outputs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="help">9. Troubleshoot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rnotes">10. Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/index">9. Tutorials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="help">10. Troubleshoot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnotes">11. Release Notes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="appendix">Appendix</a></li>
 <li class="toctree-l2"><a class="reference internal" href="appendix#benchmark-package">Benchmark Package</a></li>
 </ul>

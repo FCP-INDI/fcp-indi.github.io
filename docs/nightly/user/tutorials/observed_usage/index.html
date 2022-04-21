@@ -1,0 +1,1345 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>1. Tutorial: optimizing memory estimation &#8212; C-PAC 1.8.4.dev Beta documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/classic.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
+    
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="../../../genindex" />
+    <link rel="search" title="Search" href="../../../search" />
+    <link rel="next" title="Troubleshooting and Help" href="../../help" />
+    <link rel="prev" title="C-PAC Tutorials" href="../index" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../help" title="Troubleshooting and Help"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../index" title="C-PAC Tutorials"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.4.dev Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index" >User Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../index" accesskey="U">C-PAC Tutorials</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">1. </span>Tutorial: optimizing memory estimation</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<section id="Tutorial:-optimizing-memory-estimation">
+<h1><span class="section-number">1. </span>Tutorial: optimizing memory estimation<a class="headerlink" href="#Tutorial:-optimizing-memory-estimation" title="Permalink to this headline">¶</a></h1>
+<p>(You can <a class="reference external" href="https://raw.githubusercontent.com/FCP-INDI/C-PAC_tutorials/main/observed_usage/index.ipynb">⇩ download this notebook 💾</a> and run it locally.)</p>
+<p>C-PAC has some built-in heuristics for estimating the memory required for each node, but these estimates can be greatly improved by providing observed memory usage for a given configuration and comparable data. This tutorial will step through the process of an observation run and an optimized run.</p>
+<p>Note: The code cells in this notebook are using a <a class="reference external" href="https://pypi.org/project/bash_kernel">BASH kernel</a> and <a class="reference external" href="https://fcp-indi.github.io/docs/nightly/user/cpac">cpac (Python package)</a> v0.5.0</p>
+<section id="Observation-run">
+<h2><span class="section-number">1.1. </span>Observation run<a class="headerlink" href="#Observation-run" title="Permalink to this headline">¶</a></h2>
+<p>First, we need to run a single exemplar through our pipeline configuration to observe how much memory is used at each node. How many cores we provide to this run should be the same number we intend to use in our optimized runs, but we’ll want to give this run lots of memory to allow for the built-in conservative memory estimates.</p>
+<p>For this tutorial, we’ll use a subject from <a class="reference external" href="http://fcon_1000.projects.nitrc.org/indi/adhd200">ADHD-200</a>, from the FCP-INDI AWS S3 bucket, and we’ll use the anatomical only preconfiguration.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac run <span class="se">\</span>
+  s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS/NYU cpac_runs/observation participant <span class="se">\</span>
+  --preconfig anat-only <span class="se">\</span>
+  --participant_label <span class="m">0010042</span> <span class="se">\</span>
+  --n_cpus <span class="m">4</span> <span class="se">\</span>
+  --mem_gb <span class="m">10</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Loading 🐳 Docker
+[…]
+220414-15:17:19,750 nipype.workflow INFO:
+         Running in parallel.
+220414-15:17:19,751 nipype.workflow WARNING:
+         The following nodes are estimated to exceed the total amount of memory available (10.00GB):
+        resample_u: 14.799999999999999 GB
+        resample_o: 14.799999999999999 GB
+        resample_u: 14.799999999999999 GB
+        resample_o: 14.799999999999999 GB
+220414-15:17:20,8 nipype.workflow INFO:
+
+
+Error of subject workflow cpac_sub-0010042_ses-1
+
+CPAC run error:
+
+    Pipeline configuration: cpac_anat
+    Subject workflow: cpac_sub-0010042_ses-1
+[…]
+RuntimeError: Insufficient resources available for job:
+        resample_u: 14.799999999999999 GB
+        resample_o: 14.799999999999999 GB
+        resample_u: 14.799999999999999 GB
+        resample_o: 14.799999999999999 GB
+[…]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<p>We can see the initial estimate requires at least 14.8 GB for some nodes, so we’ll need to give it more memory. We have a couple options here.</p>
+<ol class="arabic simple">
+<li><p>If we don’t have hard memory limits (we expect our system will allow us to use more memory than we allocate), we can tell C-PAC to ignore the insufficient resources by adjusting our pipeline configuration, like</p></li>
+</ol>
+<p><a class="reference external" href="./configs/pipeline/anat-only-insufficient.yml">anat-only-insufficient.yml</a></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">FROM</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">anat-only</span><span class="w"></span>
+
+<span class="nt">pipeline_setup</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">system_config</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">raise_insufficient</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
+</pre></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac run <span class="se">\</span>
+  s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS/NYU cpac_runs/insufficient participant <span class="se">\</span>
+  --pipeline_file <span class="nv">$PWD</span>/configs/pipeline/anat-only-insufficient.yml <span class="se">\</span>
+  --participant_label <span class="m">0010042</span> <span class="se">\</span>
+  --n_cpus <span class="m">4</span> <span class="se">\</span>
+  --mem_gb <span class="m">10</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Loading 🐳 Docker
+[…]
+Skipping bids-validator for S3 datasets...
+Loading the &#39;anat-only&#39; pre-configured pipeline.
+#### Running C-PAC for 0010042
+Number of participants to run in parallel: 1
+Input directory: s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS/NYU
+Output directory: […]/cpac_runs/insufficient/output
+Working directory: […]/cpac_runs/insufficient/working
+Log directory: […]/cpac_runs/insufficient/log
+Remove working directory: False
+Available memory: 10.0 (GB)
+Available threads: 4
+Number of threads for ANTs: 1
+Parsing s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS/NYU..
+Connecting to AWS: fcp-indi anonymously...
+gathering files from S3 bucket (s3.Bucket(name=&#39;fcp-indi&#39;)) for data/Projects/ADHD200/RawDataBIDS/NYU
+Starting participant level processing
+Run called with config file […]/cpac_runs/insufficient/cpac_pipeline_config_2022-04-14T15-18-12Z.yml
+220414-15:18:19,245 nipype.workflow INFO:
+
+    Run command: run s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS/NYU cpac_runs/insufficient participant --pipeline_file […]/configs/pipeline/anat-only-insufficient.yml --participant_label 0010042 --n_cpus 4 --mem_gb 10
+
+    C-PAC version: 1.8.4.dev
+
+    Setting maximum number of cores per participant to 4
+    Setting number of participants at once to 1
+    Setting OMP_NUM_THREADS to 1
+    Setting MKL_NUM_THREADS to 1
+    Setting ANTS/ITK thread usage to 1
+    Maximum potential number of cores that might be used during this run: 4
+[…]
+    End of subject workflow cpac_sub-0010042_ses-1
+
+    CPAC run complete:
+
+        Pipeline configuration: cpac_anat
+        Subject workflow: cpac_sub-0010042_ses-1
+[…]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<p>Or</p>
+<ol class="arabic simple" start="2">
+<li><p>We can just allocate enough memory to satisfy the estimates</p></li>
+</ol>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac run <span class="se">\</span>
+  s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS/NYU cpac_runs/enough participant <span class="se">\</span>
+  --preconfig anat-only <span class="se">\</span>
+  --participant_label <span class="m">0010042</span> <span class="se">\</span>
+  --n_cpus <span class="m">4</span> <span class="se">\</span>
+  --mem_gb <span class="m">14</span>.8
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Loading 🐳 Docker
+[…]
+Skipping bids-validator for S3 datasets...
+Loading the &#39;anat-only&#39; pre-configured pipeline.
+#### Running C-PAC for 0010042
+Number of participants to run in parallel: 1
+Input directory: s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS/NYU
+Output directory: […]/cpac_runs/enough/output
+Working directory: […]/cpac_runs/enough/working
+Log directory: […]/cpac_runs/enough/log
+Remove working directory: False
+Available memory: 14.8 (GB)
+Available threads: 4
+Number of threads for ANTs: 1
+Parsing s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS/NYU..
+Connecting to AWS: fcp-indi anonymously...
+gathering files from S3 bucket (s3.Bucket(name=&#39;fcp-indi&#39;)) for data/Projects/ADHD200/RawDataBIDS/NYU
+Starting participant level processing
+Run called with config file […]/cpac_runs/enough/cpac_pipeline_config_2022-04-14T15-25-19Z.yml
+220414-15:25:26,762 nipype.workflow INFO:
+
+    Run command: run s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS/NYU cpac_runs/enough participant --preconfig anat-only --participant_label 0010042 --n_cpus 4 --mem_gb 14.8
+
+    C-PAC version: 1.8.4.dev
+
+    Setting maximum number of cores per participant to 4
+    Setting number of participants at once to 1
+    Setting OMP_NUM_THREADS to 1
+    Setting MKL_NUM_THREADS to 1
+    Setting ANTS/ITK thread usage to 1
+    Maximum potential number of cores that might be used during this run: 4
+[…]
+    End of subject workflow cpac_sub-0010042_ses-1
+
+    CPAC run complete:
+
+        Pipeline configuration: cpac_anat
+        Subject workflow: cpac_sub-0010042_ses-1
+[…]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<p>Now we have a <code class="docutils literal notranslate"><span class="pre">callback.log</span></code> file with observed memory usage. We can peek at the observations with <code class="docutils literal notranslate"><span class="pre">cpac</span> <span class="pre">parse-resources</span></code>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac parse-resources --help
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+usage: cpac parse-resources [-h]
+                            [--filter_field {runtime,estimate,efficiency}]
+                            [--filter_group {lowest,highest}]
+                            [--filter_count FILTER_COUNT]
+                            callback
+
+positional arguments:
+  callback              callback.log file found in the &#39;log&#39; directory of the
+                        specified derivatives path
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --filter_field {runtime,estimate,efficiency}, -f {runtime,estimate,efficiency}
+  --filter_group {lowest,highest}, -g {lowest,highest}
+  --filter_count FILTER_COUNT, -n FILTER_COUNT
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<p>Looking at the 5 most efficient nodes in each successful run, we can see the resource usage varies from run to run, even with the same data, system, and configuration:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac parse-resources <span class="se">\</span>
+  --filter_field efficiency <span class="se">\</span>
+  --filter_group highest <span class="se">\</span>
+  --filter_count <span class="m">5</span> <span class="se">\</span>
+  cpac_runs/insufficient/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃<span class="ansi-magenta-intense-fg ansi-bold">                                          </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Task ID                                 </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Used     </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Estimated</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Efficien…</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.8167    │ 1.2235    │ 66.75 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.8133    │ 1.2235    │ 66.48 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.7481    │ 1.8547    │ 40.33 %   │
+│ cpac_sub-0010042_ses-1.WM_63.seg_tissue… │ 0.6710    │ 1.7051    │ 39.35 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.7274    │ 1.8547    │ 39.22 %   │
+└──────────────────────────────────────────┴───────────┴───────────┴───────────┘
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac parse-resources <span class="se">\</span>
+  --filter_field efficiency <span class="se">\</span>
+  --filter_group highest <span class="se">\</span>
+  --filter_count <span class="m">5</span> <span class="se">\</span>
+  cpac_runs/enough/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃<span class="ansi-magenta-intense-fg ansi-bold">                                          </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Task ID                                 </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Used     </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Estimated</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Efficien…</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.7283    │ 1.2235    │ 59.53 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.7850    │ 1.8547    │ 42.32 %   │
+│ cpac_sub-0010042_ses-1.CSF_64.seg_tissu… │ 0.7159    │ 1.7051    │ 41.99 %   │
+│ cpac_sub-0010042_ses-1.WM_64.seg_tissue… │ 0.6658    │ 1.7051    │ 39.05 %   │
+│ cpac_sub-0010042_ses-1.GM_64.seg_tissue… │ 0.6486    │ 1.7051    │ 38.04 %   │
+└──────────────────────────────────────────┴───────────┴───────────┴───────────┘
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<p>Let’s look at the other bottom five efficiency and the top and bottom five for each of the other fields for one of these <code class="docutils literal notranslate"><span class="pre">callback.log</span></code>s.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac parse-resources <span class="se">\</span>
+  --filter_field efficiency <span class="se">\</span>
+  --filter_group lowest <span class="se">\</span>
+  --filter_count <span class="m">5</span> <span class="se">\</span>
+  cpac_runs/enough/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃<span class="ansi-magenta-intense-fg ansi-bold">                                          </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Task ID                                 </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Used     </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Estimated</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Efficien…</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ cpac_sub-0010042_ses-1.montage_mni_anat… │ 0.2135    │ 13.8000   │ 1.55 %    │
+│ cpac_sub-0010042_ses-1.anat_reorient_0   │ 0.2233    │ 13.8000   │ 1.62 %    │
+│ cpac_sub-0010042_ses-1.qc_skullstrip_63… │ 0.2272    │ 13.8000   │ 1.65 %    │
+│ cpac_sub-0010042_ses-1.qc_skullstrip_63… │ 0.2272    │ 13.8000   │ 1.65 %    │
+│ cpac_sub-0010042_ses-1.qc_skullstrip_63… │ 0.2272    │ 13.8000   │ 1.65 %    │
+└──────────────────────────────────────────┴───────────┴───────────┴───────────┘
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac parse-resources <span class="se">\</span>
+  --filter_field estimate <span class="se">\</span>
+  --filter_group highest <span class="se">\</span>
+  --filter_count <span class="m">5</span> <span class="se">\</span>
+  cpac_runs/enough/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃<span class="ansi-magenta-intense-fg ansi-bold">                                          </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Task ID                                 </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Used     </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Estimated</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Efficien…</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ cpac_sub-0010042_ses-1.montage_mni_anat… │ 0.2135    │ 13.8000   │ 1.55 %    │
+│ cpac_sub-0010042_ses-1.montage_mni_anat… │ 0.2279    │ 13.8000   │ 1.65 %    │
+│ cpac_sub-0010042_ses-1.anat_reorient_0   │ 0.2233    │ 13.8000   │ 1.62 %    │
+│ cpac_sub-0010042_ses-1.montage_mni_anat… │ 0.2279    │ 13.8000   │ 1.65 %    │
+│ cpac_sub-0010042_ses-1.qc_skullstrip_82… │ 0.2348    │ 13.8000   │ 1.70 %    │
+└──────────────────────────────────────────┴───────────┴───────────┴───────────┘
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac parse-resources <span class="se">\</span>
+  --filter_field runtime <span class="se">\</span>
+  --filter_group highest <span class="se">\</span>
+  --filter_count <span class="m">5</span> <span class="se">\</span>
+  cpac_runs/enough/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃<span class="ansi-magenta-intense-fg ansi-bold">                                          </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Task ID                                 </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Used     </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Estimated</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Efficien…</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ cpac_sub-0010042_ses-1.segment_64        │ 1.1257    │ 3.4958    │ 32.20 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.9344    │ 3.0513    │ 30.62 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.7850    │ 1.8547    │ 42.32 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.7283    │ 1.2235    │ 59.53 %   │
+│ cpac_sub-0010042_ses-1.CSF_64.seg_tissu… │ 0.7159    │ 1.7051    │ 41.99 %   │
+└──────────────────────────────────────────┴───────────┴───────────┴───────────┘
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac parse-resources <span class="se">\</span>
+  --filter_field estimate <span class="se">\</span>
+  --filter_group lowest <span class="se">\</span>
+  --filter_count <span class="m">5</span> <span class="se">\</span>
+  cpac_runs/enough/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃<span class="ansi-magenta-intense-fg ansi-bold">                                          </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Task ID                                 </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Used     </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Estimated</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Efficien…</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.7283    │ 1.2235    │ 59.53 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.3601    │ 1.2806    │ 28.12 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.2212    │ 1.4200    │ 15.58 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.3732    │ 1.5000    │ 24.88 %   │
+│ cpac_sub-0010042_ses-1.CSF_64.seg_tissu… │ 0.7159    │ 1.7051    │ 41.99 %   │
+└──────────────────────────────────────────┴───────────┴───────────┴───────────┘
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac parse-resources <span class="se">\</span>
+  --filter_field runtime <span class="se">\</span>
+  --filter_group lowest <span class="se">\</span>
+  --filter_count <span class="m">5</span> <span class="se">\</span>
+  cpac_runs/enough/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃<span class="ansi-magenta-intense-fg ansi-bold">                                          </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Task ID                                 </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Used     </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Estimated</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Efficien…</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ cpac_sub-0010042_ses-1.CSF_64.seg_tissu… │ 0.1778    │ 2.5000    │ 7.11 %    │
+│ cpac_sub-0010042_ses-1.func_ingress_sub… │ 0.1788    │ 2.0000    │ 8.94 %    │
+│ cpac_sub-0010042_ses-1.func_ingress_sub… │ 0.1789    │ 2.0000    │ 8.95 %    │
+│ cpac_sub-0010042_ses-1.func_ingress_sub… │ 0.1789    │ 2.0000    │ 8.95 %    │
+│ cpac_sub-0010042_ses-1.func_ingress_sub… │ 0.1796    │ 2.0000    │ 8.98 %    │
+└──────────────────────────────────────────┴───────────┴───────────┴───────────┘
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+</section>
+<section id="Memory-optimized-runs">
+<h2><span class="section-number">1.2. </span>Memory optimized runs<a class="headerlink" href="#Memory-optimized-runs" title="Permalink to this headline">¶</a></h2>
+<p>Now that we have observed memory usage specific to our system + configuration + data shape, we can use these observations to inform the estimates of our subesquent runs. Here we’ll run another subject and re-run the same intial subject so we can compare the performance. We’ll use our original desired memory constraints.</p>
+<p>In this example, we’ll use a buffer of 25% to demonstrate adjusting the buffer. If you don’t set a buffer, the default of 10% will be used. If you don’t want a buffer, you can set the buffer to 0.</p>
+<p>We can do this with a pipeline configuration like</p>
+<p><code class="docutils literal notranslate"><span class="pre">anat-only-optimized.yml</span></code></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">FROM</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">anat-only</span><span class="w"></span>
+<span class="nt">pipeline_setup</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">system_config</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">observed_usage</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">callback_log</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cpac_runs/enough/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log</span><span class="w"></span>
+<span class="w">      </span><span class="nt">buffer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span><span class="w"></span>
+</pre></div>
+</div>
+<p>or we can use commandline flags like</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac run <span class="se">\</span>
+  s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS/NYU cpac_runs/optimized participant <span class="se">\</span>
+  --preconfig anat-only <span class="se">\</span>
+  --participant_label <span class="m">0010042</span> <span class="m">5971050</span> <span class="se">\</span>
+  --n_cpus <span class="m">4</span> <span class="se">\</span>
+  --mem_gb <span class="m">10</span> <span class="se">\</span>
+  --runtime_usage cpac_runs/enough/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log <span class="se">\</span>
+  --runtime_buffer <span class="m">25</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Loading 🐳 Docker
+[…]
+Skipping bids-validator for S3 datasets...
+Loading the &#39;anat-only&#39; pre-configured pipeline.
+#### Running C-PAC for 0010042, 5971050
+Number of participants to run in parallel: 1
+Input directory: s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS/NYU
+Output directory: […]/cpac_runs/optimized/output
+Working directory: […]/cpac_runs/optimized/working
+Log directory: […]/cpac_runs/optimized/log
+Remove working directory: False
+Available memory: 10.0 (GB)
+Available threads: 4
+Number of threads for ANTs: 1
+Parsing s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS/NYU..
+Connecting to AWS: fcp-indi anonymously...
+gathering files from S3 bucket (s3.Bucket(name=&#39;fcp-indi&#39;)) for data/Projects/ADHD200/RawDataBIDS/NYU
+Starting participant level processing
+Run called with config file […]/cpac_runs/optimized/cpac_pipeline_config_2022-04-14T15-30-12Z.yml
+220414-15:30:20,887 nipype.workflow INFO:
+
+    Run command: run s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS/NYU cpac_runs/optimized participant --preconfig anat-only --participant_label 0010042 5971050 --n_cpus 4 --mem_gb 10 --runtime_usage cpac_runs/enough/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log --runtime_buffer 25
+
+    C-PAC version: 1.8.4.dev
+
+    Setting maximum number of cores per participant to 4
+    Setting number of participants at once to 1
+    Setting OMP_NUM_THREADS to 1
+    Setting MKL_NUM_THREADS to 1
+    Setting ANTS/ITK thread usage to 1
+    Maximum potential number of cores that might be used during this run: 4
+[…]
+         The following nodes used excessive resources:
+---------------------------------------------
+
+cpac_sub-0010042_ses-1
+  .sinker_desc-brain_T1w_50
+      **memory_gb**
+        runtime &gt; estimated
+        0.258327484375 &gt; 0.23091316162109377
+
+cpac_sub-0010042_ses-1
+  .sinker_label-GM_probseg_71
+      **memory_gb**
+        runtime &gt; estimated
+        0.258304595703125 &gt; 0.22700309814453123
+
+cpac_sub-0010042_ses-1
+  .nii_space-template_desc-brain_T1w_57
+      **memory_gb**
+        runtime &gt; estimated
+        0.25536346484375 &gt; 0.22719383300781248
+
+cpac_sub-0010042_ses-1
+  .nii_label-WM_desc-preproc_mask_78
+      **memory_gb**
+        runtime &gt; estimated
+        0.236785888671875 &gt; 0.22455692260742188
+---------------------------------------------
+
+220414-15:31:25,9 nipype.workflow INFO:
+
+
+    End of subject workflow cpac_sub-0010042_ses-1
+
+    CPAC run complete:
+
+        Pipeline configuration: cpac_anat
+        Subject workflow: cpac_sub-0010042_ses-1
+[…]
+
+220414-15:31:25,33 nipype.workflow INFO:
+
+    Run command: run s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS/NYU cpac_runs/optimized participant --preconfig anat-only --participant_label 0010042 5971050 --n_cpus 4 --mem_gb 10 --runtime_usage cpac_runs/enough/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log --runtime_buffer 25
+
+    C-PAC version: 1.8.4.dev
+
+    Setting maximum number of cores per participant to 4
+    Setting number of participants at once to 1
+    Setting OMP_NUM_THREADS to 1
+    Setting MKL_NUM_THREADS to 1
+    Setting ANTS/ITK thread usage to 1
+    Maximum potential number of cores that might be used during this run: 4
+[…]
+         The following nodes used excessive resources:
+---------------------------------------------
+
+cpac_sub-5971050_ses-1
+  .sinker_space-T1w_desc-brain_mask_47
+      **memory_gb**
+        runtime &gt; estimated
+        0.239810943359375 &gt; 0.23887157470703124
+
+cpac_sub-5971050_ses-1
+  .sinker_desc-brain_T1w_50
+      **memory_gb**
+        runtime &gt; estimated
+        0.23128891015625 &gt; 0.23091316162109377
+
+cpac_sub-5971050_ses-1
+  .nii_label-CSF_mask_73
+      **memory_gb**
+        runtime &gt; estimated
+        0.23983383203125 &gt; 0.22700309814453123
+
+cpac_sub-5971050_ses-1
+  .sinker_label-GM_probseg_71
+      **memory_gb**
+        runtime &gt; estimated
+        0.23983383203125 &gt; 0.22700309814453123
+
+cpac_sub-5971050_ses-1
+  .nii_space-template_desc-brain_T1w_57
+      **memory_gb**
+        runtime &gt; estimated
+        0.2322998046875 &gt; 0.22719383300781248
+
+cpac_sub-5971050_ses-1
+  .ANTS_T1_to_template_51
+  .inverse_all_transform_flags
+      **memory_gb**
+        runtime &gt; estimated
+        0.2548370361328125 &gt; 0.2273988720703125
+
+cpac_sub-5971050_ses-1
+  .nii_from-template_to-T1w_mode-image_xfm_59
+      **memory_gb**
+        runtime &gt; estimated
+        0.255855560546875 &gt; 0.22507190673828126
+
+cpac_sub-5971050_ses-1
+  .sinker_from-template_to-T1w_mode-image_xfm_59
+      **memory_gb**
+        runtime &gt; estimated
+        0.255855560546875 &gt; 0.22446632324218752
+---------------------------------------------
+
+220414-15:32:37,121 nipype.workflow INFO:
+
+
+    End of subject workflow cpac_sub-5971050_ses-1
+
+    CPAC run complete:
+
+        Pipeline configuration: cpac_anat
+        Subject workflow: cpac_sub-5971050_ses-1
+[…]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<p>Now let’s see how our efficiency compares across runs.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac parse-resources <span class="se">\</span>
+  --filter_field efficiency <span class="se">\</span>
+  --filter_group highest <span class="se">\</span>
+  --filter_count <span class="m">5</span> <span class="se">\</span>
+  cpac_runs/optimized/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃<span class="ansi-magenta-intense-fg ansi-bold">                                          </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Task ID                                 </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Used     </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Estimated</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Efficien…</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ cpac_sub-0010042_ses-1.sinker_label-GM_… │ 0.2583    │ 0.2270    │ 113.79 %  │
+│ cpac_sub-0010042_ses-1.nii_space-templa… │ 0.2554    │ 0.2272    │ 112.40 %  │
+│ cpac_sub-0010042_ses-1.sinker_desc-brai… │ 0.2583    │ 0.2309    │ 111.87 %  │
+│ cpac_sub-0010042_ses-1.nii_label-WM_des… │ 0.2368    │ 0.2246    │ 105.45 %  │
+│ cpac_sub-0010042_ses-1.montage_mni_anat… │ 0.3656    │ 0.3714    │ 98.45 %   │
+└──────────────────────────────────────────┴───────────┴───────────┴───────────┘
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac parse-resources <span class="se">\</span>
+  --filter_field efficiency <span class="se">\</span>
+  --filter_group lowest <span class="se">\</span>
+  --filter_count <span class="m">5</span> <span class="se">\</span>
+  cpac_runs/optimized/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃<span class="ansi-magenta-intense-fg ansi-bold">                                          </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Task ID                                 </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Used     </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Estimated</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Efficien…</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ cpac_sub-0010042_ses-1.resampled_T1w-br… │ 0.1883    │ 2.0000    │ 9.41 %    │
+│ cpac_sub-0010042_ses-1.montage_mni_anat… │ 0.2606    │ 0.5124    │ 50.87 %   │
+│ cpac_sub-0010042_ses-1.CSF_64.seg_tissu… │ 0.1830    │ 0.3170    │ 57.74 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.1926    │ 0.3283    │ 58.65 %   │
+│ cpac_sub-0010042_ses-1.get_pve_wm_64     │ 0.2566    │ 0.4225    │ 60.73 %   │
+└──────────────────────────────────────────┴───────────┴───────────┴───────────┘
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac parse-resources <span class="se">\</span>
+  --filter_field estimate <span class="se">\</span>
+  --filter_group highest <span class="se">\</span>
+  --filter_count <span class="m">5</span> <span class="se">\</span>
+  cpac_runs/optimized/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃<span class="ansi-magenta-intense-fg ansi-bold">                                          </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Task ID                                 </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Used     </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Estimated</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Efficien…</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ cpac_sub-0010042_ses-1.resampled_T1w-br… │ 0.1883    │ 2.0000    │ 9.41 %    │
+│ cpac_sub-0010042_ses-1.segment_64        │ 1.1376    │ 1.4072    │ 80.84 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.9533    │ 1.1681    │ 81.62 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.7189    │ 0.9812    │ 73.27 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.7630    │ 0.9104    │ 83.81 %   │
+└──────────────────────────────────────────┴───────────┴───────────┴───────────┘
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac parse-resources <span class="se">\</span>
+  --filter_field runtime <span class="se">\</span>
+  --filter_group highest <span class="se">\</span>
+  --filter_count <span class="m">5</span> <span class="se">\</span>
+  cpac_runs/optimized/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃<span class="ansi-magenta-intense-fg ansi-bold">                                          </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Task ID                                 </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Used     </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Estimated</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Efficien…</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ cpac_sub-0010042_ses-1.segment_64        │ 1.1376    │ 1.4072    │ 80.84 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.9533    │ 1.1681    │ 81.62 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.7630    │ 0.9104    │ 83.81 %   │
+│ cpac_sub-0010042_ses-1.ANTS_T1_to_templ… │ 0.7189    │ 0.9812    │ 73.27 %   │
+│ cpac_sub-0010042_ses-1.WM_64.seg_tissue… │ 0.6409    │ 0.8323    │ 77.00 %   │
+└──────────────────────────────────────────┴───────────┴───────────┴───────────┘
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac parse-resources <span class="se">\</span>
+  --filter_field estimate <span class="se">\</span>
+  --filter_group lowest <span class="se">\</span>
+  --filter_count <span class="m">5</span> <span class="se">\</span>
+  cpac_runs/optimized/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃<span class="ansi-magenta-intense-fg ansi-bold">                                          </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Task ID                                 </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Used     </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Estimated</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Efficien…</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ cpac_sub-0010042_ses-1.CSF_64.seg_tissu… │ 0.1800    │ 0.2223    │ 80.96 %   │
+│ cpac_sub-0010042_ses-1.func_ingress_sub… │ 0.1815    │ 0.2245    │ 80.84 %   │
+│ cpac_sub-0010042_ses-1.sinker_from-temp… │ 0.2025    │ 0.2245    │ 90.24 %   │
+│ cpac_sub-0010042_ses-1.func_ingress_sub… │ 0.1815    │ 0.2245    │ 80.84 %   │
+│ cpac_sub-0010042_ses-1.func_ingress_sub… │ 0.1800    │ 0.2245    │ 80.17 %   │
+└──────────────────────────────────────────┴───────────┴───────────┴───────────┘
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-bash notranslate"><div class="highlight"><pre><span></span>cpac parse-resources <span class="se">\</span>
+  --filter_field runtime <span class="se">\</span>
+  --filter_group lowest <span class="se">\</span>
+  --filter_count <span class="m">5</span> <span class="se">\</span>
+  cpac_runs/optimized/log/pipeline_cpac_anat/sub-0010042_ses-1/callback.log
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃<span class="ansi-magenta-intense-fg ansi-bold">                                          </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Memory   </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Task ID                                 </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Used     </span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Estimated</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃<span class="ansi-magenta-intense-fg ansi-bold"> </span><span class="ansi-magenta-intense-fg ansi-bold">Efficien…</span><span class="ansi-magenta-intense-fg ansi-bold"> </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ cpac_sub-0010042_ses-1.id_string_from-T… │ 0.1762    │ 0.2311    │ 76.28 %   │
+│ cpac_sub-0010042_ses-1.json_desc-brain_… │ 0.1762    │ 0.2311    │ 76.28 %   │
+│ cpac_sub-0010042_ses-1.id_string_space-… │ 0.1762    │ 0.2343    │ 75.22 %   │
+│ cpac_sub-0010042_ses-1.json_desc-reorie… │ 0.1762    │ 0.2257    │ 78.08 %   │
+│ cpac_sub-0010042_ses-1.id_string_from-t… │ 0.1762    │ 0.2344    │ 75.18 %   │
+└──────────────────────────────────────────┴───────────┴───────────┴───────────┘
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<p>Here are some box-and-whisker plots (generated in <a class="reference internal" href="visualize_observed_usage"><span class="doc">visualize_observed_usage.ipynb</span></a> comparing the efficiency, estimates, and observed memory usage of the four runs we completed above:</p>
+<p><img alt="Box-and-whisker plot of efficiency" src="../../../_images/efficiency.png" /> <img alt="Box-and-whisker plot of estimated memory usage" src="../../../_images/estimated.png" /> <img alt="Box-and-whisker plot of observed memory usage" src="../../../_images/runtime.png" /></p>
+</section>
+<section id="Notes">
+<h2><span class="section-number">1.3. </span>Notes<a class="headerlink" href="#Notes" title="Permalink to this headline">¶</a></h2>
+<section id="Total-memory-usage">
+<h3><span class="section-number">1.3.1. </span>Total memory usage<a class="headerlink" href="#Total-memory-usage" title="Permalink to this headline">¶</a></h3>
+<p>These estimates and observations are per-node. At any given moment, you’ll have up to <code class="docutils literal notranslate"><span class="pre">n_cpus</span></code> nodes running at once, plus C-PAC and Nipype will be using some memory, so a worst-case scenario for memory usage is approximately the heaviest <code class="docutils literal notranslate"><span class="pre">n_cpus</span></code> nodes + <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">GB</span></code> for overhead.</p>
+<p>In this example, we set <code class="docutils literal notranslate"><span class="pre">n_cpus</span></code> to <code class="docutils literal notranslate"><span class="pre">4</span></code>. For the optimized re-run in this example, the four greediest nodes + <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">GB</span></code> for overhead = <code class="docutils literal notranslate"><span class="pre">(1.1376</span> <span class="pre">+</span> <span class="pre">0.9533</span> <span class="pre">+</span> <span class="pre">0.7630</span> <span class="pre">+</span> <span class="pre">0.7189</span> <span class="pre">+</span> <span class="pre">1)</span> <span class="pre">GB</span></code> = <code class="docutils literal notranslate"><span class="pre">4.5728</span> <span class="pre">GB</span></code>, which is well within the specified limit of <code class="docutils literal notranslate"><span class="pre">10</span> <span class="pre">GB</span></code>. In most cases, the greediest nodes won’t be peaking simultaneously, so we won’t expect an out-of-memory error on an optimized run, but they are possible, even if no individual node is overruning by much.</p>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index">
+              <img class="logo" src="../../../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+  <div>
+    <h3><a href="../../../index">Table of Contents</a></h3>
+    <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../../index">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../release_notes/v1.8.3">Latest Release: Version 1.8.3 Beta (Feb 11, 2022)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../quick">1. C-PAC Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../subject_list_config">2. Specify Your Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pipelines/pipeline_config">3. Select Your Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../preprocessing">4. Pre-Process Your Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../derivatives">5. Compute Derivatives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../running">6. All Run Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../group_analysis">7. Run Group Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../output_dir">8. Check Your Outputs</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index">9. Tutorials</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">1. Tutorial: optimizing memory estimation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../help">10. Troubleshoot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../rnotes">11. Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../appendix">Appendix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../appendix#benchmark-package">Benchmark Package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer/index">Developer Documentation</a></li>
+</ul>
+
+  </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../help" title="Troubleshooting and Help"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../index" title="C-PAC Tutorials"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index">C-PAC 1.8.4.dev Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index" >User Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../index" >C-PAC Tutorials</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">1. </span>Tutorial: optimizing memory estimation</a></li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, C-PAC Team.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+    <script defer src="https://fcp-indi.github.io/scripts/versionList.js"></script>
+
+  </body>
+</html>

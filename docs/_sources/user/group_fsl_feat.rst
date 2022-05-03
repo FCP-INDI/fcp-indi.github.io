@@ -29,7 +29,7 @@ The presets that are generated:
 * can be modified to your liking either by using the standard Group Analysis Model Builder, or by hand via text editor
 * are all in one place in the output directory you specify in the Preset Generator
 
-**Preset options**: Currently, there are 5 presets to choose from. More are on their way. If you have any commonly-used or useful group model designs you'd like to see as a preset, `please let us know <https://groups.google.com/forum/#!forum/cpax_forum>`_!
+**Preset options**: Currently, there are 5 presets to choose from. More are on their way. If you have any commonly-used or useful group model designs you'd like to see as a preset, please let us know on `GitHub <https://github.com/FCP-INDI/C-PAC/issues/new?assignees=&labels=enhancement%2Cuser-reported%2Cgroup-level+analysis&template=feature_request.yml&title=%E2%9C%A8+New+Preset+Group+Model+Design:+%5Bdesign+name%5D>`_ or `Neurostars <https://neurostars.org/tag/cpac>`_!
 
 The available presets are:
 

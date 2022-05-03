@@ -3,9 +3,9 @@ Troubleshooting and Help
 
 C-PAC is beta software, which means that it is still under active development and has not yet undergone large-scale testing. As such, although we have done our best to ensure a stable pipeline, there may still be a few bugs that we did not catch.
 
-If you find a bug, or would like to request a new feature please visit the `GitHub Issues page for CPAC <https://github.com/FCP-INDI/C-PAC/issues>`__.
+If you find a bug, or would like to request a new feature please visit the `GitHub Issues page for CPAC <https://github.com/FCP-INDI/C-PAC/issues>`_.
 
-If you have a question that is not answered in the User Guide or encounter an issue not covered in the `Common Issues and Solutions` section below, you should submit it to the `C-PAC user forum <https://groups.google.com/forum/#!forum/cpax_forum>`__.
+If you have a question that is not answered in the User Guide or encounter an issue not covered in the `'Common Issues and Solutions' section <#common-issues>`_ below, you should submit it to `Neurostars <https://neurostars.org/tag/cpac>`_.
 
 View Crash Files
 ^^^^^^^^^^^^^^^^

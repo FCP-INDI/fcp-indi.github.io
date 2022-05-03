@@ -55,4 +55,4 @@ Or you can provide it to the C-PAC Singularity container like so:
 
 **Reporting errors and getting help**
 
-Please report errors on the `C-PAC github page issue tracker <https://github.com/FCP-INDI/C-PAC/issues>`_. Please use the `C-PAC google group <https://groups.google.com/forum/#!forum/cpax_forum>`_ for help using C-PAC and this application.
+Please report errors on the `C-PAC GitHub issue tracker <https://github.com/FCP-INDI/C-PAC/issues>`_. Please use `Neurostars <https://neurostars.org/tag/cpac>`_ for help using C-PAC and this application.

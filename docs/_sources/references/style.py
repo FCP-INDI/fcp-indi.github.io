@@ -138,3 +138,6 @@ class CPAC_DocsStyle(Style):
             sentence[optional_field('note')],
         ]
         return template
+
+    def get_techreport_template(self, e):
+        return self.get_article_template(e)

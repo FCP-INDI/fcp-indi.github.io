@@ -181,7 +181,7 @@ C-PAC's data quality control (QC) interface allows you to take a quick glance at
 
 **Upcoming Additions**
 
-In future releases, more visualizations will be introduced, and the QC pages will be integrated into an easy-to-use dashboard that is updated throughout the process of your C-PAC run, and also provides information on the status of the pipeline. As always, we greatly appreciate any ideas, suggestions, or items on your wishlist and `take them into consideration <https://groups.google.com/forum/#!forum/cpax_forum>`_.
+In future releases, more visualizations will be introduced, and the QC pages will be integrated into an easy-to-use dashboard that is updated throughout the process of your C-PAC run, and also provides information on the status of the pipeline. As always, we greatly appreciate any `ideas, suggestions, or items on your wishlist <https://github.com/FCP-INDI/C-PAC/issues/new?assignees=&labels=enhancement%2Cuser-reported&template=feature_request.yml&title=%E2%9C%A8+%5BUser-requested+Feature%5D>`_ and `take them into consideration <https://neurostars.org/tag/cpac>`_.
 
 Quick Look
 ----------

@@ -13,7 +13,7 @@ The data configuration file is essentially a list of file paths to anatomical an
 **UPDATE (May 15, 2018): C-PAC v1.1.0 and Later**
 The data configuration file layout has changed significantly from older versions. Functional scan file paths, and scan parameter information (or scan parameter file paths) are now nested beneath the "func:" key. See the "Data Configuration File YAML Fields" section below for examples.
 
-If you have already-existing data configuration files and wish to update these for the new version, you can simply use your already-existing data settings preset files to regenerate the data configuration files using your new/upgraded install of C-PAC v1.1.0. If you have any questions, please feel free to reach us at our `support forum <https://groups.google.com/forum/#!forum/cpax_forum>`_.
+If you have already-existing data configuration files and wish to update these for the new version, you can simply use your already-existing data settings preset files to regenerate the data configuration files using C-PAC ≥v1.1.0. If you have any questions, please reach us on `Neurostars <https://neurostars.org/tag/cpac>`_.
 
 From Terminal
 -------------

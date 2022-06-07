@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,6 +13,7 @@
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../../_static/doctools.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
@@ -63,12 +64,13 @@
                                     <span class="n">interpolation_string</span><span class="p">,</span> \
                                     <span class="n">change_itk_transform_type</span><span class="p">,</span> \
                                     <span class="n">hardcoded_reg</span><span class="p">,</span> \
+                                    <span class="n">one_d_to_mat</span><span class="p">,</span> \
                                     <span class="n">run_ants_apply_warp</span><span class="p">,</span> \
                                     <span class="n">run_c3d</span><span class="p">,</span> \
                                     <span class="n">run_c4d</span>
 
 <span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.fsl</span> <span class="kn">import</span> <span class="n">Merge</span> <span class="k">as</span> <span class="n">fslMerge</span>
-<span class="kn">from</span> <span class="nn">CPAC.utils.utils</span> <span class="kn">import</span> <span class="n">check_prov_for_regtool</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.utils</span> <span class="kn">import</span> <span class="n">check_prov_for_motion_tool</span><span class="p">,</span> <span class="n">check_prov_for_regtool</span>
 
 
 <span class="k">def</span> <span class="nf">apply_transform</span><span class="p">(</span><span class="n">wf_name</span><span class="p">,</span> <span class="n">reg_tool</span><span class="p">,</span> <span class="n">time_series</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">multi_input</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -916,7 +918,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Registers a functional scan in native space to structural.  This is</span>
 <span class="sd">    meant to be used after create_nonlinear_register() has been run and</span>
-<span class="sd">    relies on some of it&#39;s outputs.</span>
+<span class="sd">    relies on some of its outputs.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -2241,11 +2243,11 @@
     <span class="n">params</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span><span class="s1">&#39;anatomical_registration&#39;</span><span class="p">][</span>
         <span class="s1">&#39;registration&#39;</span><span class="p">][</span><span class="s1">&#39;ANTs&#39;</span><span class="p">][</span><span class="s1">&#39;T1_registration&#39;</span><span class="p">]</span>
 
-    <span class="n">ants</span><span class="p">,</span> <span class="n">outputs</span> <span class="o">=</span> <span class="n">ANTs_registration_connector</span><span class="p">(</span><span class="s1">&#39;ANTS_T1_to_template_&#39;</span>
-                                                <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span>
-                                                <span class="n">params</span><span class="p">,</span> <span class="n">orig</span><span class="o">=</span><span class="s1">&#39;T1w&#39;</span><span class="p">)</span>
+    <span class="n">ants_rc</span><span class="p">,</span> <span class="n">outputs</span> <span class="o">=</span> <span class="n">ANTs_registration_connector</span><span class="p">(</span><span class="s1">&#39;ANTS_T1_to_template_&#39;</span>
+                                                   <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span>
+                                                   <span class="n">params</span><span class="p">,</span> <span class="n">orig</span><span class="o">=</span><span class="s1">&#39;T1w&#39;</span><span class="p">)</span>
 
-    <span class="n">ants</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span>
+    <span class="n">ants_rc</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span>
         <span class="s1">&#39;anatomical_registration&#39;</span><span class="p">][</span><span class="s1">&#39;registration&#39;</span><span class="p">][</span><span class="s1">&#39;ANTs&#39;</span><span class="p">][</span><span class="s1">&#39;interpolation&#39;</span><span class="p">]</span>
 
     <span class="n">connect</span><span class="p">,</span> <span class="n">brain</span> <span class="o">=</span> \
@@ -2253,44 +2255,45 @@
                              <span class="s1">&#39;space-longitudinal_desc-brain_T1w&#39;</span><span class="p">],</span>
                             <span class="n">report_fetched</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">connect</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">ants</span><span class="p">,</span> <span class="s1">&#39;inputspec.input_brain&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">ants_rc</span><span class="p">,</span> <span class="s1">&#39;inputspec.input_brain&#39;</span><span class="p">)</span>
 
-    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;T1w-brain-template&#39;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">ants</span><span class="p">,</span> <span class="s1">&#39;inputspec.reference_brain&#39;</span><span class="p">)</span>
+    <span class="n">t1w_brain_template</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">node_data</span><span class="p">(</span><span class="s1">&#39;T1w-brain-template&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">t1w_brain_template</span><span class="o">.</span><span class="n">node</span><span class="p">,</span> <span class="n">t1w_brain_template</span><span class="o">.</span><span class="n">out</span><span class="p">,</span>
+               <span class="n">ants_rc</span><span class="p">,</span> <span class="s1">&#39;inputspec.reference_brain&#39;</span><span class="p">)</span>
 
     <span class="c1"># TODO check the order of T1w</span>
     <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;desc-restore_T1w&quot;</span><span class="p">,</span> <span class="s2">&quot;desc-preproc_T1w&quot;</span><span class="p">,</span>
                                      <span class="s2">&quot;desc-reorient_T1w&quot;</span><span class="p">,</span> <span class="s2">&quot;T1w&quot;</span><span class="p">,</span>
                                      <span class="s2">&quot;space-longitudinal_desc-reorient_T1w&quot;</span><span class="p">])</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">ants</span><span class="p">,</span> <span class="s1">&#39;inputspec.input_head&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">ants_rc</span><span class="p">,</span> <span class="s1">&#39;inputspec.input_head&#39;</span><span class="p">)</span>
 
 
-    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;T1w-template&#39;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">ants</span><span class="p">,</span> <span class="s1">&#39;inputspec.reference_head&#39;</span><span class="p">)</span>
+    <span class="n">t1w_template</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">node_data</span><span class="p">(</span><span class="s1">&#39;T1w-template&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">t1w_template</span><span class="o">.</span><span class="n">node</span><span class="p">,</span> <span class="n">t1w_template</span><span class="o">.</span><span class="n">out</span><span class="p">,</span>
+               <span class="n">ants_rc</span><span class="p">,</span> <span class="s1">&#39;inputspec.reference_head&#39;</span><span class="p">)</span>
 
-    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span><span class="s2">&quot;space-T1w_desc-brain_mask&quot;</span><span class="p">,</span>
-                                     <span class="s2">&quot;space-longitudinal_desc-brain_mask&quot;</span><span class="p">,</span>
-                                     <span class="s2">&quot;space-T1w_desc-acpcbrain_mask&quot;</span><span class="p">])</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">ants</span><span class="p">,</span> <span class="s1">&#39;inputspec.input_mask&#39;</span><span class="p">)</span>
+    <span class="n">brain_mask</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">node_data</span><span class="p">([</span><span class="s2">&quot;space-T1w_desc-brain_mask&quot;</span><span class="p">,</span>
+                                       <span class="s2">&quot;space-longitudinal_desc-brain_mask&quot;</span><span class="p">,</span>
+                                       <span class="s2">&quot;space-T1w_desc-acpcbrain_mask&quot;</span><span class="p">])</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">brain_mask</span><span class="o">.</span><span class="n">node</span><span class="p">,</span> <span class="n">brain_mask</span><span class="o">.</span><span class="n">out</span><span class="p">,</span>
+               <span class="n">ants_rc</span><span class="p">,</span> <span class="s1">&#39;inputspec.input_mask&#39;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s1">&#39;T1w-brain-template-mask&#39;</span><span class="p">):</span>
         <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;T1w-brain-template-mask&#39;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">ants</span><span class="p">,</span> <span class="s1">&#39;inputspec.reference_mask&#39;</span><span class="p">)</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">ants_rc</span><span class="p">,</span> <span class="s1">&#39;inputspec.reference_mask&#39;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s1">&#39;label-lesion_mask&#39;</span><span class="p">):</span>
         <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;label-lesion_mask&#39;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">ants</span><span class="p">,</span> <span class="s1">&#39;inputspec.lesion_mask&#39;</span><span class="p">)</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">ants_rc</span><span class="p">,</span> <span class="s1">&#39;inputspec.lesion_mask&#39;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="s1">&#39;space-longitudinal&#39;</span> <span class="ow">in</span> <span class="n">brain</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">if</span> <span class="s1">&#39;from-T1w&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
-                <span class="n">new_key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;from-T1w&#39;</span><span class="p">,</span> <span class="s1">&#39;from-longitudinal&#39;</span><span class="p">)</span>
-                <span class="n">outputs</span><span class="p">[</span><span class="n">new_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-                <span class="k">del</span> <span class="n">outputs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-            <span class="k">if</span> <span class="s1">&#39;to-T1w&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
-                <span class="n">new_key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;to-T1w&#39;</span><span class="p">,</span> <span class="s1">&#39;to-longitudinal&#39;</span><span class="p">)</span>
-                <span class="n">outputs</span><span class="p">[</span><span class="n">new_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-                <span class="k">del</span> <span class="n">outputs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">direction</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;from&#39;</span><span class="p">,</span> <span class="s1">&#39;to&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s1">-T1w&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                    <span class="n">new_key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s1">-T1w&#39;</span><span class="p">,</span>
+                                          <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s1">-longitudinal&#39;</span><span class="p">)</span>
+                    <span class="n">outputs</span><span class="p">[</span><span class="n">new_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                    <span class="k">del</span> <span class="n">outputs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
@@ -3167,7 +3170,10 @@
 
     <span class="n">convert_func_to_anat_linear_warp</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">out_relwarp</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">convert_func_to_anat_linear_warp</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">relwarp</span> <span class="o">=</span> <span class="kc">True</span>
-
+    
+    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-preproc_T1w&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">convert_func_to_anat_linear_warp</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
+    
     <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s1">&#39;blip-warp&#39;</span><span class="p">):</span>
         <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;from-bold_to-T1w_mode-image_desc-linear_xfm&#39;</span><span class="p">)</span>
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">convert_func_to_anat_linear_warp</span><span class="p">,</span> <span class="s1">&#39;postmat&#39;</span><span class="p">)</span>
@@ -3177,9 +3183,6 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;from-bold_to-T1w_mode-image_desc-linear_xfm&#39;</span><span class="p">)</span>
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">convert_func_to_anat_linear_warp</span><span class="p">,</span> <span class="s1">&#39;premat&#39;</span><span class="p">)</span>
-
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-preproc_T1w&#39;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">convert_func_to_anat_linear_warp</span><span class="p">,</span> <span class="s1">&#39;reference&#39;</span><span class="p">)</span>
 
     <span class="c1"># https://github.com/DCAN-Labs/DCAN-HCP/blob/master/fMRIVolume/scripts/OneStepResampling.sh#L140</span>
     <span class="c1"># convertwarp --relout --rel --warp1=${fMRIToStructuralInput} --warp2=${StructuralToStandard} --ref=${WD}/${T1wImageFile}.${FinalfMRIResolution} --out=${OutputTransform}</span>
@@ -3697,7 +3700,8 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">single_step_resample_timeseries_to_T1template</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">single_step_resample_timeseries_to_T1template</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span>
+                                                  <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    {&quot;name&quot;: &quot;single_step_resample_timeseries_to_T1template&quot;,</span>
 <span class="sd">     &quot;config&quot;: [&quot;registration_workflows&quot;, &quot;functional_registration&quot;,</span>
@@ -3717,7 +3721,8 @@
 <span class="sd">                 &quot;desc-brain_T1w&quot;,</span>
 <span class="sd">                 &quot;T1w-brain-template-funcreg&quot;)],</span>
 <span class="sd">     &quot;outputs&quot;: [&quot;space-template_desc-preproc_bold&quot;,</span>
-<span class="sd">                 &quot;space-template_desc-brain_bold&quot;]}</span>
+<span class="sd">                 &quot;space-template_desc-brain_bold&quot;,</span>
+<span class="sd">                 &quot;space-template_desc-bold_mask&quot;]}</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Apply motion correction, coreg, anat-to-template transforms on raw functional timeseries based on fMRIPrep pipeline</span>
@@ -3771,7 +3776,20 @@
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">motionxfm2itk</span><span class="p">,</span> <span class="s1">&#39;source_file&#39;</span><span class="p">)</span>
 
     <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;coordinate-transformation&#39;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">motionxfm2itk</span><span class="p">,</span> <span class="s1">&#39;transform_file&#39;</span><span class="p">)</span>
+    <span class="n">motion_correct_tool</span> <span class="o">=</span> <span class="n">check_prov_for_motion_tool</span><span class="p">(</span>
+        <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_cpac_provenance</span><span class="p">(</span><span class="s1">&#39;coordinate-transformation&#39;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;mcflirt&#39;</span><span class="p">:</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">motionxfm2itk</span><span class="p">,</span> <span class="s1">&#39;transform_file&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;3dvolreg&#39;</span><span class="p">:</span>
+        <span class="n">convert_transform</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span>
+            <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;one_d_filename&#39;</span><span class="p">],</span>
+            <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;transform_directory&#39;</span><span class="p">],</span>
+            <span class="n">function</span><span class="o">=</span><span class="n">one_d_to_mat</span><span class="p">,</span>
+            <span class="n">imports</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;import numpy as np&#39;</span><span class="p">]),</span>
+            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;convert_transform_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">convert_transform</span><span class="p">,</span> <span class="s1">&#39;one_d_filename&#39;</span><span class="p">)</span>
+        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">convert_transform</span><span class="p">,</span> <span class="s1">&#39;transform_directory&#39;</span><span class="p">,</span>
+                   <span class="n">motionxfm2itk</span><span class="p">,</span> <span class="s1">&#39;transform_file&#39;</span><span class="p">)</span>
 
     <span class="n">collectxfm</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Merge</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span>
                             <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;collectxfm_func_to_standard_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
@@ -3847,8 +3865,11 @@
         <span class="n">apply_mask</span><span class="p">,</span> <span class="s1">&#39;mask_file&#39;</span><span class="p">)</span>
 
     <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;space-template_desc-preproc_bold&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">merge_func_to_standard</span><span class="p">,</span> <span class="s1">&#39;merged_file&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;space-template_desc-brain_bold&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">apply_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+        <span class="s1">&#39;space-template_desc-preproc_bold&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">merge_func_to_standard</span><span class="p">,</span>
+                                             <span class="s1">&#39;merged_file&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;space-template_desc-brain_bold&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">apply_mask</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;space-template_desc-bold_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">applyxfm_func_mask_to_standard</span><span class="p">,</span>
+            <span class="s1">&#39;output_image&#39;</span><span class="p">),</span>
     <span class="p">}</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
@@ -4244,85 +4265,39 @@
 <span class="sd">                 &quot;label-WM_mask&quot;,</span>
 <span class="sd">                 &quot;label-GM_mask&quot;,</span>
 <span class="sd">                 &quot;from-T1w_to-template_mode-image_xfm&quot;),</span>
-<span class="sd">                &quot;T1w-template&quot;],</span>
+<span class="sd">                 &quot;T1w-template&quot;],</span>
 <span class="sd">     &quot;outputs&quot;: [&quot;space-template_label-CSF_mask&quot;,</span>
 <span class="sd">                 &quot;space-template_label-WM_mask&quot;,</span>
 <span class="sd">                 &quot;space-template_label-GM_mask&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-
     <span class="n">xfm_prov</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_cpac_provenance</span><span class="p">(</span>
         <span class="s1">&#39;from-T1w_to-template_mode-image_xfm&#39;</span><span class="p">)</span>
     <span class="n">reg_tool</span> <span class="o">=</span> <span class="n">check_prov_for_regtool</span><span class="p">(</span><span class="n">xfm_prov</span><span class="p">)</span>
-
-    <span class="n">num_cpus</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">pipeline_setup</span><span class="p">[</span><span class="s1">&#39;system_config&#39;</span><span class="p">][</span>
-        <span class="s1">&#39;max_cores_per_participant&#39;</span><span class="p">]</span>
-
-    <span class="n">num_ants_cores</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">pipeline_setup</span><span class="p">[</span><span class="s1">&#39;system_config&#39;</span><span class="p">][</span><span class="s1">&#39;num_ants_threads&#39;</span><span class="p">]</span>
-
-    <span class="n">apply_xfm_CSF</span> <span class="o">=</span> <span class="n">apply_transform</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;warp_Tissuemask_to_T1template_CSF</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-                                <span class="n">reg_tool</span><span class="p">,</span> <span class="n">time_series</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                                <span class="n">num_cpus</span><span class="o">=</span><span class="n">num_cpus</span><span class="p">,</span>
-                                <span class="n">num_ants_cores</span><span class="o">=</span><span class="n">num_ants_cores</span><span class="p">)</span>
-
-    <span class="n">apply_xfm_WM</span> <span class="o">=</span> <span class="n">apply_transform</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;warp_Tissuemask_to_T1template_WM</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-                                <span class="n">reg_tool</span><span class="p">,</span> <span class="n">time_series</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                                <span class="n">num_cpus</span><span class="o">=</span><span class="n">num_cpus</span><span class="p">,</span>
-                                <span class="n">num_ants_cores</span><span class="o">=</span><span class="n">num_ants_cores</span><span class="p">)</span>
-
-    <span class="n">apply_xfm_GM</span> <span class="o">=</span> <span class="n">apply_transform</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;warp_Tissuemask_to_T1template_GM</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-                                <span class="n">reg_tool</span><span class="p">,</span> <span class="n">time_series</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                                <span class="n">num_cpus</span><span class="o">=</span><span class="n">num_cpus</span><span class="p">,</span>
-                                <span class="n">num_ants_cores</span><span class="o">=</span><span class="n">num_ants_cores</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">reg_tool</span> <span class="o">==</span> <span class="s1">&#39;ants&#39;</span><span class="p">:</span>
-        <span class="n">apply_xfm_CSF</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="s1">&#39;NearestNeighbor&#39;</span>
-        <span class="n">apply_xfm_WM</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="s1">&#39;NearestNeighbor&#39;</span>
-        <span class="n">apply_xfm_GM</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="s1">&#39;NearestNeighbor&#39;</span>
-    <span class="k">elif</span> <span class="n">reg_tool</span> <span class="o">==</span> <span class="s1">&#39;fsl&#39;</span><span class="p">:</span>
-        <span class="n">apply_xfm_CSF</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="s1">&#39;nn&#39;</span>
-        <span class="n">apply_xfm_WM</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="s1">&#39;nn&#39;</span>
-        <span class="n">apply_xfm_GM</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="s1">&#39;nn&#39;</span>
-
-    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s1">&#39;label-CSF_mask&#39;</span><span class="p">):</span>
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;label-CSF_mask&quot;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">apply_xfm_CSF</span><span class="p">,</span> <span class="s1">&#39;inputspec.input_image&#39;</span><span class="p">)</span>
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;T1w-template&quot;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">apply_xfm_CSF</span><span class="p">,</span> <span class="s1">&#39;inputspec.reference&#39;</span><span class="p">)</span>
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;from-T1w_to-template_mode-image_xfm&quot;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">apply_xfm_CSF</span><span class="p">,</span> <span class="s1">&#39;inputspec.transform&#39;</span><span class="p">)</span>
-        <span class="n">outputs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
-         <span class="sa">f</span><span class="s1">&#39;space-template_label-CSF_mask&#39;</span><span class="p">:</span>
-
-            <span class="p">(</span><span class="n">apply_xfm_CSF</span><span class="p">,</span> <span class="s1">&#39;outputspec.output_image&#39;</span><span class="p">)})</span>
-
-
-
-    <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s1">&#39;label-WM_mask&#39;</span><span class="p">):</span>
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;label-WM_mask&quot;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">apply_xfm_WM</span><span class="p">,</span> <span class="s1">&#39;inputspec.input_image&#39;</span><span class="p">)</span>
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;T1w-template&quot;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">apply_xfm_WM</span><span class="p">,</span> <span class="s1">&#39;inputspec.reference&#39;</span><span class="p">)</span>
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;from-T1w_to-template_mode-image_xfm&quot;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">apply_xfm_WM</span><span class="p">,</span> <span class="s1">&#39;inputspec.transform&#39;</span><span class="p">)</span>
-
-        <span class="n">outputs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
-         <span class="sa">f</span><span class="s1">&#39;space-template_label-WM_mask&#39;</span><span class="p">:</span>
-            <span class="p">(</span><span class="n">apply_xfm_WM</span><span class="p">,</span> <span class="s1">&#39;outputspec.output_image&#39;</span><span class="p">)})</span>
-
-
-    <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s1">&#39;label-GM_mask&#39;</span><span class="p">):</span>
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;label-GM_mask&quot;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">apply_xfm_GM</span><span class="p">,</span> <span class="s1">&#39;inputspec.input_image&#39;</span><span class="p">)</span>
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;T1w-template&quot;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">apply_xfm_GM</span><span class="p">,</span> <span class="s1">&#39;inputspec.reference&#39;</span><span class="p">)</span>
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;from-T1w_to-template_mode-image_xfm&quot;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">apply_xfm_GM</span><span class="p">,</span> <span class="s1">&#39;inputspec.transform&#39;</span><span class="p">)</span>
-
-        <span class="n">outputs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
-         <span class="sa">f</span><span class="s1">&#39;space-template_label-GM_mask&#39;</span><span class="p">:</span>
-            <span class="p">(</span><span class="n">apply_xfm_GM</span><span class="p">,</span> <span class="s1">&#39;outputspec.output_image&#39;</span><span class="p">)})</span>
-
+    <span class="n">tissue_types</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CSF&#39;</span><span class="p">,</span> <span class="s1">&#39;WM&#39;</span><span class="p">,</span> <span class="s1">&#39;GM&#39;</span><span class="p">]</span>
+    <span class="n">apply_xfm</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">tissue</span><span class="p">:</span> <span class="n">apply_transform</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;warp_Tissuemask_to_T1template_</span><span class="si">{</span><span class="n">tissue</span><span class="si">}</span><span class="s1">_&#39;</span>
+                                <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">reg_tool</span><span class="p">,</span> <span class="n">time_series</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                <span class="n">num_cpus</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">pipeline_setup</span><span class="p">[</span><span class="s1">&#39;system_config&#39;</span><span class="p">][</span>
+                                    <span class="s1">&#39;max_cores_per_participant&#39;</span><span class="p">],</span>
+                                <span class="n">num_ants_cores</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">pipeline_setup</span><span class="p">[</span>
+                                    <span class="s1">&#39;system_config&#39;</span><span class="p">][</span><span class="s1">&#39;num_ants_threads&#39;</span><span class="p">])</span> <span class="k">for</span>
+        <span class="n">tissue</span> <span class="ow">in</span> <span class="n">tissue_types</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">tissue</span> <span class="ow">in</span> <span class="n">tissue_types</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">reg_tool</span> <span class="o">==</span> <span class="s1">&#39;ants&#39;</span><span class="p">:</span>
+            <span class="n">apply_xfm</span><span class="p">[</span><span class="n">tissue</span><span class="p">]</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> \
+                <span class="s1">&#39;NearestNeighbor&#39;</span>
+        <span class="k">elif</span> <span class="n">reg_tool</span> <span class="o">==</span> <span class="s1">&#39;fsl&#39;</span><span class="p">:</span>
+            <span class="n">apply_xfm</span><span class="p">[</span><span class="s1">&#39;tissue&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">interpolation</span> <span class="o">=</span> <span class="s1">&#39;nn&#39;</span>
+        <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;label-</span><span class="si">{</span><span class="n">tissue</span><span class="si">}</span><span class="s1">_mask&#39;</span><span class="p">):</span>
+            <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;label-</span><span class="si">{</span><span class="n">tissue</span><span class="si">}</span><span class="s1">_mask&#39;</span><span class="p">)</span>
+            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">apply_xfm</span><span class="p">[</span><span class="n">tissue</span><span class="p">],</span> <span class="s1">&#39;inputspec.input_image&#39;</span><span class="p">)</span>
+            <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;T1w-template&#39;</span><span class="p">)</span>
+            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">apply_xfm</span><span class="p">[</span><span class="n">tissue</span><span class="p">],</span> <span class="s1">&#39;inputspec.reference&#39;</span><span class="p">)</span>
+            <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;from-T1w_to-template_&#39;</span>
+                                            <span class="s1">&#39;mode-image_xfm&#39;</span><span class="p">)</span>
+            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">apply_xfm</span><span class="p">[</span><span class="n">tissue</span><span class="p">],</span> <span class="s1">&#39;inputspec.transform&#39;</span><span class="p">)</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s1">&#39;space-template_label-</span><span class="si">{</span><span class="n">tissue</span><span class="si">}</span><span class="s1">_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">apply_xfm</span><span class="p">[</span><span class="n">tissue</span><span class="p">],</span>
+               <span class="s1">&#39;outputspec.output_image&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">tissue</span> <span class="ow">in</span> <span class="n">tissue_types</span><span class="p">}</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
@@ -4450,7 +4425,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -4471,8 +4446,8 @@
     </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+        &#169; Copyright 2012‒2022, C-PAC Team.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

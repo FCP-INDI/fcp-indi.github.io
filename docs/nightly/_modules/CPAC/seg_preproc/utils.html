@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,6 +13,7 @@
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../../_static/doctools.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
@@ -71,6 +72,46 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;File </span><span class="si">{0}</span><span class="s1"> is empty. Use a lower threshold or turn &#39;</span>
                          <span class="s1">&#39;off regressors.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">in_file</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">in_file</span></div>
+
+
+<span class="k">def</span> <span class="nf">_erode</span><span class="p">(</span><span class="n">roi_mask</span><span class="p">,</span> <span class="n">erosion_mm</span><span class="p">,</span> <span class="n">erosion_prop</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Function to perform in-common erosion steps</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mask : str</span>
+<span class="sd">        Path to mask</span>
+
+<span class="sd">    erosion_mm : int, float or None</span>
+<span class="sd">        Kernel width in mm</span>
+
+<span class="sd">    erosion_prop : float or None</span>
+<span class="sd">        Target volume ratio, 0 &lt; erosion_prop &lt; 1</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    mask_img : nibabel image</span>
+<span class="sd">        Original mask image</span>
+
+<span class="sd">    erode : bool</span>
+<span class="sd">        erosion_bool or erosion_mm</span>
+
+<span class="sd">    mask_data : numpy array</span>
+<span class="sd">        eroded mask data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mask_img</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">roi_mask</span><span class="p">)</span>
+    <span class="n">mask_data</span> <span class="o">=</span> <span class="n">mask_img</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()</span>
+    <span class="n">orig_vol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask_data</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">erode</span> <span class="o">=</span> <span class="p">((</span><span class="n">erosion_mm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">erosion_mm</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span>
+             <span class="p">(</span><span class="n">erosion_prop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">erosion_prop</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">erode</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">erosion_mm</span><span class="p">:</span>
+            <span class="n">iter_n</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">erosion_mm</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">mask_img</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">get_zooms</span><span class="p">())),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">mask_data</span> <span class="o">=</span> <span class="n">nd</span><span class="o">.</span><span class="n">binary_erosion</span><span class="p">(</span><span class="n">mask_data</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="n">iter_n</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">while</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask_data</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">orig_vol</span> <span class="o">*</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">erosion_prop</span><span class="p">:</span>
+                <span class="n">mask_data</span> <span class="o">=</span> <span class="n">nd</span><span class="o">.</span><span class="n">binary_erosion</span><span class="p">(</span><span class="n">mask_data</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mask_img</span><span class="p">,</span> <span class="n">erode</span><span class="p">,</span> <span class="n">mask_data</span>
 
 
 <div class="viewcode-block" id="pick_wm_prob_0"><a class="viewcode-back" href="../../../developer/workflows/seg_preproc#CPAC.seg_preproc.pick_wm_prob_0">[docs]</a><span class="k">def</span> <span class="nf">pick_wm_prob_0</span><span class="p">(</span><span class="n">probability_maps</span><span class="p">):</span>
@@ -238,7 +279,7 @@
 <span class="sd">        Path to skull-stripped brain mask</span>
 
 <span class="sd">    mask_erosion_prop : float</span>
-<span class="sd">        Proportion of erosion skull-stripped brain mask</span>
+<span class="sd">        Target volume ratio for skull-stripped brain mask</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -249,31 +290,13 @@
 <span class="sd">    eroded_skullstrip_mask : string</span>
 <span class="sd">        Path to eroded skull-stripped brain mask</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">skullstrip_mask_img</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">skullstrip_mask</span><span class="p">)</span>
-    <span class="n">skullstrip_mask_data</span> <span class="o">=</span> <span class="n">skullstrip_mask_img</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()</span>
-
     <span class="n">roi_mask_img</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">roi_mask</span><span class="p">)</span>
     <span class="n">roi_mask_data</span> <span class="o">=</span> <span class="n">roi_mask_img</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()</span>
-    <span class="n">erode_in</span> <span class="o">=</span> <span class="p">(</span><span class="n">mask_erosion_mm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mask_erosion_mm</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span>
-                <span class="n">mask_erosion_prop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mask_erosion_prop</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">and</span>
-                <span class="n">mask_erosion_prop</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">erode_in</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">mask_erosion_mm</span><span class="p">:</span>
-            <span class="n">iter_n</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
-                <span class="nb">int</span><span class="p">(</span><span class="n">mask_erosion_mm</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span>
-                    <span class="n">skullstrip_mask_img</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">get_zooms</span><span class="p">()</span>
-                <span class="p">)),</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">skullstrip_mask_data</span> <span class="o">=</span> <span class="n">nd</span><span class="o">.</span><span class="n">binary_erosion</span><span class="p">(</span>
-                <span class="n">skullstrip_mask_data</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="n">iter_n</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">orig_vol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">skullstrip_mask_data</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
-            <span class="k">while</span> <span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">skullstrip_mask_data</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">orig_vol</span><span class="o">*</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">&gt;</span>
-                <span class="n">mask_erosion_prop</span>
-            <span class="p">):</span>
-                <span class="n">skullstrip_mask_data</span> <span class="o">=</span> <span class="n">nd</span><span class="o">.</span><span class="n">binary_erosion</span><span class="p">(</span>
-                    <span class="n">skullstrip_mask_data</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">skullstrip_mask_img</span><span class="p">,</span> <span class="n">erode_in</span><span class="p">,</span> <span class="n">skullstrip_mask_data</span> <span class="o">=</span> <span class="n">_erode</span><span class="p">(</span>
+        <span class="n">skullstrip_mask</span><span class="p">,</span> <span class="n">mask_erosion_mm</span><span class="p">,</span> <span class="n">mask_erosion_prop</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">erode_in</span><span class="p">:</span>
+        <span class="c1"># pylint: disable=invalid-unary-operand-type</span>
         <span class="n">roi_mask_data</span><span class="p">[</span><span class="o">~</span><span class="n">skullstrip_mask_data</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="n">hdr</span> <span class="o">=</span> <span class="n">roi_mask_img</span><span class="o">.</span><span class="n">get_header</span><span class="p">()</span>
@@ -305,37 +328,18 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-
 <span class="sd">    roi_mask : string</span>
 <span class="sd">        Path to binarized segment (ROI) mask</span>
 
 <span class="sd">    erosion_prop : float</span>
-<span class="sd">        Proportion of erosion segment mask</span>
+<span class="sd">        Target volume ratio for erosion segment mask</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-
 <span class="sd">    eroded_roi_mask : string</span>
 <span class="sd">        Path to eroded segment mask</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">roi_mask_img</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">roi_mask</span><span class="p">)</span>
-    <span class="n">roi_mask_data</span> <span class="o">=</span> <span class="n">roi_mask_img</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()</span>
-    <span class="n">orig_vol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">roi_mask_data</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
-
-    <span class="n">erode_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">erosion_mm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">erosion_mm</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span>
-                 <span class="n">erosion_prop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">erosion_prop</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">and</span>
-                 <span class="n">erosion_prop</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">erode_out</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">erosion_mm</span><span class="p">:</span>
-            <span class="n">iter_n</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
-                <span class="nb">int</span><span class="p">(</span><span class="n">erosion_mm</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">roi_mask_img</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">get_zooms</span><span class="p">())),</span>
-                <span class="mi">1</span>
-            <span class="p">)</span>
-            <span class="n">iter_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">erosion_mm</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">roi_mask_img</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">get_zooms</span><span class="p">()))</span>
-            <span class="n">roi_mask_data</span> <span class="o">=</span> <span class="n">nd</span><span class="o">.</span><span class="n">binary_erosion</span><span class="p">(</span><span class="n">roi_mask_data</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="n">iter_n</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">while</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">roi_mask_data</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">orig_vol</span><span class="o">*</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">erosion_prop</span><span class="p">:</span>
-                <span class="n">roi_mask_data</span> <span class="o">=</span> <span class="n">nd</span><span class="o">.</span><span class="n">binary_erosion</span><span class="p">(</span><span class="n">roi_mask_data</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">roi_mask_img</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">roi_mask_data</span> <span class="o">=</span> <span class="n">_erode</span><span class="p">(</span><span class="n">roi_mask</span><span class="p">,</span> <span class="n">erosion_mm</span><span class="p">,</span> <span class="n">erosion_prop</span><span class="p">)</span>
 
     <span class="n">hdr</span> <span class="o">=</span> <span class="n">roi_mask_img</span><span class="o">.</span><span class="n">get_header</span><span class="p">()</span>
     <span class="n">output_img</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">Nifti1Image</span><span class="p">(</span><span class="n">roi_mask_data</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">hdr</span><span class="p">,</span>
@@ -529,7 +533,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -550,8 +554,8 @@
     </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+        &#169; Copyright 2012‒2022, C-PAC Team.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

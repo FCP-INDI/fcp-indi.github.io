@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,6 +13,7 @@
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../../_static/doctools.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
@@ -128,10 +129,13 @@
                          <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">form_mask_erosion_prop</span><span class="p">(</span><span class="n">erosion_prop</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">erosion_prop</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">erosion_prop</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">return</span> <span class="n">erosion_prop</span> <span class="o">**</span> <span class="mi">3</span>
 
     <span class="n">ero_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import scipy.ndimage as nd&#39;</span><span class="p">,</span> <span class="s1">&#39;import numpy as np&#39;</span><span class="p">,</span>
-                   <span class="s1">&#39;import nibabel as nb&#39;</span><span class="p">,</span> <span class="s1">&#39;import os&#39;</span><span class="p">]</span>
+                   <span class="s1">&#39;import nibabel as nb&#39;</span><span class="p">,</span> <span class="s1">&#39;import os&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;from CPAC.seg_preproc.utils import _erode&#39;</span><span class="p">]</span>
 
     <span class="n">eroded_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span>
         <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;roi_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;skullstrip_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;mask_erosion_mm&#39;</span><span class="p">,</span>
@@ -147,7 +151,8 @@
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;brain_mask&#39;</span><span class="p">,</span> <span class="n">eroded_mask</span><span class="p">,</span> <span class="s1">&#39;skullstrip_mask&#39;</span><span class="p">)</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;mask&#39;</span><span class="p">,</span> <span class="n">eroded_mask</span><span class="p">,</span> <span class="s1">&#39;roi_mask&#39;</span><span class="p">)</span>
 
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;erode_prop&#39;</span><span class="p">,</span> <span class="n">form_mask_erosion_prop</span><span class="p">),</span> <span class="n">eroded_mask</span><span class="p">,</span> <span class="s1">&#39;mask_erosion_prop&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;erode_prop&#39;</span><span class="p">,</span> <span class="n">form_mask_erosion_prop</span><span class="p">),</span> <span class="n">eroded_mask</span><span class="p">,</span>
+               <span class="s1">&#39;mask_erosion_prop&#39;</span><span class="p">)</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;mask_erode_mm&#39;</span><span class="p">,</span> <span class="n">eroded_mask</span><span class="p">,</span> <span class="s1">&#39;mask_erosion_mm&#39;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">segmentmap</span><span class="p">:</span>
@@ -155,7 +160,8 @@
     <span class="k">if</span> <span class="n">segmentmap</span><span class="p">:</span>
         <span class="n">erosion_segmentmap</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;roi_mask&#39;</span><span class="p">,</span>
                                                                 <span class="s1">&#39;erosion_mm&#39;</span><span class="p">,</span>
-                                                                <span class="s1">&#39;erosion_prop&#39;</span><span class="p">],</span>
+                                                                <span class="s1">&#39;erosion_prop&#39;</span>
+                                                                <span class="p">],</span>
                                                    <span class="n">output_names</span><span class="o">=</span><span class="p">[</span>
                                                        <span class="s1">&#39;eroded_roi_mask&#39;</span><span class="p">],</span>
                                                    <span class="n">function</span><span class="o">=</span><span class="n">erosion</span><span class="p">,</span>
@@ -2046,7 +2052,9 @@
     <span class="n">erode</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">mask_erode_mm</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">nuisance_corrections</span><span class="p">[</span>
         <span class="s1">&#39;2-nuisance_regression&#39;</span><span class="p">][</span><span class="s1">&#39;regressor_masks&#39;</span><span class="p">][</span>
         <span class="s1">&#39;erode_anatomical_brain_mask&#39;</span><span class="p">][</span><span class="s1">&#39;brain_mask_erosion_mm&#39;</span><span class="p">]</span>
-    <span class="n">erode</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">erode_prop</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">erode</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">erode_prop</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">nuisance_corrections</span><span class="p">[</span>
+        <span class="s1">&#39;2-nuisance_regression&#39;</span><span class="p">][</span><span class="s1">&#39;regressor_masks&#39;</span><span class="p">][</span>
+        <span class="s1">&#39;erode_anatomical_brain_mask&#39;</span><span class="p">][</span><span class="s1">&#39;brain_mask_erosion_prop&#39;</span><span class="p">]</span>
 
     <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;space-T1w_desc-brain_mask&#39;</span><span class="p">)</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">erode</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain_mask&#39;</span><span class="p">)</span>
@@ -2453,7 +2461,9 @@
     <span class="n">erode</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">mask_erode_mm</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">nuisance_corrections</span><span class="p">[</span>
         <span class="s1">&#39;2-nuisance_regression&#39;</span><span class="p">][</span><span class="s1">&#39;regressor_masks&#39;</span><span class="p">][</span>
         <span class="s1">&#39;erode_anatomical_brain_mask&#39;</span><span class="p">][</span><span class="s1">&#39;brain_mask_erosion_mm&#39;</span><span class="p">]</span>
-    <span class="n">erode</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">erode_prop</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">erode</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">erode_prop</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">nuisance_corrections</span><span class="p">[</span>
+        <span class="s1">&#39;2-nuisance_regression&#39;</span><span class="p">][</span><span class="s1">&#39;regressor_masks&#39;</span><span class="p">][</span>
+        <span class="s1">&#39;erode_anatomical_brain_mask&#39;</span><span class="p">][</span><span class="s1">&#39;brain_mask_erosion_prop&#39;</span><span class="p">]</span>
 
     <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;space-bold_desc-brain_mask&#39;</span><span class="p">)</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">erode</span><span class="p">,</span> <span class="s1">&#39;inputspec.brain_mask&#39;</span><span class="p">)</span>
@@ -2742,7 +2752,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -2763,8 +2773,8 @@
     </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+        &#169; Copyright 2012‒2022, C-PAC Team.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

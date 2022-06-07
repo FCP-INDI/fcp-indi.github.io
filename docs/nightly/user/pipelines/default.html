@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
@@ -14,6 +14,7 @@
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
@@ -1247,6 +1248,13 @@
 <span class="w">  </span><span class="nt">func_masking</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">    </span><span class="c1"># using: [&#39;AFNI&#39;, &#39;FSL&#39;, &#39;FSL_AFNI&#39;, &#39;Anatomical_Refined&#39;, &#39;Anatomical_Based&#39;, &#39;Anatomical_Resampled&#39;, &#39;CCS_Anatomical_Refined&#39;]</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1"># FSL_AFNI: fMRIPrep-style BOLD mask. Ref: https://github.com/nipreps/niworkflows/blob/a221f612/niworkflows/func/util.py#L246-L514</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># Anatomical_Refined: 1. binarize anat mask, in case it is not a binary mask. 2. fill holes of anat mask 3. init_bold_mask : input raw func → dilate init func brain mask 4. refined_bold_mask : input motion corrected func → dilate anatomical mask 5. get final func mask</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># Anatomical_Based: Generate the BOLD mask by basing it off of the anatomical brain mask. Adapted from DCAN Lab&#39;s BOLD mask method from the ABCD pipeline.</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># Anatomical_Resampled: Resample anatomical brain mask in standard space to get BOLD brain mask in standard space. Adapted from DCAN Lab&#39;s BOLD mask method from the ABCD pipeline. (&quot;Create fMRI resolution standard space files for T1w image, wmparc, and brain mask […] don&#39;t use FLIRT to do spline interpolation with -applyisoxfm for the 2mm and 1mm cases because it doesn&#39;t know the peculiarities of the MNI template FOVs&quot;)</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># CCS_Anatomical_Refined: Generate the BOLD mask by basing it off of the anatomical brain. Adapted from the BOLD mask method from the CCS pipeline.</span><span class="w"></span>
+
 <span class="w">    </span><span class="c1"># this is a fork point</span><span class="w"></span>
 <span class="w">    </span><span class="nt">using</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;AFNI&#39;</span><span class="p p-Indicator">]</span><span class="w"></span>
 
@@ -1428,69 +1436,69 @@
 
 <span class="w">      </span><span class="nt">erode_anatomical_brain_mask</span><span class="p">:</span><span class="w"></span>
 
-<span class="w">        </span><span class="c1"># Erode binarized anatomical brain mask. If choosing True, please also set seg_csf_use_erosion: True; regOption: niworkflows-ants.</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Erode binarized anatomical brain mask. If choosing True, please also set regressor_masks[&#39;erode_csf&#39;][&#39;run&#39;]: True; anatomical_preproc[&#39;brain_extraction&#39;][&#39;using&#39;]: niworkflows-ants.</span><span class="w"></span>
 <span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
 
-<span class="w">        </span><span class="c1"># Erosion proportion, if using erosion.</span><span class="w"></span>
-<span class="w">        </span><span class="c1"># Default proportion is 0 for anatomical brain mask.</span><span class="w"></span>
-<span class="w">        </span><span class="c1"># Recommend that do not use erosion in both proportion and millimeter method.</span><span class="w"></span>
-<span class="w">        </span><span class="nt">brain_mask_erosion_prop </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Target volume ratio, if using erosion.</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Default proportion is None for anatomical brain mask.</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># If using erosion, using both proportion and millimeters is not recommended.</span><span class="w"></span>
+<span class="w">        </span><span class="nt">brain_mask_erosion_prop</span><span class="p">:</span><span class="w"></span>
 
-<span class="w">        </span><span class="c1"># Erode brain mask in millimeter, default of brain is 30 mm</span><span class="w"></span>
-<span class="w">        </span><span class="c1"># brain erosion default is using millimeter erosion method when use erosion for brain.</span><span class="w"></span>
-<span class="w">        </span><span class="nt">brain_mask_erosion_mm </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Erode brain mask in millimeters, default for brain mask is 30 mm</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Brain erosion default is using millimeters.</span><span class="w"></span>
+<span class="w">        </span><span class="nt">brain_mask_erosion_mm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span><span class="w"></span>
 
 <span class="w">        </span><span class="c1"># Erode binarized brain mask in millimeter</span><span class="w"></span>
-<span class="w">        </span><span class="nt">brain_erosion_mm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"></span>
+<span class="w">        </span><span class="nt">brain_erosion_mm</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">      </span><span class="nt">erode_csf</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">        </span><span class="c1"># Erode binarized csf tissue mask.</span><span class="w"></span>
 <span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
 
-<span class="w">        </span><span class="c1"># Erosion proportion, if use erosion.</span><span class="w"></span>
-<span class="w">        </span><span class="c1"># Default proportion is 0 for CSF (cerebrospinal fluid)  mask.</span><span class="w"></span>
-<span class="w">        </span><span class="c1"># Recommend to do not use erosion in both proportion and millimeter method.</span><span class="w"></span>
-<span class="w">        </span><span class="nt">csf_erosion_prop </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Target volume ratio, if using erosion.</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Default proportion is None for cerebrospinal fluid mask.</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># If using erosion, using both proportion and millimeters is not recommended.</span><span class="w"></span>
+<span class="w">        </span><span class="nt">csf_erosion_prop</span><span class="p">:</span><span class="w"></span>
 
-<span class="w">        </span><span class="c1"># Erode brain mask in millimeter, default of csf is 30 mm</span><span class="w"></span>
-<span class="w">        </span><span class="c1"># CSF erosion default is using millimeter erosion method when use erosion for CSF.</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Erode cerebrospinal fluid mask in millimeters, default for cerebrospinal fluid is 30mm</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Cerebrospinal fluid erosion default is using millimeters.</span><span class="w"></span>
 <span class="w">        </span><span class="nt">csf_mask_erosion_mm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span><span class="w"></span>
 
-<span class="w">        </span><span class="c1"># Erode binarized CSF (cerebrospinal fluid)  mask in millimeter</span><span class="w"></span>
-<span class="w">        </span><span class="nt">csf_erosion_mm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Erode binarized cerebrospinal fluid mask in millimeter</span><span class="w"></span>
+<span class="w">        </span><span class="nt">csf_erosion_mm</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">      </span><span class="nt">erode_wm</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">        </span><span class="c1"># Erode WM binarized tissue mask.</span><span class="w"></span>
 <span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
 
-<span class="w">        </span><span class="c1"># Erosion proportion, if use erosion.</span><span class="w"></span>
-<span class="w">        </span><span class="c1"># Default proportion is 0.6 for White Matter mask.</span><span class="w"></span>
-<span class="w">        </span><span class="c1"># Recommend to do not use erosion in both proportion and millimeter method.</span><span class="w"></span>
-<span class="w">        </span><span class="c1"># White Matter erosion default is using proportion erosion method when use erosion for White Matter.</span><span class="w"></span>
-<span class="w">        </span><span class="nt">wm_erosion_prop </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.6</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Target volume ratio, if using erosion.</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Default proportion is 0.6 for white matter mask.</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># If using erosion, using both proportion and millimeters is not recommended.</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># White matter erosion default is using proportion erosion method when use erosion for white matter.</span><span class="w"></span>
+<span class="w">        </span><span class="nt">wm_erosion_prop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.6</span><span class="w"></span>
 
-<span class="w">        </span><span class="c1"># Erode brain mask in millimeter, default of White Matter is 0 mm</span><span class="w"></span>
-<span class="w">        </span><span class="nt">wm_mask_erosion_mm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Erode white matter mask in millimeters, default for white matter is None</span><span class="w"></span>
+<span class="w">        </span><span class="nt">wm_mask_erosion_mm</span><span class="p">:</span><span class="w"></span>
 
-<span class="w">        </span><span class="c1"># Erode binarized White Matter mask in millimeter</span><span class="w"></span>
-<span class="w">        </span><span class="nt">wm_erosion_mm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Erode binarized white matter mask in millimeters</span><span class="w"></span>
+<span class="w">        </span><span class="nt">wm_erosion_mm</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">      </span><span class="nt">erode_gm</span><span class="p">:</span><span class="w"></span>
 
-<span class="w">        </span><span class="c1"># Erode GM binarized tissue mask.</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Erode gray matter binarized tissue mask.</span><span class="w"></span>
 <span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
 
-<span class="w">        </span><span class="c1"># Erosion proportion, if use erosion.</span><span class="w"></span>
-<span class="w">        </span><span class="c1"># Recommend to do not use erosion in both proportion and millimeter method.</span><span class="w"></span>
-<span class="w">        </span><span class="nt">gm_erosion_prop </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.6</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Target volume ratio, if using erosion.</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># If using erosion, using both proportion and millimeters is not recommended.</span><span class="w"></span>
+<span class="w">        </span><span class="nt">gm_erosion_prop</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.6</span><span class="w"></span>
 
-<span class="w">        </span><span class="c1"># Erode brain mask in millimeter, default of csf is 30 mm</span><span class="w"></span>
-<span class="w">        </span><span class="nt">gm_mask_erosion_mm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Erode gray matter mask in millimeters</span><span class="w"></span>
+<span class="w">        </span><span class="nt">gm_mask_erosion_mm</span><span class="p">:</span><span class="w"></span>
 
-<span class="w">        </span><span class="c1"># Erode binarized White Matter mask in millimeter</span><span class="w"></span>
-<span class="w">        </span><span class="nt">gm_erosion_mm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># Erode binarized gray matter mask in millimeters</span><span class="w"></span>
+<span class="w">        </span><span class="nt">gm_erosion_mm</span><span class="p">:</span><span class="w"></span>
 
 
 <span class="c1"># OUTPUTS AND DERIVATIVES</span><span class="w"></span>
@@ -1500,7 +1508,7 @@
 <span class="w">  </span><span class="nt">spatial_smoothing</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">    </span><span class="c1"># Smooth the derivative outputs.</span><span class="w"></span>
-<span class="w">    </span><span class="c1"># Set as [&#39;nonsmoothed&#39;] to disable smoothing. Set as both to get both.</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># Set as [&#39;nonsmoothed&#39;] to disable smoothing. Set as [&#39;smoothed&#39;, &#39;nonsmoothed&#39;] to get both.</span><span class="w"></span>
 <span class="w">    </span><span class="c1">#</span><span class="w"></span>
 <span class="w">    </span><span class="c1"># Options:</span><span class="w"></span>
 <span class="w">    </span><span class="c1">#     [&#39;smoothed&#39;, &#39;nonsmoothed&#39;]</span><span class="w"></span>
@@ -1519,7 +1527,7 @@
 <span class="w">  </span><span class="nt">z-scoring</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">    </span><span class="c1"># z-score standardize the derivatives. This may be needed for group-level analysis.</span><span class="w"></span>
-<span class="w">    </span><span class="c1"># Set as [&#39;raw&#39;] to disable z-scoring. Set as both to get both.</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># Set as [&#39;raw&#39;] to disable z-scoring. Set as [&#39;z-scored&#39;, &#39;raw&#39;] to get both.</span><span class="w"></span>
 <span class="w">    </span><span class="c1">#</span><span class="w"></span>
 <span class="w">    </span><span class="c1"># Options:</span><span class="w"></span>
 <span class="w">    </span><span class="c1">#     [&#39;z-scored&#39;, &#39;raw&#39;]</span><span class="w"></span>
@@ -1577,11 +1585,13 @@
 <span class="w">    </span><span class="c1"># Create a connectivity matrix from timeseries data</span><span class="w"></span>
 
 <span class="w">    </span><span class="c1"># Options:</span><span class="w"></span>
-<span class="w">    </span><span class="c1">#  [&#39;AFNI&#39;, &#39;Nilearn&#39;]</span><span class="w"></span>
+<span class="w">    </span><span class="c1">#  [&#39;AFNI&#39;, &#39;Nilearn&#39;, &#39;ndmg&#39;]</span><span class="w"></span>
 <span class="w">    </span><span class="nt">using</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Nilearn</span><span class="w"></span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ndmg</span><span class="w"></span>
 <span class="w">    </span><span class="c1"># Options:</span><span class="w"></span>
 <span class="w">    </span><span class="c1">#  [&#39;Pearson&#39;, &#39;Partial&#39;]</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># Note: These options are not configurable for ndmg, which will ignore these options</span><span class="w"></span>
 <span class="w">    </span><span class="nt">measure</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Pearson</span><span class="w"></span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Partial</span><span class="w"></span>
@@ -1615,7 +1625,7 @@
 <span class="nt">amplitude_low_frequency_fluctuation</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">  </span><span class="c1"># ALFF &amp; f/ALFF</span><span class="w"></span>
-<span class="w">  </span><span class="c1"># Calculate Amplitude of Low Frequency Fluctuations (ALFF) and and fractional ALFF (f/ALFF) for all voxels.</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># Calculate Amplitude of Low Frequency Fluctuations (ALFF) and fractional ALFF (f/ALFF) for all voxels.</span><span class="w"></span>
 <span class="w">  </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">On</span><span class="w"></span>
 
 <span class="w">  </span><span class="c1"># Frequency cutoff (in Hz) for the high-pass filter used when calculating f/ALFF.</span><span class="w"></span>
@@ -1804,7 +1814,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -1824,8 +1834,8 @@
     </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+        &#169; Copyright 2012‒2022, C-PAC Team.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

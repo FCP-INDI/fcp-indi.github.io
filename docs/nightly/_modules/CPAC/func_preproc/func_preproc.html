@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,6 +13,7 @@
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../../_static/doctools.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
@@ -40,27 +41,21 @@
           <div class="body" role="main">
             
   <h1>Source code for CPAC.func_preproc.func_preproc</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">nipype</span> <span class="kn">import</span> <span class="n">logging</span>
-<span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="kn">import</span> <span class="n">ants</span>
-
+<span></span><span class="c1"># pylint: disable=ungrouped-imports,wrong-import-order,wrong-import-position</span>
+<span class="kn">from</span> <span class="nn">nipype</span> <span class="kn">import</span> <span class="n">logging</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="kn">import</span> <span class="n">afni</span><span class="p">,</span> <span class="n">ants</span><span class="p">,</span> <span class="n">fsl</span><span class="p">,</span> <span class="n">utility</span> <span class="k">as</span> <span class="n">util</span>
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;nipype.workflow&#39;</span><span class="p">)</span>
-
 <span class="kn">from</span> <span class="nn">CPAC.pipeline</span> <span class="kn">import</span> <span class="n">nipype_pipeline_engine</span> <span class="k">as</span> <span class="n">pe</span>
-<span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="k">as</span> <span class="nn">fsl</span>
-<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
-<span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="kn">import</span> <span class="n">afni</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces.afni</span> <span class="kn">import</span> <span class="n">preprocess</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces.afni</span> <span class="kn">import</span> <span class="n">utils</span> <span class="k">as</span> <span class="n">afni_utils</span>
+
 <span class="kn">from</span> <span class="nn">CPAC.func_preproc.utils</span> <span class="kn">import</span> <span class="n">add_afni_prefix</span><span class="p">,</span> <span class="n">nullify</span><span class="p">,</span> <span class="n">chunk_ts</span><span class="p">,</span> \
     <span class="n">split_ts_chunks</span><span class="p">,</span> <span class="n">oned_text_concat</span><span class="p">,</span> <span class="n">notch_filter_motion</span>
-<span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.function</span> <span class="kn">import</span> <span class="n">Function</span>
 <span class="kn">from</span> <span class="nn">CPAC.generate_motion_statistics</span> <span class="kn">import</span> <span class="n">motion_power_statistics</span>
-
+<span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.ants</span> <span class="kn">import</span> <span class="n">AI</span>  <span class="c1"># niworkflows</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.ants</span> <span class="kn">import</span> <span class="n">PrintHeader</span><span class="p">,</span> <span class="n">SetDirectionByMatrix</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.function</span> <span class="kn">import</span> <span class="n">Function</span>
 <span class="kn">from</span> <span class="nn">CPAC.utils.utils</span> <span class="kn">import</span> <span class="n">check_prov_for_motion_tool</span>
-
-<span class="c1"># niworkflows</span>
-<span class="kn">from</span> <span class="nn">..utils.interfaces.ants</span> <span class="kn">import</span> <span class="n">AI</span><span class="p">,</span> \
-    <span class="n">CopyImageHeaderInformation</span>  <span class="c1"># noqa: E402</span>
 
 
 <span class="k">def</span> <span class="nf">collect_arguments</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
@@ -1441,9 +1436,8 @@
 <span class="sd">     &quot;inputs&quot;: [[&quot;desc-preproc_bold&quot;, &quot;bold&quot;]],</span>
 <span class="sd">     &quot;outputs&quot;: {</span>
 <span class="sd">         &quot;space-bold_desc-brain_mask&quot;: {</span>
-<span class="sd">             &quot;Description&quot;: &quot;Binary brain mask of the BOLD functional time-series</span>
-<span class="sd">                             created by AFNI 3dAutomask.&quot;}}</span>
-<span class="sd">    }</span>
+<span class="sd">             &quot;Description&quot;: &quot;Binary brain mask of the BOLD functional &quot;</span>
+<span class="sd">                            &quot;time-series created by AFNI 3dAutomask.&quot;}}}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">func_get_brain_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">Automask</span><span class="p">(),</span>
@@ -1710,8 +1704,10 @@
 
     <span class="c1"># Fix precision errors</span>
     <span class="c1"># https://github.com/ANTsX/ANTs/wiki/Inputs-do-not-occupy-the-same-physical-space#fixing-precision-errors</span>
-    <span class="n">restore_header</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">CopyImageHeaderInformation</span><span class="p">(),</span>
-                             <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;restore_header_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">print_header</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">PrintHeader</span><span class="p">(</span><span class="n">what_information</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+                           <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;print_header_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">set_direction</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">SetDirectionByMatrix</span><span class="p">(),</span>
+                            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;set_direction_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
     <span class="c1"># Run N4 normally, force num_threads=1 for stability (images are</span>
     <span class="c1"># small, no need for &gt;1)</span>
@@ -1757,7 +1753,6 @@
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">([(</span><span class="n">node</span><span class="p">,</span> <span class="n">init_aff</span><span class="p">,</span> <span class="p">[(</span><span class="n">out</span><span class="p">,</span> <span class="s2">&quot;moving_image&quot;</span><span class="p">)]),</span>
                 <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">map_brainmask</span><span class="p">,</span> <span class="p">[(</span><span class="n">out</span><span class="p">,</span> <span class="s2">&quot;reference_image&quot;</span><span class="p">)]),</span>
                 <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">norm</span><span class="p">,</span> <span class="p">[(</span><span class="n">out</span><span class="p">,</span> <span class="s2">&quot;moving_image&quot;</span><span class="p">)]),</span>
-                <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">restore_header</span><span class="p">,</span> <span class="p">[(</span><span class="n">out</span><span class="p">,</span> <span class="s2">&quot;refimage&quot;</span><span class="p">)]),</span>
                 <span class="p">(</span><span class="n">init_aff</span><span class="p">,</span> <span class="n">norm</span><span class="p">,</span> <span class="p">[</span>
                     <span class="p">(</span><span class="s2">&quot;output_transform&quot;</span><span class="p">,</span> <span class="s2">&quot;initial_moving_transform&quot;</span><span class="p">)]),</span>
                 <span class="p">(</span><span class="n">norm</span><span class="p">,</span> <span class="n">map_brainmask</span><span class="p">,</span> <span class="p">[</span>
@@ -1766,9 +1761,10 @@
                 <span class="p">]),</span>
                 <span class="p">(</span><span class="n">map_brainmask</span><span class="p">,</span> <span class="n">binarize_mask</span><span class="p">,</span> <span class="p">[(</span><span class="s2">&quot;output_image&quot;</span><span class="p">,</span> <span class="s2">&quot;in_file&quot;</span><span class="p">)]),</span>
                 <span class="p">(</span><span class="n">binarize_mask</span><span class="p">,</span> <span class="n">pre_dilate</span><span class="p">,</span> <span class="p">[(</span><span class="s2">&quot;out_file&quot;</span><span class="p">,</span> <span class="s2">&quot;in_file&quot;</span><span class="p">)]),</span>
-                <span class="p">(</span><span class="n">pre_dilate</span><span class="p">,</span> <span class="n">restore_header</span><span class="p">,</span> <span class="p">[</span>
-                    <span class="p">(</span><span class="s2">&quot;out_file&quot;</span><span class="p">,</span> <span class="s2">&quot;imagetocopyrefimageinfoto&quot;</span><span class="p">)]),</span>
-                <span class="p">(</span><span class="n">restore_header</span><span class="p">,</span> <span class="n">n4_correct</span><span class="p">,</span> <span class="p">[(</span><span class="s2">&quot;imageout&quot;</span><span class="p">,</span> <span class="s2">&quot;mask_image&quot;</span><span class="p">)]),</span>
+                <span class="p">(</span><span class="n">pre_dilate</span><span class="p">,</span> <span class="n">print_header</span><span class="p">,</span> <span class="p">[(</span><span class="s2">&quot;out_file&quot;</span><span class="p">,</span> <span class="s2">&quot;image&quot;</span><span class="p">)]),</span>
+                <span class="p">(</span><span class="n">print_header</span><span class="p">,</span> <span class="n">set_direction</span><span class="p">,</span> <span class="p">[(</span><span class="s2">&quot;header&quot;</span><span class="p">,</span> <span class="s2">&quot;direction&quot;</span><span class="p">)]),</span>
+                <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">set_direction</span><span class="p">,</span> <span class="p">[(</span><span class="n">out</span><span class="p">,</span> <span class="s2">&quot;infile&quot;</span><span class="p">),</span> <span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="s2">&quot;outfile&quot;</span><span class="p">)]),</span>
+                <span class="p">(</span><span class="n">set_direction</span><span class="p">,</span> <span class="n">n4_correct</span><span class="p">,</span> <span class="p">[(</span><span class="s2">&quot;outfile&quot;</span><span class="p">,</span> <span class="s2">&quot;mask_image&quot;</span><span class="p">)]),</span>
                 <span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">n4_correct</span><span class="p">,</span> <span class="p">[(</span><span class="n">out</span><span class="p">,</span> <span class="s2">&quot;input_image&quot;</span><span class="p">)]),</span>
                 <span class="p">(</span><span class="n">n4_correct</span><span class="p">,</span> <span class="n">skullstrip_first_pass</span><span class="p">,</span>
                  <span class="p">[(</span><span class="s1">&#39;output_image&#39;</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)]),</span>
@@ -2079,7 +2075,7 @@
     <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">&#39;space-template_res-bold_desc-brain_T1w&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">anat_brain_to_func_res</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
         <span class="s1">&#39;space-template_desc-bold_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">anat_brain_mask_to_func_res</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
-        <span class="s2">&quot;space-bold_desc-brain_mask&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_mask_template_to_native</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
+        <span class="s1">&#39;space-bold_desc-brain_mask&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_mask_template_to_native</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
     <span class="p">}</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
@@ -2385,7 +2381,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -2406,8 +2402,8 @@
     </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+        &#169; Copyright 2012‒2022, C-PAC Team.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

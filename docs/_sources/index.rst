@@ -14,6 +14,7 @@ Contents:
 
    User Guide <user/index>
    Developer Documentation <developer/index>
+   License <license>
    
 
 Indices and tables

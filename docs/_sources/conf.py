@@ -168,8 +168,8 @@ suppress_warnings = ['autosectionlabel.*']
 
 # General information about the project.
 project = 'C-PAC'
-copyright = '2012‒2022, C-PAC Team'
-
+copyright = '2012‒2022, C-PAC Developers. C-PAC is licensed under LGPL-3' \
+            '.0-or-later'
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.

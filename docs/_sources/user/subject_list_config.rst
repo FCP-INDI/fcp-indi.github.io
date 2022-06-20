@@ -41,7 +41,7 @@ The Singularity command will create ``data_settings.yml`` in the current working
 
 The Docker command requires a few more parameters than the Singularity command:
 
-* ``--user $(id -u)`` is necessary so the generated files will be owned locally by the user running Docker rather than by root (the default).
+* ``--user $(id -u)`` is necessary so the generated files will be owned locally by the user running Docker rather than by ``c-pac_user`` (the default).
 * ``-v /path/to/data_config:/scratch`` binds your local ``data_config`` directory to ``/scratch`` on the Docker image, and
 * ``-w="/scratch"`` sets the current working directory on the Docker image to ``/scratch``.
 

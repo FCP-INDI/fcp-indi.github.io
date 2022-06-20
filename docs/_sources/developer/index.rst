@@ -24,6 +24,7 @@ Contents:
    workflows/index
    xcpqc
    testing
+   continuous_integration
 
 Indices and tables
 ^^^^^^^^^^^^^^^^^^

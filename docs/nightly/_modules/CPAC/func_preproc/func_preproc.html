@@ -50,8 +50,10 @@
 <span class="kn">from</span> <span class="nn">nipype.interfaces.afni</span> <span class="kn">import</span> <span class="n">utils</span> <span class="k">as</span> <span class="n">afni_utils</span>
 
 <span class="kn">from</span> <span class="nn">CPAC.func_preproc.utils</span> <span class="kn">import</span> <span class="n">add_afni_prefix</span><span class="p">,</span> <span class="n">nullify</span><span class="p">,</span> <span class="n">chunk_ts</span><span class="p">,</span> \
-    <span class="n">split_ts_chunks</span><span class="p">,</span> <span class="n">oned_text_concat</span><span class="p">,</span> <span class="n">notch_filter_motion</span>
+                                    <span class="n">split_ts_chunks</span><span class="p">,</span> <span class="n">oned_text_concat</span><span class="p">,</span> \
+                                    <span class="n">notch_filter_motion</span>
 <span class="kn">from</span> <span class="nn">CPAC.generate_motion_statistics</span> <span class="kn">import</span> <span class="n">motion_power_statistics</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.docs</span> <span class="kn">import</span> <span class="n">grab_docstring_dct</span>
 <span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.ants</span> <span class="kn">import</span> <span class="n">AI</span>  <span class="c1"># niworkflows</span>
 <span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.ants</span> <span class="kn">import</span> <span class="n">PrintHeader</span><span class="p">,</span> <span class="n">SetDirectionByMatrix</span>
 <span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.function</span> <span class="kn">import</span> <span class="n">Function</span>
@@ -1125,12 +1127,14 @@
 <span class="sd">                 &quot;bold&quot;],</span>
 <span class="sd">     &quot;outputs&quot;: [&quot;motion-basefile&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-
-    <span class="k">if</span> <span class="n">opt</span> <span class="o">!=</span> <span class="s1">&#39;mean&#39;</span> <span class="ow">and</span> <span class="n">opt</span> <span class="o">!=</span> <span class="s1">&#39;median&#39;</span> <span class="ow">and</span> <span class="n">opt</span> <span class="o">!=</span> <span class="s1">&#39;selected_volume&#39;</span> <span class="ow">and</span> <span class="n">opt</span> <span class="o">!=</span> <span class="s1">&#39;fmriprep_reference&#39;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">[!] Error: The &#39;tool&#39; parameter of the &quot;</span>
-                        <span class="s2">&quot;&#39;motion_correction_reference&#39; workflow must be either &quot;</span>
-                        <span class="s2">&quot;&#39;mean&#39; or &#39;median&#39; or &#39;selected_volume&#39; or &#39;fmriprep_reference&#39;.</span><span class="se">\n\n</span><span class="s2">Tool input: &quot;</span>
-                        <span class="s2">&quot;</span><span class="si">{0}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">opt</span><span class="p">))</span>
+    <span class="n">option_vals</span> <span class="o">=</span> <span class="n">grab_docstring_dct</span><span class="p">(</span><span class="n">get_motion_ref</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;option_val&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">opt</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">option_vals</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">[!] Error: The </span><span class="se">\&#39;</span><span class="s1">motion_correction_reference</span><span class="se">\&#39;</span><span class="s1"> &#39;</span>
+                         <span class="s1">&#39;parameter of the </span><span class="se">\&#39;</span><span class="s1">motion_correction</span><span class="se">\&#39;</span><span class="s1"> workflow &#39;</span>
+                         <span class="s1">&#39;must be one of:</span><span class="se">\n\t</span><span class="si">{0}</span><span class="s1">.</span><span class="se">\n\n</span><span class="s1">Tool input: </span><span class="se">\&#39;</span><span class="si">{1}</span><span class="se">\&#39;</span><span class="s1">&#39;</span>
+                         <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                             <span class="s1">&#39; or &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&#39;&quot;</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">option_vals</span><span class="p">]),</span>
+                             <span class="n">opt</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="n">opt</span> <span class="o">==</span> <span class="s1">&#39;mean&#39;</span><span class="p">:</span>
         <span class="n">func_get_RPI</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">TStat</span><span class="p">(),</span>
@@ -1353,7 +1357,7 @@
 <span class="sd">                &quot;motion_estimates&quot;, &quot;calculate_motion_after&quot;]],</span>
 <span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
 <span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [(&quot;desc-motion_bold&quot;,</span>
+<span class="sd">     &quot;inputs&quot;: [(&quot;desc-preproc_bold&quot;,</span>
 <span class="sd">                 &quot;space-bold_desc-brain_mask&quot;,</span>
 <span class="sd">                 &quot;movement-parameters&quot;,</span>
 <span class="sd">                 &quot;max-displacement&quot;,</span>
@@ -1385,7 +1389,7 @@
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
                <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;inputspec.scan_id&#39;</span><span class="p">)</span>
 
-    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;desc-motion_bold&quot;</span><span class="p">)</span>
+    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;desc-preproc_bold&quot;</span><span class="p">)</span>
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
                <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;inputspec.motion_correct&#39;</span><span class="p">)</span>
 
@@ -2369,6 +2373,7 @@
     <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../user/index">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../developer/index">Developer Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license">License</a></li>
 </ul>
 
   </div>
@@ -2402,8 +2407,8 @@
     </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012‒2022, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
+        &#169; Copyright 2012‒2022, C-PAC Developers. C-PAC is licensed under LGPL-3.0-or-later.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

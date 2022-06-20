@@ -46,10 +46,39 @@
 <span class="sd">for C-PAC-specific documentation.</span>
 <span class="sd">See https://nipype.readthedocs.io/en/latest/api/generated/nipype.pipeline.engine.html</span>
 <span class="sd">for Nipype&#39;s documentation.</span>
-<span class="sd">&#39;&#39;&#39;</span>  <span class="c1"># noqa: E501</span>
+
+<span class="sd">STATEMENT OF CHANGES:</span>
+<span class="sd">    This file is derived from sources licensed under the Apache-2.0 terms,</span>
+<span class="sd">    and this file has been changed.</span>
+
+<span class="sd">CHANGES:</span>
+<span class="sd">    * Supports just-in-time dynamic memory allocation</span>
+<span class="sd">    * Skips doctests that require files that we haven&#39;t copied over</span>
+<span class="sd">    * Applies a random seed</span>
+<span class="sd">    * Supports overriding memory estimates via a log file and a buffer</span>
+
+<span class="sd">ORIGINAL WORK&#39;S ATTRIBUTION NOTICE:</span>
+<span class="sd">    Copyright (c) 2009-2016, Nipype developers</span>
+
+<span class="sd">    Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="sd">    you may not use this file except in compliance with the License.</span>
+<span class="sd">    You may obtain a copy of the License at</span>
+
+<span class="sd">        http://www.apache.org/licenses/LICENSE-2.0</span>
+
+<span class="sd">    Unless required by applicable law or agreed to in writing, software</span>
+<span class="sd">    distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="sd">    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="sd">    See the License for the specific language governing permissions and</span>
+<span class="sd">    limitations under the License.</span>
+
+<span class="sd">    Prior to release 0.12, Nipype was licensed under a BSD license.</span>
+
+<span class="sd">Modifications Copyright (C) 2022  C-PAC Developers</span>
+
+<span class="sd">This file is part of C-PAC.&#39;&#39;&#39;</span>  <span class="c1"># noqa: E501</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">logging</span> <span class="kn">import</span> <span class="n">getLogger</span>
 <span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">Parameter</span><span class="p">,</span> <span class="n">Signature</span><span class="p">,</span> <span class="n">signature</span>
 <span class="kn">from</span> <span class="nn">nibabel</span> <span class="kn">import</span> <span class="n">load</span>
@@ -318,8 +347,8 @@
 
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">verbose_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">.mem_x: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                                          <span class="bp">self</span><span class="o">.</span><span class="n">mem_x</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">verbose_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">._mem_x: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">multiplicand</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">multiplicand</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x_file</span><span class="p">()</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_mem_gb&#39;</span><span class="p">,</span> <span class="p">(</span>
@@ -476,11 +505,12 @@
                                      <span class="s2">&quot;result_</span><span class="si">%s</span><span class="s2">.pklz&quot;</span> <span class="o">%</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
                         <span class="n">sourceinfo</span><span class="p">,</span>
                     <span class="p">)</span>
-                    <span class="k">if</span> <span class="n">node</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">&#39;mem_x&#39;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">node</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">&#39;_mem_x&#39;</span><span class="p">):</span>
                         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span>
-                            <span class="n">node</span><span class="o">.</span><span class="n">mem_x</span><span class="p">,</span>
+                            <span class="n">node</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">,</span>  <span class="c1"># pylint: disable=protected-access</span>
                             <span class="nb">dict</span>
-                        <span class="p">)</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">mem_x</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">field</span><span class="p">:</span>
+                        <span class="p">)</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">_mem_x</span><span class="p">[</span>  <span class="c1"># pylint: disable=protected-access</span>
+                                          <span class="s1">&#39;file&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">field</span><span class="p">:</span>
                             <span class="n">input_resultfile</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">input_source</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
                             <span class="k">if</span> <span class="n">input_resultfile</span><span class="p">:</span>
                                 <span class="c1"># pylint: disable=protected-access</span>
@@ -492,14 +522,8 @@
                                     <span class="n">node</span><span class="o">.</span><span class="n">_apply_mem_x</span><span class="p">(</span><span class="n">_load_resultfile</span><span class="p">(</span>
                                         <span class="n">input_resultfile</span>
                                     <span class="p">)</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="n">field</span><span class="p">])</span>
-                                <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-                                    <span class="bp">self</span><span class="o">.</span><span class="n">_handle_just_in_time_exception</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-                                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="ne">KeyError</span><span class="p">(</span>
-                                        <span class="sa">f</span><span class="s1">&#39;Node </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> specifies memory &#39;</span>
-                                        <span class="s1">&#39;allocation for input &#39;</span>
-                                        <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">mem_x</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">, but no such &#39;</span>
-                                        <span class="s1">&#39;input is specified for that Node.&#39;</span><span class="p">)))</span>
+                                <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span>
+                                        <span class="ne">TypeError</span><span class="p">):</span>
                                     <span class="bp">self</span><span class="o">.</span><span class="n">_handle_just_in_time_exception</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_handle_just_in_time_exception</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
@@ -562,6 +586,7 @@
     <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../user/index">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../developer/index">Developer Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../license">License</a></li>
 </ul>
 
   </div>
@@ -595,8 +620,8 @@
     </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2012‒2022, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.1.
+        &#169; Copyright 2012‒2022, C-PAC Developers. C-PAC is licensed under LGPL-3.0-or-later.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

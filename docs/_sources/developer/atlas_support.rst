@@ -7,4 +7,3 @@ CIFTI is a popular atlas format not yet supported by C-PAC. As always, if anyone
 .. bibliography:: /references/cifti.bib
    :all:
    :list: bullet
-   :style: cpac_docs_style

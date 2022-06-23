@@ -142,6 +142,5 @@ Reference
 
 
 .. bibliography:: /references/glossary.bib
-    :style: cpac_docs_style
     :cited:
     :keyprefix: glossary-

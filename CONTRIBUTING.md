@@ -163,7 +163,6 @@ To cite C-PAC, use :cite:`cite-cpac2013`.
 .. rubric Cite C-PAC
 
 .. bibliography:: cpac_citation.bib
-   :style: cpac_docs_style
    :cited:
    :keyprefix: cite-
 ```

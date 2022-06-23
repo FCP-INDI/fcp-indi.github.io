@@ -38,6 +38,6 @@ Configuring ROI Time Series Extraction
 .. rubric References
 
 .. bibliography:: /references/tse.bib
-   :style: cpac_docs_style
+
    :cited:
    :keyprefix: cite-

@@ -151,6 +151,10 @@ extensions = [
     'nbsphinx',
     'numpydoc']
 
+bibtex_bibfiles = [f'references/{bib}' for bib in os.listdir('references') if
+                   bib.endswith('.bib')]
+bibtex_default_style = 'cpac_docs_style'
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

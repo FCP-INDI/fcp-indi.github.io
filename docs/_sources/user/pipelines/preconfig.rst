@@ -88,7 +88,7 @@ This pipeline is the result of `Neurodata's <https://neurodata.io/>`_ study to c
 Note, the 'ndmg_graph' connectome graph outputs are always produced by C-PAC. This pipeline configuration simply replicates the preprocessing methods described in the paper, linked below.
 
 .. bibliography:: /references/preconfigs.bib
-   :style: cpac_docs_style
+   :list: bullet
 
    Kiar18a
    Neur
@@ -102,7 +102,6 @@ Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/r
 RBC-options pipeline was built and integrated in C-PAC based on the Reproducible Brain Charts initiative, which aims to aggregate and harmonize phenotypic and neuroimage data to delineate node mechanisms regarding developmental basis of psychopathology in youth and yield reproducible growth charts of brain development :cite:`cite-rbc-Hoff21`.
 
 .. bibliography:: /references/preconfigs.bib
-   :style: cpac_docs_style
    :cited:
    :keyprefix: cite-rbc-
 
@@ -118,11 +117,9 @@ Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/r
 This pipeline is based on the work of Xu et al. :cite:`cite-monkey-Xu19` and nhp-ABCD-BIDS-pipeline. :cite:`cite-monkey-Stur20`
 
 .. bibliography:: /references/preconfigs.bib
-   :style: cpac_docs_style
    :cited:
    :keyprefix: cite-monkey-
 
-.. bibliography:: /references/preconfigs.bib
    Wang21a
    Rami20
 

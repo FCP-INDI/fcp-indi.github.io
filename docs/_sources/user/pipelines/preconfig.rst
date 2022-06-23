@@ -87,9 +87,12 @@ This pipeline is the result of `Neurodata's <https://neurodata.io/>`_ study to c
 
 Note, the 'ndmg_graph' connectome graph outputs are always produced by C-PAC. This pipeline configuration simply replicates the preprocessing methods described in the paper, linked below.
 
-* `https://www.biorxiv.org/content/10.1101/188706v6 <https://www.biorxiv.org/content/10.1101/188706v6>`_
-* `https://neurodata.io/m2g/ <https://neurodata.io/m2g/>`_
-* `https://github.com/neurodata/m2g <https://github.com/neurodata/m2g>`_
+.. bibliography:: /references/preconfigs.bib
+   :style: cpac_docs_style
+
+   Kiar18a
+   Neur
+   Neur18a
 
 rbc-options: ReproBrainChart Options Pipeline
 ---------------------------------------------

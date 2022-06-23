@@ -137,11 +137,8 @@ Derivatives
    quality
 
 
-Reference
----------
+.. rubric:: References
 
-
-.. bibliography:: /references/glossary.bib
-    :style: cpac_docs_style
+.. bibliography::
     :cited:
     :keyprefix: glossary-

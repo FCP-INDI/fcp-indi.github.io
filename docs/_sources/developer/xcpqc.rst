@@ -6,7 +6,6 @@ eXtensible Connectivity Pipeline-style quality control files
 
 .. rubric:: References
 
-.. bibliography:: /references/xcpqc_citation.bib
-   :style: cpac_docs_style
+.. bibliography::
    :cited:
    :keyprefix: cite-

@@ -91,13 +91,10 @@ Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/r
 
 RBC-options pipeline was built and integrated in C-PAC based on the Reproducible Brain Charts initiative, which aims to aggregate and harmonize phenotypic and neuroimage data to delineate node mechanisms regarding developmental basis of psychopathology in youth and yield reproducible growth charts of brain development :cite:`cite-rbc-Hoff21`.
 
-.. rubric:: References
-
 .. bibliography:: /references/preconfigs.bib
    :style: cpac_docs_style
    :cited:
    :keyprefix: cite-rbc-
-
 
 benchmark-ANTS: C-PAC Benchmark with ANTs Registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -119,10 +116,16 @@ Monkey: Default with Monkey Preprocessing
 
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_monkey.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_monkey.yml>`_
 
-This pipeline is based on the work of Xu et al. (2019) and `nhp-ABCD-BIDS-pipeline. <https://zenodo.org/record/3888969#.Xw31IpNKjyU>`_
+This pipeline is based on the work of Xu et al. :cite:`cite-monkey-Xu19` and nhp-ABCD-BIDS-pipeline. :cite:`cite-monkey-Stur20`
 
-* `Nanditha Rajamani, et al. "U-Net Model for Brain Extraction: Training in Humans and Transferring to Non-human Primates." OHBM (2019) <https://ww5.aievolution.com/hbm1901/index.cfm?do=abs.viewAbs&abs=4924>`_
-* `Julian S B Ramirez, Alice M Graham, Jacqueline R Thompson, Jennifer Y Zhu, Darrick Sturgeon, Jennifer L Bagley, Elina Thomas, Samantha Papadakis, Muhammed Bah, Anders Perrone, Eric Earl, Oscar Miranda-Dominguez, Eric Feczko, Eric J Fombonne, David G Amaral, Joel T Nigg, Elinor L Sullivan, Damien A Fair, Maternal Interleukin-6 Is Associated With Macaque Offspring Amygdala Development and Behavior, Cerebral Cortex, Volume 30, Issue 3, March 2020, Pages 1573–1585 <https://doi.org/10.1093/cercor/bhz188>`_
+.. bibliography:: /references/preconfigs.bib
+   :style: cpac_docs_style
+   :cited:
+   :keyprefix: cite-monkey-
+
+.. bibliography:: /references/preconfigs.bib
+   Wang21a
+   Rami20
 
 Based on the preprocessing decisions of the default pipeline, this preconfiguration allows you to preprocess all of your macaque data, includes:
 

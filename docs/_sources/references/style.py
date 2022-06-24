@@ -135,6 +135,7 @@ class CPAC_DocsStyle(Style):
                 ],
                 optional[tag('em')[self.format_title(e, 'journal')]],
             ]]],
+            optional[self.format_doi(optional_field('doi'))],
             sentence[optional_field('note')],
         ]
         return template

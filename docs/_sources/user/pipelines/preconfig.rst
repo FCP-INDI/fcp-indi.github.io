@@ -117,11 +117,15 @@ Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/r
 This pipeline is based on the work of Xu et al. :cite:`cite-monkey-Xu19` and nhp-ABCD-BIDS-pipeline. :cite:`cite-monkey-Stur20`
 
 .. bibliography:: /references/preconfigs.bib
-   :cited:
-   :keyprefix: cite-monkey-
+   :list: bullet
 
    Wang21a
    Rami20
+
+.. bibliography:: /references/preconfigs.bib
+   :cited:
+   :keyprefix: cite-monkey-
+   :start: continue
 
 Based on the preprocessing decisions of the default pipeline, this preconfiguration allows you to preprocess all of your macaque data, includes:
 

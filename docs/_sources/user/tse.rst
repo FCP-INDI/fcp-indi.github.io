@@ -35,9 +35,9 @@ Configuring ROI Time Series Extraction
    :start-at: timeseries_extraction:
    :end-before: seed_based_correlation_analysis:
 
-.. rubric References
+.. rubric:: References
 
 .. bibliography:: /references/tse.bib
-
    :cited:
    :keyprefix: cite-
+   :start: continue

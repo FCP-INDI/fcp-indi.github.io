@@ -73,10 +73,18 @@ fmriprep-options: fmriprep-Options Pipeline
 
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_fmriprep-options.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_fmriprep-options.yml>`_
 
-This pipeline is designed to increase reproducibility with the preprocessing results of the `fmriprep pipeline package <https://fmriprep.readthedocs.io/en/stable/>`_ produced by the `Poldrack Lab at Stanford University <https://poldracklab.stanford.edu/>`_.
+This pipeline is designed to increase reproducibility with the preprocessing results of the fmriprep pipeline package :cite:`cite-fmriprep-fMRI16` produced by the `Poldrack Lab at Stanford University <https://poldracklab.stanford.edu/>`_.
 
-* `https://github.com/poldracklab/fmriprep <https://github.com/poldracklab/fmriprep>`_
-* `https://www.nature.com/articles/s41592-018-0235-4 <https://www.nature.com/articles/s41592-018-0235-4>`_
+.. bibliography:: /references/preconfigs.bib
+   :list: bullet
+
+   NiPr20
+   Este19
+
+.. bibliography:: /references/preconfigs.bib
+   :cited:
+   :keyprefix: cite-fmriprep-
+   :start: continue
 
 ndmg: Neurodata's 'ndmg-f' Pipeline
 -----------------------------------
@@ -89,6 +97,7 @@ Note, the 'ndmg_graph' connectome graph outputs are always produced by C-PAC. Th
 
 .. bibliography:: /references/preconfigs.bib
    :list: bullet
+   :start: continue
 
    Kiar18a
    Neur
@@ -104,7 +113,7 @@ RBC-options pipeline was built and integrated in C-PAC based on the Reproducible
 .. bibliography:: /references/preconfigs.bib
    :cited:
    :keyprefix: cite-rbc-
-
+   :start: continue
 
 non-human primate
 ^^^^^^^^^^^^^^^^^
@@ -118,6 +127,7 @@ This pipeline is based on the work of Xu et al. :cite:`cite-monkey-Xu19` and nhp
 
 .. bibliography:: /references/preconfigs.bib
    :list: bullet
+   :start: continue
 
    Wang21a
    Rami20

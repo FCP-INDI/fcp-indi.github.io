@@ -181,11 +181,9 @@ copyright = '2012‒2022, C-PAC Developers. C-PAC is licensed under LGPL-3' \
 # The short X.Y version.
 version = __version__
 
+
 # Get tags from GitHub
 # Set GITHUBTOKEN to your API token in your environment to increase rate limit.
-g = Github(os.environ.get('GITHUBTOKEN'))
-
-
 def _gh_rate_limit():
     print("""Release notes not updated due to GitHub API rate limit.
 
@@ -208,49 +206,6 @@ def _gh_rate_limit():
         .~~MM~MM~MM~MM~~.
      ~~~~MM:~MM~~~MM~:MM~~~~
 """)
-
-
-try:
-    gh_cpac = g.get_user('FCP-INDI').get_repo('C-PAC')
-    gh_tags = [t.name for t in gh_cpac.get_tags()]
-except RateLimitExceededException:
-    _gh_rate_limit()
-    gh_tags = []
-gh_tags.sort(reverse=True)
-
-# don't build release notes for newer releases
-build_version = os.environ.get('CIRCLE_TAG', '').rstrip('-source')
-if len(build_version):
-    gh_tags = [gh_tag for gh_tag in gh_tags if compare_versions(
-        build_version, gh_tag
-    )]
-
-# Try to get release notes from GitHub
-try:
-    gh_releases = []
-    for t in gh_tags:
-        try:
-            gh_releases.append(gh_cpac.get_release(t).raw_data)
-        except (AttributeError, UnknownObjectException):
-            print(f'No notes for {t}')
-    gh_releaseNotes = {r['tag_name']: {
-        'name': r['name'],
-        'body': r['body'],
-        'published_at': r['published_at']
-    } for r in gh_releases}
-except RateLimitExceededException:
-    _gh_rate_limit()
-    gh_releaseNotes = {
-        t: {
-            'name': t,
-            'body': ''.join([
-                'See https://github.com/FCP-INDI/C-PAC/releases/tag/',
-                t,
-                ' for release notes.'
-            ]),
-            'published_at': None
-        } for t in gh_tags
-    }
 
 
 def sort_tag(t):
@@ -277,94 +232,144 @@ def _unireplace(release_note, unireplace):
     )
 
 
-this_dir = os.path.dirname(os.path.abspath(__file__))
-release_notes_dir = os.path.join(this_dir, 'user', 'release_notes')
-if not os.path.exists(release_notes_dir):
-    os.makedirs(release_notes_dir)
-latest_path = os.path.join(release_notes_dir, 'latest.rst')
-# all_release_notes = ''
-for t in gh_tags:
-    if t in gh_releaseNotes:
-        tag_header = '{}{}{}'.format(
-            'Latest Release: ' if t == gh_tags[0] else '',
-            (
-                gh_releaseNotes[t]['name'][4:] if (
-                    gh_releaseNotes[t]['name'].startswith('CPAC')
-                ) else gh_releaseNotes[t]['name'][5:] if (
-                    gh_releaseNotes[t]['name'].startswith('C-PAC')
-                ) else gh_releaseNotes[t]['name']
-            ).strip(),
-            ' ({})'.format(
-                dparser.parse(gh_releaseNotes[t]['published_at']).date(
-                ).strftime('%b %d, %Y')
-            ) if gh_releaseNotes[t]['published_at'] else ''
-        )
-        release_note = '\n'.join(_unireplace(
-            """{}
-{}
-{}
-""".format(
-                tag_header,
-                '^'*len(tag_header),
-                m2r.convert(gh_releaseNotes[t]['body'].encode(
-                    'ascii',
-                    errors='backslashreplace'
-                ).decode('utf-8'))
-            ),
-            {}
-        ))
+gh_tags = []
+_gh_token = os.environ.get('GITHUBTOKEN')
+if _gh_token is None:
+    g = None
+    _gh_rate_limit()
+else:
+    g = Github(os.environ.get('GITHUBTOKEN'))
+    try:
+        gh_cpac = g.get_user('FCP-INDI').get_repo('C-PAC')
+        gh_tags = [t.name for t in gh_cpac.get_tags()]
+    except RateLimitExceededException:
+        _gh_rate_limit()
+    gh_tags.sort(reverse=True)
 
-        release_notes_path = os.path.join(release_notes_dir, f'{t}.rst')
-        if gh_releaseNotes[t]['published_at'] and not os.path.exists(
-            release_notes_path
-        ) and not os.path.exists(
-            os.path.join(release_notes_dir, f'v{t}.rst')
-        ):
-            with open(release_notes_path, 'w+') as f:
-                f.write(release_note)
-        else:
-            print(release_notes_path)
+    # don't build release notes for newer releases
+    build_version = os.environ.get('CIRCLE_TAG', '').rstrip('-source')
+    if len(build_version):
+        gh_tags = [gh_tag for gh_tag in gh_tags if compare_versions(
+            build_version, gh_tag
+        )]
 
-        if tag_header.startswith('Latest') and not os.path.exists(latest_path):
-            with open(latest_path, 'w+') as f:
-                f.write(
-                    """
+    # Try to get release notes from GitHub
+    try:
+        gh_releases = []
+        for t in gh_tags:
+            try:
+                gh_releases.append(gh_cpac.get_release(t).raw_data)
+            except (AttributeError, UnknownObjectException):
+                print(f'No notes for {t}')
+        gh_releaseNotes = {r['tag_name']: {
+            'name': r['name'],
+            'body': r['body'],
+            'published_at': r['published_at']
+        } for r in gh_releases}
+    except RateLimitExceededException:
+        _gh_rate_limit()
+        gh_releaseNotes = {
+            t: {
+                'name': t,
+                'body': ''.join([
+                    'See https://github.com/FCP-INDI/C-PAC/releases/tag/',
+                    t,
+                    ' for release notes.'
+                ]),
+                'published_at': None
+            } for t in gh_tags
+        }
 
-.. include:: /user/release_notes/{latest}.rst
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    release_notes_dir = os.path.join(this_dir, 'user', 'release_notes')
+    if not os.path.exists(release_notes_dir):
+        os.makedirs(release_notes_dir)
+    latest_path = os.path.join(release_notes_dir, 'latest.rst')
+    # all_release_notes = ''
+    for t in gh_tags:
+        if t in gh_releaseNotes:
+            tag_header = '{}{}{}'.format(
+                'Latest Release: ' if t == gh_tags[0] else '',
+                (
+                    gh_releaseNotes[t]['name'][4:] if (
+                        gh_releaseNotes[t]['name'].startswith('CPAC')
+                    ) else gh_releaseNotes[t]['name'][5:] if (
+                        gh_releaseNotes[t]['name'].startswith('C-PAC')
+                    ) else gh_releaseNotes[t]['name']
+                ).strip(),
+                ' ({})'.format(
+                    dparser.parse(gh_releaseNotes[t]['published_at']).date(
+                    ).strftime('%b %d, %Y')
+                ) if gh_releaseNotes[t]['published_at'] else ''
+            )
+            release_note = '\n'.join(_unireplace(
+                """{}
+    {}
+    {}
+    """.format(
+                    tag_header,
+                    '^'*len(tag_header),
+                    m2r.convert(gh_releaseNotes[t]['body'].encode(
+                        'ascii',
+                        errors='backslashreplace'
+                    ).decode('utf-8'))
+                ),
+                {}
+            ))
 
-.. toctree::
-   :hidden:
-   :titlesonly:
-   :maxdepth: 1
+            release_notes_path = os.path.join(release_notes_dir, f'{t}.rst')
+            if gh_releaseNotes[t]['published_at'] and not os.path.exists(
+                release_notes_path
+            ) and not os.path.exists(
+                os.path.join(release_notes_dir, f'v{t}.rst')
+            ):
+                with open(release_notes_path, 'w+') as f:
+                    f.write(release_note)
+            else:
+                print(release_notes_path)
 
-   /user/release_notes/{latest}.rst
-""".format(latest=str(t))
-                )
+            if (
+                tag_header.startswith('Latest') and
+                not os.path.exists(latest_path)
+            ):
+                with open(latest_path, 'w+') as f:
+                    f.write(
+                        """
 
-rnd = [
-    d for d in os.listdir(release_notes_dir) if d not in [
-        'index.rst',
-        'latest.rst'
+    .. include:: /user/release_notes/{latest}.rst
+
+    .. toctree::
+    :hidden:
+    :titlesonly:
+    :maxdepth: 1
+
+    /user/release_notes/{latest}.rst
+    """.format(latest=str(t))
+                    )
+
+    rnd = [
+        d for d in os.listdir(release_notes_dir) if d not in [
+            'index.rst',
+            'latest.rst'
+        ]
     ]
-]
-rnd.sort(key=sort_tag, reverse=True)
+    rnd.sort(key=sort_tag, reverse=True)
 
-all_release_notes = """
-{}
+    all_release_notes = """
+    {}
 
-.. toctree::
-   :hidden:
-   :titlesonly:
-   :maxdepth: 1
+    .. toctree::
+    :hidden:
+    :titlesonly:
+    :maxdepth: 1
 
-   {}
+    {}
 
-""".format(
-    '\n'.join([f'.. include:: /user/release_notes/{fp}' for fp in rnd]),
-    '\n   '.join([f'/user/release_notes/{d}' for d in rnd]))
-with open(os.path.join(release_notes_dir, 'index.rst'), 'w+') as f:
-    f.write(all_release_notes.strip())
-
+    """.format(
+        '\n'.join([f'.. include:: /user/release_notes/{fp}' for fp in rnd]),
+        '\n   '.join([f'/user/release_notes/{d}' for d in rnd]))
+    with open(os.path.join(release_notes_dir, 'index.rst'), 'w+') as f:
+        f.write(all_release_notes.strip())
 
 # The full version, including alpha/beta/rc tags.
 release = f'{__version__} Beta'
@@ -579,7 +584,7 @@ rst_epilog = """
 
 """.format(
     versions=', '.join(gh_tags[:5])
-)
+) if len(gh_tags) >= 5 else ""
 
 def setup(app):
     from CPAC.utils.monitoring import custom_logging

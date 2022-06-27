@@ -32,12 +32,12 @@ class CPAC_DocsStyle(Style):
         e : str
           digital object identifier
         """
-        return join(sep=':')[
-            words['doi'],
-            href[join(sep='/')[
+        return href[join(sep='/')[
                 'https://dx.doi.org',
                 e
-            ], e]
+            ], join(sep=':')[
+            words['doi'],
+            e]
         ]
 
     def get_article_template(self, e):
@@ -64,7 +64,8 @@ class CPAC_DocsStyle(Style):
             optional[join(sep='')[
                 ', pp. ', optional_field('pages')
             ] if e.fields.get('pages') else ''],
-            optional[self.format_doi(optional_field('doi'))],
+            optional[self.format_doi(optional_field('doi')) if
+                     e.fields.get('doi') else ''],
             sentence[optional_field('note')],
         ]
         return template
@@ -135,7 +136,8 @@ class CPAC_DocsStyle(Style):
                 ],
                 optional[tag('em')[self.format_title(e, 'journal')]],
             ]]],
-            optional[self.format_doi(optional_field('doi'))],
+            optional[self.format_doi(optional_field('doi')) if
+                     e.fields.get('doi') else ''],
             sentence[optional_field('note')],
         ]
         return template

@@ -75,13 +75,13 @@ Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/r
 
 This pipeline is designed to increase reproducibility with the preprocessing results of the fmriprep pipeline package :cite:`cite-fmriprep-fMRI16` produced by the `Poldrack Lab at Stanford University <https://poldracklab.stanford.edu/>`_.
 
-.. bibliography:: /references/preconfigs.bib
+.. bibliography::
    :list: bullet
 
    NiPr20
    Este19
 
-.. bibliography:: /references/preconfigs.bib
+.. bibliography::
    :cited:
    :keyprefix: cite-fmriprep-
    :start: continue
@@ -95,13 +95,13 @@ This pipeline is the result of `Neurodata's <https://neurodata.io/>`_ study to c
 
 Note, the 'ndmg_graph' connectome graph outputs are always produced by C-PAC. This pipeline configuration simply replicates the preprocessing methods described in the paper, linked below.
 
-.. bibliography:: /references/preconfigs.bib
+.. bibliography::
    :list: bullet
    :start: continue
 
-   Kiar18a
+   Kiar18
    Neur
-   Neur18a
+   Neur18
 
 rbc-options: ReproBrainChart Options Pipeline
 ---------------------------------------------
@@ -110,7 +110,7 @@ Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/r
 
 RBC-options pipeline was built and integrated in C-PAC based on the Reproducible Brain Charts initiative, which aims to aggregate and harmonize phenotypic and neuroimage data to delineate node mechanisms regarding developmental basis of psychopathology in youth and yield reproducible growth charts of brain development :cite:`cite-rbc-Hoff21`.
 
-.. bibliography:: /references/preconfigs.bib
+.. bibliography::
    :cited:
    :keyprefix: cite-rbc-
    :start: continue
@@ -125,14 +125,14 @@ Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/r
 
 This pipeline is based on the work of Xu et al. :cite:`cite-monkey-Xu19` and nhp-ABCD-BIDS-pipeline. :cite:`cite-monkey-Stur20`
 
-.. bibliography:: /references/preconfigs.bib
+.. bibliography::
    :list: bullet
    :start: continue
 
    Wang21a
    Rami20
 
-.. bibliography:: /references/preconfigs.bib
+.. bibliography::
    :cited:
    :keyprefix: cite-monkey-
    :start: continue

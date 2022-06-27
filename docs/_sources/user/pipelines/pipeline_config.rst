@@ -139,7 +139,6 @@ Derivatives
 
 .. rubric:: References
 
-.. bibliography:: /references/glossary.bib
+.. bibliography::
     :cited:
     :keyprefix: glossary-
-    :start: continue

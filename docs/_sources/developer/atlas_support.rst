@@ -4,6 +4,9 @@ CIFTI is a popular atlas format not yet supported by C-PAC. As always, if anyone
 
 .. rubric:: CIFTI Resources
 
-.. bibliography:: /references/cifti.bib
-   :all:
+.. bibliography::
    :list: bullet
+
+   Meji15
+   Habe18
+   Etze14

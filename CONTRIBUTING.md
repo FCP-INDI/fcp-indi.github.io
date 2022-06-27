@@ -130,9 +130,9 @@ See [FCP-INDI/C-PAC_tutorials/CONTRIBUTING.md](https://github.com/FCP-INDI/C-PAC
 
 [sphinxcontrib-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/) is installed and configured. This extension creates links between the citations and the reference in the reference list and formats citations in referenced BibTeX files using built-in or [custom styles](https://github.com/FCP-INDI/fcp-indi.github.io/blob/source/docs/_sources/references/style.py). To use this Sphinx extension, 
 
-1. Include your citations in a BibTeX file (see the `*.bib` files in [docs/_sources/references](https://github.com/FCP-INDI/fcp-indi.github.io/blob/source/docs/_sources/references) for examples).
+1. Include your references in a BibTeX file. Unless you have a speficic reason to use a separate file, that BibTeX file should be [`docs/_sources/references/references.bib`](https://github.com/FCP-INDI/fcp-indi.github.io/blob/source/docs/_sources/references/references.bib).
 2. Using the key (the text between the opening `{` and the first `,` in a BibTeX entry) use the ReStructuredText syntax `` :cite:`key` `` to cite your reference in a ReStructuredText file.
-3. Include a `.. bibliography::` directive somewhere on any page that you want to use this extension to format references and create two-way links between the references and citations. Specify the (one) BibTeX file for this reference list any formatting for the reference list in this directive. Both `:cite:` and `.. bibliography::` need to be rendered on the same page for the links to generate.
+3. Include a `.. bibliography::` directive somewhere on any page that you want to use this extension to format references and create two-way links between the references and citations. Both `:cite:` and `.. bibliography::` need to be rendered on the same page for the links to generate. You can list uncited references by listing their BibTeX keys explicilty
 4. If you will (or might) use more than one `.. bibliography::` directive on a single rendered page (including `.. include::` directives), choose a prefix for the keys and include that prefix in both the `:cite:` role (like `` :cite:`prefix-key` ``) and the bibliography directive (like `:keyprefix: prefix-`).
 5. If you want to include a header over a reference list, use the `.. rubric::` directive above its `.. bibliography` directive.
 6. If the entry type (e.g., `book`, `article`, `misc`) of any of the entries in your BibTeX file(s) is not included in [docs/_sources/references/style.py](https://github.com/FCP-INDI/fcp-indi.github.io/blob/source/docs/_sources/references/style.py), add a `get_{entry_type}_template` [Pybtex](https://pybtex.org) method to `CPAC_DocsStyle`.
@@ -158,13 +158,13 @@ For example, if you have a BibTeX file called `cpac_citation.bib` that contains
 If you include
 
 ```rst
-To cite C-PAC, use :cite:`cite-cpac2013`.
+To cite C-PAC, use :cite:`cite-example-cpac2013`.
 
 .. rubric Cite C-PAC
 
-.. bibliography:: cpac_citation.bib
+.. bibliography::
    :cited:
-   :keyprefix: cite-
+   :keyprefix: cite-example-
 ```
 
 The rendered file should look something like
@@ -174,6 +174,17 @@ The rendered file should look something like
 > __Cite C-PAC__
 > 
 > <a name="ref1" href="#backref1">[1]</a> Craddock, C., Sikka, S., Cheung, B., Khanuja, R., Ghosh, S. S., Yan, C., Li, Q., Lurie, D., Vogelstein, J., Burns, R., Colcombe, S., Mennes, M., Kelly, C., Di Martino, A., Castellanos, F. X., and Milham, M. 2013. [Towards automated analysis of connectomes: the Configurable Pipeline for the Analysis of Connectomes (C-PAC).](http://www.frontiersin.org/neuroinformatics/10.3389/conf.fninf.2013.09.00042/full) *Frontiers in neuroinformatics* 42. doi:[10.3389/conf.fninf.2013.09.00042](https://dx.doi.org/10.3389/conf.fninf.2013.09.00042)
+
+Or
+
+```rst
+.. bibliography::
+   :cited:
+   
+   cpac2013
+```
+
+to generate the bibliography entry without the citation.
 
 <a id="markdown-environment-notes" name="environment-notes"></a>
 ## Environment notes

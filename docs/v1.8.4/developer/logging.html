@@ -1,0 +1,257 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Logging &#8212; C-PAC 1.8.4 Beta documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex" />
+    <link rel="search" title="Search" href="../search" />
+    <link rel="next" title="Workflow Documentation" href="workflow_documentation" />
+    <link rel="prev" title="Random State" href="random_state" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="workflow_documentation" title="Workflow Documentation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="random_state" title="Random State"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.4 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index" accesskey="U">Developer Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Logging</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="logging">
+<h1>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h1>
+<p>Most C-PAC logging is handled by the built-in Python <code class="docutils literal notranslate"><span class="pre">logging</span></code> library. When logging, take care to choose an appropriate <code class="docutils literal notranslate"><span class="pre">getLogger</span></code> function or method. While <a class="reference internal" href="#CPAC.utils.monitoring.custom_logging.getLogger" title="CPAC.utils.monitoring.custom_logging.getLogger"><code class="xref py py-func docutils literal notranslate"><span class="pre">CPAC.utils.monitoring.custom_logging.getLogger</span></code></a> and <code class="docutils literal notranslate"><span class="pre">nipype.utils.logger.Logging.getLogger</span></code> each fall back on <code class="docutils literal notranslate"><span class="pre">logging.getLogger</span></code>,</p>
+<div class="flowchart-container"><object data="../_static/flowcharts/getLogger.svg" type="image/svg+xml"></object></div><p>each have their own intended use cases.</p>
+<blockquote>
+<div><p>Loggers are singletons that are never freed during a script execution, and so creating lots of loggers will use up memory which can’t then be freed.</p>
+<p class="attribution">—<a class="reference external" href="https://docs.python.org/3/howto/logging-cookbook.html#creating-a-lot-of-loggers">Logging Cookbook: Creating a lot of loggers</a></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">CPAC.utils.monitoring.custom_logging.getLogger</span></code> will look for a <a class="reference internal" href="#CPAC.utils.monitoring.custom_logging.MockLogger" title="CPAC.utils.monitoring.custom_logging.MockLogger"><code class="xref py py-class docutils literal notranslate"><span class="pre">CPAC.utils.monitoring.custom_logging.MockLogger</span></code></a> before falling back on <code class="docutils literal notranslate"><span class="pre">logging.getLogger</span></code>.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre">CPAC.utils.monitoring.custom_logging.MockLogger</span></code> can be used in place of a <code class="xref py py-class docutils literal notranslate"><span class="pre">logging.Logger</span></code> and deleted from memory when no longer needed. For an example, see how <code class="docutils literal notranslate"><span class="pre">missing_log</span></code> is created and deleted in <code class="xref py py-func docutils literal notranslate"><span class="pre">CPAC.pipeline.check_outputs.check_outputs</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">nipype.utils.logger.Logging.getLogger</span></code> will only consider loggers that are part of the class instance calling the method.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="CPAC.utils.monitoring.custom_logging.getLogger">
+<span class="sig-prename descclassname"><span class="pre">CPAC.utils.monitoring.custom_logging.</span></span><span class="sig-name descname"><span class="pre">getLogger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/CPAC/utils/monitoring/custom_logging#getLogger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CPAC.utils.monitoring.custom_logging.getLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to get a mock logger if one exists, falling back on
+real loggers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>name</strong><span class="classifier">str</span></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>logger</strong><span class="classifier">CPAC.utils.monitoring.custom_logging.MockLogger or logging.Logger</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="CPAC.utils.monitoring.custom_logging.MockLogger">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">CPAC.utils.monitoring.custom_logging.</span></span><span class="sig-name descname"><span class="pre">MockLogger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/CPAC/utils/monitoring/custom_logging#MockLogger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CPAC.utils.monitoring.custom_logging.MockLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mock logging.Logger to provide the same API without keeping the
+logger in memory.</p>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#CPAC.utils.monitoring.custom_logging.MockLogger.critical" title="CPAC.utils.monitoring.custom_logging.MockLogger.critical"><code class="xref py py-obj docutils literal notranslate"><span class="pre">critical</span></code></a>()</p></td>
+<td><p>Log a message if logging level &gt;= critical.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#CPAC.utils.monitoring.custom_logging.MockLogger.debug" title="CPAC.utils.monitoring.custom_logging.MockLogger.debug"><code class="xref py py-obj docutils literal notranslate"><span class="pre">debug</span></code></a>()</p></td>
+<td><p>Log a message if logging level &gt;= debug.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#CPAC.utils.monitoring.custom_logging.MockLogger.delete" title="CPAC.utils.monitoring.custom_logging.MockLogger.delete"><code class="xref py py-obj docutils literal notranslate"><span class="pre">delete</span></code></a>()</p></td>
+<td><p>Delete the mock logger from memory.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#CPAC.utils.monitoring.custom_logging.MockLogger.error" title="CPAC.utils.monitoring.custom_logging.MockLogger.error"><code class="xref py py-obj docutils literal notranslate"><span class="pre">error</span></code></a>()</p></td>
+<td><p>Log a message if logging level &gt;= error.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#CPAC.utils.monitoring.custom_logging.MockLogger.info" title="CPAC.utils.monitoring.custom_logging.MockLogger.info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">info</span></code></a>()</p></td>
+<td><p>Log a message if logging level &gt;= info.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#CPAC.utils.monitoring.custom_logging.MockLogger.warning" title="CPAC.utils.monitoring.custom_logging.MockLogger.warning"><code class="xref py py-obj docutils literal notranslate"><span class="pre">warning</span></code></a>()</p></td>
+<td><p>Log a message if logging level &gt;= warning.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="CPAC.utils.monitoring.custom_logging.MockLogger.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/CPAC/utils/monitoring/custom_logging#MockLogger.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CPAC.utils.monitoring.custom_logging.MockLogger.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CPAC.utils.monitoring.custom_logging.MockLogger.critical">
+<span class="sig-name descname"><span class="pre">critical</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#CPAC.utils.monitoring.custom_logging.MockLogger.critical" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log a message if logging level &gt;= critical. See <a class="reference external" href="https://docs.python.org/3/library/logging.html#levels">Logging Levels</a> for a list of levels.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CPAC.utils.monitoring.custom_logging.MockLogger.debug">
+<span class="sig-name descname"><span class="pre">debug</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#CPAC.utils.monitoring.custom_logging.MockLogger.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log a message if logging level &gt;= debug. See <a class="reference external" href="https://docs.python.org/3/library/logging.html#levels">Logging Levels</a> for a list of levels.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CPAC.utils.monitoring.custom_logging.MockLogger.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/CPAC/utils/monitoring/custom_logging#MockLogger.delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CPAC.utils.monitoring.custom_logging.MockLogger.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete the mock logger from memory.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CPAC.utils.monitoring.custom_logging.MockLogger.error">
+<span class="sig-name descname"><span class="pre">error</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#CPAC.utils.monitoring.custom_logging.MockLogger.error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log a message if logging level &gt;= error. See <a class="reference external" href="https://docs.python.org/3/library/logging.html#levels">Logging Levels</a> for a list of levels.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CPAC.utils.monitoring.custom_logging.MockLogger.info">
+<span class="sig-name descname"><span class="pre">info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#CPAC.utils.monitoring.custom_logging.MockLogger.info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log a message if logging level &gt;= info. See <a class="reference external" href="https://docs.python.org/3/library/logging.html#levels">Logging Levels</a> for a list of levels.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CPAC.utils.monitoring.custom_logging.MockLogger.warning">
+<span class="sig-name descname"><span class="pre">warning</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#CPAC.utils.monitoring.custom_logging.MockLogger.warning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log a message if logging level &gt;= warning. See <a class="reference external" href="https://docs.python.org/3/library/logging.html#levels">Logging Levels</a> for a list of levels.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nipype.utils.logger.Logging.getLogger">
+<span class="sig-prename descclassname"><span class="pre">Logging.</span></span><span class="sig-name descname"><span class="pre">getLogger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nipype/utils/logger#Logging.getLogger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nipype.utils.logger.Logging.getLogger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="nipype.utils.logger.Logging.__init__">
+<span class="sig-prename descclassname"><span class="pre">Logging.</span></span><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/nipype/utils/logger#Logging.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nipype.utils.logger.Logging.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="logging.getLogger">
+<span class="sig-prename descclassname"><span class="pre">logging.</span></span><span class="sig-name descname"><span class="pre">getLogger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/logging#getLogger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#logging.getLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a logger with the specified name, creating it if necessary.</p>
+<p>If no name is specified, return the root logger.</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index">
+              <img class="logo" src="../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index">Table of Contents</a></h3>
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../user/index">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index">Developer Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation">Installing CPAC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipeline">Pipeline Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nodes">Nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="random_state">Random State</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow_documentation">Workflow Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows/index">Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows/index#indices-and-tables">Indices and tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xcpqc">eXtensible Connectivity Pipeline-style quality control files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing">Testing CPAC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="continuous_integration">Continuous Integration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license">License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="workflow_documentation" title="Workflow Documentation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="random_state" title="Random State"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.4 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index" >Developer Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Logging</a></li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012‒2022, C-PAC Developers. C-PAC is licensed under LGPL-3.0-or-later.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.0.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+    <script defer src="https://fcp-indi.github.io/scripts/versionList.js"></script>
+
+  </body>
+</html>

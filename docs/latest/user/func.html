@@ -4,9 +4,9 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Functional Preprocessing &#8212; C-PAC 1.8.3 Beta documentation</title>
+    <title>Functional Preprocessing &#8212; C-PAC 1.8.4 Beta documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
@@ -15,7 +15,9 @@
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex" />
     <link rel="search" title="Search" href="../search" />
     <link rel="next" title="Nuisance Signal Regression" href="nuisance" />
@@ -36,7 +38,7 @@
         <li class="right" >
           <a href="anat" title="Anatomical Preprocessing"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.3 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.4 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index" >User Documentation</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="pipelines/pipeline_config" >Setting Up A Pipeline Configuration</a> &#187;</li>
           <li class="nav-item nav-item-3"><a href="pipelines/pre-and-post" accesskey="U">Pre- and post-processing</a> &#187;</li>
@@ -264,6 +266,15 @@
 </div>
 <p id="motion-estimate-filter-valid-options">For <code class="docutils literal notranslate"><span class="pre">motion_estimate_filter</span></code>, if <code class="docutils literal notranslate"><span class="pre">breathing_rate_min</span></code> and <code class="docutils literal notranslate"><span class="pre">breathing_rate_max</span></code> are provided, the filter design attributes (<code class="docutils literal notranslate"><span class="pre">center_frequency</span></code>, <code class="docutils literal notranslate"><span class="pre">filter_bandwidth</span></code>, <code class="docutils literal notranslate"><span class="pre">lowpass_cutoff</span></code>) are automatically configured. But if you provide these directly, you don’t need the breathing rates. If all all parameters are provided, the filter design attributes will be ignored in favor of the <code class="docutils literal notranslate"><span class="pre">breathing_rate_*</span></code> attributes. A configuration must match at least one row in the following table:</p>
 <table class="docutils align-default">
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 12%" />
+<col style="width: 18%" />
+<col style="width: 18%" />
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 15%" />
+</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">run</span></code></p></th>
 <th class="head"><p><code class="docutils literal notranslate"><span class="pre">filter_type</span></code></p></th>
@@ -578,6 +589,13 @@ Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-enco
 <div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="w">  </span><span class="nt">func_masking</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">    </span><span class="c1"># using: [&#39;AFNI&#39;, &#39;FSL&#39;, &#39;FSL_AFNI&#39;, &#39;Anatomical_Refined&#39;, &#39;Anatomical_Based&#39;, &#39;Anatomical_Resampled&#39;, &#39;CCS_Anatomical_Refined&#39;]</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1"># FSL_AFNI: fMRIPrep-style BOLD mask. Ref: https://github.com/nipreps/niworkflows/blob/a221f612/niworkflows/func/util.py#L246-L514</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># Anatomical_Refined: 1. binarize anat mask, in case it is not a binary mask. 2. fill holes of anat mask 3. init_bold_mask : input raw func → dilate init func brain mask 4. refined_bold_mask : input motion corrected func → dilate anatomical mask 5. get final func mask</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># Anatomical_Based: Generate the BOLD mask by basing it off of the anatomical brain mask. Adapted from DCAN Lab&#39;s BOLD mask method from the ABCD pipeline.</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># Anatomical_Resampled: Resample anatomical brain mask in standard space to get BOLD brain mask in standard space. Adapted from DCAN Lab&#39;s BOLD mask method from the ABCD pipeline. (&quot;Create fMRI resolution standard space files for T1w image, wmparc, and brain mask […] don&#39;t use FLIRT to do spline interpolation with -applyisoxfm for the 2mm and 1mm cases because it doesn&#39;t know the peculiarities of the MNI template FOVs&quot;)</span><span class="w"></span>
+<span class="w">    </span><span class="c1"># CCS_Anatomical_Refined: Generate the BOLD mask by basing it off of the anatomical brain. Adapted from the BOLD mask method from the CCS pipeline.</span><span class="w"></span>
+
 <span class="w">    </span><span class="c1"># this is a fork point</span><span class="w"></span>
 <span class="w">    </span><span class="nt">using</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;AFNI&#39;</span><span class="p p-Indicator">]</span><span class="w"></span>
 </pre></div>
@@ -1213,8 +1231,9 @@ Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-enco
 
 <span class="w">        </span><span class="c1"># options: &#39;default&#39;, &#39;abcd&#39;, &#39;single_step_resampling&#39;, &#39;dcan_nhp&#39;</span><span class="w"></span>
 <span class="w">        </span><span class="c1"># &#39;default&#39;: apply func-to-anat and anat-to-template transforms on motion corrected functional image.</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># &#39;single_step_resampling&#39;: apply motion correction, func-to-anat and anat-to-template transforms on each of PREPROCESSED functional volume using ANTs antsApplyTransform based on fMRIPrep pipeline. </span><span class="w"></span>
 <span class="w">        </span><span class="c1"># &#39;abcd&#39;: apply motion correction, func-to-anat and anat-to-template transforms on each of raw functional volume using FSL applywarp based on ABCD-HCP pipeline.</span><span class="w"></span>
-<span class="w">        </span><span class="c1"># &#39;single_step_resampling&#39;: apply motion correction, func-to-anat and anat-to-template transforms on each of raw functional volume using ANTs antsApplyTransform based on fMRIPrep pipeline.</span><span class="w"></span>
+<span class="w">        </span><span class="c1"># &#39;single_step_resampling_from_stc&#39;: apply motion correction, func-to-anat and anat-to-template transforms on each of slice-time-corrected functional volume using ANTs antsApplyTransform based on fMRIPrep pipeline.</span><span class="w"></span>
 <span class="w">        </span><span class="nt">using</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;default&#39;</span><span class="w"></span>
 
 
@@ -1429,59 +1448,6 @@ Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-enco
 <span class="w">  </span><span class="nt">func_masking</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">    </span><span class="c1"># using: [&#39;AFNI&#39;, &#39;FSL&#39;, &#39;FSL_AFNI&#39;, &#39;Anatomical_Refined&#39;, &#39;Anatomical_Based&#39;, &#39;Anatomical_Resampled&#39;, &#39;CCS_Anatomical_Refined&#39;]</span><span class="w"></span>
-<span class="w">    </span><span class="c1"># this is a fork point</span><span class="w"></span>
-<span class="w">    </span><span class="nt">using</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&#39;AFNI&#39;</span><span class="p p-Indicator">]</span><span class="w"></span>
-
-<span class="w">    </span><span class="nt">FSL-BET</span><span class="p">:</span><span class="w"></span>
-
-<span class="w">      </span><span class="c1"># Apply to 4D FMRI data, if bold_bet_functional_mean_boolean : Off.</span><span class="w"></span>
-<span class="w">      </span><span class="c1"># Mutually exclusive with functional, reduce_bias, robust, padding, remove_eyes, surfaces</span><span class="w"></span>
-<span class="w">      </span><span class="c1"># It must be &#39;on&#39; if select &#39;reduce_bias&#39;, &#39;robust&#39;, &#39;padding&#39;, &#39;remove_eyes&#39;, or &#39;bet_surfaces&#39; on</span><span class="w"></span>
-<span class="w">      </span><span class="nt">functional_mean_boolean</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
-
-<span class="w">      </span><span class="c1"># Set an intensity threshold to improve skull stripping performances of FSL BET on rodent scans.</span><span class="w"></span>
-<span class="w">      </span><span class="nt">functional_mean_thr</span><span class="p">:</span><span class="w"> </span>
-<span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
-<span class="w">        </span><span class="nt">threshold_value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">98</span><span class="w"></span>
-
-<span class="w">      </span><span class="c1"># Bias correct the functional mean image to improve skull stripping performances of FSL BET on rodent scans</span><span class="w"></span>
-<span class="w">      </span><span class="nt">functional_mean_bias_correction</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
-
-<span class="w">      </span><span class="c1"># Set the threshold value controling the brain vs non-brain voxels.</span><span class="w"></span>
-<span class="w">      </span><span class="nt">frac</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.3</span><span class="w"></span>
-
-<span class="w">      </span><span class="c1"># Mesh created along with skull stripping</span><span class="w"></span>
-<span class="w">      </span><span class="nt">mesh_boolean</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
-
-<span class="w">      </span><span class="c1"># Create a surface outline image</span><span class="w"></span>
-<span class="w">      </span><span class="nt">outline</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
-
-<span class="w">      </span><span class="c1"># Add padding to the end of the image, improving BET.Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces</span><span class="w"></span>
-<span class="w">      </span><span class="nt">padding</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
-
-<span class="w">      </span><span class="c1"># Integer value of head radius</span><span class="w"></span>
-<span class="w">      </span><span class="nt">radius</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"></span>
-
-<span class="w">      </span><span class="c1"># Reduce bias and cleanup neck. Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces</span><span class="w"></span>
-<span class="w">      </span><span class="nt">reduce_bias</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
-
-<span class="w">      </span><span class="c1"># Eyes and optic nerve cleanup. Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces</span><span class="w"></span>
-<span class="w">      </span><span class="nt">remove_eyes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
-
-<span class="w">      </span><span class="c1"># Robust brain center estimation. Mutually exclusive with functional,reduce_bias,robust,padding,remove_eyes,surfaces</span><span class="w"></span>
-<span class="w">      </span><span class="nt">robust</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
-
-<span class="w">      </span><span class="c1"># Create a skull image</span><span class="w"></span>
-<span class="w">      </span><span class="nt">skull</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
-
-<span class="w">      </span><span class="c1"># Gets additional skull and scalp surfaces by running bet2 and betsurf. This is mutually exclusive with reduce_bias, robust, padding, remove_eyes</span><span class="w"></span>
-<span class="w">      </span><span class="nt">surfaces</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
-
-<span class="w">      </span><span class="c1"># Apply thresholding to segmented brain image and mask</span><span class="w"></span>
-<span class="w">      </span><span class="nt">threshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span><span class="w"></span>
-
-<span class="w">      </span><span class="c1"># Vertical gradient in fractional intensity threshold (-1,1)</span><span class="w"></span>
-<span class="w">      </span><span class="nt">vertical_gradient</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span><span class="w"></span>
 </pre></div>
 </div>
 </section>
@@ -1693,11 +1659,9 @@ Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-enco
             <p class="logo"><a href="../index">
               <img class="logo" src="../_static/cpac_logo_vertical.png" alt="Logo"/>
             </a></p>
-  <div>
-    <h3><a href="../index">Table of Contents</a></h3>
-    <ul class="current">
+  <h3><a href="../index">Table of Contents</a></h3>
+  <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index">User Guide</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="release_notes/v1.8.3">Latest Release: Version 1.8.3 Beta (Feb 11, 2022)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quick">1. C-PAC Quickstart</a></li>
 <li class="toctree-l2"><a class="reference internal" href="subject_list_config">2. Specify Your Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pipelines/pipeline_config">3. Select Your Pipeline</a></li>
@@ -1716,21 +1680,21 @@ Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-enco
 <li class="toctree-l2"><a class="reference internal" href="running">6. All Run Options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="group_analysis">7. Run Group Analysis</a></li>
 <li class="toctree-l2"><a class="reference internal" href="output_dir">8. Check Your Outputs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="help">9. Troubleshoot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rnotes">10. Release Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="help">10. Troubleshoot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rnotes">11. Release Notes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="appendix">Appendix</a></li>
 <li class="toctree-l2"><a class="reference internal" href="appendix#benchmark-package">Benchmark Package</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../developer/index">Developer Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license">License</a></li>
 </ul>
 
-  </div>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
     </div>
@@ -1755,7 +1719,7 @@ Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-enco
         <li class="right" >
           <a href="anat" title="Anatomical Preprocessing"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.3 Beta documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.4 Beta documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index" >User Documentation</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="pipelines/pipeline_config" >Setting Up A Pipeline Configuration</a> &#187;</li>
           <li class="nav-item nav-item-3"><a href="pipelines/pre-and-post" >Pre- and post-processing</a> &#187;</li>
@@ -1764,8 +1728,8 @@ Phase-Encoding Polarity (commonly known as blip-up/blip-down) employs phase-enco
     </div>
 
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2020, C-PAC Team.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+        &#169; Copyright 2012‒2022, C-PAC Developers. C-PAC is licensed under LGPL-3.0-or-later.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.0.
     </div>
     <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
     <script>

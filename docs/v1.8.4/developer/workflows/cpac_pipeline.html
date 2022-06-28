@@ -1,0 +1,220 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>C-PAC Pipeline Construction &#8212; C-PAC 1.8.4 Beta documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/classic.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex" />
+    <link rel="search" title="Search" href="../../search" />
+    <link rel="next" title="Anatomical Preprocessing" href="anat_preproc" />
+    <link rel="prev" title="Workflows" href="index" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="anat_preproc" title="Anatomical Preprocessing"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index" title="Workflows"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index">C-PAC 1.8.4 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index" >Developer Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="index" accesskey="U">Workflows</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">C-PAC Pipeline Construction</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="c-pac-pipeline-construction">
+<span id="cpac-pipeline"></span><h1>C-PAC Pipeline Construction<a class="headerlink" href="#c-pac-pipeline-construction" title="Permalink to this headline">¶</a></h1>
+<section id="configuration-object">
+<h2>Configuration Object<a class="headerlink" href="#configuration-object" title="Permalink to this headline">¶</a></h2>
+<p>The ‘c’ variable in cpac_pipeline.py is a <a class="reference external" href="https://github.com/FCP-INDI/C-PAC/blob/v1.8.4/CPAC/utils/configuration.py">Configuration object</a>, which is an abstract representation used to store the options for the pipeline configuration YAML after it is read in by C-PAC.  Each attribute of the Configuration object is a key from the YAML file, with values mirroring the YAML.</p>
+</section>
+<section id="strategy-object">
+<h2>Strategy Object<a class="headerlink" href="#strategy-object" title="Permalink to this headline">¶</a></h2>
+<p>A strategy object represents an individual pipeline.  The number of strategies is determined by how options have been set in the configuration file.  If there is a step where multiple options have been specified, all steps in the pipeline prior to that step will be forked and multiple strategies will created for each option.  The steps where forking can occur are CompCor, nuisance regressor, segmentation and scrubbing.  Each strategy has the following attributes:</p>
+<ul class="simple">
+<li><p>resource pool - a dictionary containing all nodes/workflows used by a strategy.  Keys are descriptors of the node/workflow and values are two-element tuples containing a copy of the node/workflow and the outputspec for that node/workflow.</p></li>
+<li><p>leaf_node - the final node/workflow added during the last step of strategy construction.</p></li>
+<li><p>leaf_out_file - the outputspec associated with the leaf node.</p></li>
+<li><p>name - a list of workflow names</p></li>
+</ul>
+</section>
+<section id="strategy-construction">
+<h2>Strategy Construction<a class="headerlink" href="#strategy-construction" title="Permalink to this headline">¶</a></h2>
+<p>cpac_pipeline.py is where the Nipype workflow object for each strategy is constructed via flow control.
+To add a new method/technique, add a code block similar to this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Inserting &lt;technique/method&gt;</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="n">new_strat_list</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">num_strat</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">if</span> <span class="mi">1</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">runTechnique</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">strat</span> <span class="ow">in</span> <span class="n">strat_list</span><span class="p">:</span>
+                <span class="c1"># Introduce nodes/workflows here</span>
+                <span class="k">try</span><span class="p">:</span>
+                        <span class="n">nipype_node</span><span class="o">=</span><span class="n">spawn_nipype_node</span><span class="p">()</span>
+                <span class="k">except</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Something went wrong!&#39;</span><span class="p">)</span>
+                <span class="c1"># Get the necessary inputs from the resource pool and connect to the node/workflow.</span>
+                <span class="k">try</span><span class="p">:</span>
+                        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat</span><span class="o">.</span><span class="n">get_node_from_resource_pool</span><span class="p">(</span><span class="s1">&#39;previous&#39;</span><span class="p">)</span>
+                        <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">nipype_node</span><span class="p">,</span><span class="s1">&#39;inputspec.input&#39;</span><span class="p">)</span>
+                <span class="k">except</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Something went wrong!&#39;</span><span class="p">)</span>
+                <span class="c1"># Add additional options from configuration YAML / config object here using conditional statements.</span>
+
+                <span class="c1"># If runTechnique can take multiple values, fork the strategy.</span>
+                <span class="c1"># This is the off option, so the original strategy is copied into a new one.</span>
+                <span class="c1"># The new strategy is then updated with the values for a pipeline where the technique is turned on.</span>
+                <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">c</span><span class="o">.</span><span class="n">runTechnique</span><span class="p">:</span>
+                        <span class="n">tmp</span> <span class="o">=</span> <span class="n">strategy</span><span class="p">()</span>
+                        <span class="n">tmp</span><span class="o">.</span><span class="n">resource_pool</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">strat</span><span class="o">.</span><span class="n">resource_pool</span><span class="p">)</span>
+                        <span class="n">tmp</span><span class="o">.</span><span class="n">leaf_node</span> <span class="o">=</span> <span class="p">(</span><span class="n">strat</span><span class="o">.</span><span class="n">leaf_node</span><span class="p">)</span>
+                        <span class="n">tmp</span><span class="o">.</span><span class="n">leaf_out_file</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">strat</span><span class="o">.</span><span class="n">leaf_out_file</span><span class="p">)</span>
+                        <span class="n">tmp</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">strat</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                        <span class="c1"># strat now points at the new strategy, rather than the old strategy contained in strat_list</span>
+                        <span class="n">strat</span> <span class="o">=</span> <span class="n">tmp</span>
+                        <span class="n">new_strat_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">strat</span><span class="p">)</span>
+                <span class="n">strat</span><span class="o">.</span><span class="n">append_name</span><span class="p">(</span><span class="n">nipype_node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">strat</span><span class="o">.</span><span class="n">update_resource_pool</span><span class="p">({</span><span class="s1">&#39;output&#39;</span><span class="p">:(</span><span class="n">output</span><span class="p">,</span><span class="s1">&#39;outputspec.output&#39;</span><span class="p">)})</span>
+                <span class="n">create_log_node</span><span class="p">(</span><span class="n">nipype_node</span><span class="p">,</span><span class="s1">&#39;outputspec.output&#39;</span><span class="p">,</span> <span class="n">num_strat</span><span class="p">)</span>
+                <span class="n">num_strat</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="n">strat_list</span> <span class="o">+=</span> <span class="n">new_strat_list</span>
+</pre></div>
+</div>
+<p>Where <cite>runTechnique</cite> is the name of the YAML configuration key for that method/technique.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index">
+              <img class="logo" src="../../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index">Table of Contents</a></h3>
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../user/index">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index">Developer Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../installation">Installing CPAC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../pipeline">Pipeline Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../nodes">Nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../random_state">Random State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../logging">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../workflow_documentation">Workflow Documentation</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index">Workflows</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">C-PAC Pipeline Construction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="anat_preproc">Anatomical Preprocessing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="func_preproc">Functional Preprocessing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="seg_preproc">Segmentation Workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sca">Seed Based Correlation Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basc">Bootstrap Analysis of Stable Clusters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="nuisance">Nuisance Signal Removal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="alff">Amplitude of Low Frequency Fluctuations(ALFF) and fractional ALFF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vmhc">Voxel Mirrored Homotopic Connectivity Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reho">Regional Homogeneity Approach to fMRI data analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generate_motion_statistics">Generate Motion and Power Statistics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scrubbing">Scrubbing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="group_analysis">Group Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="easy_thresh">Easy thresh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mdmr">Multivariate Distance Matrix Regression (MDMR)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="median_angle">Median Angle Correction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="registration">Registration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="timeseries">Timeseries Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="network_centrality">Network Centrality</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index#indices-and-tables">Indices and tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../xcpqc">eXtensible Connectivity Pipeline-style quality control files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testing">Testing CPAC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../continuous_integration">Continuous Integration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../license">License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="anat_preproc" title="Anatomical Preprocessing"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index" title="Workflows"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index">C-PAC 1.8.4 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index" >Developer Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="index" >Workflows</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">C-PAC Pipeline Construction</a></li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012‒2022, C-PAC Developers. C-PAC is licensed under LGPL-3.0-or-later.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.0.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+    <script defer src="https://fcp-indi.github.io/scripts/versionList.js"></script>
+
+  </body>
+</html>

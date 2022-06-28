@@ -108,6 +108,13 @@ rbc-options: ReproBrainChart Options Pipeline
 
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_rbc-options.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_rbc-options.yml>`_
 
+RBC-options pipeline was built and integrated in C-PAC based on the Reproducible Brain Charts initiative, which aims to aggregate and harmonize phenotypic and neuroimage data to delineate node mechanisms regarding developmental basis of psychopathology in youth and yield reproducible growth charts of brain development :cite:`cite-rbc-Hoff21`.
+
+.. bibliography::
+   :cited:
+   :keyprefix: cite-rbc-
+   :start: continue
+
 non-human primate
 ^^^^^^^^^^^^^^^^^
 

@@ -303,10 +303,7 @@ else:
                 ) if gh_releaseNotes[t]['published_at'] else ''
             )
             release_note = '\n'.join(_unireplace(
-                """{}
-    {}
-    {}
-    """.format(
+                "{}\n{}\n{}".format(
                     tag_header,
                     '^'*len(tag_header),
                     m2r.convert(gh_releaseNotes[t]['body'].encode(
@@ -334,17 +331,15 @@ else:
             ):
                 with open(latest_path, 'w+') as f:
                     f.write(
-                        """
+                        """.. include:: /user/release_notes/{latest}.rst
 
-    .. include:: /user/release_notes/{latest}.rst
+.. toctree::
+   :hidden:
+   :titlesonly:
+   :maxdepth: 1
 
-    .. toctree::
-    :hidden:
-    :titlesonly:
-    :maxdepth: 1
-
-    /user/release_notes/{latest}.rst
-    """.format(latest=str(t))
+   /user/release_notes/{latest}.rst
+""".format(latest=str(t))
                     )
 
     rnd = [

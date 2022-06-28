@@ -226,7 +226,7 @@ def _unireplace(release_note, unireplace):
     return(
         release_note,
         '\n\n'.join([
-            f'.. |u{u}| unicode:: {v}'
+            f'.. |u{u}| unicode:: {v}\n   :trim:'
             for u, v in list(unireplace.items())
         ])
     )

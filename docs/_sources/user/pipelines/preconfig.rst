@@ -1,8 +1,15 @@
 ﻿Pre-configured Pipelines
-------------------------
+========================
+
+.. contents::
+   :depth: 2
+   :local:
+
+human
+^^^^^
 
 default: The Default Pipeline
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------
 
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/dev/docker_data/default_pipeline.yml <https://github.com/FCP-INDI/C-PAC/blob/main/dev/docker_data/default_pipeline.yml>`_
 
@@ -30,7 +37,7 @@ Several different individual level analysis are performed on the fMRI data inclu
 * **Time series extraction:** similar the procedure used for time series analysis, the preprocessed functional data is written into MNI space at 2mm and then time series for the various atlases are extracted by averaging within region voxel time courses. This procedure was used to generate summary time series for the automated anatomic labelling atlas [20], Eickhoff-Zilles atlas [21], Harvard-Oxford atlas [22], Talaraich and Tournoux atlas [23], 200 and 400 regions from the spatially constrained clustering voxel timeseries [24], and 160 ROIs from a meta-analysis of task results [19]. Time series for 10 ICNs were extracted using spatial regression.
 
 anat-only: Default with Anatomical Preprocessing Only
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------------------------
 
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_anat-only.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_anat-only.yml>`_
 
@@ -41,7 +48,7 @@ Based on the preprocessing decisions of the default pipeline, this preconfigurat
 * Registration to template (via ANTs/ITK)
 
 preproc: Default without Derivatives
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------
 
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_preproc.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_preproc.yml>`_
 
@@ -61,8 +68,26 @@ Functional:
 * Nuisance correction & filtering
 * Registration to template (via ANTs/ITK)
 
+fmriprep-options: fmriprep-Options Pipeline
+-------------------------------------------
+
+Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_fmriprep-options.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_fmriprep-options.yml>`_
+
+This pipeline is designed to increase reproducibility with the preprocessing results of the fmriprep pipeline package :cite:`cite-fmriprep-fMRI16` produced by the `Poldrack Lab at Stanford University <https://poldracklab.stanford.edu/>`_.
+
+.. bibliography::
+   :list: bullet
+
+   NiPr20
+   Este19
+
+.. bibliography::
+   :cited:
+   :keyprefix: cite-fmriprep-
+   :start: continue
+
 ndmg: Neurodata's 'ndmg-f' Pipeline
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------
 
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_ndmg.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_ndmg.yml>`_
 
@@ -70,49 +95,47 @@ This pipeline is the result of `Neurodata's <https://neurodata.io/>`_ study to c
 
 Note, the 'ndmg_graph' connectome graph outputs are always produced by C-PAC. This pipeline configuration simply replicates the preprocessing methods described in the paper, linked below.
 
-* `https://www.biorxiv.org/content/10.1101/188706v6 <https://www.biorxiv.org/content/10.1101/188706v6>`_
-* `https://neurodata.io/m2g/ <https://neurodata.io/m2g/>`_
-* `https://github.com/neurodata/m2g <https://github.com/neurodata/m2g>`_
+.. bibliography::
+   :list: bullet
+   :start: continue
 
-fmriprep-options: fmriprep-Options Pipeline
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_fmriprep-options.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_fmriprep-options.yml>`_
-
-This pipeline is designed to increase reproducibility with the preprocessing results of the `fmriprep pipeline package <https://fmriprep.readthedocs.io/en/stable/>`_ produced by the `Poldrack Lab at Stanford University <https://poldracklab.stanford.edu/>`_.
-
-* `https://github.com/poldracklab/fmriprep <https://github.com/poldracklab/fmriprep>`_
-* `https://www.nature.com/articles/s41592-018-0235-4 <https://www.nature.com/articles/s41592-018-0235-4>`_
+   Kiar18
+   Neur
+   Neur18
 
 rbc-options: ReproBrainChart Options Pipeline
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------------------
 
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_rbc-options.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_rbc-options.yml>`_
 
-benchmark-ANTS: C-PAC Benchmark with ANTs Registration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RBC-options pipeline was built and integrated in C-PAC based on the Reproducible Brain Charts initiative, which aims to aggregate and harmonize phenotypic and neuroimage data to delineate node mechanisms regarding developmental basis of psychopathology in youth and yield reproducible growth charts of brain development :cite:`cite-rbc-Hoff21`.
 
-Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_benchmark-ANTS.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_benchmark-ANTS.yml>`_
+.. bibliography::
+   :cited:
+   :keyprefix: cite-rbc-
+   :start: continue
 
-The benchmark pipeline has remained mostly unchanged since the project's inception, and is used at the end of each release cycle to ensure the results of C-PAC's key outputs have not changed. It is designed to test a wide range of pipeline options. This pipeline is based on registration-to-template using the ANTs/ITK toolset, as this decision impacts many other aspects of the pipeline further downstream.
+non-human primate
+^^^^^^^^^^^^^^^^^
 
-benchmark-FNIRT: C-PAC Benchmark with FSL FNIRT Registration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_benchmark-FNIRT.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_benchmark-FNIRT.yml>`_
-
-The benchmark pipeline has remained mostly unchanged since the project's inception, and is used at the end of each release cycle to ensure the results of C-PAC's key outputs have not changed. It is designed to test a wide range of pipeline options. This pipeline is based on registration-to-template using the FSL FLIRT & FNIRT, as this decision impacts many other aspects of the pipeline further downstream.
-
-
-Monkey: Default with Monkey Preprocessing 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+monkey: Default with Monkey Preprocessing 
+-----------------------------------------
 
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_monkey.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_monkey.yml>`_
 
-This pipeline is based on the work of Xu et al. (2019) and `nhp-ABCD-BIDS-pipeline. <https://zenodo.org/record/3888969#.Xw31IpNKjyU>`_
+This pipeline is based on the work of Xu et al. :cite:`cite-monkey-Xu19` and nhp-ABCD-BIDS-pipeline. :cite:`cite-monkey-Stur20`
 
-* `Nanditha Rajamani, et al. "U-Net Model for Brain Extraction: Training in Humans and Transferring to Non-human Primates." OHBM (2019) <https://ww5.aievolution.com/hbm1901/index.cfm?do=abs.viewAbs&abs=4924>`_
-* `Julian S B Ramirez, Alice M Graham, Jacqueline R Thompson, Jennifer Y Zhu, Darrick Sturgeon, Jennifer L Bagley, Elina Thomas, Samantha Papadakis, Muhammed Bah, Anders Perrone, Eric Earl, Oscar Miranda-Dominguez, Eric Feczko, Eric J Fombonne, David G Amaral, Joel T Nigg, Elinor L Sullivan, Damien A Fair, Maternal Interleukin-6 Is Associated With Macaque Offspring Amygdala Development and Behavior, Cerebral Cortex, Volume 30, Issue 3, March 2020, Pages 1573–1585 <https://doi.org/10.1093/cercor/bhz188>`_
+.. bibliography::
+   :list: bullet
+   :start: continue
+
+   Wang21a
+   Rami20
+
+.. bibliography::
+   :cited:
+   :keyprefix: cite-monkey-
+   :start: continue
 
 Based on the preprocessing decisions of the default pipeline, this preconfiguration allows you to preprocess all of your macaque data, includes:
 
@@ -133,3 +156,20 @@ Functional:
 * Nuisance correction & filtering
 * Registration to template (via ANTs/ITK)
 * spatial smoothing
+
+testing
+^^^^^^^
+
+benchmark-ANTS: C-PAC Benchmark with ANTs Registration
+------------------------------------------------------
+
+Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_benchmark-ANTS.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_benchmark-ANTS.yml>`_
+
+The benchmark pipeline has remained mostly unchanged since the project's inception, and is used at the end of each release cycle to ensure the results of C-PAC's key outputs have not changed. It is designed to test a wide range of pipeline options. This pipeline is based on registration-to-template using the ANTs/ITK toolset, as this decision impacts many other aspects of the pipeline further downstream.
+
+benchmark-FNIRT: C-PAC Benchmark with FSL FNIRT Registration
+------------------------------------------------------------
+
+Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_benchmark-FNIRT.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_benchmark-FNIRT.yml>`_
+
+The benchmark pipeline has remained mostly unchanged since the project's inception, and is used at the end of each release cycle to ensure the results of C-PAC's key outputs have not changed. It is designed to test a wide range of pipeline options. This pipeline is based on registration-to-template using the FSL FLIRT & FNIRT, as this decision impacts many other aspects of the pipeline further downstream.

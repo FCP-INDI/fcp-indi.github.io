@@ -1,5 +1,5 @@
 from pybtex.style.formatting import toplevel
-from pybtex.style.formatting.plain import Style
+from pybtex.style.formatting.unsrt import Style
 from pybtex.style.names.lastfirst import NameStyle as LastFirst
 from pybtex.style.sorting.none import SortingStyle as NoSort
 from pybtex.style.template import field, href, join, optional, \
@@ -14,7 +14,7 @@ class CPAC_DocsStyle(Style):
 
     References
     ----------
-    .. [1] Troffaes, M.C.M. 2021. Custom Formatting, Sorting, and Labelling. *sphinxcontrib-bibtex 1.0.0 documentation*. https://sphinxcontrib-bibtex.readthedocs.io/en/1.0.0/usage.html#custom-formatting-sorting-and-labelling
+    .. [1] Troffaes, M.C.M. 2021. Usage § Custom Formatting, Sorting, and Labelling. *sphinxcontrib-bibtex 2.4.2 documentation*. https://sphinxcontrib-bibtex.readthedocs.io/en/2.4.2/usage.html#bibtex-custom-formatting
     """  # pylint: disable=line-too-long  # noqa: E501
     # pylint: disable=no-value-for-parameter,invalid-name
     def __init__(self, *args, **kwargs):

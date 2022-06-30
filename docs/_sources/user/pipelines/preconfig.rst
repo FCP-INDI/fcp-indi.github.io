@@ -73,7 +73,7 @@ fmriprep-options: fmriprep-Options Pipeline
 
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_fmriprep-options.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_fmriprep-options.yml>`_
 
-This pipeline is designed to increase reproducibility with the preprocessing results of the fmriprep pipeline package :cite:`cite-fmriprep-fMRI16` produced by the `Poldrack Lab at Stanford University <https://poldracklab.stanford.edu/>`_.
+This pipeline is designed to increase reproducibility with the preprocessing results of the fmriprep pipeline package :footcite:`fMRI16` produced by the `Poldrack Lab at Stanford University <https://poldracklab.stanford.edu/>`_.
 
 .. bibliography::
    :list: bullet
@@ -81,10 +81,7 @@ This pipeline is designed to increase reproducibility with the preprocessing res
    NiPr20
    Este19
 
-.. bibliography::
-   :cited:
-   :keyprefix: cite-fmriprep-
-   :start: continue
+.. footbibliography::
 
 ndmg: Neurodata's 'ndmg-f' Pipeline
 -----------------------------------
@@ -97,7 +94,6 @@ Note, the 'ndmg_graph' connectome graph outputs are always produced by C-PAC. Th
 
 .. bibliography::
    :list: bullet
-   :start: continue
 
    Kiar18
    Neur
@@ -108,12 +104,9 @@ rbc-options: ReproBrainChart Options Pipeline
 
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_rbc-options.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_rbc-options.yml>`_
 
-RBC-options pipeline was built and integrated in C-PAC based on the Reproducible Brain Charts initiative, which aims to aggregate and harmonize phenotypic and neuroimage data to delineate node mechanisms regarding developmental basis of psychopathology in youth and yield reproducible growth charts of brain development :cite:`cite-rbc-Hoff21`.
+RBC-options pipeline was built and integrated in C-PAC based on the Reproducible Brain Charts initiative, which aims to aggregate and harmonize phenotypic and neuroimage data to delineate node mechanisms regarding developmental basis of psychopathology in youth and yield reproducible growth charts of brain development :footcite:`Hoff21`.
 
-.. bibliography::
-   :cited:
-   :keyprefix: cite-rbc-
-   :start: continue
+.. footbibliography::
 
 non-human primate
 ^^^^^^^^^^^^^^^^^
@@ -123,19 +116,15 @@ monkey: Default with Monkey Preprocessing
 
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_monkey.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_monkey.yml>`_
 
-This pipeline is based on the work of Xu et al. :cite:`cite-monkey-Xu19` and nhp-ABCD-BIDS-pipeline. :cite:`cite-monkey-Stur20`
+This pipeline is based on the work of Xu et al. :footcite:`Xu19` and nhp-ABCD-BIDS-pipeline. :footcite:`Stur20`
 
 .. bibliography::
    :list: bullet
-   :start: continue
 
    Wang21a
    Rami20
 
-.. bibliography::
-   :cited:
-   :keyprefix: cite-monkey-
-   :start: continue
+.. footbibliography::
 
 Based on the preprocessing decisions of the default pipeline, this preconfiguration allows you to preprocess all of your macaque data, includes:
 

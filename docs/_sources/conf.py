@@ -18,7 +18,7 @@ import re
 import semver
 import sys
 
-from CPAC import __version__
+from CPAC import _url_version, __version__
 from dateutil import parser as dparser
 from github import Github
 from github.GithubException import RateLimitExceededException, \
@@ -142,6 +142,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinxcontrib.bibtex',
     'sphinxcontrib.fulltoc',
+    'sphinx.ext.extlinks',
     'sphinx.ext.ifconfig',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
@@ -154,6 +155,13 @@ extensions = [
 bibtex_bibfiles = [f'references/{bib}' for bib in os.listdir('references') if
                    bib.endswith('.bib')]
 bibtex_default_style = 'cpac_docs_style'
+
+if _url_version == 'nightly':
+    _url_version = 'develop'
+
+extlinks = {'versioned_source': (
+    f'https://github.com/FCP-INDI/C-PAC/blob/{_url_version}/%s',
+    f'{_url_version} source code: ')}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -580,6 +588,7 @@ rst_epilog = """
 """.format(
     versions=', '.join(gh_tags[:5])
 ) if len(gh_tags) >= 5 else ""
+
 
 def setup(app):
     from CPAC.utils.monitoring import custom_logging

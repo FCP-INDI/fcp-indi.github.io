@@ -163,7 +163,11 @@ with open(os.path.join(*([os.pardir] * 2), 'CONTRIBUTING.rst'), 'r') as f:
         'https://github.com/FCP-INDI/fcp-indi.github.io/raw/source/images'
     ).replace(
         'fcp-indi.github.io/docs/',
-        f'fcp-indi.github.io/docs/{_url_version}/')
+        f'fcp-indi.github.io/docs/{_url_version}/'
+    ).replace('* :octocat:', '* |:octocat:|')
+    for emoji in ['construction_worker', 'heavy_plus_sign', 'octocat']:
+        _converted = r'{}'.format(_converted).replace(
+            r'\:' + f'{emoji}:', f'|:{emoji}:|')
 
 if _url_version == 'nightly':
     _url_version = 'develop'
@@ -211,7 +215,7 @@ def _gh_rate_limit():
        MMMMMMMMMMMMMMMMMMM     |                                          |
        MMMMMMMMMMMMMMMMMMM     | Set GITHUBTOKEN to your API token in     |
       MMMMMMMMMMMMMMMMMMMMM    | your environment to increase rate limit. |
-     MMMMMMMMMMMMMMMMMMMMMMM   | See CONTRIBUTING.md#environment-notes    |
+     MMMMMMMMMMMMMMMMMMMMMMM   | See CONTRIBUTING.rst#environment-notes   |
     MMMMMMMMMMMMMMMMMMMMMMMM   |_   ______________________________________|
     MMMM::- -:::::::- -::MMMM    |/
      MM~:~ 00~:::::~ 00~:~MM

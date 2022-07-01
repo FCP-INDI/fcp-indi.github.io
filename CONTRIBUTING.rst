@@ -232,7 +232,7 @@ If you want to generate that bibliography entry without the citation:
 Environment notes
 *****************
 
-* Because `C-PAC`_ and `cpac`_ have conflicting commandline commands, we first run any ``cpac`` commands in a virtual environment and spoof the ``command-output`` directive with ``code-block`` like
+* \:construction_worker: Because `C-PAC`_ and `cpac`_ have conflicting commandline commands, we first run any ``cpac`` commands in a virtual environment and spoof the ``command-output`` directive with ``code-block`` like
 
   .. code-block:: RST
 
@@ -244,9 +244,9 @@ Environment notes
          :shell:
          :ellipsis: 0,9
 
-* |:heavy_plus_sign:| Check |circleci config|_ of the branch you're working from for build dependencies.
+* \:heavy_plus_sign: Check |circleci config|_ of the branch you're working from for build dependencies.
 
-* |:octocat:| Set an environment variable ``GITHUBTOKEN`` to a `personal access token <https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line>`_ to increase `your API rate limit <https://developer.github.com/v3/#rate-limiting>`_ from 60 to 5000 requests per hour (for getting `release notes from GitHub <https://github.com/FCP-INDI/C-PAC/releases>`_\ ).
+* \:octocat: Set an environment variable ``GITHUBTOKEN`` to a `personal access token <https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line>`_ to increase `your API rate limit <https://developer.github.com/v3/#rate-limiting>`_ from 60 to 5000 requests per hour (for getting `release notes from GitHub <https://github.com/FCP-INDI/C-PAC/releases>`_\ ).
 
 .. |circleci config| replace:: ``.circleci/config.yml``
    

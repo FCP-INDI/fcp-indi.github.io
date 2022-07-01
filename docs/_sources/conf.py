@@ -142,6 +142,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinxcontrib.bibtex',
     'sphinxcontrib.fulltoc',
+    'sphinxemoji.sphinxemoji',
     'sphinx.ext.extlinks',
     'sphinx.ext.ifconfig',
     'sphinx.ext.intersphinx',
@@ -156,12 +157,23 @@ bibtex_bibfiles = [f'references/{bib}' for bib in os.listdir('references') if
                    bib.endswith('.bib')]
 bibtex_default_style = 'cpac_docs_style'
 
+with open(os.path.join(*([os.pardir] * 2), 'CONTRIBUTING.rst'), 'r') as f:
+    _converted = f.read().replace(
+        './images',
+        'https://github.com/FCP-INDI/fcp-indi.github.io/raw/source/images'
+    ).replace(
+        'fcp-indi.github.io/docs/',
+        f'fcp-indi.github.io/docs/{_url_version}/')
+
 if _url_version == 'nightly':
     _url_version = 'develop'
 
 extlinks = {'versioned_source': (
     f'https://github.com/FCP-INDI/C-PAC/blob/{_url_version}/%s',
     f'{_url_version} source code: ')}
+
+with open('developer/CONTRIBUTING.rst', 'w') as contributing:
+    contributing.write(_converted)
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

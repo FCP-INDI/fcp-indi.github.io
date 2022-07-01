@@ -16,11 +16,11 @@ Contents:
    :titlesonly:
 
    installation
+   documentation
    pipeline
    nodes
    random_state
    logging
-   workflow_documentation
    workflows/index
    xcpqc
    testing

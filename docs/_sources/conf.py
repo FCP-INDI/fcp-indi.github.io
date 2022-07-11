@@ -573,13 +573,23 @@ texinfo_documents = [
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 # texinfo_show_urls = 'footnote'
 
+rst_prolog = """
+
+.. |version as code| replace:: ``{version}``
+
+""".format(
+    version=f'v{version}' if not version.endswith('dev') else 'nightly'
+)
+
 rst_epilog = """
+
 
 .. |Versions| replace:: {versions}
 
 """.format(
     versions=', '.join(gh_tags[:5])
 ) if len(gh_tags) >= 5 else ""
+
 
 def setup(app):
     from CPAC.utils.monitoring import custom_logging

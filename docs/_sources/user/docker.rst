@@ -15,6 +15,8 @@ To start, first pull the image from Docker Hub:
 
 Once this is complete, you can use the ``fcpindi/c-pac:latest`` image tag to invoke runs. The full C-PAC Docker image usage options are shown here, with some specific use cases.
 
+   .. seealso:: :doc:`/user/versions`
+
 As a quick example, in order to run the C-PAC Docker container in participant mode, for one participant, using a BIDS dataset stored on your machine or server, and using the Docker image's default pipeline configuration (broken into multiple lines for visual clarity):
 
 .. code-block:: console

@@ -15,6 +15,7 @@ To semiautomatically deprecate a published version of C-PAC, follow these steps:
 
    #. Replace the critical alert in |CRITICAL_ALERT.rst|_ with the ``CRITICAL_ALERT`` from step one, above.
    #. Update |cpac_pipeline.py|_ and |run.py|_:
+
       #. Overwrite the current versions in the |CPAC-Development/deprecate|_ with the versions from the source code of the version of C-PAC to deprecate.
       #. Add
 
@@ -143,25 +144,25 @@ To semiautomatically deprecate a published version of C-PAC, follow these steps:
 
 .. _cpac_pipeline.py: https://github.com/FCP-INDI/CPAC-Development/blob/DEPRECATE/deprecate/cpac_pipeline.py
 
-.. |cpac_pipeline.py example 1| replace:: ``cpac_pipeline.py#L264-L265@bc6081c``
+.. |cpac_pipeline.py example 1| replace:: ``cpac_pipeline.py#L264-L265@6cd6c67``
 
-.. _cpac_pipeline.py example 1: https://github.com/FCP-INDI/CPAC-Development/blob/bc6081c/deprecate/cpac_pipeline.py#L264-L265
+.. _cpac_pipeline.py example 1: https://github.com/FCP-INDI/CPAC-Development/blob/6cd6c67/deprecate/cpac_pipeline.py#L264-L265
 
-.. |cpac_pipeline.py example 2| replace:: ``cpac_pipeline.py#L370@bc6081c``
+.. |cpac_pipeline.py example 2| replace:: ``cpac_pipeline.py#L370@6cd6c67``
 
-.. _cpac_pipeline.py example 2: https://github.com/FCP-INDI/CPAC-Development/blob/bc6081c/deprecate/cpac_pipeline.py#L370
+.. _cpac_pipeline.py example 2: https://github.com/FCP-INDI/CPAC-Development/blob/6cd6c67/deprecate/cpac_pipeline.py#L370
 
-.. |cpac_pipeline.py example 3| replace:: ``cpac_pipeline.py#L705@bc6081c``
+.. |cpac_pipeline.py example 3| replace:: ``cpac_pipeline.py#L706@6cd6c67``
 
-.. _cpac_pipeline.py example 3: https://github.com/FCP-INDI/CPAC-Development/blob/bc6081c/deprecate/cpac_pipeline.py#L705
+.. _cpac_pipeline.py example 3: https://github.com/FCP-INDI/CPAC-Development/blob/6cd6c67/deprecate/cpac_pipeline.py#L706
 
-.. |cpac_pipeline.py example 4| replace:: ``cpac_pipeline.py#L373-L375@bc6081c``
+.. |cpac_pipeline.py example 4| replace:: ``cpac_pipeline.py#L373-L376@6cd6c67``
 
-.. _cpac_pipeline.py example 4: https://github.com/FCP-INDI/CPAC-Development/blob/bc6081c/deprecate/cpac_pipeline.py#L373-L375
+.. _cpac_pipeline.py example 4: https://github.com/FCP-INDI/CPAC-Development/blob/6cd6c67/deprecate/cpac_pipeline.py#L373-L376
 
-.. |cpac_pipeline.py example 5| replace:: ``cpac_pipeline.py#L722@bc6081c``
+.. |cpac_pipeline.py example 5| replace:: ``cpac_pipeline.py#L723@6cd6c67``
 
-.. _cpac_pipeline.py example 5: https://github.com/FCP-INDI/CPAC-Development/blob/bc6081c/deprecate/cpac_pipeline.py#L722
+.. _cpac_pipeline.py example 5: https://github.com/FCP-INDI/CPAC-Development/blob/6cd6c67/deprecate/cpac_pipeline.py#L723
 
 .. |Docker Hub tags| replace:: fcpindi/c-pac Tags | Docker Hub
 
@@ -171,9 +172,9 @@ To semiautomatically deprecate a published version of C-PAC, follow these steps:
 
 .. _run.py: https://github.com/FCP-INDI/CPAC-Development/blob/DEPRECATE/deprecate/run.py
 
-.. |run.py example 1| replace:: ``run.py#L216-L219@bc6081c``
+.. |run.py example 1| replace:: ``run.py#L216-L220@6cd6c67``
 
-.. _run.py example 1: https://github.com/FCP-INDI/CPAC-Development/blob/bc6081c/deprecate/run.py#L216-L219
+.. _run.py example 1: https://github.com/FCP-INDI/CPAC-Development/blob/6cd6c67/deprecate/run.py#L216-L220
 
 .. |semver| raw:: HTML
 

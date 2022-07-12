@@ -22,7 +22,7 @@ To semiautomatically deprecate a published version of C-PAC, follow these steps:
          .. code:: Python
 
             shutil.copyfile('/CRITICAL_ALERT.rst',
-               os.path.join(log_dir, 'CRITICAL_ALERT.rst'))
+                            os.path.join(log_dir, 'CRITICAL_ALERT.rst'))
 
          to |cpac_pipeline.py|_ after
 
@@ -84,8 +84,9 @@ To semiautomatically deprecate a published version of C-PAC, follow these steps:
          .. code:: Python
 
             with open('/CRITICAL_ALERT.rst', 'r') as critical_alert_file:
-               critical_alert = critical_alert_file.read()
-
+               critical_alert = ''.join([line for line in
+                                         critical_alert_file.readlines() if
+                                         not line.startswith('.. ')])
             print(critical_alert)
 
    #. From the ``deprecate`` subdirectory, run

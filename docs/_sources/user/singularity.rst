@@ -1,7 +1,7 @@
 Run on Singularity
 ------------------
 
-For those who wish to avoid the administrator rights requirements often associated with Docker usage (or the security hazards when used on a shared computing system), `Singularity <https://singularityhub.github.io/singularityhub-docs/>`_ is a good option. Singularity is a container solution just like Docker, except it is designed specifically to offer secure deployment on shared cluster environments.
+For those who wish to avoid the administrator rights requirements often associated with Docker usage (or the security hazards when used on a shared computing system), `Singularity <https://apptainer.org/docs-legacy>`_ is a good option. Singularity is a container solution just like Docker, except it is designed specifically to offer secure deployment on shared cluster environments.
 
 You can pull a Singularity container much like how you would pull a Docker container:
 

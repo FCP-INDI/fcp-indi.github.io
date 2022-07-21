@@ -16,8 +16,8 @@ Documents #[issue number] by @[original issue author]
 - [ ] My pull request has a descriptive title (not a vague title like `Update index.md`).  <!-- If you want to in include a leading emoji, check out https://gitmoji.dev for a pseudo-standard set of options -->
 - [ ] My pull request targets the `source` branch of the repository. <!-- Change this branch if you're targeting a branch other than `source` -->
 - [ ] My commit messages follow best practices.
-- [ ] My code follows the [established code style of the repository](../CONTRIBUTING.md).
-- [ ] I tried [letting the CI build this branch on a fork or built the project locally](../CONTRIBUTING.md#building) and verified that there are no visible errors.
+- [ ] My code follows the [established code style of the repository](../blob/source/CONTRIBUTING.rst).
+- [ ] I tried [letting the CI build this branch on a fork or built the project locally](../blob/source/CONTRIBUTING.rst#building) and verified that there are no visible errors.
 
 ## Developer Certificate of Origin
 <!-- You must read and understand the following attestation. -->

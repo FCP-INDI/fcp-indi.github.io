@@ -11,7 +11,7 @@ human
 default: The Default Pipeline
 -----------------------------
 
-Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/dev/docker_data/default_pipeline.yml <https://github.com/FCP-INDI/C-PAC/blob/main/dev/docker_data/default_pipeline.yml>`_
+Pipeline Configuration YAML: :versioned_source:`dev/docker_data/default_pipeline.yml`
 
 **Note:** C-PAC runs this pipeline by default, and it is not necessary to invoke the `--preconfig` flag to run it.
 
@@ -39,7 +39,7 @@ Several different individual level analysis are performed on the fMRI data inclu
 anat-only: Default with Anatomical Preprocessing Only
 -----------------------------------------------------
 
-Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_anat-only.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_anat-only.yml>`_
+Pipeline Configuration YAML: :versioned_source:`CPAC/resources/configs/pipeline_config_anat-only.yml`
 
 Based on the preprocessing decisions of the default pipeline, this preconfiguration allows you to immediately kick off a run with only anatomical preprocessing selected. This includes:
 
@@ -50,7 +50,7 @@ Based on the preprocessing decisions of the default pipeline, this preconfigurat
 preproc: Default without Derivatives
 ------------------------------------
 
-Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_preproc.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_preproc.yml>`_
+Pipeline Configuration YAML: :versioned_source:`CPAC/resources/configs/pipeline_config_preproc.yml`
 
 Based on the preprocessing decisions of the default pipeline, this preconfiguration allows you to preprocess all of your data, without launching into calculation of outputs and data derivatives. This includes:
 
@@ -71,9 +71,9 @@ Functional:
 fmriprep-options: fmriprep-Options Pipeline
 -------------------------------------------
 
-Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_fmriprep-options.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_fmriprep-options.yml>`_
+Pipeline Configuration YAML: :versioned_source:`CPAC/resources/configs/pipeline_config_fmriprep-options.yml`
 
-This pipeline is designed to increase reproducibility with the preprocessing results of the fmriprep pipeline package :cite:`cite-fmriprep-fMRI16` produced by the `Poldrack Lab at Stanford University <https://poldracklab.stanford.edu/>`_.
+This pipeline is designed to increase reproducibility with the preprocessing results of the fmriprep pipeline package :footcite:`fMRI16` produced by the `Poldrack Lab at Stanford University <https://poldracklab.stanford.edu/>`_.
 
 .. bibliography::
    :list: bullet
@@ -81,15 +81,12 @@ This pipeline is designed to increase reproducibility with the preprocessing res
    NiPr20
    Este19
 
-.. bibliography::
-   :cited:
-   :keyprefix: cite-fmriprep-
-   :start: continue
+.. footbibliography::
 
 ndmg: Neurodata's 'ndmg-f' Pipeline
 -----------------------------------
 
-Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_ndmg.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_ndmg.yml>`_
+Pipeline Configuration YAML: :versioned_source:`CPAC/resources/configs/pipeline_config_ndmg.yml`
 
 This pipeline is the result of `Neurodata's <https://neurodata.io/>`_ study to converge upon the intersection of pipeline configuration decisions that maximizes discriminability between participants' data, drawing from the connectome graphs produced (labeled 'ndmg_graph' in the C-PAC output directory). This pipeline invokes a minimal set of preprocessing.
 
@@ -97,7 +94,6 @@ Note, the 'ndmg_graph' connectome graph outputs are always produced by C-PAC. Th
 
 .. bibliography::
    :list: bullet
-   :start: continue
 
    Kiar18
    Neur
@@ -106,14 +102,21 @@ Note, the 'ndmg_graph' connectome graph outputs are always produced by C-PAC. Th
 rbc-options: ReproBrainChart Options Pipeline
 ---------------------------------------------
 
-Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_rbc-options.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_rbc-options.yml>`_
+Pipeline Configuration YAML: :versioned_source:`CPAC/resources/configs/pipeline_config_rbc-options.yml`
 
-RBC-options pipeline was built and integrated in C-PAC based on the Reproducible Brain Charts initiative, which aims to aggregate and harmonize phenotypic and neuroimage data to delineate node mechanisms regarding developmental basis of psychopathology in youth and yield reproducible growth charts of brain development :cite:`cite-rbc-Hoff21`.
 
-.. bibliography::
-   :cited:
-   :keyprefix: cite-rbc-
-   :start: continue
+RBC-options pipeline was built and integrated in C-PAC based on the Reproducible Brain Charts initiative, which aims to aggregate and harmonize phenotypic and neuroimage data to delineate node mechanisms regarding developmental basis of psychopathology in youth and yield reproducible growth charts of brain development :footcite:`Hoff21`.
+
+This pipeline has two regression strategies, 36-parameter (based on XCP-D "36P" :footcite:`xcp_22a`) and acompcor. See the ``Regressors`` section of the pipeline configuration YAML for specific configuration of each of these strategies:
+
+
+.. literalinclude:: /references/pipeline_config_rbc-options.yml
+   :language: YAML
+   :start-at: Regressors:
+   :end-before: # Process and refine masks used to produce regressors and time series for
+
+
+.. footbibliography::
 
 non-human primate
 ^^^^^^^^^^^^^^^^^
@@ -121,21 +124,17 @@ non-human primate
 monkey: Default with Monkey Preprocessing 
 -----------------------------------------
 
-Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_monkey.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_monkey.yml>`_
+Pipeline Configuration YAML: :versioned_source:`CPAC/resources/configs/pipeline_config_monkey.yml`
 
-This pipeline is based on the work of Xu et al. :cite:`cite-monkey-Xu19` and nhp-ABCD-BIDS-pipeline. :cite:`cite-monkey-Stur20`
+This pipeline is based on the work of :footcite:t:`Xu19` and nhp-ABCD-BIDS-pipeline :footcite:`Stur20`.
 
 .. bibliography::
    :list: bullet
-   :start: continue
 
    Wang21a
    Rami20
 
-.. bibliography::
-   :cited:
-   :keyprefix: cite-monkey-
-   :start: continue
+.. footbibliography::
 
 Based on the preprocessing decisions of the default pipeline, this preconfiguration allows you to preprocess all of your macaque data, includes:
 
@@ -163,13 +162,13 @@ testing
 benchmark-ANTS: C-PAC Benchmark with ANTs Registration
 ------------------------------------------------------
 
-Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_benchmark-ANTS.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_benchmark-ANTS.yml>`_
+Pipeline Configuration YAML: :versioned_source:`CPAC/resources/configs/pipeline_config_benchmark-ANTS.yml`
 
 The benchmark pipeline has remained mostly unchanged since the project's inception, and is used at the end of each release cycle to ensure the results of C-PAC's key outputs have not changed. It is designed to test a wide range of pipeline options. This pipeline is based on registration-to-template using the ANTs/ITK toolset, as this decision impacts many other aspects of the pipeline further downstream.
 
 benchmark-FNIRT: C-PAC Benchmark with FSL FNIRT Registration
 ------------------------------------------------------------
 
-Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_benchmark-FNIRT.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_benchmark-FNIRT.yml>`_
+Pipeline Configuration YAML: :versioned_source:`CPAC/resources/configs/pipeline_config_benchmark-FNIRT.yml>`
 
 The benchmark pipeline has remained mostly unchanged since the project's inception, and is used at the end of each release cycle to ensure the results of C-PAC's key outputs have not changed. It is designed to test a wide range of pipeline options. This pipeline is based on registration-to-template using the FSL FLIRT & FNIRT, as this decision impacts many other aspects of the pipeline further downstream.

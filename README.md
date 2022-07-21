@@ -4,4 +4,4 @@ GitHub Pages repo for FCP-INDI
 
 ## Editing
 
-See [CONTRIBUTING](./CONTRIBUTING.md) for editing and contributing guidelines.
+See [CONTRIBUTING](./CONTRIBUTING.rst) for editing and contributing guidelines.

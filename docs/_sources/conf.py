@@ -18,7 +18,7 @@ import re
 import semver
 import sys
 
-from CPAC import __version__
+from CPAC import _url_version, __version__
 from dateutil import parser as dparser
 from github import Github
 from github.GithubException import RateLimitExceededException, \
@@ -142,6 +142,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinxcontrib.bibtex',
     'sphinxcontrib.fulltoc',
+    'sphinxemoji.sphinxemoji',
+    'sphinx.ext.extlinks',
     'sphinx.ext.ifconfig',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
@@ -154,6 +156,28 @@ extensions = [
 bibtex_bibfiles = [f'references/{bib}' for bib in os.listdir('references') if
                    bib.endswith('.bib')]
 bibtex_default_style = 'cpac_docs_style'
+
+with open(os.path.join(*([os.pardir] * 2), 'CONTRIBUTING.rst'), 'r') as f:
+    _converted = f.read().replace(
+        './images',
+        'https://github.com/FCP-INDI/fcp-indi.github.io/raw/source/images'
+    ).replace(
+        'fcp-indi.github.io/docs/',
+        f'fcp-indi.github.io/docs/{_url_version}/'
+    ).replace('* :octocat:', '* |:octocat:|')
+    for emoji in ['construction_worker', 'heavy_plus_sign', 'octocat']:
+        _converted = r'{}'.format(_converted).replace(
+            r'\:' + f'{emoji}:', f'|:{emoji}:|')
+
+if _url_version == 'nightly':
+    _url_version = 'develop'
+
+extlinks = {'versioned_source': (
+    f'https://github.com/FCP-INDI/C-PAC/blob/{_url_version}/%s',
+    f'{_url_version} source code: ')}
+
+with open('developer/CONTRIBUTING.rst', 'w') as contributing:
+    contributing.write(_converted)
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -191,7 +215,7 @@ def _gh_rate_limit():
        MMMMMMMMMMMMMMMMMMM     |                                          |
        MMMMMMMMMMMMMMMMMMM     | Set GITHUBTOKEN to your API token in     |
       MMMMMMMMMMMMMMMMMMMMM    | your environment to increase rate limit. |
-     MMMMMMMMMMMMMMMMMMMMMMM   | See CONTRIBUTING.md#environment-notes    |
+     MMMMMMMMMMMMMMMMMMMMMMM   | See CONTRIBUTING.rst#environment-notes   |
     MMMMMMMMMMMMMMMMMMMMMMMM   |_   ______________________________________|
     MMMM::- -:::::::- -::MMMM    |/
      MM~:~ 00~:::::~ 00~:~MM
@@ -580,6 +604,7 @@ rst_epilog = """
 """.format(
     versions=', '.join(gh_tags[:5])
 ) if len(gh_tags) >= 5 else ""
+
 
 def setup(app):
     from CPAC.utils.monitoring import custom_logging

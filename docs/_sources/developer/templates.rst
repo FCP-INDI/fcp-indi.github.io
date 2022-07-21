@@ -59,8 +59,13 @@ You can use `.github/Dockerfiles/cpac_templates.Dockerfile <https://github.com/F
 .. code:: BASH
 
    docker build -t cpac_templates:custom -f .github/Dockerfiles/cpac_templates.Dockerfile .  # <-- run in your modified fork or branch of FCP-INDI/C-PAC_templates
-   docker run --rm -dit --name=CPACTemplates -v cpac_templates:/cpac_templates ghcr.io/fcp-indi/c-pac_templates:latest  # <-- Start a daemon image with your custom templates
-   docker run --rm -it -v --volumes-from CPACTemplates fcpindi/c-pac:nightly $BIDS_DIR $OUTPUTS_DIR participant  # <-- Use C-PAC as usual, but bind the custom /cpac_templates
+   docker run --rm -dit \
+     --name=CPACTemplates \
+     -v cpac_templates:/cpac_templates \
+     ghcr.io/fcp-indi/c-pac_templates:latest  # <-- Start a daemon image with your custom templates
+   docker run --rm -it \
+     --volumes-from CPACTemplates \
+     fcpindi/c-pac:nightly $BIDS_DIR $OUTPUTS_DIR participant  # <-- Use C-PAC as usual, but bind the custom /cpac_templates
    docker attach CPACTemplates  # <-- Clean up when you're done
    exit                         # <-- Clean up when you're done
 

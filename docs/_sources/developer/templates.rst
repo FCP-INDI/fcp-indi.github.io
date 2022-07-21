@@ -70,6 +70,10 @@ You can use `.github/Dockerfiles/cpac_templates.Dockerfile <https://github.com/F
    exit                         # <-- Clean up when you're done
 
 
+.. note::
+
+   When you use ``--volumes-from`` to bind a directory that already exists in the image, the container will only be able to see the content from the bound daemon container, not any of the files in the original image. You can bind specific files instead of their parent directories to make files from the bound daemon container available in an existing directory in a container.
+
 Once your changes have been merged to |main|_, C-PAC will include them in each subsequent build.
 
 References

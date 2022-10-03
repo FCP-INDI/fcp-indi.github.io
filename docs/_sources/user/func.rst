@@ -175,11 +175,11 @@ The C-PAC pipeline configuration builder provides options for configuring the Di
 
 #. **EffectiveEchoSpacing, in s - [float]:** The effective echo spacing is the time between the start of the readout of two successive lines in k-space during the EPI acquisition. This is a value obtained from the functional EPI (NOT the fieldmap).
    
-   .. versionadded: v.1.0.3
+   .. versionadded:: v.1.0.3
 
-   .. versionchanged: v1.8.5
+   .. versionchanged:: v1.8.5
 
-.. include:: /admonitions/DwellTime.rst
+   .. include:: /admonitions/DwellTime.rst
 
 #. **EffectiveEchoSpacing to asymmetric ratio - [float]:** This is the ratio between the effective echo spacing, as referenced above, and the asymmetric time.
 

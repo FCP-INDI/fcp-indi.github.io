@@ -81,7 +81,14 @@ For each filter, ``Name`` need not be provided; if ``Name`` is not provided, it 
 
 and the format ``{filterType}{filterOrder}[{key}{value}]*`` with a lowercase ``p`` replacing any decimal points. If any filters have duplicate names (given or generated), each name after the first will be suffixed with ``dup{duplicate_number}``, with ``duplicate_number`` starting at 1. See :py:func:`CPAC.pipeline.schema.name_motion_filter` for examples.
 
-.. [#motion-filter-abbreviations] These abbreviations are based on :cite:`Eybe16` but modified to comply with :cite:`BIDS21`.
+.. [#motion-filter-abbreviations] These abbreviations are based on :cite:`motionfilt-Eybe16` but modified to comply with :cite:`motionfilt-BIDS21`.
+
+.. rubric:: References
+
+.. bibliography::
+    :cited:
+    :keyprefix: motionfilt-
+
 
 Slice Timing Correction
 ^^^^^^^^^^^^^^^^^^^^^^^

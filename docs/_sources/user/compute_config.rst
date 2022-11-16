@@ -2,7 +2,7 @@ Computer Settings
 -----------------
 .. figure:: /_images/compute_gui.png
 
-**Pipeline Name - [text]:** Name for this pipeline configuration - useful for identification.  *Note that including an individual participant's ID code in this will presently cause C-PAC to crash.*
+#. **Pipeline Name - [text]:** Name for this pipeline configuration - useful for identification.  *Note that including an individual participant's ID code in this will presently cause C-PAC to crash.*
 
 #. **Maximum Memory Per Participant (GB) - [number]:**  The maximum amount of memory each participant's workflow can allocate. Use this to place an upper bound of memory usage. **Warning: 'Memory Per Participant' multiplied by 'Number of Participants to Run Simultaneously' must not be more than the total amount of RAM. Conversely, using too little RAM can impede the speed of a pipeline run. It is recommended that you set this to a value that when multiplied by 'Number of Participants to Run Simultaneously' is as much RAM you can safely allocate.**
 

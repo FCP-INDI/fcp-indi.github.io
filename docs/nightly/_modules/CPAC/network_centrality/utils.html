@@ -41,7 +41,23 @@
           <div class="body" role="main">
             
   <h1>Source code for CPAC.network_centrality.utils</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">CPAC.pipeline.schema</span> <span class="kn">import</span> <span class="n">valid_options</span>
+<span></span><span class="c1"># Copyright (C) 2012-2022  C-PAC Developers</span>
+
+<span class="c1"># This file is part of C-PAC.</span>
+
+<span class="c1"># C-PAC is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU Lesser General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or (at your</span>
+<span class="c1"># option) any later version.</span>
+
+<span class="c1"># C-PAC is distributed in the hope that it will be useful, but WITHOUT</span>
+<span class="c1"># ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or</span>
+<span class="c1"># FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public</span>
+<span class="c1"># License for more details.</span>
+
+<span class="c1"># You should have received a copy of the GNU Lesser General Public</span>
+<span class="c1"># License along with C-PAC. If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="kn">from</span> <span class="nn">CPAC.pipeline.schema</span> <span class="kn">import</span> <span class="n">valid_options</span>
 <span class="kn">from</span> <span class="nn">CPAC.utils.docs</span> <span class="kn">import</span> <span class="n">docstring_parameter</span>
 
 
@@ -125,21 +141,40 @@
             <span class="n">eigen_binarized</span><span class="p">,</span> <span class="n">lfcd_weighted</span><span class="p">,</span> <span class="n">lfcd_binarized</span><span class="p">)</span>
 
 
-<span class="c1"># Separate sub-briks of niftis and save</span>
+<span class="nd">@docstring_parameter</span><span class="p">(</span>
+    <span class="n">weight_options</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">valid_options</span><span class="p">[</span><span class="s1">&#39;centrality&#39;</span><span class="p">][</span><span class="s1">&#39;weight_options&#39;</span><span class="p">]))</span>
 <span class="k">def</span> <span class="nf">sep_nifti_subbriks</span><span class="p">(</span><span class="n">nifti_file</span><span class="p">,</span> <span class="n">out_names</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&#39;&#39;&#39;Separate sub-briks of niftis and save specified out</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nifti_file : str</span>
+<span class="sd">        path to NIfTI output of an AFNI centrality tool</span>
+
+<span class="sd">    out_names : iterable of str</span>
+<span class="sd">        an iterable of strings, each ending with one of {weight_options}</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        each of the specified outputs as its own file</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># pylint: disable=redefined-outer-name,reimported,unused-import</span>
     <span class="kn">import</span> <span class="nn">os</span>
     <span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nib</span>
+    <span class="kn">from</span> <span class="nn">CPAC.pipeline.schema</span> <span class="kn">import</span> <span class="n">valid_options</span>
+    <span class="kn">from</span> <span class="nn">CPAC.utils.docs</span> <span class="kn">import</span> <span class="n">docstring_parameter</span>  <span class="c1"># noqa: F401</span>
 
     <span class="n">output_niftis</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">weight_options</span> <span class="o">=</span> <span class="n">valid_options</span><span class="p">[</span><span class="s1">&#39;centrality&#39;</span><span class="p">][</span><span class="s1">&#39;weight_options&#39;</span><span class="p">]</span>
+    <span class="n">selected_options</span> <span class="o">=</span> <span class="p">{</span><span class="n">_</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span> <span class="n">_</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">out_names</span><span class="p">}</span>
 
     <span class="n">nii_img</span> <span class="o">=</span> <span class="n">nib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">nifti_file</span><span class="p">)</span>
     <span class="n">nii_arr</span> <span class="o">=</span> <span class="n">nii_img</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
     <span class="n">nii_affine</span> <span class="o">=</span> <span class="n">nii_img</span><span class="o">.</span><span class="n">get_affine</span><span class="p">()</span>
     <span class="n">nii_dims</span> <span class="o">=</span> <span class="n">nii_arr</span><span class="o">.</span><span class="n">shape</span>
 
-    <span class="k">if</span> <span class="n">nii_dims</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">out_names</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">nii_dims</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">weight_options</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nii_dims</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">out_names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">pass</span>
         <span class="k">else</span><span class="p">:</span>
@@ -147,15 +182,17 @@
                       <span class="s1">&#39;nifti sub-briks&#39;</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
 
-    <span class="k">for</span> <span class="n">brik</span><span class="p">,</span> <span class="n">out_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">out_names</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nii_dims</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-            <span class="n">brik_arr</span> <span class="o">=</span> <span class="n">nii_arr</span>
-        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">nii_dims</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
-            <span class="n">brik_arr</span> <span class="o">=</span> <span class="n">nii_arr</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">brik</span><span class="p">]</span>
-        <span class="n">out_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">out_name</span><span class="o">+</span><span class="s1">&#39;.nii.gz&#39;</span><span class="p">)</span>
-        <span class="n">out_img</span> <span class="o">=</span> <span class="n">nib</span><span class="o">.</span><span class="n">Nifti1Image</span><span class="p">(</span><span class="n">brik_arr</span><span class="p">,</span> <span class="n">nii_affine</span><span class="p">)</span>
-        <span class="n">out_img</span><span class="o">.</span><span class="n">to_filename</span><span class="p">(</span><span class="n">out_file</span><span class="p">)</span>
-        <span class="n">output_niftis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out_file</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">brik</span><span class="p">,</span> <span class="n">option</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">weight_options</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">option</span> <span class="ow">in</span> <span class="n">selected_options</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nii_dims</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">brik_arr</span> <span class="o">=</span> <span class="n">nii_arr</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">nii_dims</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">brik_arr</span> <span class="o">=</span> <span class="n">nii_arr</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">brik</span><span class="p">]</span>
+            <span class="n">out_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span>
+                                    <span class="n">selected_options</span><span class="p">[</span><span class="n">option</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.nii.gz&#39;</span><span class="p">)</span>
+            <span class="n">out_img</span> <span class="o">=</span> <span class="n">nib</span><span class="o">.</span><span class="n">Nifti1Image</span><span class="p">(</span><span class="n">brik_arr</span><span class="p">,</span> <span class="n">nii_affine</span><span class="p">)</span>
+            <span class="n">out_img</span><span class="o">.</span><span class="n">to_filename</span><span class="p">(</span><span class="n">out_file</span><span class="p">)</span>
+            <span class="n">output_niftis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out_file</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">output_niftis</span>
 

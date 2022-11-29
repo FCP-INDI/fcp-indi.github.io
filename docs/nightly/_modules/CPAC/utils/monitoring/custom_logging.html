@@ -41,12 +41,47 @@
           <div class="body" role="main">
             
   <h1>Source code for CPAC.utils.monitoring.custom_logging</h1><div class="highlight"><pre>
-<span></span><span class="sd">&#39;&#39;&#39;Funtions for logging.&#39;&#39;&#39;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Funtions for logging.</span>
+
+<span class="sd">Copyright (C) 2022  C-PAC Developers</span>
+
+<span class="sd">This file is part of C-PAC.</span>
+
+<span class="sd">C-PAC is free software: you can redistribute it and/or modify it under</span>
+<span class="sd">the terms of the GNU Lesser General Public License as published by the</span>
+<span class="sd">Free Software Foundation, either version 3 of the License, or (at your</span>
+<span class="sd">option) any later version.</span>
+
+<span class="sd">C-PAC is distributed in the hope that it will be useful, but WITHOUT</span>
+<span class="sd">ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or</span>
+<span class="sd">FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public</span>
+<span class="sd">License for more details.</span>
+
+<span class="sd">You should have received a copy of the GNU Lesser General Public</span>
+<span class="sd">License along with C-PAC. If not, see &lt;https://www.gnu.org/licenses/&gt;.&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
-
+<span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">exc_info</span> <span class="k">as</span> <span class="n">sys_exc_info</span>
+<span class="kn">from</span> <span class="nn">traceback</span> <span class="kn">import</span> <span class="n">print_exception</span>
 <span class="kn">from</span> <span class="nn">CPAC.utils.docs</span> <span class="kn">import</span> <span class="n">docstring_parameter</span>
 <span class="kn">from</span> <span class="nn">CPAC.utils.monitoring.config</span> <span class="kn">import</span> <span class="n">MOCK_LOGGERS</span>
+
+
+<span class="k">def</span> <span class="nf">failed_to_start</span><span class="p">(</span><span class="n">log_dir</span><span class="p">,</span> <span class="n">exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Launch a failed-to-start logger for a run that failed to start.</span>
+<span class="sd">    Must be called from within an ``except`` block.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    log_dir : str</span>
+<span class="sd">        path to logging directory</span>
+
+<span class="sd">    exception : Exception</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">set_up_logger</span><span class="p">(</span><span class="s1">&#39;failedToStart&#39;</span><span class="p">,</span> <span class="s1">&#39;failedToStart.log&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">,</span>
+                           <span class="n">log_dir</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;C-PAC failed to start&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="getLogger"><a class="viewcode-back" href="../../../../developer/logging#CPAC.utils.monitoring.custom_logging.getLogger">[docs]</a><span class="k">def</span> <span class="nf">getLogger</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>  <span class="c1"># pylint: disable=invalid-name</span>
@@ -68,15 +103,15 @@
 
 <span class="c1"># pylint: disable=too-few-public-methods</span>
 <span class="k">class</span> <span class="nc">MockHandler</span><span class="p">:</span>
-    <span class="sd">&#39;&#39;&#39;Handler for MockLogger.&#39;&#39;&#39;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">baseFilename</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">baseFilename</span> <span class="o">=</span> <span class="n">baseFilename</span>  <span class="c1"># pylint: disable=invalid-name</span>
+    <span class="sd">&quot;&quot;&quot;Handler for MockLogger.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseFilename</span> <span class="o">=</span> <span class="n">filename</span>  <span class="c1"># pylint: disable=invalid-name</span>
 
 
 <span class="c1"># pylint: disable=too-few-public-methods</span>
 <div class="viewcode-block" id="MockLogger"><a class="viewcode-back" href="../../../../developer/logging#CPAC.utils.monitoring.custom_logging.MockLogger">[docs]</a><span class="k">class</span> <span class="nc">MockLogger</span><span class="p">:</span>
-    <span class="sd">&#39;&#39;&#39;Mock logging.Logger to provide the same API without keeping the</span>
-<span class="sd">    logger in memory.&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;Mock logging.Logger to provide the same API without keeping the</span>
+<span class="sd">    logger in memory.&quot;&quot;&quot;</span>
 <div class="viewcode-block" id="MockLogger.__init__"><a class="viewcode-back" href="../../../../developer/logging#CPAC.utils.monitoring.custom_logging.MockLogger.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">log_dir</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">level</span>
@@ -86,26 +121,37 @@
             <span class="c1"># set up log methods for all built-in levels</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loglevel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_factory_log</span><span class="p">(</span><span class="n">loglevel</span><span class="p">))</span></div>
 
+<div class="viewcode-block" id="MockLogger.exception"><a class="viewcode-back" href="../../../../developer/logging#CPAC.utils.monitoring.custom_logging.MockLogger.exception">[docs]</a>    <span class="k">def</span> <span class="nf">exception</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># pylint: disable=missing-function-docstring,no-member</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="n">exc_info</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="n">exception</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="o">.</span><span class="vm">__doc__</span>
+
     <span class="k">def</span> <span class="nf">_factory_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Generate a log method like `self.log(message)` for a given</span>
 <span class="sd">        built-in level.&quot;&quot;&quot;</span>
         <span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">)</span>
-        <span class="k">def</span> <span class="nf">_log</span><span class="p">(</span><span class="n">message</span><span class="p">):</span>
-            <span class="sd">&quot;&quot;&quot;Log a message if logging level &gt;= {level}. See `Logging Levels &lt;https://docs.python.org/3/library/logging.html#levels&gt;`_ for a list of levels.&quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">_log</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">&gt;=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">level</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
                                                         <span class="n">logging</span><span class="o">.</span><span class="n">NOTSET</span><span class="p">):</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handlers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">baseFilename</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">log_file</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">log_file</span><span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">handlers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">baseFilename</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span>
+                          <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">log_file</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">exc_info</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">):</span>
+                        <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span> <span class="o">=</span> <span class="n">sys_exc_info</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]</span>
+                        <span class="n">print_exception</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">tb</span><span class="o">=</span><span class="n">traceback</span><span class="p">,</span>
+                                        <span class="n">file</span><span class="o">=</span><span class="n">log_file</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">log_file</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_log</span>
 
 <div class="viewcode-block" id="MockLogger.delete"><a class="viewcode-back" href="../../../../developer/logging#CPAC.utils.monitoring.custom_logging.MockLogger.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;Delete the mock logger from memory.&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;Delete the mock logger from memory.&quot;&quot;&quot;</span>
         <span class="k">del</span> <span class="n">MOCK_LOGGERS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span></div></div>
 
 
 <span class="k">def</span> <span class="nf">set_up_logger</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mock</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                   <span class="n">overwrite_existing</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&#39;&#39;&#39;Function to initialize a logger</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Function to initialize a logger</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -152,7 +198,7 @@
 <span class="sd">    &gt;&gt;&gt; lg.delete()</span>
 <span class="sd">    &gt;&gt;&gt; &#39;third_test&#39; in MOCK_LOGGERS</span>
 <span class="sd">    False</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">.log&#39;</span>
     <span class="k">try</span><span class="p">:</span>

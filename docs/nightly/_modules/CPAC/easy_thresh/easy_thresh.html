@@ -41,7 +41,11 @@
           <div class="body" role="main">
             
   <h1>Source code for CPAC.easy_thresh.easy_thresh</h1><div class="highlight"><pre>
-<span></span>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+
+<span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nib</span>
 <span class="kn">from</span> <span class="nn">CPAC.pipeline</span> <span class="kn">import</span> <span class="n">nipype_pipeline_engine</span> <span class="k">as</span> <span class="n">pe</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.fsl</span> <span class="k">as</span> <span class="nn">fsl</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
@@ -275,7 +279,7 @@
 <span class="c1">#    #defines the cluster cordinates</span>
 <span class="c1">#    cluster.inputs.out_localmax_txt_file = True</span>
 
-    <span class="n">cluster_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;import re&#39;</span><span class="p">,</span> <span class="s1">&#39;import subprocess as sb&#39;</span><span class="p">]</span>
+    <span class="n">cluster_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;import re&#39;</span><span class="p">,</span> <span class="s1">&#39;import subprocess&#39;</span><span class="p">]</span>
     <span class="n">cluster</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">,</span>
                                                     <span class="s1">&#39;volume&#39;</span><span class="p">,</span>
                                                     <span class="s1">&#39;dlh&#39;</span><span class="p">,</span>
@@ -322,7 +326,7 @@
 
     <span class="c1"># function mapnode to get the standard fsl brain image based on parameters</span>
     <span class="c1"># as FSLDIR,MNI and voxel size</span>
-    <span class="n">get_bg_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;from nibabel import load&#39;</span><span class="p">]</span>
+    <span class="n">get_bg_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;import nibabel as nib&#39;</span><span class="p">]</span>
     <span class="n">get_backgroundimage</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">,</span>
                                                                 <span class="s1">&#39;file_parameters&#39;</span><span class="p">],</span>
                                                    <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
@@ -394,7 +398,7 @@
 
 <span class="k">def</span> <span class="nf">call_cluster</span><span class="p">(</span><span class="n">in_file</span><span class="p">,</span> <span class="n">volume</span><span class="p">,</span> <span class="n">dlh</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">pthreshold</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
 
-    <span class="n">out_name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;z(\w)*stat(\d)+&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">in_file</span><span class="p">))</span>
+    <span class="n">out_name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;z(\w)*stat(\d)+&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">in_file</span><span class="p">))</span>
 
     <span class="n">filename</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">in_file</span><span class="p">))</span>
     <span class="n">ext</span><span class="o">=</span>  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">ext</span>
@@ -415,7 +419,7 @@
 
     <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">localmax_txt_file</span><span class="p">,</span><span class="s1">&#39;wb&#39;</span><span class="p">)</span>
 
-    <span class="n">cmd</span> <span class="o">=</span> <span class="n">sb</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span> <span class="n">cmd_path</span><span class="p">,</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span> <span class="n">cmd_path</span><span class="p">,</span>
                     <span class="s1">&#39;--dlh=&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dlh</span><span class="p">),</span>
                     <span class="s1">&#39;--in=&#39;</span> <span class="o">+</span> <span class="n">in_file</span><span class="p">,</span>
                     <span class="s1">&#39;--oindex=&#39;</span> <span class="o">+</span> <span class="n">index_file</span><span class="p">,</span>
@@ -494,7 +498,7 @@
 
     <span class="k">try</span><span class="p">:</span>
 
-        <span class="n">img</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">in_file</span><span class="p">)</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">nib</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">in_file</span><span class="p">)</span>
         <span class="n">hdr</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">get_header</span><span class="p">()</span>
         <span class="n">group_mm</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">hdr</span><span class="o">.</span><span class="n">get_zooms</span><span class="p">()[</span><span class="mi">2</span><span class="p">])</span>
         <span class="n">FSLDIR</span><span class="p">,</span> <span class="n">MNI</span> <span class="o">=</span> <span class="n">file_parameters</span>

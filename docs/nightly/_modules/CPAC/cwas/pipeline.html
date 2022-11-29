@@ -45,6 +45,7 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">CPAC.pipeline</span> <span class="kn">import</span> <span class="n">nipype_pipeline_engine</span> <span class="k">as</span> <span class="n">pe</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
+<span class="kn">from</span> <span class="nn">nipype</span> <span class="kn">import</span> <span class="n">config</span>
 
 <span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.function</span> <span class="kn">import</span> <span class="n">Function</span>
 
@@ -54,6 +55,7 @@
     <span class="n">create_cwas_batches</span><span class="p">,</span>
     <span class="n">merge_cwas_batches</span><span class="p">,</span>
     <span class="n">nifti_cwas</span><span class="p">,</span>
+    <span class="n">zstat_image</span><span class="p">,</span>
 <span class="p">)</span>
 
 
@@ -97,6 +99,8 @@
 <span class="sd">            Pseudo F values of CWAS</span>
 <span class="sd">        outputspec.p_map : string (nifti file)</span>
 <span class="sd">            Significance p values calculated from permutation tests</span>
+<span class="sd">        outputspec.z_map : string (nifti file)</span>
+<span class="sd">            Significance p values converted to z-scores </span>
 <span class="sd">            </span>
 <span class="sd">    CWAS Procedure:</span>
 <span class="sd">    </span>
@@ -126,10 +130,9 @@
 <span class="sd">    </span>
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
-<span class="sd">    .. [1] Shehzad Z, Kelly C, Reiss PT, Emerson JW, McMahon K, Copland DA, Castellanos FX, Milham MP. An Analytic Framework for Connectome-Wide Association Studies. Under Review.</span>
+<span class="sd">    .. [1] Shehzad Z, Kelly C, Reiss PT, Cameron Craddock R, Emerson JW, McMahon K, Copland DA, Castellanos FX, Milham MP. A multivariate distance-based analytic framework for connectome-wide association studies. Neuroimage. 2014 Jun;93 Pt 1(0 1):74-94. doi: 10.1016/j.neuroimage.2014.02.024. Epub 2014 Feb 28. PMID: 24583255; PMCID: PMC4138049.</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">if</span> <span class="ow">not</span> <span class="n">working_dir</span><span class="p">:</span>
         <span class="n">working_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;MDMR_work_dir&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">crash_dir</span><span class="p">:</span>
@@ -138,7 +141,8 @@
     <span class="n">workflow</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
     <span class="n">workflow</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">=</span> <span class="n">working_dir</span>
     <span class="n">workflow</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;execution&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;hash_method&#39;</span><span class="p">:</span> <span class="s1">&#39;timestamp&#39;</span><span class="p">,</span>
-                                    <span class="s1">&#39;crashdump_dir&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">crash_dir</span><span class="p">)}</span>
+                                    <span class="s1">&#39;crashdump_dir&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">crash_dir</span><span class="p">),</span> 
+                                    <span class="s1">&#39;crashfile_format&#39;</span><span class="p">:</span> <span class="s1">&#39;txt&#39;</span><span class="p">}</span>
 
     <span class="n">inputspec</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;roi&#39;</span><span class="p">,</span>
                                                        <span class="s1">&#39;subjects&#39;</span><span class="p">,</span>
@@ -146,12 +150,15 @@
                                                        <span class="s1">&#39;participant_column&#39;</span><span class="p">,</span>
                                                        <span class="s1">&#39;columns&#39;</span><span class="p">,</span>
                                                        <span class="s1">&#39;permutations&#39;</span><span class="p">,</span>
-                                                       <span class="s1">&#39;parallel_nodes&#39;</span><span class="p">]),</span>
+                                                       <span class="s1">&#39;parallel_nodes&#39;</span><span class="p">,</span>
+                                                       <span class="s1">&#39;z_score&#39;</span><span class="p">]),</span>
                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
 
     <span class="n">outputspec</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;F_map&#39;</span><span class="p">,</span>
                                                         <span class="s1">&#39;p_map&#39;</span><span class="p">,</span>
-                                                        <span class="s1">&#39;neglog_p_map&#39;</span><span class="p">]),</span>
+                                                        <span class="s1">&#39;neglog_p_map&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;one_p_map&#39;</span><span class="p">,</span>
+                                                        <span class="s1">&#39;z_map&#39;</span><span class="p">]),</span>
                          <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
 
     <span class="n">ccb</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mask_file&#39;</span><span class="p">,</span>
@@ -182,10 +189,14 @@
                     <span class="n">name</span><span class="o">=</span><span class="s1">&#39;joint_mask&#39;</span><span class="p">)</span>
 
     <span class="n">mcwasb</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cwas_batches&#39;</span><span class="p">,</span>
-                                           <span class="s1">&#39;mask_file&#39;</span><span class="p">],</span>
+                                           <span class="s1">&#39;mask_file&#39;</span><span class="p">,</span>
+                                           <span class="s1">&#39;z_score&#39;</span><span class="p">,</span>
+                                           <span class="s1">&#39;permutations&#39;</span><span class="p">],</span>
                               <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;F_file&#39;</span><span class="p">,</span>
                                             <span class="s1">&#39;p_file&#39;</span><span class="p">,</span>
-                                            <span class="s1">&#39;neglog_p_file&#39;</span><span class="p">],</span>
+                                            <span class="s1">&#39;neglog_p_file&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;one_p_file&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;z_file&#39;</span><span class="p">],</span>
                               <span class="n">function</span><span class="o">=</span><span class="n">merge_cwas_batches</span><span class="p">,</span>
                               <span class="n">as_module</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;cwas_volumes&#39;</span><span class="p">)</span>
@@ -224,10 +235,16 @@
                      <span class="n">mcwasb</span><span class="p">,</span> <span class="s1">&#39;cwas_batches&#39;</span><span class="p">)</span>
     <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">jmask</span><span class="p">,</span> <span class="s1">&#39;joint_mask&#39;</span><span class="p">,</span>
                      <span class="n">mcwasb</span><span class="p">,</span> <span class="s1">&#39;mask_file&#39;</span><span class="p">)</span>
+    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;z_score&#39;</span><span class="p">,</span>
+                     <span class="n">mcwasb</span><span class="p">,</span> <span class="s1">&#39;z_score&#39;</span><span class="p">)</span>
+    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputspec</span><span class="p">,</span> <span class="s1">&#39;permutations&#39;</span><span class="p">,</span>
+                     <span class="n">mcwasb</span><span class="p">,</span> <span class="s1">&#39;permutations&#39;</span><span class="p">)</span>
 
     <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">mcwasb</span><span class="p">,</span> <span class="s1">&#39;F_file&#39;</span><span class="p">,</span> <span class="n">outputspec</span><span class="p">,</span> <span class="s1">&#39;F_map&#39;</span><span class="p">)</span>
     <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">mcwasb</span><span class="p">,</span> <span class="s1">&#39;p_file&#39;</span><span class="p">,</span> <span class="n">outputspec</span><span class="p">,</span> <span class="s1">&#39;p_map&#39;</span><span class="p">)</span>
     <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">mcwasb</span><span class="p">,</span> <span class="s1">&#39;neglog_p_file&#39;</span><span class="p">,</span> <span class="n">outputspec</span><span class="p">,</span> <span class="s1">&#39;neglog_p_map&#39;</span><span class="p">)</span>
+    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">mcwasb</span><span class="p">,</span> <span class="s1">&#39;one_p_file&#39;</span><span class="p">,</span> <span class="n">outputspec</span><span class="p">,</span> <span class="s1">&#39;one_p_map&#39;</span><span class="p">)</span>
+    <span class="n">workflow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">mcwasb</span><span class="p">,</span> <span class="s1">&#39;z_file&#39;</span><span class="p">,</span> <span class="n">outputspec</span><span class="p">,</span> <span class="s1">&#39;z_map&#39;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">workflow</span></div>
 </pre></div>

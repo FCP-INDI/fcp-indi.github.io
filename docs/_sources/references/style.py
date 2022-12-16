@@ -120,6 +120,9 @@ class CPAC_DocsStyle(Style):
         ]
         return template
 
+    def get_inproceedings_template(self, entry):
+        return self.get_incollection_template(entry)
+
     def get_misc_template(self, e):
         template = toplevel[
             optional[sentence[self.format_names('author')]],
@@ -138,6 +141,26 @@ class CPAC_DocsStyle(Style):
             ]]],
             optional[self.format_doi(optional_field('doi')) if
                      e.fields.get('doi') else ''],
+            sentence[optional_field('note')],
+        ]
+        return template
+
+    def get_phdthesis_template(self, entry):
+        template = toplevel[optional[
+            sentence[self.format_names('author')]],
+            optional[sentence[date]],
+            optional[sentence[href[
+                field('url'),
+                self.format_title(entry, 'title')
+            ]]] if entry.fields.get('url') else optional[sentence[
+                self.format_title(entry, 'title')
+            ]],
+            optional[sentence[
+                join(sep=': ')[
+                    optional_field('address'),
+                    optional_field('school')
+                ],
+            ]],
             sentence[optional_field('note')],
         ]
         return template

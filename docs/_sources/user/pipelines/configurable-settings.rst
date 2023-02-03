@@ -3,7 +3,7 @@ Configurable Settings
 
 .. raw:: html
 
-    <a href="../_static/flowcharts/pipeline-individual.svg"><img src="../_static/flowcharts/pipeline-individual.svg" /></a>
+    <a href="../../_static/flowcharts/pipeline-individual.svg"><img src="../../_static/flowcharts/pipeline-individual.svg" /></a>
 
 .. toctree::
    :maxdepth: 1

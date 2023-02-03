@@ -3,7 +3,7 @@ Functional Preprocessing
 
 .. raw:: html
 
-    <div class="flowchart-container"><object data="../_static/flowcharts/functional.svg" type="image/svg+xml"></object></div>
+    <a href="../_static/flowcharts/functional.svg"><img src="../_static/flowcharts/functional.svg" /></a>
 
 Initial Preprocessing
 ^^^^^^^^^^^^^^^^^^^^^

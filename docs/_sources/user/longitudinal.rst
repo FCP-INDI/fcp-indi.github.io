@@ -3,7 +3,7 @@ Longitudinal Preprocessing
 
 .. raw:: html
 
-    <div class="flowchart-container"><object data="../_static/flowcharts/longitudinal.svg" type="image/svg+xml"></object></div>
+    <a href="../_static/flowcharts/longitudinal.svg"><img src="../_static/flowcharts/longitudinal.svg" /></a>
 
 Background
 ^^^^^^^^^^

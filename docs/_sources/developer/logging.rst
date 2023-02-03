@@ -5,7 +5,7 @@ Most C-PAC logging is handled by the built-in Python ``logging`` library. When l
 
 .. raw:: html
 
-    <div class="flowchart-container"><object data="../_static/flowcharts/getLogger.svg" type="image/svg+xml"></object></div>
+    <a href="../_static/flowcharts/getLogger.svg"><img src="../_static/flowcharts/getLogger.svg" /></a>
 
 
 each have their own intended use cases.

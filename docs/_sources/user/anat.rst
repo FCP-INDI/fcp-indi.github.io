@@ -3,7 +3,7 @@
 
 .. raw:: html
 
-    <div class="flowchart-container"><object data="../_static/flowcharts/anatomical.svg" type="image/svg+xml"></object></div>
+    <a href="../_static/flowcharts/anatomical.svg"><img src="../_static/flowcharts/anatomical.svg" /></a>
 
 Surface Analysis
 ^^^^^^^^^^^^^^^^
@@ -296,7 +296,7 @@ Anatomical Tissue Segmentation
 
 .. raw:: html
 
-    <div class="flowchart-container"><object data="../_static/flowcharts/segmentation.svg" type="image/svg+xml"></object></div>
+    <a href="../_static/flowcharts/segmentation.svg"><img src="../_static/flowcharts/segmentation.svg" /></a>
 
 C-PAC uses `FSL/FAST <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FAST>`_ to automatically segment brain images into white matter, gray matter, and CSF. This is done using probability maps that contain information about the likelihood that a given voxel will be of a particular tissue type. Users specify a probability threshold such that voxels meeting a minimum probability of being a particular tissue will be classified as such. This results in masks containing voxels of only a single tissue type.
 

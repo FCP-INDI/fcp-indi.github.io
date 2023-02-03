@@ -5,4 +5,4 @@ Our continous integration flow relies on GitHub Actions, GitHub Container Regist
 
 .. raw:: html
 
-    <div class="flowchart-container"><object data="../_static/flowcharts/CI-flow.svg" type="image/svg+xml"></object></div>
+    <a href="../_static/flowcharts/CI-flow.svg"><img src="../_static/flowcharts/CI-flow.svg" /></a>

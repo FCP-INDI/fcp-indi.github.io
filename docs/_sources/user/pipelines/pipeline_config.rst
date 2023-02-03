@@ -97,7 +97,7 @@ Configurable Settings
 
 .. raw:: html
 
-    <div class="flowchart-container"><object data="../_static/flowcharts/pipeline-individual.svg" type="image/svg+xml"></object></div>
+    <a href="../_static/flowcharts/pipeline-individual.svg"><img src="../_static/flowcharts/pipeline-individual.svg" /></a>
 
 Data Management and Environment Settings
 '''''''''''''''''''''''''''''''''''''''''

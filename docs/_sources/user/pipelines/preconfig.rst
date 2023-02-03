@@ -1,10 +1,6 @@
 ﻿Pre-configured Pipelines
 ========================
 
-.. contents::
-   :depth: 2
-   :local:
-
 human
 ^^^^^
 

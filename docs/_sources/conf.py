@@ -141,7 +141,6 @@ sys.path.insert(0, os.path.abspath('.'))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinxcontrib.bibtex',
-    'sphinxcontrib.fulltoc',
     'sphinx.ext.ifconfig',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
@@ -408,25 +407,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'classic'
-
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-html_theme_options = {
-    'relbarbgcolor': '#0067a0',
-    'sidebarbgcolor': '#f0f0f0',
-    'sidebartextcolor': '#000000',
-    'sidebarlinkcolor': '#0067a0',
-    'headbgcolor': '#919d9d',
-    'headtextcolor': '#e4e4e4'
-}
-
-# Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = ['../Themes']
-html_css_files = [
-    'custom.css',
-]
+html_theme = 'furo'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # '<project> v<release> documentation'.
@@ -458,13 +439,13 @@ html_static_path = ['_static']
 # html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-html_sidebars = {
-  '**': [
-    'localtoc.html',
-    # 'globaltoc.html',
-    'searchbox.html'
-  ]
- }
+#html_sidebars = {
+#  '**': [
+#    # 'localtoc.html',
+#    # 'globaltoc.html',
+#    'searchbox.html'
+#  ]
+# }
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.

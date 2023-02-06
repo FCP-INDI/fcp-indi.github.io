@@ -1,9 +1,12 @@
 ﻿Anatomical Preprocessing
 ------------------------
 
-.. raw:: html
+.. container:: svg-flowchart
 
-    <a href="../_static/flowcharts/anatomical.svg"><img src="../_static/flowcharts/anatomical.svg" /></a>
+    .. raw:: html
+        :file: ../_static/flowcharts/anatomical.svg
+
+    `Open image <../_static/flowcharts/anatomical.svg>`_
 
 Surface Analysis
 ^^^^^^^^^^^^^^^^
@@ -294,9 +297,12 @@ Configuring CPAC to Run Anatomical Registration
 Anatomical Tissue Segmentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. raw:: html
+.. container:: svg-flowchart
 
-    <a href="../_static/flowcharts/segmentation.svg"><img src="../_static/flowcharts/segmentation.svg" /></a>
+    .. raw:: html
+        :file: ../_static/flowcharts/segmentation.svg
+
+    `Open image <../_static/flowcharts/segmentation.svg>`_
 
 C-PAC uses `FSL/FAST <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FAST>`_ to automatically segment brain images into white matter, gray matter, and CSF. This is done using probability maps that contain information about the likelihood that a given voxel will be of a particular tissue type. Users specify a probability threshold such that voxels meeting a minimum probability of being a particular tissue will be classified as such. This results in masks containing voxels of only a single tissue type.
 

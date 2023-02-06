@@ -3,9 +3,12 @@ Logging
 
 Most C-PAC logging is handled by the built-in Python ``logging`` library. When logging, take care to choose an appropriate ``getLogger`` function or method. While :py:func:`CPAC.utils.monitoring.custom_logging.getLogger` and ``nipype.utils.logger.Logging.getLogger`` each fall back on ``logging.getLogger``,
 
-.. raw:: html
+.. container:: svg-flowchart
 
-    <a href="../_static/flowcharts/getLogger.svg"><img src="../_static/flowcharts/getLogger.svg" /></a>
+    .. raw:: html
+        :file: ../_static/flowcharts/getLogger.svg
+
+    `Open image <../_static/flowcharts/getLogger.svg>`_
 
 
 each have their own intended use cases.

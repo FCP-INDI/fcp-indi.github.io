@@ -95,9 +95,12 @@ You may notice as you learn about the settings for various outputs that many of 
 Configurable Settings
 ------------------------------
 
-.. raw:: html
+.. container:: svg-flowchart
 
-    <a href="../../_static/flowcharts/pipeline-individual.svg"><img src="../../_static/flowcharts/pipeline-individual.svg" /></a>
+    .. raw:: html
+        :file: ../../_static/flowcharts/pipeline-individual.svg
+
+    `Open image <../../_static/flowcharts/pipeline-individual.svg>`_
 
 Data Management and Environment Settings
 '''''''''''''''''''''''''''''''''''''''''

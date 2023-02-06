@@ -1,9 +1,12 @@
 Functional Preprocessing
 -------------------------
 
-.. raw:: html
+.. container:: svg-flowchart
 
-    <a href="../_static/flowcharts/functional.svg"><img src="../_static/flowcharts/functional.svg" /></a>
+    .. raw:: html
+        :file: ../_static/flowcharts/functional.svg
+
+    `Open image <../_static/flowcharts/functional.svg>`_
 
 Initial Preprocessing
 ^^^^^^^^^^^^^^^^^^^^^

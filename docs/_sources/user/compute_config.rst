@@ -13,9 +13,12 @@ Computer Settings
 
 #. **Observed Usage:** The resource usage of each node depends on many factors, including the data, the pipeline configuration, and the system. To run many subjects with optimimzed resource estimation, first run a single subject with the desired number of cores and with a generous memory limit. Then, provide the ``callback.log`` generated from that initial run when you run the rest of the subjects.
 
-    .. raw:: html
+    .. container:: svg-flowchart
 
-        <object data="../_static/flowcharts/observed-usage.svg" type="image/svg+xml"></object>
+        .. raw:: html
+            :file: ../_static/flowcharts/observed-usage.svg
+
+        `Open image <../_static/flowcharts/observed-usage.svg`_
 
     #. **Callback log - [text]:** The path to a callback log file from a previous run, including any resource-management parameters that will be applied in this run, like ``n_cpus`` and ``num_ants_threads``. This file is used override memory estimates with previously observed memory usage. Can be overridden with the commandline flag ``--runtime_usage``.
     #. **Buffer - [percent]:** A percent of the previously observed memory usage that is to be added to the memory estimate. Default: 10. Can be overridden with the commandline flag ``--runtime_buffer``.

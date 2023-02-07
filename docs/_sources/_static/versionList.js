@@ -27,6 +27,7 @@ function versionDropdown() {
   const navTitles = document.querySelectorAll(".brand,.sidebar-brand-text");
   createDropdown(here).then(dropdown => {
     for (let item of navTitles) {
+      item.parentElement.removeAttribute("href");
       let newTitle = document.createElement("div");
       let newTitlePrefix = document.createElement("a");
       newTitlePrefix.setAttribute("href", dochome);

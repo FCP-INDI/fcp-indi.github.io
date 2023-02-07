@@ -435,6 +435,8 @@ html_static_path = ['_static']
 html_css_files = [
     'custom.css',
 ]
+html_js_files = [
+    ('versionList.js', {'defer': 'defer'})]
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.

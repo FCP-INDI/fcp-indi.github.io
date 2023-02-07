@@ -171,7 +171,7 @@ suppress_warnings = ['autosectionlabel.*']
 
 # General information about the project.
 project = 'C-PAC'
-copyright = '2012‒2022, C-PAC Developers. C-PAC is licensed under LGPL-3' \
+copyright = '2012‒2023, C-PAC Developers. C-PAC is licensed under LGPL-3' \
             '.0-or-later'
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -435,6 +435,8 @@ html_static_path = ['_static']
 html_css_files = [
     'custom.css',
 ]
+html_js_files = [
+    ('versionList.js', {'defer': 'defer'})]
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.

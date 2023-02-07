@@ -24,9 +24,10 @@ function createDropdown(here) {
 function versionDropdown() {
   const here = window.location.href;
   const dochome = "https://" + here.split('/').slice(2, 5).join('/');
-  const navTitles = document.getElementsByClassName("nav-item-0");
+  const navTitles = document.querySelectorAll(".brand,.sidebar-brand-text");
   createDropdown(here).then(dropdown => {
     for (let item of navTitles) {
+      item.parentElement.removeAttribute("href");
       let newTitle = document.createElement("div");
       let newTitlePrefix = document.createElement("a");
       newTitlePrefix.setAttribute("href", dochome);

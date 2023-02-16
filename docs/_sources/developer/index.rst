@@ -17,6 +17,7 @@ Contents:
 
    installation
    pipeline
+   templates
    nodes
    random_state
    logging

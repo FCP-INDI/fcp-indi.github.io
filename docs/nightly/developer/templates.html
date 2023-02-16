@@ -1,0 +1,241 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Templates and Atlases &#8212; C-PAC 1.8.5.dev1 Beta documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex" />
+    <link rel="search" title="Search" href="../search" />
+    <link rel="next" title="Nodes" href="nodes" />
+    <link rel="prev" title="Pipeline Development" href="pipeline" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="nodes" title="Nodes"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pipeline" title="Pipeline Development"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.5.dev1 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index" accesskey="U">Developer Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Templates and Atlases</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="templates-and-atlases">
+<h1>Templates and Atlases<a class="headerlink" href="#templates-and-atlases" title="Permalink to this headline">¶</a></h1>
+<p>Templates and altases included in the C-PAC Docker and Singularity images are maintained in a separate repository: <a class="reference external" href="https://github.com/FCP-INDI/C-PAC_templates">FCP-INDI/C-PAC_templates</a> and packaged in a <a class="reference external" href="https://github.com/FCP-INDI/C-PAC_templates/pkgs/container/c-pac_templates"><code class="docutils literal notranslate"><span class="pre">c-pac_templates</span></code> staging image</a>.</p>
+<section id="adding-a-template-or-atlas-to-be-packaged-in-c-pac">
+<h2>Adding a template or atlas to be packaged in C-PAC<a class="headerlink" href="#adding-a-template-or-atlas-to-be-packaged-in-c-pac" title="Permalink to this headline">¶</a></h2>
+<p>In a branch:</p>
+<ol class="arabic">
+<li><p>For the new file(s), fill in as much of the appropriate table(s) in <a class="reference external" href="https://github.com/FCP-INDI/C-PAC_templates/blob/main/README.md"><code class="docutils literal notranslate"><span class="pre">README.md</span></code></a> as you can. If no appropriate table exists in the <code class="docutils literal notranslate"><span class="pre">README</span></code>, add one.</p></li>
+<li><p>If you had add a new table to the <code class="docutils literal notranslate"><span class="pre">README</span></code>, add a matching subdirectory under <a class="reference external" href="https://github.com/FCP-INDI/C-PAC_templates/tree/main/atlases/label"><code class="docutils literal notranslate"><span class="pre">atlases/label</span></code></a>.</p></li>
+<li><p>Rename your file(s) to begin with the “Atlas name” you used in the <code class="docutils literal notranslate"><span class="pre">README</span></code> table, and use BIDS standard template identifiers <span id="id1">[<a class="reference internal" href="#id6" title="BIDS-contributors. 2022. Appendix VIII: Coordinate systems § standard template identifiers. The Brain Imaging Data Structure (BIDS) Specification, 1.7.0">1</a>]</span> to identify the atlas/template’s space if possible.</p></li>
+<li><p>Add your file(s).</p>
+<ul>
+<li><p>If your file(s) are available from a reliable source,</p>
+<ol class="arabic">
+<li><p>If they’re available in a reliable, web-accessible Docker image, <a class="reference external" href="https://docs.docker.com/develop/develop-images/multistage-build/">use that image as a staging image</a> and <code class="docutils literal notranslate"><span class="pre">COPY</span></code> the files directly from , e.g.</p>
+<div class="highlight-Dockerfile notranslate"><div class="highlight"><pre><span></span><span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>ghcr.io/fcp-indi/c-pac/neuroparc:v1.0-human<span class="w"> </span>/ndmg_atlases<span class="w"> </span>/ndmg_atlases
+</pre></div>
+</div>
+</li>
+<li><p>If they’re avilable in a GitHub repository,</p>
+<ol class="arabic">
+<li><p>Clone into the <code class="docutils literal notranslate"><span class="pre">GitHubPipelines</span></code> staging image, <a class="reference external" href="https://github.com/FCP-INDI/C-PAC_templates/blob/9b33a4f1/.github/Dockerfiles/cpac_templates.Dockerfile#L6-L19">e.g.</a>,</p>
+<div class="highlight-Dockerfile notranslate"><div class="highlight"><pre><span></span>RUN git clone --branch v0.1.1 --depth 1 https://github.com/DCAN-Labs/dcan-macaque-pipeline.git &amp;&amp; \
+    git clone --branch v0.22.6-Edit_KRR_LITE_to_only_allow_for_corr_kernel https://github.com/ThomasYeoLab/CBIG.git &amp;&amp; \
+</pre></div>
+</div>
+</li>
+<li><p>Copy or move relevant files to a directory that does not contain any unnecessary files, <a class="reference external" href="https://github.com/FCP-INDI/C-PAC_templates/blob/9b33a4f1/.github/Dockerfiles/cpac_templates.Dockerfile#L7-L25">e.g.</a></p>
+<div class="highlight-Dockerfile notranslate"><div class="highlight"><pre><span></span><span class="w">    </span>#<span class="w"> </span>Washington<span class="w"> </span>University<span class="w"> </span>NHP<span class="w"> </span>Pipelines
+<span class="w">    </span><span class="nb">cd</span><span class="w"> </span>dcan-macaque-pipeline/global/templates<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/macaque_templates<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span>FILE<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">$(</span>ls<span class="w"> </span>MacaqueYerkes19*mm.nii.gz<span class="w"> </span>MacaqueYerkes19*mm_brain.nii.gz<span class="w"> </span>MacaqueYerkes19*brain_mask.nii.gz<span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="k">do</span><span class="w"> </span>cp<span class="w"> </span><span class="nv">$FILE</span><span class="w"> </span>/macaque_templates/<span class="nv">$FILE</span><span class="p">;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="k">done</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span>FILE<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">$(</span>ls<span class="w"> </span>JointLabelCouncil/MacaqueYerkes19_T1w_0.5mm/<span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="k">do</span><span class="w"> </span>cp<span class="w"> </span>JointLabelCouncil/MacaqueYerkes19_T1w_0.5mm/<span class="nv">$FILE</span><span class="w"> </span>/macaque_templates/MacaqueYerkes19_T1w_0.5mm_desc-JLC_<span class="nv">$FILE</span><span class="p">;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="k">done</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span>FILE<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="k">$(</span>ls<span class="w"> </span>JointLabelCouncil/J_Macaque_11mo_atlas_nACQ_194x252x160space_0.5mm/<span class="k">)</span><span class="p">;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="k">do</span><span class="w"> </span>cp<span class="w"> </span>JointLabelCouncil/J_Macaque_11mo_atlas_nACQ_194x252x160space_0.5mm/<span class="nv">$FILE</span><span class="w"> </span>/macaque_templates/J_Macaque_11mo_atlas_nACQ_194x252x160space_0.5mm_desc-JLC_<span class="nv">$FILE</span><span class="p">;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="k">done</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>#<span class="w"> </span>CBIG
+<span class="w">    </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/atlases/label/human<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span>NODECOUNT<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">200</span><span class="w"> </span><span class="m">300</span><span class="w"> </span><span class="m">400</span><span class="w"> </span><span class="m">1000</span><span class="p">;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="k">do</span><span class="w"> </span><span class="se">\</span>
+<span class="w">      </span>cp<span class="w"> </span>CBIG/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/MNI/Schaefer2018_<span class="si">${</span><span class="nv">NODECOUNT</span><span class="si">}</span>Parcels_17Networks_order_FSLMNI152_2mm.nii.gz<span class="w"> </span>/atlases/label/human/Schaefer2018_space-FSLMNI152_res-2mm_desc-<span class="si">${</span><span class="nv">NODECOUNT</span><span class="si">}</span>Parcels17NetworksOrder.nii.gz<span class="p">;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="k">done</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li><p>Otherwise, your file(s) to the appropriate subdirectory of <a class="reference external" href="https://github.com/FCP-INDI/C-PAC_templates/tree/main/atlases/label"><code class="docutils literal notranslate"><span class="pre">atlases/label</span></code></a> in your branch.</p></li>
+</ul>
+</li>
+<li><p>If adding to a directory not already being copied from the <code class="docutils literal notranslate"><span class="pre">GitHubPipelines</span></code> staging image to the final templates image, add a <code class="docutils literal notranslate"><span class="pre">COPY</span></code> command to copy the files over, <a class="reference external" href="https://github.com/FCP-INDI/C-PAC_templates/blob/9b33a4f1/.github/Dockerfiles/cpac_templates.Dockerfile#L39-L40">e.g.</a>,</p>
+<div class="highlight-Dockerfile notranslate"><div class="highlight"><pre><span></span><span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>GitHubPipelines<span class="w"> </span>/macaque_templates/*<span class="w"> </span>/cpac_templates/
+<span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>GitHubPipelines<span class="w"> </span>/atlases/label/human/*<span class="w"> </span>/cpac_templates/
+</pre></div>
+</div>
+</li>
+</ol>
+<section id="if-your-template-or-atlas-is-in-a-different-path">
+<h3>If your template or atlas is in a different path<a class="headerlink" href="#if-your-template-or-atlas-is-in-a-different-path" title="Permalink to this headline">¶</a></h3>
+<p>If you’re adding your template or atlas to the <a class="reference external" href="https://github.com/FCP-INDI/C-PAC_templates/pkgs/container/c-pac_templates"><code class="docutils literal notranslate"><span class="pre">c-pac_templates</span></code> staging image</a> in a location other than <code class="docutils literal notranslate"><span class="pre">/cpac_templates/</span></code>, update both the <a class="reference external" href="https://github.com/FCP-INDI/C-PAC/blob/6ab438f7/.github/Dockerfiles/Ubuntu.bionic-non-free.Dockerfile#L153-L156">Bionic Beaver staging image</a> and the <a class="reference external" href="https://github.com/FCP-INDI/C-PAC/blob/6ab438f752de1de764378ffc73a423cfa36c4b44/.github/Dockerfiles/Ubuntu.xenial-20200114.Dockerfile#L163-L166">Xenial Xerus staging image</a> to <code class="docutils literal notranslate"><span class="pre">COPY</span></code> your files from the <a class="reference external" href="https://github.com/FCP-INDI/C-PAC_templates/pkgs/container/c-pac_templates"><code class="docutils literal notranslate"><span class="pre">c-pac_templates</span></code> staging image</a> to each Ubuntu staging image, e.g.,</p>
+<blockquote>
+<div><div class="highlight-Dockerfile notranslate"><div class="highlight"><pre><span></span><span class="c"># Installing surface files for downsampling</span>
+<span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>c-pac_templates<span class="w"> </span>/opt/dcan-tools/pipeline/global/templates/standard_mesh_atlases/<span class="w"> </span>/opt/dcan-tools/pipeline/global/templates/standard_mesh_atlases/
+<span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>c-pac_templates<span class="w"> </span>/opt/dcan-tools/pipeline/global/templates/28224_Greyordinates/<span class="w"> </span>/opt/dcan-tools/pipeline/global/templates/28224_Greyordinates/
+<span class="k">COPY</span><span class="w"> </span>--from<span class="o">=</span>c-pac_templates<span class="w"> </span>/opt/dcan-tools/pipeline/global/templates/8617_Greyordinates/<span class="w"> </span>/opt/dcan-tools/pipeline/global/templates/8617_Greyordinates/
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="testing-your-updates">
+<h3>Testing your updates<a class="headerlink" href="#testing-your-updates" title="Permalink to this headline">¶</a></h3>
+<p>You can use <a class="reference external" href="https://github.com/FCP-INDI/C-PAC_templates/blob/main/.github/Dockerfiles/cpac_templates.Dockerfile">.github/Dockerfiles/cpac_templates.Dockerfile</a> to build a custom <a class="reference external" href="https://github.com/FCP-INDI/C-PAC_templates/pkgs/container/c-pac_templates"><code class="docutils literal notranslate"><span class="pre">c-pac_templates</span></code> staging image</a>, e.g.,</p>
+<div class="highlight-BASH notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>cpac_templates:custom<span class="w"> </span>-f<span class="w"> </span>.github/Dockerfiles/cpac_templates.Dockerfile<span class="w"> </span>.<span class="w">  </span><span class="c1"># &lt;-- run in your modified fork or branch of FCP-INDI/C-PAC_templates</span>
+docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-dit<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--name<span class="o">=</span>CPACTemplates<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span>cpac_templates:/cpac_templates<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>ghcr.io/fcp-indi/c-pac_templates:latest<span class="w">  </span><span class="c1"># &lt;-- Start a daemon image with your custom templates</span>
+docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--volumes-from<span class="w"> </span>CPACTemplates<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>fcpindi/c-pac:nightly<span class="w"> </span><span class="nv">$BIDS_DIR</span><span class="w"> </span><span class="nv">$OUTPUTS_DIR</span><span class="w"> </span>participant<span class="w">  </span><span class="c1"># &lt;-- Use C-PAC as usual, but bind the custom /cpac_templates</span>
+docker<span class="w"> </span>attach<span class="w"> </span>CPACTemplates<span class="w">  </span><span class="c1"># &lt;-- Clean up when you&#39;re done</span>
+<span class="nb">exit</span><span class="w">                         </span><span class="c1"># &lt;-- Clean up when you&#39;re done</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When you use <code class="docutils literal notranslate"><span class="pre">--volumes-from</span></code> to bind a directory that already exists in the image, the container will only be able to see the content from the bound daemon container, not any of the files in the original image. You can bind specific files instead of their parent directories to make files from the bound daemon container available in an existing directory in a container.</p>
+</div>
+<p>Once your changes have been merged to <a class="reference external" href="https://github.com/FCP-INDI/C-PAC_templates/tree/main"><code class="docutils literal notranslate"><span class="pre">main</span></code></a>, C-PAC will include them in each subsequent build.</p>
+</section>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<div class="docutils container" id="id4">
+<dl class="citation">
+<dt class="label" id="id6"><span class="brackets">1</span></dt>
+<dd><p>BIDS-contributors. 2022. <a class="reference external" href="https://bids-specification.readthedocs.io/en/v1.7.0/99-appendices/08-coordinate-systems.html#standard-template-identifiers">Appendix VIII: Coordinate systems § standard template identifiers.</a> <em>The Brain Imaging Data Structure (BIDS) Specification, 1.7.0</em></p>
+</dd>
+</dl>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index">
+              <img class="logo" src="../_static/cpac_logo_vertical.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index">Table of Contents</a></h3>
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../user/index">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index">Developer Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation">Installing CPAC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pipeline">Pipeline Development</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Templates and Atlases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nodes">Nodes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="random_state">Random State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflow_documentation">Workflow Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows/index">Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows/index#indices-and-tables">Indices and tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xcpqc">eXtensible Connectivity Pipeline-style quality control files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing">Testing CPAC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="continuous_integration">Continuous Integration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license">License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="nodes" title="Nodes"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pipeline" title="Pipeline Development"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index">C-PAC 1.8.5.dev1 Beta documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index" >Developer Documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Templates and Atlases</a></li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2012‒2022, C-PAC Developers. C-PAC is licensed under LGPL-3.0-or-later.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.0.0.
+    </div>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-19224662-10"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-19224662-10');
+    </script>
+    <script defer src="https://fcp-indi.github.io/scripts/versionList.js"></script>
+
+  </body>
+</html>

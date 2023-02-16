@@ -41,7 +41,48 @@
           <div class="body" role="main">
             
   <h1>Source code for CPAC.utils.monitoring.draw_gantt_chart</h1><div class="highlight"><pre>
-<span></span><span class="sd">&#39;&#39;&#39;Module to draw an html gantt chart from logfile produced by</span>
+<span></span><span class="c1"># STATEMENT OF CHANGES:</span>
+<span class="c1">#     This file is derived from sources licensed under the Apache-2.0 terms,</span>
+<span class="c1">#     and this file has been changed.</span>
+
+<span class="c1"># CHANGES:</span>
+<span class="c1">#     * Resolves bugs preventing the original from generating the chart</span>
+<span class="c1">#     * Handles when chart-drawing is called but no nodes were run (all cached)</span>
+
+<span class="c1"># ORIGINAL WORK&#39;S ATTRIBUTION NOTICE:</span>
+<span class="c1">#     Copyright (c) 2015-2019, Nipype developers</span>
+
+<span class="c1">#     Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1">#     you may not use this file except in compliance with the License.</span>
+<span class="c1">#     You may obtain a copy of the License at</span>
+
+<span class="c1">#         http://www.apache.org/licenses/LICENSE-2.0</span>
+
+<span class="c1">#     Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1">#     distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1">#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1">#     See the License for the specific language governing permissions and</span>
+<span class="c1">#     limitations under the License.</span>
+
+<span class="c1">#     Prior to release 0.12, Nipype was licensed under a BSD license.</span>
+
+<span class="c1"># Modifications Copyright (C) 2021-2023 C-PAC Developers</span>
+
+<span class="c1"># This file is part of C-PAC.</span>
+
+<span class="c1"># C-PAC is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU Lesser General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or (at your</span>
+<span class="c1"># option) any later version.</span>
+
+<span class="c1"># C-PAC is distributed in the hope that it will be useful, but WITHOUT</span>
+<span class="c1"># ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or</span>
+<span class="c1"># FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public</span>
+<span class="c1"># License for more details.</span>
+
+<span class="c1"># You should have received a copy of the GNU Lesser General Public</span>
+<span class="c1"># License along with C-PAC. If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="sd">&#39;&#39;&#39;Module to draw an html gantt chart from logfile produced by</span>
 <span class="sd">``CPAC.utils.monitoring.log_nodes_cb()``.</span>
 
 <span class="sd">See https://nipype.readthedocs.io/en/latest/api/generated/nipype.utils.draw_gantt_chart.html</span>
@@ -401,7 +442,11 @@
 
     <span class="c1"># Only include nodes with timing information, and covert timestamps</span>
     <span class="c1"># from strings to datetimes</span>
-    <span class="n">nodes_list</span> <span class="o">=</span> <span class="n">_timing</span><span class="p">(</span><span class="n">nodes_list</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">nodes_list</span> <span class="o">=</span> <span class="n">_timing</span><span class="p">(</span><span class="n">nodes_list</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ProcessLookupError</span><span class="p">:</span>
+        <span class="n">warn</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="ne">ProcessLookupError</span><span class="p">))</span>
+        <span class="n">nodes_list</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">nodes_list</span><span class="p">:</span>
         <span class="k">return</span>
@@ -648,6 +693,8 @@
 <span class="sd">    -------</span>
 <span class="sd">    dict</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ProcessLookupError</span><span class="p">(</span><span class="s1">&#39;No logged nodes have timing information.&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%S.</span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">if</span>
             <span class="s1">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">v</span> <span class="k">else</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">if</span>
             <span class="n">k</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;finish&quot;</span><span class="p">}</span> <span class="k">else</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>

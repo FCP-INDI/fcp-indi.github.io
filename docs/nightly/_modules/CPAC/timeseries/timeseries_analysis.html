@@ -41,7 +41,23 @@
           <div class="body" role="main">
             
   <h1>Source code for CPAC.timeseries.timeseries_analysis</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
+<span></span><span class="c1"># Copyright (C) 2012-2023  C-PAC Developers</span>
+
+<span class="c1"># This file is part of C-PAC.</span>
+
+<span class="c1"># C-PAC is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU Lesser General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or (at your</span>
+<span class="c1"># option) any later version.</span>
+
+<span class="c1"># C-PAC is distributed in the hope that it will be useful, but WITHOUT</span>
+<span class="c1"># ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or</span>
+<span class="c1"># FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public</span>
+<span class="c1"># License for more details.</span>
+
+<span class="c1"># You should have received a copy of the GNU Lesser General Public</span>
+<span class="c1"># License along with C-PAC. If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="kn">import</span> <span class="n">afni</span><span class="p">,</span> <span class="n">fsl</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces.utility</span> <span class="kn">import</span> <span class="n">Function</span>
 
@@ -802,6 +818,21 @@
     <span class="k">return</span> <span class="n">out_list</span></div>
 
 
+<span class="k">def</span> <span class="nf">resample_function</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="s1">&#39;Function&#39;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a Function interface for</span>
+<span class="sd">    `CPAC.utils.datasource.resample_func_roi`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Function</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_func&#39;</span><span class="p">,</span> <span class="s1">&#39;in_roi&#39;</span><span class="p">,</span> <span class="s1">&#39;realignment&#39;</span><span class="p">,</span>
+                                 <span class="s1">&#39;identity_matrix&#39;</span><span class="p">],</span>
+                    <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_func&#39;</span><span class="p">,</span> <span class="s1">&#39;out_roi&#39;</span><span class="p">],</span>
+                    <span class="n">function</span><span class="o">=</span><span class="n">resample_func_roi</span><span class="p">,</span> <span class="n">as_module</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
 <span class="k">def</span> <span class="nf">timeseries_extraction_AVG</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    {&quot;name&quot;: &quot;timeseries_extraction_AVG&quot;,</span>
@@ -809,28 +840,21 @@
 <span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
 <span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
 <span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;space-template_desc-preproc_bold&quot;],</span>
+<span class="sd">     &quot;inputs&quot;: [&quot;space-template_desc-preproc_bold&quot;,</span>
+<span class="sd">                &quot;space-template_desc-brain_mask&quot;],</span>
 <span class="sd">     &quot;outputs&quot;: [&quot;space-template_desc-Mean_timeseries&quot;,</span>
-<span class="sd">                 &quot;space-template_space-template_desc-ndmg_correlations&quot;,</span>
+<span class="sd">                 &quot;space-template_desc-ndmg_correlations&quot;,</span>
 <span class="sd">                 &quot;atlas_name&quot;,</span>
 <span class="sd">                 &quot;space-template_desc-PearsonAfni_correlations&quot;,</span>
 <span class="sd">                 &quot;space-template_desc-PartialAfni_correlations&quot;,</span>
 <span class="sd">                 &quot;space-template_desc-PearsonNilearn_correlations&quot;,</span>
 <span class="sd">                 &quot;space-template_desc-PartialNilearn_correlations&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">resample_functional_roi</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_func&#39;</span><span class="p">,</span>
-                                                            <span class="s1">&#39;in_roi&#39;</span><span class="p">,</span>
-                                                            <span class="s1">&#39;realignment&#39;</span><span class="p">,</span>
-                                                            <span class="s1">&#39;identity_matrix&#39;</span><span class="p">],</span>
-                                               <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_func&#39;</span><span class="p">,</span>
-                                                             <span class="s1">&#39;out_roi&#39;</span><span class="p">],</span>
-                                               <span class="n">function</span><span class="o">=</span><span class="n">resample_func_roi</span><span class="p">,</span>
-                                               <span class="n">as_module</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-                                      <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;resample_functional_roi_&#39;</span>
+    <span class="n">resample_functional_roi</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">resample_function</span><span class="p">(),</span>
+                                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;resample_functional_roi_&#39;</span>
                                            <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-    <span class="n">resample_functional_roi</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">realignment</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">timeseries_extraction</span><span class="p">[</span>
-        <span class="s1">&#39;realignment&#39;</span><span class="p">]</span>
+    <span class="n">realignment</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">timeseries_extraction</span><span class="p">[</span><span class="s1">&#39;realignment&#39;</span><span class="p">]</span>
+    <span class="n">resample_functional_roi</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">realignment</span> <span class="o">=</span> <span class="n">realignment</span>
     <span class="n">resample_functional_roi</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">identity_matrix</span> <span class="o">=</span> \
     <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span><span class="s1">&#39;functional_registration&#39;</span><span class="p">][</span>
         <span class="s1">&#39;func_registration_to_template&#39;</span><span class="p">][</span><span class="s1">&#39;FNIRT_pipelines&#39;</span><span class="p">][</span><span class="s1">&#39;identity_matrix&#39;</span><span class="p">]</span>
@@ -885,9 +909,26 @@
                     <span class="n">pipe_num</span><span class="o">=</span><span class="n">pipe_num</span>
                 <span class="p">)</span>
                 <span class="n">brain_mask_node</span><span class="p">,</span> <span class="n">brain_mask_out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">([</span>
-                    <span class="s1">&#39;space-template_desc-preproc_bold&#39;</span><span class="p">])</span>
-                <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">brain_mask_node</span><span class="p">,</span> <span class="n">brain_mask_out</span><span class="p">,</span>
-                           <span class="n">timeseries_correlation</span><span class="p">,</span> <span class="s1">&#39;inputspec.mask&#39;</span><span class="p">)</span>
+                    <span class="s1">&#39;space-template_desc-brain_mask&#39;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="s1">&#39;func_to_ROI&#39;</span> <span class="ow">in</span> <span class="n">realignment</span><span class="p">:</span>
+                    <span class="n">resample_brain_mask_roi</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
+                        <span class="n">resample_function</span><span class="p">(),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;resample_brain_mask_roi_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="n">resample_brain_mask_roi</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">realignment</span> <span class="o">=</span> <span class="n">realignment</span>
+                    <span class="n">resample_brain_mask_roi</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">identity_matrix</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">cfg</span><span class="o">.</span><span class="n">registration_workflows</span><span class="p">[</span><span class="s1">&#39;functional_registration&#39;</span><span class="p">][</span>
+                            <span class="s1">&#39;func_registration_to_template&#39;</span>
+                        <span class="p">][</span><span class="s1">&#39;FNIRT_pipelines&#39;</span><span class="p">][</span><span class="s1">&#39;identity_matrix&#39;</span><span class="p">])</span>
+                    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">([</span>
+                        <span class="p">(</span><span class="n">brain_mask_node</span><span class="p">,</span> <span class="n">resample_brain_mask_roi</span><span class="p">,</span> <span class="p">[</span>
+                            <span class="p">(</span><span class="n">brain_mask_out</span><span class="p">,</span> <span class="s1">&#39;in_func&#39;</span><span class="p">)]),</span>
+                        <span class="p">(</span><span class="n">roi_dataflow</span><span class="p">,</span> <span class="n">resample_brain_mask_roi</span><span class="p">,</span> <span class="p">[</span>
+                            <span class="p">(</span><span class="s1">&#39;outputspec.out_file&#39;</span><span class="p">,</span> <span class="s1">&#39;in_roi&#39;</span><span class="p">)]),</span>
+                        <span class="p">(</span><span class="n">resample_brain_mask_roi</span><span class="p">,</span> <span class="n">timeseries_correlation</span><span class="p">,</span> <span class="p">[</span>
+                            <span class="p">(</span><span class="s1">&#39;out_func&#39;</span><span class="p">,</span> <span class="s1">&#39;inputspec.mask&#39;</span><span class="p">)])])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">brain_mask_node</span><span class="p">,</span> <span class="n">brain_mask_out</span><span class="p">,</span>
+                               <span class="n">timeseries_correlation</span><span class="p">,</span> <span class="s1">&#39;inputspec.mask&#39;</span><span class="p">)</span>
 
             <span class="n">timeseries_correlation</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">inputspec</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">cm_measure</span>
             <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">([</span>
@@ -927,7 +968,7 @@
 
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">roi_timeseries</span><span class="p">,</span> <span class="s1">&#39;outputspec.roi_ts&#39;</span><span class="p">,</span> <span class="n">ndmg_graph</span><span class="p">,</span> <span class="s1">&#39;ts&#39;</span><span class="p">)</span>
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">roi_dataflow</span><span class="p">,</span> <span class="s1">&#39;outputspec.out_file&#39;</span><span class="p">,</span> <span class="n">ndmg_graph</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">)</span>
-        <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;space-template_space-template_desc-ndmg_correlations&#39;</span>
+        <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;space-template_desc-ndmg_correlations&#39;</span>
                 <span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ndmg_graph</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
@@ -945,15 +986,8 @@
 <span class="sd">                 &quot;atlas_name&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="n">resample_functional_to_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_func&#39;</span><span class="p">,</span>
-                                                                <span class="s1">&#39;in_roi&#39;</span><span class="p">,</span>
-                                                                <span class="s1">&#39;realignment&#39;</span><span class="p">,</span>
-                                                                <span class="s1">&#39;identity_matrix&#39;</span><span class="p">],</span>
-                                                   <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_func&#39;</span><span class="p">,</span>
-                                                                 <span class="s1">&#39;out_roi&#39;</span><span class="p">],</span>
-                                                   <span class="n">function</span><span class="o">=</span><span class="n">resample_func_roi</span><span class="p">,</span>
-                                                   <span class="n">as_module</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-                                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;resample_functional_to_mask_&#39;</span>
+    <span class="n">resample_functional_to_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">resample_function</span><span class="p">(),</span>
+                                          <span class="n">name</span><span class="o">=</span><span class="s1">&#39;resample_functional_to_mask_&#39;</span>
                                                <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
     <span class="n">resample_functional_to_mask</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">realignment</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">timeseries_extraction</span><span class="p">[</span>

@@ -24,7 +24,7 @@ or
 
     cpac upgrade
 
-When downloading/upgrading, the ``--platform``, ``--image``, and ``--tag`` let you specify platform (Docker or Singularity), image (Docker image name or URL to image in repository), and tag (version tag, currently only for Docker repositories), respectively.
+When downloading/upgrading, the ``--platform``, ``--image``, and ``--tag`` let you specify platform (Docker or Singularity), image (Docker image name or URL to image in repository), and tag (:doc:`version tag </user/versions>`), respectively.
 
 For example, a development Docker image can be downloaded with
 
@@ -69,6 +69,8 @@ Usage
 * Pull ``fcpindi/c-pac:latest`` from Docker Hub and convert to a Singularity image.
 
 You can also specify a container image with an ``--image`` argument, passing an image name (e.g., ``fcpindi/c-pac``) for a Docker image or a filepath (e.g. ``~/singularity_images/C-PAC.sif``) for a Singularity image. You can also specify a ``--tag`` (e.g., ``latest`` or ``nightly``).
+
+   .. seealso:: :doc:`/user/versions`
 
 You can also provide a link to an AWS S3 bucket containing a BIDS directory as the data source:
 
@@ -115,7 +117,3 @@ Note that any of the optional arguments above will over-ride any pipeline settin
 * The ``participant_label`` and ``participant_ndx`` arguments allow the user to specify which of the many datasets should be processed, which is useful when parallelizing the run of multiple participants.
 
 * If you want to pass runtime options to your container plaform (Docker or Singularity), you can pass them with ``-o`` or ``--container_options``.
-
-.. rubric:: Footnotes
-
-.. [*] The version restrictions for Singularity are specific to cpac the convenience wrapper. C-PAC itself should :doc:`run on Singularity <singularity>` 2 or 3.

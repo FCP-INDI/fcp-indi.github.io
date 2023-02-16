@@ -26,6 +26,7 @@ Contents:
    xcpqc
    testing
    continuous_integration
+   deprecating
 
 Indices and tables
 ^^^^^^^^^^^^^^^^^^

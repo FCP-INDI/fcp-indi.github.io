@@ -173,9 +173,15 @@ The C-PAC pipeline configuration builder provides options for configuring the Di
 
 #. **DeltaTE, in ms - [float]:** The time difference between the first magnitude image and the second magnitude image. The default value is 2.46 ms, which is widely used for SIEMENS, but it may differ with different datasets acquired by other MRI scanner brands, so it is important to ascertain this value specific to your data.
 
-#. **Dwell Time, in s - [float]:** The dwell time is also known as echo spacing, and it is the time between the start of the readout of two successive lines in k-space during the EPI acquisition. This is a value obtained from the functional EPI (NOT the fieldmap). Here, the default value is 0.0005s.
+#. **EffectiveEchoSpacing, in s - [float]:** The effective echo spacing is the time between the start of the readout of two successive lines in k-space during the EPI acquisition. This is a value obtained from the functional EPI (NOT the fieldmap).
+   
+   .. versionadded:: v.1.0.3
 
-#. **Dwell to asymmetric ratio - [float]:** This is the ratio between the Dwell time, as referenced above, and the asymmetric time. Here, the default value is 0.93902439.
+   .. versionchanged:: v1.8.5
+
+   .. include:: /admonitions/DwellTime.rst
+
+#. **EffectiveEchoSpacing to asymmetric ratio - [float]:** This is the ratio between the effective echo spacing, as referenced above, and the asymmetric time.
 
 #. **Phase encoding direction - [string]:** This is the position of the voxels in the input image, and can have values of x/y/z or -x/-y/-z.
 

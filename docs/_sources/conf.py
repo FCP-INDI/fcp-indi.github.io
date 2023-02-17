@@ -141,7 +141,6 @@ sys.path.insert(0, os.path.abspath('.'))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinxcontrib.bibtex',
-    'sphinxcontrib.fulltoc',
     'sphinx.ext.ifconfig',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
@@ -172,7 +171,7 @@ suppress_warnings = ['autosectionlabel.*']
 
 # General information about the project.
 project = 'C-PAC'
-copyright = '2012‒2022, C-PAC Developers. C-PAC is licensed under LGPL-3' \
+copyright = '2012‒2023, C-PAC Developers. C-PAC is licensed under LGPL-3' \
             '.0-or-later'
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -408,25 +407,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'classic'
-
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-html_theme_options = {
-    'relbarbgcolor': '#0067a0',
-    'sidebarbgcolor': '#f0f0f0',
-    'sidebartextcolor': '#000000',
-    'sidebarlinkcolor': '#0067a0',
-    'headbgcolor': '#919d9d',
-    'headtextcolor': '#e4e4e4'
-}
-
-# Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = ['../Themes']
-html_css_files = [
-    'custom.css',
-]
+html_theme = 'furo'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # '<project> v<release> documentation'.
@@ -449,6 +430,14 @@ html_favicon = '_static/favicon.ico'
 # so a file named 'default.css' will overwrite the builtin 'default.css'.
 html_static_path = ['_static']
 
+# These paths are either relative to html_static_path
+# or fully qualified paths (eg. https://...)
+html_css_files = [
+    'custom.css',
+]
+html_js_files = [
+    ('versionList.js', {'defer': 'defer'})]
+
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 # html_last_updated_fmt = '%b %d, %Y'
@@ -456,15 +445,6 @@ html_static_path = ['_static']
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
 # html_use_smartypants = True
-
-# Custom sidebar templates, maps document names to template names.
-html_sidebars = {
-  '**': [
-    'localtoc.html',
-    # 'globaltoc.html',
-    'searchbox.html'
-  ]
- }
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.

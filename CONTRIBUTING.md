@@ -112,12 +112,15 @@ Steps to build this documentation locally:
 ```
 
 where `{width}` and `{height}` are the values already present in the existing `width` and `height` XML attributes.
-- Load SVGs in HTML `object` elements with the `raw:: html` directive to preserve hyperlinks and scaling:
+- Embed SVGs with the `raw:: html` directive to preserve hyperlinks. Since the `svg-flowchart` container scales SVGs to the page width, add a link below to view them at their original scale:
 
 ```rst
-.. raw:: html
+.. container:: svg-flowchart
 
-    <object data="../_static/path/to/chart.svg" type="image/svg+xml"></object>
+    .. raw:: html
+        :file: ../_static/path/to/chart.svg
+
+    `Open image <../_static/path/to/chart.svg>`_
 ```
 
 <a id="markdown-tutorials" name="tutorials"></a>

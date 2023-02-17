@@ -1,9 +1,12 @@
 Configurable Settings
 ---------------------
 
-.. raw:: html
+.. container:: svg-flowchart
 
-    <div class="flowchart-container"><object data="../_static/flowcharts/pipeline-individual.svg" type="image/svg+xml"></object></div>
+    .. raw:: html
+        :file: ../../_static/flowcharts/pipeline-individual.svg
+
+    `Open image <../../_static/flowcharts/pipeline-individual.svg>`_
 
 .. toctree::
    :maxdepth: 1

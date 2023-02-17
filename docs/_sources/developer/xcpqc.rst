@@ -6,6 +6,4 @@ eXtensible Connectivity Pipeline-style quality control files
 
 .. rubric:: References
 
-.. bibliography::
-   :cited:
-   :keyprefix: cite-
+.. footbibliography::

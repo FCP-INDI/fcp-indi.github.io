@@ -32,3 +32,7 @@ A ``CPAC.utils.monitoring.custom_logging.MockLogger`` can be used in place of a 
 .. automethod:: nipype.utils.logger.Logging.__init__
 
 .. autofunction:: logging.getLogger
+
+Logging ``subprocess.check_outputs``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: CPAC.utils.monitoring.custom_logging.log_subprocess

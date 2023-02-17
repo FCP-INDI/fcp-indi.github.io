@@ -54,19 +54,42 @@ Initial Preprocessing
    :start-at: motion_estimates_and_correction:
    :end-before: distortion_correction:
 
-.. _motion_estimate_filter_valid_options:
+.. _motion-estimate-filter-valid-options:
 
-For ``motion_estimate_filter``, if ``breathing_rate_min`` and ``breathing_rate_max`` are provided, the filter design attributes (``center_frequency``, ``filter_bandwidth``, ``lowpass_cutoff``) are automatically configured. But if you provide these directly, you don't need the breathing rates. If all all parameters are provided, the filter design attributes will be ignored in favor of the ``breathing_rate_*`` attributes. A configuration must match at least one row in the following table:
+.. versionchanged:: 1.8.5
+   Changed from single dictionary to ``filters`` list of dictionaries
 
-======= =============== ====================== ====================== ==================== ==================== ==================
-``run`` ``filter_type`` ``breathing_rate_min`` ``breathing_rate_max`` ``center_frequency`` ``filter_bandwidth`` ``lowpass_cutoff``
-======= =============== ====================== ====================== ==================== ==================== ==================
-Off
-On      notch           **required**           **required**
-On      notch           None                   None                   **required**         **required**
-On      lowpass         **required**
-On      lowpass         None                                                                                    **required**
-======= =============== ====================== ====================== ==================== ==================== ==================
+For each filter in ``motion_estimate_filter.filters``, if ``breathing_rate_min`` and ``breathing_rate_max`` are provided, the filter design attributes (``center_frequency``, ``filter_bandwidth``, ``lowpass_cutoff``) are automatically configured. But if you provide these directly, you don't need the breathing rates. If all all parameters are provided, the filter design attributes will be ignored in favor of the ``breathing_rate_*`` attributes. A configuration must match at least one row in the following table:
+
+======= =============== ================ ====================== ====================== ==================== ==================== ================== ============
+``run`` ``filter_type`` ``filter_order`` ``breathing_rate_min`` ``breathing_rate_max`` ``center_frequency`` ``filter_bandwidth`` ``lowpass_cutoff`` ``Name``
+======= =============== ================ ====================== ====================== ==================== ==================== ================== ============
+"Off"
+"On"    "notch"         **required** int **required** float     **required** float                                                                  optional str
+"On"    "notch"         **required** int *None*                 *None*                 **required** float   **required** float                      optional str
+"On"    "lowpass"       **required** int **required** float                                                                                         optional str
+"On"    "lowpass"       **required** int *None*                                                                                  **required** float optional str
+======= =============== ================ ====================== ====================== ==================== ==================== ================== ============
+
+For each filter, ``Name`` need not be provided; if ``Name`` is not provided, it will be autopopulated based on the configuration, using the keys in this table [#motion-filter-abbreviations]_:
+
+====================== ====================== ==================== ==================== ==================
+``breathing_rate_min`` ``breathing_rate_max`` ``center_frequency`` ``filter_bandwidth`` ``lowpass_cutoff``
+====================== ====================== ==================== ==================== ==================
+``fl``                 ``fu``                 ``fc``               ``bw``               ``fc``
+====================== ====================== ==================== ==================== ==================
+
+and the format ``{filterType}{filterOrder}[{key}{value}]*`` with a lowercase ``p`` replacing any decimal points. If any filters have duplicate names (given or generated), each name after the first will be suffixed with ``dup{duplicate_number}``, with ``duplicate_number`` starting at 1. See :py:func:`CPAC.pipeline.schema.name_motion_filter` for examples.
+
+.. rubric:: Note about abbreviation table
+
+.. [#motion-filter-abbreviations] These abbreviations are based on :cite:`motionfilt-Eybe16` but modified to comply with :cite:`motionfilt-BIDS21`.
+
+.. rubric:: References
+
+.. bibliography::
+    :cited:
+    :keyprefix: motionfilt-
 
 
 Slice Timing Correction

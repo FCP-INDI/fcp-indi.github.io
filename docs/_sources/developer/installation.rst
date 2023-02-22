@@ -68,7 +68,7 @@ Building a new C-PAC image
 
 The C-PAC build process makes use of Docker's multi-stage build functionality :footcite:`Mult23` to reduce iteration time. See https://github.com/FCP-INDI/C-PAC/tree/develop/.github for the latest Dockerfiles and GitHub Actions workflow configurations.
 
-For each stage that you don't need to change, you can just pull that stage from GitHub Packages :footcite:`Work23`. If you need to build a stage, you can do so locally by running
+For each stage that you don't need to change, you can just pull that stage from GitHub Packages :footcite:`Work23,GHCR`. If you need to build a stage, you can do so locally by running
 
 .. code:: BASH
 

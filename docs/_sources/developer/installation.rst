@@ -85,6 +85,7 @@ To interactively develop a staging image Dockerfile, attach to a base image in a
 
    docker run --rm -it \
      --entrypoint /bin/bash \
+     --user root \
      ghcr.io/fcp-indi/c-pac/ubuntu:jammy-non-free
 
 enters a C-PAC staging Ubuntu 22.04 image where you can test installation commands interactively before committing them in a Dockerfile.

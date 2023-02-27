@@ -575,7 +575,7 @@ def format_node_block_docstrings(app, what, name, obj, options, lines):
     if what in ['function']:
         newlines = []
         indent = 0
-        for i, line in enumerate(lines):
+        for line in lines:
             if line.lstrip().startswith('Node Block:'):
                 newlines += [line, '', '.. code:: Python', '']
                 indent = 3
@@ -584,6 +584,8 @@ def format_node_block_docstrings(app, what, name, obj, options, lines):
                 indent = 3
             else:
                 newlines.append(f'{" " * indent}line')
+        if indent:
+            newlines.append('')
         lines = newlines
 
 def setup(app):

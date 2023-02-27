@@ -571,6 +571,21 @@ rst_epilog = """
 ) if len(gh_tags) >= 5 else ""
 
 
+def format_node_block_docstrings(app, what, name, obj, options, lines):
+    if what in ['function']:
+        newlines = []
+        indent = 0
+        for i, line in enumerate(lines):
+            if line.lstrip().startswith('Node Block:'):
+                newlines += [line, '', '.. code:: Python', '']
+                indent = 3
+            elif indent == 0 and re.match("\s*^{['\"]name['\"]:", line):
+                newlines += ['', '.. code:: Python', '', f'   {line}']
+                indent = 3
+            else:
+                newlines.append(f'{" " * indent}line')
+        lines = newlines
+
 def setup(app):
     from CPAC.utils.monitoring import custom_logging
 
@@ -582,3 +597,5 @@ def setup(app):
         method not in ['name', 'handlers']
     ]:
         setattr(custom_logging.MockLogger, method, getattr(ml, method))
+
+    app.connect('autodoc-process-docstring', format_node_block_docstrings)

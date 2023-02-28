@@ -146,7 +146,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand centered" href="../../../index">
   
   <div class="sidebar-logo-container">
-    <img class="sidebar-logo" src="../../../_static/cpac_logo_vertical.png" alt="Logo"/>
+    <img class="sidebar-logo" src="../../../_static/cpac_logo_vertical.svg" alt="Logo"/>
   </div>
   
   <span class="sidebar-brand-text">C-PAC 1.8.5.dev1 Beta documentation</span>
@@ -730,114 +730,114 @@
     <span class="k">return</span> <span class="n">preproc</span></div>
 
 
-<span class="k">def</span> <span class="nf">create_seg_preproc_freesurfer</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                                  <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;seg_preproc_freesurfer&#39;</span><span class="p">,</span>
-                                  <span class="n">pipe_num</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generate the subject&#39;s segmentations based on freesurfer.</span>
+<span class="c1"># def create_seg_preproc_freesurfer(config=None,</span>
+<span class="c1">#                                   wf_name=&#39;seg_preproc_freesurfer&#39;,</span>
+<span class="c1">#                                   pipe_num=0):</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     Generate the subject&#39;s segmentations based on freesurfer.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    config : CPAC.utils.configuration.Configuration</span>
+<span class="c1">#     Parameters</span>
+<span class="c1">#     ----------</span>
+<span class="c1">#     config : CPAC.utils.configuration.Configuration</span>
 
-<span class="sd">    wf_name : string</span>
-<span class="sd">        name of the workflow</span>
+<span class="c1">#     wf_name : string</span>
+<span class="c1">#         name of the workflow</span>
 
-<span class="sd">    pipe_num : int</span>
+<span class="c1">#     pipe_num : int</span>
 
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    seg_preproc_freesurfer : workflow</span>
-<span class="sd">        workflow object for segmentation workflow</span>
+<span class="c1">#     Returns</span>
+<span class="c1">#     -------</span>
+<span class="c1">#     seg_preproc_freesurfer : workflow</span>
+<span class="c1">#         workflow object for segmentation workflow</span>
 
-<span class="sd">    hemisphere_outputs : dict</span>
-<span class="sd">        hemisphere-specific FreeSurfer outputs</span>
+<span class="c1">#     hemisphere_outputs : dict</span>
+<span class="c1">#         hemisphere-specific FreeSurfer outputs</span>
 
-<span class="sd">    Notes</span>
-<span class="sd">    -----</span>
+<span class="c1">#     Notes</span>
+<span class="c1">#     -----</span>
 
-<span class="sd">    Workflow Inputs: ::</span>
+<span class="c1">#     Workflow Inputs: ::</span>
 
-<span class="sd">        inputspec.subject_dir : string (existing nifti file)</span>
-<span class="sd">            FreeSurfer autorecon1 dir</span>
+<span class="c1">#         inputspec.subject_dir : string (existing nifti file)</span>
+<span class="c1">#             FreeSurfer autorecon1 dir</span>
 
-<span class="sd">    Workflow Outputs: ::</span>
+<span class="c1">#     Workflow Outputs: ::</span>
 
-<span class="sd">        outputspec.wm_mask : string (nifti file)</span>
-<span class="sd">            outputs White Matter mask</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">preproc</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">wf_name</span><span class="p">)</span>
+<span class="c1">#         outputspec.wm_mask : string (nifti file)</span>
+<span class="c1">#             outputs White Matter mask</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     preproc = pe.Workflow(name=wf_name)</span>
 
-    <span class="n">inputnode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;subject_dir&#39;</span><span class="p">]),</span>
-                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;inputspec&#39;</span><span class="p">)</span>
+<span class="c1">#     inputnode = pe.Node(util.IdentityInterface(fields=[&#39;subject_dir&#39;]),</span>
+<span class="c1">#                         name=&#39;inputspec&#39;)</span>
 
-    <span class="n">outputnode</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;wm_mask&#39;</span><span class="p">,</span>
-                                                        <span class="s1">&#39;gm_mask&#39;</span><span class="p">,</span>
-                                                        <span class="s1">&#39;csf_mask&#39;</span><span class="p">,</span>
-                                                        <span class="s1">&#39;subject_id&#39;</span><span class="p">]),</span>
-                         <span class="n">name</span><span class="o">=</span><span class="s1">&#39;outputspec&#39;</span><span class="p">)</span>
+<span class="c1">#     outputnode = pe.Node(util.IdentityInterface(fields=[&#39;wm_mask&#39;,</span>
+<span class="c1">#                                                         &#39;gm_mask&#39;,</span>
+<span class="c1">#                                                         &#39;csf_mask&#39;,</span>
+<span class="c1">#                                                         &#39;subject_id&#39;]),</span>
+<span class="c1">#                          name=&#39;outputspec&#39;)</span>
 
-    <span class="n">reconall2</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">freesurfer</span><span class="o">.</span><span class="n">ReconAll</span><span class="p">(),</span>
-                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;anat_autorecon2&#39;</span><span class="p">)</span>
+<span class="c1">#     reconall2 = pe.Node(interface=freesurfer.ReconAll(),</span>
+<span class="c1">#                         name=&#39;anat_autorecon2&#39;)</span>
 
-    <span class="n">reconall2</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">directive</span> <span class="o">=</span> <span class="s1">&#39;autorecon2&#39;</span>
-    <span class="n">reconall2</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">openmp</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">pipeline_setup</span><span class="p">[</span><span class="s1">&#39;system_config&#39;</span><span class="p">][</span>
-        <span class="s1">&#39;num_omp_threads&#39;</span><span class="p">]</span>
+<span class="c1">#     reconall2.inputs.directive = &#39;autorecon2&#39;</span>
+<span class="c1">#     reconall2.inputs.openmp = config.pipeline_setup[&#39;system_config&#39;][</span>
+<span class="c1">#         &#39;num_omp_threads&#39;]</span>
 
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;subject_dir&#39;</span><span class="p">,</span>
-                    <span class="n">reconall2</span><span class="p">,</span> <span class="s1">&#39;subjects_dir&#39;</span><span class="p">)</span>
+<span class="c1">#     preproc.connect(inputnode, &#39;subject_dir&#39;,</span>
+<span class="c1">#                     reconall2, &#39;subjects_dir&#39;)</span>
 
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">reconall2</span><span class="p">,</span> <span class="s1">&#39;subject_id&#39;</span><span class="p">,</span>
-                    <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;subject_id&#39;</span><span class="p">)</span>
+<span class="c1">#     preproc.connect(reconall2, &#39;subject_id&#39;,</span>
+<span class="c1">#                     outputnode, &#39;subject_id&#39;)</span>
 
-    <span class="c1"># register FS segmentations (aseg.mgz) to native space</span>
-    <span class="n">fs_aseg_to_native</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">freesurfer</span><span class="o">.</span><span class="n">ApplyVolTransform</span><span class="p">(),</span>
-                                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fs_aseg_to_native&#39;</span><span class="p">)</span>
+<span class="c1">#     # register FS segmentations (aseg.mgz) to native space</span>
+<span class="c1">#     fs_aseg_to_native = pe.Node(interface=freesurfer.ApplyVolTransform(),</span>
+<span class="c1">#                                 name=&#39;fs_aseg_to_native&#39;)</span>
 
-    <span class="n">fs_aseg_to_native</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">reg_header</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">fs_aseg_to_native</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;nearest&#39;</span>
+<span class="c1">#     fs_aseg_to_native.inputs.reg_header = True</span>
+<span class="c1">#     fs_aseg_to_native.inputs.interp = &#39;nearest&#39;</span>
 
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">reconall2</span><span class="p">,</span> <span class="s1">&#39;aseg&#39;</span><span class="p">,</span>
-                    <span class="n">fs_aseg_to_native</span><span class="p">,</span> <span class="s1">&#39;source_file&#39;</span><span class="p">)</span>
+<span class="c1">#     preproc.connect(reconall2, &#39;aseg&#39;,</span>
+<span class="c1">#                     fs_aseg_to_native, &#39;source_file&#39;)</span>
 
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">reconall2</span><span class="p">,</span> <span class="s1">&#39;rawavg&#39;</span><span class="p">,</span>
-                    <span class="n">fs_aseg_to_native</span><span class="p">,</span> <span class="s1">&#39;target_file&#39;</span><span class="p">)</span>
+<span class="c1">#     preproc.connect(reconall2, &#39;rawavg&#39;,</span>
+<span class="c1">#                     fs_aseg_to_native, &#39;target_file&#39;)</span>
 
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">inputnode</span><span class="p">,</span> <span class="s1">&#39;subject_dir&#39;</span><span class="p">,</span>
-                    <span class="n">fs_aseg_to_native</span><span class="p">,</span> <span class="s1">&#39;subjects_dir&#39;</span><span class="p">)</span>
+<span class="c1">#     preproc.connect(inputnode, &#39;subject_dir&#39;,</span>
+<span class="c1">#                     fs_aseg_to_native, &#39;subjects_dir&#39;)</span>
 
-    <span class="c1"># convert registered FS segmentations from .mgz to .nii.gz</span>
-    <span class="n">fs_aseg_to_nifti</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">],</span>
-                                             <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
-                                             <span class="n">function</span><span class="o">=</span><span class="n">mri_convert</span><span class="p">),</span>
-                               <span class="n">name</span><span class="o">=</span><span class="s1">&#39;fs_aseg_to_nifti&#39;</span><span class="p">)</span>
+<span class="c1">#     # convert registered FS segmentations from .mgz to .nii.gz</span>
+<span class="c1">#     fs_aseg_to_nifti = pe.Node(util.Function(input_names=[&#39;in_file&#39;],</span>
+<span class="c1">#                                              output_names=[&#39;out_file&#39;],</span>
+<span class="c1">#                                              function=mri_convert),</span>
+<span class="c1">#                                name=&#39;fs_aseg_to_nifti&#39;)</span>
 
-    <span class="n">fs_aseg_to_nifti</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;-rt nearest&#39;</span>
+<span class="c1">#     fs_aseg_to_nifti.inputs.args = &#39;-rt nearest&#39;</span>
 
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">fs_aseg_to_native</span><span class="p">,</span> <span class="s1">&#39;transformed_file&#39;</span><span class="p">,</span>
-                    <span class="n">fs_aseg_to_nifti</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+<span class="c1">#     preproc.connect(fs_aseg_to_native, &#39;transformed_file&#39;,</span>
+<span class="c1">#                     fs_aseg_to_nifti, &#39;in_file&#39;)</span>
 
-    <span class="n">pick_tissue</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-        <span class="n">pick_tissue_from_labels_file_interface</span><span class="p">(</span>
-            <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;multiatlas_Labels&#39;</span><span class="p">]),</span>
-        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">wf_name</span><span class="si">}</span><span class="s1">_tissue_mask&#39;</span><span class="p">)</span>
+<span class="c1">#     pick_tissue = pe.Node(</span>
+<span class="c1">#         pick_tissue_from_labels_file_interface(</span>
+<span class="c1">#             input_names=[&#39;multiatlas_Labels&#39;]),</span>
+<span class="c1">#         name=f&#39;{wf_name}_tissue_mask&#39;)</span>
 
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">fs_aseg_to_nifti</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                    <span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;multiatlas_Labels&#39;</span><span class="p">)</span>
+<span class="c1">#     preproc.connect(fs_aseg_to_nifti, &#39;out_file&#39;,</span>
+<span class="c1">#                     pick_tissue, &#39;multiatlas_Labels&#39;)</span>
 
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;wm_mask&#39;</span><span class="p">,</span>
-                    <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;wm_mask&#39;</span><span class="p">)</span>
+<span class="c1">#     preproc.connect(pick_tissue, &#39;wm_mask&#39;,</span>
+<span class="c1">#                     outputnode, &#39;wm_mask&#39;)</span>
 
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;gm_mask&#39;</span><span class="p">,</span>
-                    <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;gm_mask&#39;</span><span class="p">)</span>
+<span class="c1">#     preproc.connect(pick_tissue, &#39;gm_mask&#39;,</span>
+<span class="c1">#                     outputnode, &#39;gm_mask&#39;)</span>
 
-    <span class="n">preproc</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;csf_mask&#39;</span><span class="p">,</span>
-                    <span class="n">outputnode</span><span class="p">,</span> <span class="s1">&#39;csf_mask&#39;</span><span class="p">)</span>
+<span class="c1">#     preproc.connect(pick_tissue, &#39;csf_mask&#39;,</span>
+<span class="c1">#                     outputnode, &#39;csf_mask&#39;)</span>
 
-    <span class="n">preproc</span><span class="p">,</span> <span class="n">hemisphere_outputs</span> <span class="o">=</span> <span class="n">freesurfer_hemispheres</span><span class="p">(</span><span class="n">preproc</span><span class="p">,</span> <span class="n">reconall2</span><span class="p">,</span>
-                                                         <span class="n">pipe_num</span><span class="p">)</span>
+<span class="c1">#     preproc, hemisphere_outputs = freesurfer_hemispheres(preproc, reconall2,</span>
+<span class="c1">#                                                          pipe_num)</span>
 
-    <span class="k">return</span> <span class="n">preproc</span><span class="p">,</span> <span class="n">hemisphere_outputs</span>
+<span class="c1">#     return preproc, hemisphere_outputs</span>
 
 
 <span class="k">def</span> <span class="nf">tissue_seg_fsl_fast</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1223,26 +1223,69 @@
 <span class="sd">     &quot;option_key&quot;: [&quot;tissue_segmentation&quot;, &quot;using&quot;],</span>
 <span class="sd">     &quot;option_val&quot;: &quot;FreeSurfer&quot;,</span>
 <span class="sd">     &quot;inputs&quot;: [&quot;freesurfer-subject-dir&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;hemi-L_desc-surface_curv&quot;,</span>
-<span class="sd">                 &quot;hemi-R_desc-surface_curv&quot;,</span>
-<span class="sd">                 &quot;hemi-L_desc-surfaceMesh_pial&quot;,</span>
-<span class="sd">                 &quot;hemi-R_desc-surfaceMesh_pial&quot;,</span>
-<span class="sd">                 &quot;hemi-L_desc-surfaceMesh_smoothwm&quot;,</span>
-<span class="sd">                 &quot;hemi-R_desc-surfaceMesh_smoothwm&quot;,</span>
-<span class="sd">                 &quot;hemi-L_desc-surfaceMesh_sphere&quot;,</span>
-<span class="sd">                 &quot;hemi-R_desc-surfaceMesh_sphere&quot;,</span>
-<span class="sd">                 &quot;hemi-L_desc-surfaceMap_sulc&quot;,</span>
-<span class="sd">                 &quot;hemi-R_desc-surfaceMap_sulc&quot;,</span>
-<span class="sd">                 &quot;hemi-L_desc-surfaceMap_thickness&quot;,</span>
-<span class="sd">                 &quot;hemi-R_desc-surfaceMap_thickness&quot;,</span>
-<span class="sd">                 &quot;hemi-L_desc-surfaceMap_volume&quot;,</span>
-<span class="sd">                 &quot;hemi-R_desc-surfaceMap_volume&quot;,</span>
-<span class="sd">                 &quot;hemi-L_desc-surfaceMesh_white&quot;,</span>
-<span class="sd">                 &quot;hemi-R_desc-surfaceMesh_white&quot;,</span>
+<span class="sd">     &quot;outputs&quot;: [&quot;pipeline-fs_hemi-L_desc-surface_curv&quot;,</span>
+<span class="sd">                 &quot;pipeline-fs_hemi-R_desc-surface_curv&quot;, </span>
+<span class="sd">                 &quot;pipeline-fs_hemi-L_desc-surfaceMesh_pial&quot;,</span>
+<span class="sd">                 &quot;pipeline-fs_hemi-R_desc-surfaceMesh_pial&quot;,</span>
+<span class="sd">                 &quot;pipeline-fs_hemi-L_desc-surfaceMesh_smoothwm&quot;,</span>
+<span class="sd">                 &quot;pipeline-fs_hemi-R_desc-surfaceMesh_smoothwm&quot;,</span>
+<span class="sd">                 &quot;pipeline-fs_hemi-L_desc-surfaceMesh_sphere&quot;,</span>
+<span class="sd">                 &quot;pipeline-fs_hemi-R_desc-surfaceMesh_sphere&quot;,</span>
+<span class="sd">                 &quot;pipeline-fs_hemi-L_desc-surfaceMap_sulc&quot;, </span>
+<span class="sd">                 &quot;pipeline-fs_hemi-R_desc-surfaceMap_sulc&quot;,</span>
+<span class="sd">                 &quot;pipeline-fs_hemi-L_desc-surfaceMap_thickness&quot;,</span>
+<span class="sd">                 &quot;pipeline-fs_hemi-R_desc-surfaceMap_thickness&quot;,</span>
+<span class="sd">                 &quot;pipeline-fs_hemi-L_desc-surfaceMap_volume&quot;,</span>
+<span class="sd">                 &quot;pipeline-fs_hemi-R_desc-surfaceMap_volume&quot;,</span>
+<span class="sd">                 &quot;pipeline-fs_hemi-L_desc-surfaceMesh_white&quot;,</span>
+<span class="sd">                 &quot;pipeline-fs_hemi-R_desc-surfaceMesh_white&quot;,</span>
 <span class="sd">                 &quot;label-CSF_mask&quot;,</span>
 <span class="sd">                 &quot;label-GM_mask&quot;,</span>
 <span class="sd">                 &quot;label-WM_mask&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">fs_aseg_to_nifti</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">],</span>
+                                             <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
+                                             <span class="n">function</span><span class="o">=</span><span class="n">mri_convert</span><span class="p">),</span>
+                               <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;fs_aseg_to_nifti_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">fs_aseg_to_nifti</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;-rt nearest&#39;</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">fs_aseg_to_native</span><span class="p">,</span> <span class="s1">&#39;transformed_file&#39;</span><span class="p">,</span>
+               <span class="n">fs_aseg_to_nifti</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="n">pick_tissue</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">pick_tissue_from_labels_file_interface</span><span class="p">(),</span>
+                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;select_fs_tissue_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">pick_tissue</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">csf_label</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;segmentation&#39;</span><span class="p">][</span>
+        <span class="s1">&#39;tissue_segmentation&#39;</span><span class="p">][</span><span class="s1">&#39;FreeSurfer&#39;</span><span class="p">][</span><span class="s1">&#39;CSF_label&#39;</span><span class="p">]</span>
+    <span class="n">pick_tissue</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">gm_label</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;segmentation&#39;</span><span class="p">][</span>
+        <span class="s1">&#39;tissue_segmentation&#39;</span><span class="p">][</span><span class="s1">&#39;FreeSurfer&#39;</span><span class="p">][</span><span class="s1">&#39;GM_label&#39;</span><span class="p">]</span>
+    <span class="n">pick_tissue</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">wm_label</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;segmentation&#39;</span><span class="p">][</span>
+        <span class="s1">&#39;tissue_segmentation&#39;</span><span class="p">][</span><span class="s1">&#39;FreeSurfer&#39;</span><span class="p">][</span><span class="s1">&#39;WM_label&#39;</span><span class="p">]</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">fs_aseg_to_nifti</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;multiatlas_Labels&#39;</span><span class="p">)</span>
+
+    <span class="n">erode_tissues</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;segmentation&#39;</span><span class="p">][</span><span class="s1">&#39;tissue_segmentation&#39;</span><span class="p">][</span><span class="s1">&#39;FreeSurfer&#39;</span><span class="p">][</span><span class="s1">&#39;erode&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">tissue</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;csf&#39;</span><span class="p">,</span> <span class="s1">&#39;wm&#39;</span><span class="p">,</span> <span class="s1">&#39;gm&#39;</span><span class="p">]:</span>
+            <span class="n">erode_tissues</span><span class="p">[</span><span class="n">tissue</span><span class="p">]</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
+                <span class="n">interface</span><span class="o">=</span><span class="n">freesurfer</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">Binarize</span><span class="p">(),</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;erode_</span><span class="si">{</span><span class="n">tissue</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">erode_tissues</span><span class="p">[</span><span class="n">tissue</span><span class="p">]</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">match</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">erode_tissues</span><span class="p">[</span><span class="n">tissue</span><span class="p">]</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">erode</span> <span class="o">=</span> <span class="n">cfg</span><span class="p">[</span><span class="s1">&#39;segmentation&#39;</span><span class="p">][</span>
+                <span class="s1">&#39;tissue_segmentation&#39;</span><span class="p">][</span><span class="s1">&#39;FreeSurfer&#39;</span><span class="p">][</span><span class="s1">&#39;erode&#39;</span><span class="p">]</span>
+            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">pick_tissue</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">tissue</span><span class="si">}</span><span class="s1">_mask&#39;</span><span class="p">,</span> <span class="n">erode_tissues</span><span class="p">[</span><span class="n">tissue</span><span class="p">],</span>
+                       <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">erode_tissues</span><span class="p">:</span>
+        <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;label-CSF_mask&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">erode_tissues</span><span class="p">[</span><span class="s1">&#39;csf&#39;</span><span class="p">],</span> <span class="s1">&#39;binary_file&#39;</span><span class="p">)</span>
+        <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;label-WM_mask&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">erode_tissues</span><span class="p">[</span><span class="s1">&#39;wm&#39;</span><span class="p">],</span> <span class="s1">&#39;binary_file&#39;</span><span class="p">)</span>
+        <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;label-GM_mask&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">erode_tissues</span><span class="p">[</span><span class="s1">&#39;gm&#39;</span><span class="p">],</span> <span class="s1">&#39;binary_file&#39;</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;label-CSF_mask&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;csf_mask&#39;</span><span class="p">)</span>
+        <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;label-WM_mask&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;wm_mask&#39;</span><span class="p">)</span>
+        <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;label-GM_mask&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">pick_tissue</span><span class="p">,</span> <span class="s1">&#39;gm_mask&#39;</span><span class="p">)</span>
 
     <span class="n">fs_seg</span><span class="p">,</span> <span class="n">hemisphere_outputs</span> <span class="o">=</span> <span class="n">create_seg_preproc_freesurfer</span><span class="p">(</span>
         <span class="n">config</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span> <span class="n">wf_name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;seg_preproc_freesurfer_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>

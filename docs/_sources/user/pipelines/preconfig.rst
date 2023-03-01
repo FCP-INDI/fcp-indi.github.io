@@ -7,17 +7,29 @@ human
 default: The Default Pipeline
 -----------------------------
 
-Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/dev/docker_data/default_pipeline.yml <https://github.com/FCP-INDI/C-PAC/blob/main/dev/docker_data/default_pipeline.yml>`_
+Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_default.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_default.yml>`_
 
-**Note:** C-PAC runs this pipeline by default, and it is not necessary to invoke the `--preconfig` flag to run it.
+.. note::
+   
+   C-PAC runs this pipeline by default, and it is not necessary to invoke the `--preconfig` flag to run it.
+
+.. versionchanged:: 1.8.5 
+
+   This pipeline was modified during the v1.8.5 release cycle. |see 1.8.5 rnotes| The previous default pipeline has been preserved as |default_deprecated|_
 
 C-PAC is packaged with a default processing pipeline so that you can get your data preprocessing and analysis started immediately. Just pull the C-PAC Docker container and kick off the container with your data, and you're on your way.
 
 The default processing pipeline performs fMRI processing using four strategies, with and without global signal regression, with and without bandpass filtering.
 
-Anatomical processing begins with conforming the data to RPI orientation and removing orientation header information that will interfere with further processing. A non-linear transform between skull-on images and a 2mm MNI brain-only template are calculated using ANTs [3]. Images are them skull-stripped using AFNI's 3dSkullStrip [5] and subsequently segmented into WM, GM, and CSF using FSL’s fast tool [6]. The resulting WM mask was multiplied by a WM prior map that was transformed into individual space using the inverse of the linear transforms previously calculated during the ANTs procedure. A CSF mask was multiplied by a ventricle map derived from the Harvard-Oxford atlas distributed with FSL [4]. Skull-stripped images and grey matter tissue maps are written into MNI space at 2mm resolution.
+Anatomical processing begins with conforming the data to RPI orientation and removing orientation header information that will interfere with further processing. A non-linear transform between skull-on images and a 2mm MNI brain-only template are calculated using ANTs :cite:`cite-default-Avan08`. 
 
-Functional preprocessing begins with resampling the data to RPI orientation, and slice timing correction. Next, motion correction is performed using a two-stage approach in which the images are first coregistered to the mean fMRI and then a new mean is calculated and used as the target for a second coregistration (AFNI 3dvolreg [2]). A 7 degree of freedom linear transform between the mean fMRI and the structural image is calculated using FSL’s implementation of boundary-based registration [7]. Nuisance variable regression (NVR) is performed on motion corrected data using a 2nd order polynomial, a 24-regressor model of motion [8], 5 nuisance signals, identified via principal components analysis of signals obtained from white matter (CompCor, [9]), and mean CSF signal. WM and CSF signals were extracted using the previously described masks after transforming the fMRI data to match them in 2mm space using the inverse of the linear fMRI-sMRI transform. The NVR procedure is performed twice, with and without the inclusion of the global signal as a nuisance regressor. The residuals of the NVR procedure are processed with and without bandpass filtering (0.01Hz < f < 0.1Hz), written into MNI space at 3mm resolution and subsequently smoothed using a 6mm FWHM kernel.
+.. versionchanged:: 1.8.5
+
+   Images are them skull-stripped using FSL's BET :cite:`cite-default-Smit02` (was using AFNI's 3dSkullStrip :cite:`cite-default-Cox96,cite-default-Cox97` prior to v1.8.5. |see 1.8.5 rnotes|) and subsequently segmented into WM, GM, and CSF using FSL's fast tool :cite:`cite-default-Zhan01`.
+
+The resulting WM mask was multiplied by a WM prior map that was transformed into individual space using the inverse of the linear transforms previously calculated during the ANTs procedure. A CSF mask was multiplied by a ventricle map derived from the Harvard-Oxford atlas distributed with FSL :cite:`cite-default-Smit04`. Skull-stripped images and grey matter tissue maps are written into MNI space at 2mm resolution.
+
+Functional preprocessing begins with resampling the data to RPI orientation, and slice timing correction. Next, motion correction is performed using a two-stage approach in which the images are first coregistered to the mean fMRI and then a new mean is calculated and used as the target for a second coregistration (AFNI 3dvolreg :cite:`cite-default-Cox99`). A 7 degree of freedom linear transform between the mean fMRI and the structural image is calculated using FSL’s implementation of boundary-based registration [7]. Nuisance variable regression (NVR) is performed on motion corrected data using a 2nd order polynomial, a 24-regressor model of motion [8], 5 nuisance signals, identified via principal components analysis of signals obtained from white matter (CompCor, [9]), and mean CSF signal. WM and CSF signals were extracted using the previously described masks after transforming the fMRI data to match them in 2mm space using the inverse of the linear fMRI-sMRI transform. The NVR procedure is performed twice, with and without the inclusion of the global signal as a nuisance regressor. The residuals of the NVR procedure are processed with and without bandpass filtering (0.01Hz < f < 0.1Hz), written into MNI space at 3mm resolution and subsequently smoothed using a 6mm FWHM kernel.
 
 Several different individual level analysis are performed on the fMRI data including:
 
@@ -31,6 +43,11 @@ Several different individual level analysis are performed on the fMRI data inclu
 * **10 intrinsic connectivity networks (ICNs) from dual regression [17]:** a template including 10 ICNs from a meta-analysis of resting state and task fMRI data [18] is spatially regressed against the processed fMRI data in MNI space. The resulting time courses are entered into a multiple regression with the voxel data in original space to calculate individual representations of the 10 ICNs. The resulting networks are written into MNI space at 2mm and then spatially smoothed using a 6mm FWHM kernel.
 * **Seed correlation analysis (SCA):** preprocessed fMRI data is to match template that includes 160 regions of interest defined from a meta-analysis of different task results [19]. A time series is calculated for each region from the mean of all intra-ROI voxel time series. A separate functional connectivity map is calculated per ROI by correlating its time course with the time courses of every other voxel in the brain. Resulting values are Fisher transformed, written into MNI space at 2mm resolution, and then spatially smoothed using a 6mm FWHM kernel.
 * **Time series extraction:** similar the procedure used for time series analysis, the preprocessed functional data is written into MNI space at 2mm and then time series for the various atlases are extracted by averaging within region voxel time courses. This procedure was used to generate summary time series for the automated anatomic labelling atlas [20], Eickhoff-Zilles atlas [21], Harvard-Oxford atlas [22], Talaraich and Tournoux atlas [23], 200 and 400 regions from the spatially constrained clustering voxel timeseries [24], and 160 ROIs from a meta-analysis of task results [19]. Time series for 10 ICNs were extracted using spatial regression.
+
+.. bibliography::
+   :cited:
+   :keyprefix: cite-default-
+   :start: continue
 
 anat-only: Default with Anatomical Preprocessing Only
 -----------------------------------------------------
@@ -169,3 +186,9 @@ benchmark-FNIRT: C-PAC Benchmark with FSL FNIRT Registration
 Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_benchmark-FNIRT.yml <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_benchmark-FNIRT.yml>`_
 
 The benchmark pipeline has remained mostly unchanged since the project's inception, and is used at the end of each release cycle to ensure the results of C-PAC's key outputs have not changed. It is designed to test a wide range of pipeline options. This pipeline is based on registration-to-template using the FSL FLIRT & FNIRT, as this decision impacts many other aspects of the pipeline further downstream.
+
+.. |default-deprecated| replace:: ``default-deprecated``
+
+.. _default-deprecated:https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_default-deprecated.yml
+
+.. |see 1.8.5 rnotes| replace:: See :doc:`user/release_notes/v1.8.5` for details.

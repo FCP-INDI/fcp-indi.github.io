@@ -601,3 +601,4 @@ def setup(app):
         setattr(custom_logging.MockLogger, method, getattr(ml, method))
 
     app.connect('autodoc-process-docstring', format_node_block_docstrings)
+    return app

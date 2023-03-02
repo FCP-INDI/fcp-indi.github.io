@@ -15,7 +15,7 @@ Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/r
 
 .. versionchanged:: 1.8.5 
 
-   This pipeline was modified during the v1.8.5 release cycle. |see 1.8.5 rnotes| The previous default pipeline has been preserved as |default_deprecated|_
+   This pipeline was modified during the v1.8.5 release cycle. |see 1.8.5 rnotes| The previous default pipeline has been preserved as |default-deprecated|_
 
 C-PAC is packaged with a default processing pipeline so that you can get your data preprocessing and analysis started immediately. Just pull the C-PAC Docker container and kick off the container with your data, and you're on your way.
 
@@ -191,4 +191,4 @@ The benchmark pipeline has remained mostly unchanged since the project's incepti
 
 .. _default-deprecated:https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_default-deprecated.yml
 
-.. |see 1.8.5 rnotes| replace:: See :doc:`user/release_notes/v1.8.5` for details.
+.. |see 1.8.5 rnotes| replace:: See :doc:`/user/release_notes/v1.8.5` for details.

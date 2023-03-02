@@ -13,9 +13,11 @@ Pipeline Configuration YAML: `https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/r
    
    C-PAC runs this pipeline by default, and it is not necessary to invoke the `--preconfig` flag to run it.
 
-.. versionchanged:: 1.8.5 
+.. note::
 
-   This pipeline was modified during the v1.8.5 release cycle. |see 1.8.5 rnotes| The previous default pipeline has been preserved as |default-deprecated|_
+   .. versionchanged:: 1.8.5 
+
+      This pipeline was modified during the v1.8.5 release cycle. |see 1.8.5 rnotes| The previous default pipeline has been preserved as |default-deprecated|_
 
 C-PAC is packaged with a default processing pipeline so that you can get your data preprocessing and analysis started immediately. Just pull the C-PAC Docker container and kick off the container with your data, and you're on your way.
 

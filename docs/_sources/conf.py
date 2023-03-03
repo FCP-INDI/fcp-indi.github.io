@@ -595,6 +595,7 @@ def format_node_block_docstrings(app, what, name, obj, options, lines):
         if first_to_del is not None:
             del lines[first_to_del:]
         if insert_at is not None:
+            lines.insert(insert_at, '')
             lines.insert(insert_at, ".. code-block:: Python")
 
 

@@ -588,15 +588,13 @@ def format_node_block_docstrings(lines: list) -> None:
     lines : list
         modified in-place
     """
-    first_to_del = None
     indent = 0
     insert_at = None
     insert_herald = True
     nevermore = False
     for i, line in enumerate(lines):
         if nevermore and not line.strip():
-            first_to_del = i + 1
-            nevermore = False
+            indent = 0
         if line.lstrip().startswith("Node Block:"):
             indent = 3
             insert_at = i + 1
@@ -613,8 +611,6 @@ def format_node_block_docstrings(lines: list) -> None:
         lines.insert(insert_at, ".. code-block:: Python")
         if insert_herald:
             lines.insert(insert_at, "Node Block:")
-    if first_to_del is not None:
-        del lines[first_to_del:]
 
 
 def initialize_factory() -> None:

@@ -149,7 +149,7 @@ extensions = [
     'sphinxcontrib.programoutput',
     'exec',
     'nbsphinx',
-    'numpydoc']
+    'napoleon']
 
 bibtex_bibfiles = [f'references/{bib}' for bib in os.listdir('references') if
                    bib.endswith('.bib')]
@@ -588,17 +588,19 @@ def format_node_block_docstrings(lines: list) -> None:
     lines : list
         modified in-place
     """
+    first_to_del = None
     indent = 0
     insert_at = None
-    first_to_del = None
+    insert_herald = True
     nevermore = False
     for i, line in enumerate(lines):
         if nevermore and not line.strip():
             first_to_del = i + 1
             nevermore = False
         if line.lstrip().startswith("Node Block:"):
-            insert_at = i + 1
             indent = 3
+            insert_at = i + 1
+            insert_herald = False
         else:
             if indent == 0 and re.match(r"\s*{['\"]name['\"]:", line):
                 insert_at = i
@@ -606,11 +608,13 @@ def format_node_block_docstrings(lines: list) -> None:
             lines[i] = f'{" " * indent}{line}'
         if re.match(r"\s*{['\"]outputs['\"]:", line):
             nevermore = True
-    if first_to_del is not None:
-        del lines[first_to_del:]
     if insert_at is not None:
         lines.insert(insert_at, '')
         lines.insert(insert_at, ".. code-block:: Python")
+        if insert_herald:
+            lines.insert(insert_at, "Node Block:")
+    if first_to_del is not None:
+        del lines[first_to_del:]
 
 
 def initialize_factory() -> None:

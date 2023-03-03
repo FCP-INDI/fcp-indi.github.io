@@ -21,7 +21,7 @@ Initial Preprocessing
 #. **Motion Correction Tool - [3dvolreg, mcflirt]:** Choose motion correction method. Options: AFNI volreg, FSL mcflirt. Default is AFNI volreg.
 #. **Motion Correction Reference - [mean, median, selected volume]:** Choose motion correction reference. Options: mean, median, selected volume. Default is mean.
 #. **Motion Correction Reference Volume - [integer]:** Choose an integer as the motion correction reference volume if choosing "selected volume" as motion correction reference.
-#. **Motion Estimate Filter:** Adapted from the motion estimate filter by `DCAN Labs <https://github.com/DCAN-Labs>`__. Based on the filter described `in this publication <https://www.biorxiv.org/content/10.1101/337360v1.full.pdf>`__.
+#. **Motion Estimate Filter:** Adapted from the motion estimate filter by `DCAN Labs <https://github.com/DCAN-Labs>`__. Based on the filter described in :footcite:t:`Fair20`.
 
     #. **run - [False, True]:** Toggle the filter.
     #. **filter_type - ['notch', 'lowpass']:** Use either a notch/bandstop or low-pass filter.
@@ -86,13 +86,11 @@ and the format ``{filterType}{filterOrder}[{key}{value}]*`` with a lowercase ``p
 
 .. rubric:: Note about abbreviation table
 
-.. [#motion-filter-abbreviations] These abbreviations are based on :cite:`motionfilt-Eybe16` but modified to comply with :cite:`motionfilt-BIDS21`.
+.. [#motion-filter-abbreviations] These abbreviations are based on :footcite:`Eybe16` but modified to comply with :footcite:`BIDS21`.
 
 .. rubric:: References
 
-.. bibliography::
-    :cited:
-    :keyprefix: motionfilt-
+.. footbibliography::
 
 
 Slice Timing Correction

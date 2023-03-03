@@ -611,6 +611,7 @@ def format_node_block_docstrings(lines: list) -> None:
         lines.insert(insert_at, ".. code-block:: Python")
         if insert_herald:
             lines.insert(insert_at, "Node Block:")
+        print('\n'.join([f'|{line}|' for line in lines]))
 
 
 def initialize_factory() -> None:

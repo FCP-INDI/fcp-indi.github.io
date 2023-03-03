@@ -587,6 +587,7 @@ def format_node_block_docstrings(app, what, name, obj, options, lines):
                 lines[i] = f'{" " * indent}{lines[i]}'
         if indent == 3:
             lines += ['']
+        print('\n'.join(lines))
 
 def setup(app):
     from CPAC.utils.monitoring import custom_logging

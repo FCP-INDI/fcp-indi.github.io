@@ -8,18 +8,25 @@ C-PAC ≥ 1.8.0
 
 The output structure of C-PAC ≥ 1.8.0 is based on `the Brain Imaging Data Structure v1.6.0-dev BIDS Derivatives specification <https://bids-specification.readthedocs.io/en/latest/05-derivatives/01-introduction.html>`_. The output directory structure is a simple tree like
 
+.. versionchanged:: 1.8.5
+
 .. code-block:: text
 
    └── pipeline-name
        ├── log
-       │   └── pipeline_pipeline-name
+       │   └── pipeline_{pipeline-name}
        │       └── sub-{sub}_ses-{ses}
-       └── output
-           └── cpac_pipeline-name
-               └── sub-{sub}_ses-{ses}
-                   ├── anat
-                   └── func
+       ├── output
+       │   └── pipeline_{pipeline-name}
+       │       └── sub-{sub}
+       │           └── ses-{ses}
+       │               ├── anat
+       │               └── func
+       └── working
+           └── pipeline_{pipeline-name}
+               └── cpac_pipeline_{pipeline-name}_sub-{sub}_ses-{ses}
 
+.. versionadded:: 1.8.4
 
 Beginning with C-PAC v1.8.4, C-PAC generates a YAML file called ``sub-{sub}_ses-{ses}_expectedOutputs.yml`` near the beginning of each participant run. This file is stored in the participant's log directory and lists derivative modalities (e.g., ``anat``, ``func``) and partial BIDS filenames for outputs expected to be generated and stored for each modality given the provided data and pipeline configuration. At the end of the run (or when crashing gracefully), C-PAC will check the output directory for the presence of all expected outputs. If any expected outputs are missing, C-PAC will generate a ``sub-{sub}_ses-{ses}_missingOutputs.yml`` file listing those missing outputs, also in the participant's log directory.
 

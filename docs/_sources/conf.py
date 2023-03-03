@@ -593,6 +593,8 @@ def format_node_block_docstrings(lines: list) -> None:
     insert_herald = True
     nevermore = False
     for i, line in enumerate(lines):
+        if re.match(r"\s*{['\"]outputs['\"]:", line):
+            nevermore = True
         if nevermore and not line.strip():
             indent = 0
         if line.lstrip().startswith("Node Block:"):
@@ -604,12 +606,11 @@ def format_node_block_docstrings(lines: list) -> None:
                 insert_at = i
                 indent = 3
             lines[i] = f'{" " * indent}{line}'
-        if re.match(r"\s*{['\"]outputs['\"]:", line):
-            nevermore = True
     if insert_at is not None:
         lines.insert(insert_at, '')
         lines.insert(insert_at, ".. code-block:: Python")
         if insert_herald:
+            lines.insert(insert_at, '')
             lines.insert(insert_at, "Node Block:")
         print('\n'.join([f'|{line}|' for line in lines]))
 

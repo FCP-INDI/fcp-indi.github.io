@@ -572,21 +572,19 @@ rst_epilog = """
 
 
 def format_node_block_docstrings(app, what, name, obj, options, lines):
+    _ = (app, name, obj, options)
     if what in ['function']:
-        newlines = []
         indent = 0
-        for line in lines:
-            if line.lstrip().startswith('Node Block:'):
-                newlines += [line, '', '.. code:: Python', '']
+        for i in range(len(lines)):
+            if lines[i].lstrip().startswith('Node Block:'):
+                lines[i] = '\n'.join([lines[i], '', '.. code:: Python', ''])
                 indent = 3
-            elif indent == 0 and re.match("\s*^{['\"]name['\"]:", line):
-                newlines += ['', '.. code:: Python', '', f'   {line}']
+            elif indent == 0 and re.match("\s*^{['\"]name['\"]:", lines[i]):
+                lines[i] = '\n.join'(['', '.. code:: Python', '',
+                                      f'   {lines[i]}'])
                 indent = 3
             else:
-                newlines.append(f'{" " * indent}line')
-        if indent:
-            newlines.append('')
-        lines = newlines
+                lines[i] = f'{" " * indent}{lines[i]}'
 
 def setup(app):
     from CPAC.utils.monitoring import custom_logging
@@ -601,4 +599,3 @@ def setup(app):
         setattr(custom_logging.MockLogger, method, getattr(ml, method))
 
     app.connect('autodoc-process-docstring', format_node_block_docstrings)
-    return app

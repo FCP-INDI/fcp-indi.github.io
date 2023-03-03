@@ -577,14 +577,16 @@ def format_node_block_docstrings(app, what, name, obj, options, lines):
         indent = 0
         for i in range(len(lines)):
             if lines[i].lstrip().startswith('Node Block:'):
-                lines[i] = '\n'.join([lines[i], '', '    .. code:: Python', ''])
+                lines[i] = '\n'.join([lines[i], '', '.. code:: Python', ''])
                 indent = 3
             elif indent == 0 and re.match("\s*{['\"]name['\"]:", lines[i]):
-                lines[i] = '\n'.join(['', '    .. code:: Python', '',
+                lines[i] = '\n'.join(['', '.. code:: Python', '',
                                       f'   {lines[i]}'])
                 indent = 3
             else:
                 lines[i] = f'{" " * indent}{lines[i]}'
+        if indent == 3:
+            lines += ['']
 
 def setup(app):
     from CPAC.utils.monitoring import custom_logging

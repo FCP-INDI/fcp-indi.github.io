@@ -574,19 +574,14 @@ rst_epilog = """
 def format_node_block_docstrings(app, what, name, obj, options, lines):
     _ = (app, name, obj, options)
     if what in ['function']:
-        indent = 0
+        prefix = ''
         for i in range(len(lines)):
             if lines[i].lstrip().startswith('Node Block:'):
-                lines[i] = '\n'.join([lines[i], '', '.. code:: Python', ''])
-                indent = 3
-            elif indent == 0 and re.match("\s*{['\"]name['\"]:", lines[i]):
-                lines[i] = '\n'.join(['', '.. code:: Python', '',
-                                      f'   {lines[i]}'])
-                indent = 3
+                prefix = '>>> '
             else:
-                lines[i] = f'{" " * indent}{lines[i]}'
-        if indent == 3:
-            lines += ['']
+                if (i < 2) and re.match("\s*{['\"]name['\"]:", lines[i]):
+                    prefix = '>>> '
+                lines[i] = ''.join([prefix, lines[i]])
         print('\n'.join(lines))
 
 def setup(app):

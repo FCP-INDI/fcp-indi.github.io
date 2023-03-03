@@ -573,28 +573,30 @@ rst_epilog = """
 
 def format_node_block_docstrings(app, what, name, obj, options, lines):
     _ = (app, name, obj, options)
-    if what in ['function']:
+    if what in ["function"]:
         indent = 0
+        insert_at = None
         first_to_del = None
         nevermore = False
-        for i in range(len(lines)):
-            if nevermore and not lines[i].strip():
+        for i, line in enumerate(lines):
+            if nevermore and not line.strip():
                 first_to_del = i + 1
                 nevermore = False
-            if lines[i].lstrip().startswith('Node Block:'):
-                lines[i] = '\n'.join([lines[i], '', '.. code-block:: Python', ''])
+            if line.lstrip().startswith("Node Block:"):
+                insert_at = i + 1
                 indent = 3
-            elif indent == 0 and re.match("\s*{['\"]name['\"]:", lines[i]):
-                lines[i] = '\n'.join(['', '.. code-block:: Python', '',
-                                      f'   {lines[i]}'])
+            elif indent == 0 and re.match(r"\s*{['\"]name['\"]:", line):
+                insert_at = i
                 indent = 3
             else:
-                lines[i] = f'{" " * indent}{lines[i]}'
-            if re.match("\s*{['\"]outputs['\"]:", lines[i]):
+                lines[i] = f'{" " * indent}{line}'
+            if re.match(r"\s*{['\"]outputs['\"]:", line):
                 nevermore = True
-        if first_to_del:
+        if first_to_del is not None:
             del lines[first_to_del:]
-        
+        if insert_at is not None:
+            lines.insert(insert_at, ".. code-block:: Python")
+
 
 def setup(app):
     from CPAC.utils.monitoring import custom_logging

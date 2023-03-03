@@ -145,11 +145,11 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinxcontrib.programoutput',
     'exec',
-    'nbsphinx',
-    'napoleon']
+    'nbsphinx']
 
 bibtex_bibfiles = [f'references/{bib}' for bib in os.listdir('references') if
                    bib.endswith('.bib')]

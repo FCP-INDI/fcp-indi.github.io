@@ -40,8 +40,8 @@ To configure CWAS options within a YAML file, add the following lines to your fi
  
 .. literalinclude:: /references/group_config_template.yml
    :language: YAML
-   :start-at: mdmr:
-   :end-before: isc_isfc:
+   :start-at: # Multivariate Distance Matrix Regression (MDMR)
+   :end-before: # Inter-Subject Correlation (ISC) & Inter-Subject Functional Correlation (ISFC)
     
 References
 ^^^^^^^^^^

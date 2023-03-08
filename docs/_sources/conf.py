@@ -12,17 +12,18 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import m2r
 import os
 import re
-import semver
 import sys
 
-from CPAC import __version__
 from dateutil import parser as dparser
+from CPAC import __version__
+from CPAC.utils.monitoring import custom_logging
 from github import Github
 from github.GithubException import RateLimitExceededException, \
     UnknownObjectException
+import m2r
+import semver
 from pybtex.plugin import register_plugin
 
 sys.path.append(os.path.dirname(__file__))
@@ -144,11 +145,11 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinxcontrib.programoutput',
     'exec',
-    'nbsphinx',
-    'numpydoc']
+    'nbsphinx']
 
 bibtex_bibfiles = [f'references/{bib}' for bib in os.listdir('references') if
                    bib.endswith('.bib')]
@@ -571,14 +572,60 @@ rst_epilog = """
 ) if len(gh_tags) >= 5 else ""
 
 
-def setup(app):
-    from CPAC.utils.monitoring import custom_logging
+def autodoc_process_docstring(app, what, name, obj, options, lines) -> None:
+    """Modify docstrings before parsing RST"""
+    # pylint: disable=too-many-arguments,unused-argument
+    initialize_factory()
+    if what == "function":
+        format_node_block_docstrings(lines)
 
-    # initilaize class to make factory functions available to Sphinx
-    ml = custom_logging.MockLogger('test', 'test.log', 0, '/tmp')
+
+def format_node_block_docstrings(lines: list) -> None:
+    """Format Node Block docstring dictionaries as Python code blocks
+
+    Parameters
+    ----------
+    lines : list
+        modified in-place
+    """
+    indent = 0
+    insert_at = None
+    insert_herald = True
+    nevermore = False
+    for i, line in enumerate(lines):
+        if re.match(r"\s*{['\"]outputs['\"]:", line):
+            nevermore = True
+        if nevermore and not line.strip():
+            indent = 0
+        if line.lstrip().startswith("Node Block:"):
+            indent = 3
+            insert_at = i + 1
+            insert_herald = False
+        else:
+            if indent == 0 and re.match(r"\s*{['\"]name['\"]:", line):
+                insert_at = i
+                indent = 3
+            lines[i] = f'{" " * indent}{line}'
+    if insert_at is not None:
+        lines.insert(insert_at, '')
+        lines.insert(insert_at, ".. code-block:: Python")
+        if insert_herald:
+            lines.insert(insert_at, '')
+            lines.insert(insert_at, "Node Block:")
+
+
+def initialize_factory() -> None:
+    """Initilaize class to make factory functions available to Sphinx"""
+    mocklogger = custom_logging.MockLogger('test', 'test.log', 0, '/tmp')
     for method in [
         method for method in
-        set(dir(ml)) - set(dir(custom_logging.MockLogger)) if
+        set(dir(mocklogger)) - set(dir(custom_logging.MockLogger)) if
         method not in ['name', 'handlers']
     ]:
-        setattr(custom_logging.MockLogger, method, getattr(ml, method))
+        setattr(custom_logging.MockLogger, method,
+                getattr(mocklogger, method))
+
+
+def setup(app) -> None:
+    """Extend Sphinx"""
+    app.connect('autodoc-process-docstring', autodoc_process_docstring)

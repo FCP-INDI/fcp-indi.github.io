@@ -38,15 +38,10 @@ Configuration Using a YAML File
 """"""""""""""""""""""""""""""""
 To configure CWAS options within a YAML file, add the following lines to your file (with appropriate substitutions for paths):
  
-.. code-block:: yaml
-
-    runCWAS = [0]
-    cwas_roi_file = '/path/to/cwas_mask_file'
-    cwas_regressor_file = '/path/to/cwas_regressor_file'
-    cwas_regressor_participant_column = 'ID
-    cwas_regressor_columns = ['FIQ', 'VIQ', 'PIQ']
-    cwas_permutations = 500
-    cwas_parallel_nodes = 3
+.. literalinclude:: /references/group_config_template.yml
+   :language: YAML
+   :start-at: # Multivariate Distance Matrix Regression (MDMR)
+   :end-before: # Inter-Subject Correlation (ISC) & Inter-Subject Functional Correlation (ISFC)
     
 References
 ^^^^^^^^^^

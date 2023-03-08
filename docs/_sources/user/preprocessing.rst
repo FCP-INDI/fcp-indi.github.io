@@ -2,9 +2,12 @@ Pre-Processing Steps
 ====================
 
 
-.. raw:: html
+.. container:: svg-flowchart
 
-    <div class="flowchart-container"><object data="../_static/flowcharts/pipeline-individual.svg" type="image/svg+xml"></object></div>
+    .. raw:: html
+        :file: ../_static/flowcharts/pipeline-individual.svg
+
+    `Open image <../_static/flowcharts/pipeline-individual.svg>`_
 
 The following index provides links to pages containing overviews and configuration instructions for the various pre-processing steps that C-PAC performs.  For more information about how to set up a pipeline configuration, see the :doc:`pipeline configuration page </user/pipelines/pipeline_config>`.
 

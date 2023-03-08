@@ -2,15 +2,24 @@ Computer Settings
 -----------------
 .. figure:: /_images/compute_gui.png
 
-**Pipeline Name - [text]:** Name for this pipeline configuration - useful for identification.  *Note that including an individual participant's ID code in this will presently cause C-PAC to crash.*
+#. **Pipeline Name - [text]:** Name for this pipeline configuration - useful for identification.  *Note that including an individual participant's ID code in this will presently cause C-PAC to crash.*
 
 #. **Maximum Memory Per Participant (GB) - [number]:**  The maximum amount of memory each participant's workflow can allocate. Use this to place an upper bound of memory usage. **Warning: 'Memory Per Participant' multiplied by 'Number of Participants to Run Simultaneously' must not be more than the total amount of RAM. Conversely, using too little RAM can impede the speed of a pipeline run. It is recommended that you set this to a value that when multiplied by 'Number of Participants to Run Simultaneously' is as much RAM you can safely allocate.**
 
 #. **Maximum Cores Per Participant - [integer]:** Number of cores (on a single machine) or slots on a node (cluster/grid) per subject. Slots are cores on a cluster/grid node. 'Number of Cores Per Participant' multiplied by 'Number of Participants to Run Simultaneously' must not be greater than the total number of cores. Dedicating more than one core/CPU per participant will direct C-PAC to parallelize the motion correction and time series registration transform application steps, for a speed increase.
 
 #. **Raise Insufficient - [True, False]:** If True (default), C-PAC will raise an error before trying to run a pipeline if it estimates the given data and pipeline configuration will exceed the memory or core limits. If False, C-PAC will raise a warning and continue to run the pipeline even if it estimates the given data and pipeline configuration will exceed the memory or core limits.
+    .. _observed-usage:
 
 #. **Observed Usage:** The resource usage of each node depends on many factors, including the data, the pipeline configuration, and the system. To run many subjects with optimimzed resource estimation, first run a single subject with the desired number of cores and with a generous memory limit. Then, provide the ``callback.log`` generated from that initial run when you run the rest of the subjects.
+
+    .. container:: svg-flowchart
+
+        .. raw:: html
+            :file: ../_static/flowcharts/observed-usage.svg
+
+        `Open image <../_static/flowcharts/observed-usage.svg>`_
+
     #. **Callback log - [text]:** The path to a callback log file from a previous run, including any resource-management parameters that will be applied in this run, like ``n_cpus`` and ``num_ants_threads``. This file is used override memory estimates with previously observed memory usage. Can be overridden with the commandline flag ``--runtime_usage``.
     #. **Buffer - [percent]:** A percent of the previously observed memory usage that is to be added to the memory estimate. Default: 10. Can be overridden with the commandline flag ``--runtime_buffer``.
 

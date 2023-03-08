@@ -113,3 +113,8 @@ User Guide Index
    10. Troubleshoot <help>
    11. Release Notes <rnotes>
    12. Appendix <appendix>
+
+.. toctree::
+   :hidden:
+
+   versions

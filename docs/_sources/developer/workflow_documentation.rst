@@ -14,7 +14,7 @@ How to write workflow code with proper documentation
 Proper workflow documentation will follow the general standards provided by numpy (https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt).  Because workflow creation functions are themselves python functions, their parameters and what they return should be documented as such.  Please refer to the `example.py <https://github.com/numpy/numpy/blob/master/doc/example.py>`_ provided by numpy for syntax.
 
 
-:doc:`Example of a documented workflow <../workflows/anat_preproc>`
+:doc:`Example of a documented workflow <workflows/anat_preproc>`
 
 
 **Notes section:**

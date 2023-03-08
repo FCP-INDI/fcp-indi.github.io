@@ -17,6 +17,7 @@ Contents:
 
    installation
    pipeline
+   templates
    nodes
    random_state
    logging
@@ -25,6 +26,7 @@ Contents:
    xcpqc
    testing
    continuous_integration
+   deprecating
 
 Indices and tables
 ^^^^^^^^^^^^^^^^^^

@@ -1,9 +1,12 @@
 Longitudinal Preprocessing
 --------------------------
 
-.. raw:: html
+.. container:: svg-flowchart
 
-    <div class="flowchart-container"><object data="../_static/flowcharts/longitudinal.svg" type="image/svg+xml"></object></div>
+    .. raw:: html
+        :file: ../_static/flowcharts/longitudinal.svg
+
+    `Open image <../_static/flowcharts/longitudinal.svg>`_
 
 Background
 ^^^^^^^^^^

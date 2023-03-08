@@ -12,17 +12,18 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import m2r
 import os
 import re
-import semver
 import sys
 
-from CPAC import __version__
 from dateutil import parser as dparser
+from CPAC import __version__
+from CPAC.utils.monitoring import custom_logging
 from github import Github
 from github.GithubException import RateLimitExceededException, \
     UnknownObjectException
+import m2r
+import semver
 from pybtex.plugin import register_plugin
 
 sys.path.append(os.path.dirname(__file__))
@@ -141,15 +142,14 @@ sys.path.insert(0, os.path.abspath('.'))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinxcontrib.bibtex',
-    'sphinxcontrib.fulltoc',
     'sphinx.ext.ifconfig',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinxcontrib.programoutput',
     'exec',
-    'nbsphinx',
-    'numpydoc']
+    'nbsphinx']
 
 bibtex_bibfiles = [f'references/{bib}' for bib in os.listdir('references') if
                    bib.endswith('.bib')]
@@ -172,7 +172,7 @@ suppress_warnings = ['autosectionlabel.*']
 
 # General information about the project.
 project = 'C-PAC'
-copyright = '2012‒2022, C-PAC Developers. C-PAC is licensed under LGPL-3' \
+copyright = '2012‒2023, C-PAC Developers. C-PAC is licensed under LGPL-3' \
             '.0-or-later'
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -408,25 +408,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'classic'
-
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-html_theme_options = {
-    'relbarbgcolor': '#0067a0',
-    'sidebarbgcolor': '#f0f0f0',
-    'sidebartextcolor': '#000000',
-    'sidebarlinkcolor': '#0067a0',
-    'headbgcolor': '#919d9d',
-    'headtextcolor': '#e4e4e4'
-}
-
-# Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = ['../Themes']
-html_css_files = [
-    'custom.css',
-]
+html_theme = 'furo'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # '<project> v<release> documentation'.
@@ -437,7 +419,7 @@ html_css_files = [
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = '_static/cpac_logo_vertical.png'
+html_logo = '_static/cpac_logo_vertical.svg'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -449,6 +431,14 @@ html_favicon = '_static/favicon.ico'
 # so a file named 'default.css' will overwrite the builtin 'default.css'.
 html_static_path = ['_static']
 
+# These paths are either relative to html_static_path
+# or fully qualified paths (eg. https://...)
+html_css_files = [
+    'custom.css',
+]
+html_js_files = [
+    ('versionList.js', {'defer': 'defer'})]
+
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 # html_last_updated_fmt = '%b %d, %Y'
@@ -456,15 +446,6 @@ html_static_path = ['_static']
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
 # html_use_smartypants = True
-
-# Custom sidebar templates, maps document names to template names.
-html_sidebars = {
-  '**': [
-    'localtoc.html',
-    # 'globaltoc.html',
-    'searchbox.html'
-  ]
- }
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -573,7 +554,16 @@ texinfo_documents = [
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 # texinfo_show_urls = 'footnote'
 
+rst_prolog = """
+
+.. |version as code| replace:: ``{version}``
+
+""".format(
+    version=f'v{version}' if not version.endswith('dev') else 'nightly'
+)
+
 rst_epilog = """
+
 
 .. |Versions| replace:: {versions}
 
@@ -581,14 +571,61 @@ rst_epilog = """
     versions=', '.join(gh_tags[:5])
 ) if len(gh_tags) >= 5 else ""
 
-def setup(app):
-    from CPAC.utils.monitoring import custom_logging
 
-    # initilaize class to make factory functions available to Sphinx
-    ml = custom_logging.MockLogger('test', 'test.log', 0, '/tmp')
+def autodoc_process_docstring(app, what, name, obj, options, lines) -> None:
+    """Modify docstrings before parsing RST"""
+    # pylint: disable=too-many-arguments,unused-argument
+    initialize_factory()
+    if what == "function":
+        format_node_block_docstrings(lines)
+
+
+def format_node_block_docstrings(lines: list) -> None:
+    """Format Node Block docstring dictionaries as Python code blocks
+
+    Parameters
+    ----------
+    lines : list
+        modified in-place
+    """
+    indent = 0
+    insert_at = None
+    insert_herald = True
+    nevermore = False
+    for i, line in enumerate(lines):
+        if re.match(r"\s*{['\"]outputs['\"]:", line):
+            nevermore = True
+        if nevermore and not line.strip():
+            indent = 0
+        if line.lstrip().startswith("Node Block:"):
+            indent = 3
+            insert_at = i + 1
+            insert_herald = False
+        else:
+            if indent == 0 and re.match(r"\s*{['\"]name['\"]:", line):
+                insert_at = i
+                indent = 3
+            lines[i] = f'{" " * indent}{line}'
+    if insert_at is not None:
+        lines.insert(insert_at, '')
+        lines.insert(insert_at, ".. code-block:: Python")
+        if insert_herald:
+            lines.insert(insert_at, '')
+            lines.insert(insert_at, "Node Block:")
+
+
+def initialize_factory() -> None:
+    """Initilaize class to make factory functions available to Sphinx"""
+    mocklogger = custom_logging.MockLogger('test', 'test.log', 0, '/tmp')
     for method in [
         method for method in
-        set(dir(ml)) - set(dir(custom_logging.MockLogger)) if
+        set(dir(mocklogger)) - set(dir(custom_logging.MockLogger)) if
         method not in ['name', 'handlers']
     ]:
-        setattr(custom_logging.MockLogger, method, getattr(ml, method))
+        setattr(custom_logging.MockLogger, method,
+                getattr(mocklogger, method))
+
+
+def setup(app) -> None:
+    """Extend Sphinx"""
+    app.connect('autodoc-process-docstring', autodoc_process_docstring)

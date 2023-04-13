@@ -9,6 +9,7 @@ C-PAC ≥ 1.8.0
 The output structure of C-PAC ≥ 1.8.0 is based on `the Brain Imaging Data Structure v1.6.0-dev BIDS Derivatives specification <https://bids-specification.readthedocs.io/en/latest/05-derivatives/01-introduction.html>`_. The output directory structure is a simple tree like
 
 .. versionchanged:: 1.8.5
+   some output directory naming conventions
 
 .. code-block:: text
 
@@ -26,7 +27,15 @@ The output structure of C-PAC ≥ 1.8.0 is based on `the Brain Imaging Data Stru
            └── pipeline_{pipeline-name}
                └── cpac_pipeline_{pipeline-name}_sub-{sub}_ses-{ses}
 
+.. versionchanged:: 1.8.5
+   the location of ``cpac_*_config_*.yml`` files
+
+When ``test_config`` or a ``participant``-level analysis is run, C-PAC will output a data config file called ``cpac_data_config_{data-hash}_{datetime}.yml`` and two pipeline config files called ``cpac_pipeline_config_{data-hash}_{datetime}.yml`` and ``cpac_pipeline_config_{data-hash}_{datetime}_min.yml``. These files reflect exactly the configuration C-PAC did or would run after all expansions and substitutions. The two pipeline configs are funcitionally equivalent, with the ``*_min.yml`` only showing the options that are configured and the other pipeline config showing every configurable option.
+
+These three files will be written in the ``log/pipeline_{pipeline-name}/sub-{sub}_ses-{ses}`` directory for the run. Prior to version 1.8.5, these config files were written to the top-level output directory (siblings with ``log``, ``output`` and ``working``).
+
 .. versionadded:: 1.8.4
+   ``sub-{sub}_ses-{ses}_expectedOutputs.yml``
 
 Beginning with C-PAC v1.8.4, C-PAC generates a YAML file called ``sub-{sub}_ses-{ses}_expectedOutputs.yml`` near the beginning of each participant run. This file is stored in the participant's log directory and lists derivative modalities (e.g., ``anat``, ``func``) and partial BIDS filenames for outputs expected to be generated and stored for each modality given the provided data and pipeline configuration. At the end of the run (or when crashing gracefully), C-PAC will check the output directory for the presence of all expected outputs. If any expected outputs are missing, C-PAC will generate a ``sub-{sub}_ses-{ses}_missingOutputs.yml`` file listing those missing outputs, also in the participant's log directory.
 

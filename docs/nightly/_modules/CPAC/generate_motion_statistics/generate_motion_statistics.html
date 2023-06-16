@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex" /><link rel="search" title="Search" href="../../../search" />
 
     <link rel="shortcut icon" href="../../../_static/favicon.ico"/><meta name="generator" content="sphinx-4.0.0, furo 2022.09.29"/>
-        <title>CPAC.generate_motion_statistics.generate_motion_statistics - C-PAC 1.8.5 Beta documentation</title>
+        <title>CPAC.generate_motion_statistics.generate_motion_statistics - C-PAC 1.8.6.dev Beta documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -123,7 +123,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../../index"><div class="brand">C-PAC 1.8.5 Beta documentation</div></a>
+      <a href="../../../index"><div class="brand">C-PAC 1.8.6.dev Beta documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -149,7 +149,7 @@
     <img class="sidebar-logo" src="../../../_static/cpac_logo_vertical.svg" alt="Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">C-PAC 1.8.5 Beta documentation</span>
+  <span class="sidebar-brand-text">C-PAC 1.8.6.dev Beta documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../../../search" role="search">
   <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
@@ -640,14 +640,20 @@
     <span class="k">return</span> <span class="n">out_file</span></div>
 
 
-<div class="viewcode-block" id="calculate_FD_J"><a class="viewcode-back" href="../../../developer/workflows/generate_motion_statistics#CPAC.generate_motion_statistics.calculate_FD_J">[docs]</a><span class="k">def</span> <span class="nf">calculate_FD_J</span><span class="p">(</span><span class="n">in_file</span><span class="p">,</span> <span class="n">motion_correct_tool</span><span class="o">=</span><span class="s1">&#39;3dvolreg&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="calculate_FD_J"><a class="viewcode-back" href="../../../developer/workflows/generate_motion_statistics#CPAC.generate_motion_statistics.calculate_FD_J">[docs]</a><span class="k">def</span> <span class="nf">calculate_FD_J</span><span class="p">(</span><span class="n">in_file</span><span class="p">,</span> <span class="n">motion_correct_tool</span><span class="o">=</span><span class="s1">&#39;3dvolreg&#39;</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Method to calculate framewise displacement as per Jenkinson et al. 2002</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    in_file : string</span>
-<span class="sd">        matrix transformations from volume alignment file path</span>
+<span class="sd">        matrix transformations from volume alignment file path if</span>
+<span class="sd">        motion_correct_tool is &#39;3dvolreg&#39;, or FDRMS (*_rel.rms) output if</span>
+<span class="sd">        motion_correct_tool is &#39;mcflirt&#39;.</span>
+<span class="sd">    motion_correct_tool : string</span>
+<span class="sd">        motion correction tool used, &#39;3dvolreg&#39; or &#39;mcflirt&#39;.</span>
+<span class="sd">    center : ndarray</span>
+<span class="sd">        optional volume center for the calculation.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -655,6 +661,10 @@
 <span class="sd">        Frame-wise displacement file path</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">center</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;3dvolreg&#39;</span><span class="p">:</span>
         <span class="n">pm_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">in_file</span><span class="p">)</span>
@@ -675,7 +685,7 @@
 
             <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">T_rb</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">T_rb_prev</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
             <span class="n">A</span> <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
-            <span class="n">b</span> <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="n">A</span> <span class="o">@</span> <span class="n">center</span>
 
             <span class="n">fd</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
                 <span class="p">(</span><span class="n">rmax</span> <span class="o">*</span> <span class="n">rmax</span> <span class="o">/</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">A</span><span class="p">))</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
@@ -686,11 +696,37 @@
     <span class="k">elif</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;mcflirt&#39;</span><span class="p">:</span>
         <span class="n">rel_rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">in_file</span><span class="p">)</span>
         <span class="n">fd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">rel_rms</span><span class="p">)</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;motion_correct_tool </span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s2"> not supported&quot;</span><span class="p">)</span>
 
     <span class="n">out_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;FD_J.1D&#39;</span><span class="p">)</span>
     <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">out_file</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%.8f</span><span class="s1">&#39;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">out_file</span></div>
+
+
+<span class="k">def</span> <span class="nf">find_volume_center</span><span class="p">(</span><span class="n">img_file</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the center of mass of a Nifti image volume</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img_file : string (nifti file)</span>
+<span class="sd">        path to nifti volume image</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    center : ndarray </span>
+<span class="sd">        volume center of mass vector</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">img_file</span><span class="p">)</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s2">&quot;dim&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">])</span>
+    <span class="n">pixdim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s2">&quot;pixdim&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">])</span>
+    <span class="c1"># Calculation follows MCFLIRT</span>
+    <span class="c1"># https://github.com/fithisux/FSL/blob/7aa2932949129f5c61af912ea677d4dbda843895/src/mcflirt/mcflirt.cc#L479</span>
+    <span class="n">center</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">pixdim</span>
+    <span class="k">return</span> <span class="n">center</span>
 
 
 <div class="viewcode-block" id="gen_motion_parameters"><a class="viewcode-back" href="../../../developer/workflows/generate_motion_statistics#CPAC.generate_motion_statistics.gen_motion_parameters">[docs]</a><span class="k">def</span> <span class="nf">gen_motion_parameters</span><span class="p">(</span><span class="n">subject_id</span><span class="p">,</span> <span class="n">scan_id</span><span class="p">,</span> <span class="n">movement_parameters</span><span class="p">,</span>

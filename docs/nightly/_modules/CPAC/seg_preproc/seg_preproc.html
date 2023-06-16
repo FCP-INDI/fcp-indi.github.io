@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex" /><link rel="search" title="Search" href="../../../search" />
 
     <link rel="shortcut icon" href="../../../_static/favicon.ico"/><meta name="generator" content="sphinx-4.0.0, furo 2022.09.29"/>
-        <title>CPAC.seg_preproc.seg_preproc - C-PAC 1.8.5 Beta documentation</title>
+        <title>CPAC.seg_preproc.seg_preproc - C-PAC 1.8.6.dev Beta documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -123,7 +123,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../../index"><div class="brand">C-PAC 1.8.5 Beta documentation</div></a>
+      <a href="../../../index"><div class="brand">C-PAC 1.8.6.dev Beta documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -149,7 +149,7 @@
     <img class="sidebar-logo" src="../../../_static/cpac_logo_vertical.svg" alt="Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">C-PAC 1.8.5 Beta documentation</span>
+  <span class="sidebar-brand-text">C-PAC 1.8.6.dev Beta documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../../../search" role="search">
   <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
@@ -1112,7 +1112,9 @@
 <span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
 <span class="sd">     &quot;option_key&quot;: [&quot;tissue_segmentation&quot;, &quot;using&quot;],</span>
 <span class="sd">     &quot;option_val&quot;: &quot;FreeSurfer&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;freesurfer-subject-dir&quot;],</span>
+<span class="sd">     &quot;inputs&quot;: [&quot;freesurfer-subject-dir&quot;, </span>
+<span class="sd">                 &quot;pipeline-fs_raw-average&quot;,</span>
+<span class="sd">                 &quot;pipeline-fs_subcortical-seg&quot;],</span>
 <span class="sd">     &quot;outputs&quot;: [&quot;pipeline-fs_hemi-L_desc-surface_curv&quot;,</span>
 <span class="sd">                 &quot;pipeline-fs_hemi-R_desc-surface_curv&quot;, </span>
 <span class="sd">                 &quot;pipeline-fs_hemi-L_desc-surfaceMesh_pial&quot;,</span>
@@ -1134,11 +1136,29 @@
 <span class="sd">                 &quot;label-WM_mask&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
+    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;freesurfer-subject-dir&#39;</span><span class="p">)</span>
+
+    <span class="n">fs_aseg_to_native</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">freesurfer</span><span class="o">.</span><span class="n">ApplyVolTransform</span><span class="p">(),</span>
+                                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;fs_aseg_to_native_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">fs_aseg_to_native</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">reg_header</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">fs_aseg_to_native</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">interp</span> <span class="o">=</span> <span class="s1">&#39;nearest&#39;</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">fs_aseg_to_native</span><span class="p">,</span> <span class="s1">&#39;subjects_dir&#39;</span><span class="p">)</span>
+
+    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;pipeline-fs_subcortical-seg&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">fs_aseg_to_native</span><span class="p">,</span> <span class="s1">&#39;source_file&#39;</span><span class="p">)</span>
+
+    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;pipeline-fs_raw-average&#39;</span><span class="p">)</span>
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">fs_aseg_to_native</span><span class="p">,</span> <span class="s1">&#39;target_file&#39;</span><span class="p">)</span>
+
     <span class="n">fs_aseg_to_nifti</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">],</span>
                                              <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
                                              <span class="n">function</span><span class="o">=</span><span class="n">mri_convert</span><span class="p">),</span>
                                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;fs_aseg_to_nifti_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="n">fs_aseg_to_nifti</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="s1">&#39;-rt nearest&#39;</span>
+
+    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">fs_aseg_to_native</span><span class="p">,</span> <span class="s1">&#39;transformed_file&#39;</span><span class="p">,</span>
+               <span class="n">fs_aseg_to_nifti</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
     <span class="n">pick_tissue</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">pick_tissue_from_labels_file_interface</span><span class="p">(),</span>
                           <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;select_fs_tissue_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>

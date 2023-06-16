@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../../genindex" /><link rel="search" title="Search" href="../../search" /><link rel="next" title="Configurable Settings" href="configurable-settings" /><link rel="prev" title="Setting Up A Pipeline Configuration" href="pipeline_config" />
 
     <link rel="shortcut icon" href="../../_static/favicon.ico"/><meta name="generator" content="sphinx-4.0.0, furo 2022.09.29"/>
-        <title>Pre-configured Pipelines - C-PAC 1.8.5 Beta documentation</title>
+        <title>Pre-configured Pipelines - C-PAC 1.8.6.dev Beta documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -124,7 +124,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../index"><div class="brand">C-PAC 1.8.5 Beta documentation</div></a>
+      <a href="../../index"><div class="brand">C-PAC 1.8.6.dev Beta documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -150,7 +150,7 @@
     <img class="sidebar-logo" src="../../_static/cpac_logo_vertical.svg" alt="Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">C-PAC 1.8.5 Beta documentation</span>
+  <span class="sidebar-brand-text">C-PAC 1.8.6.dev Beta documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../../search" role="search">
   <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
@@ -329,14 +329,14 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">Changed in version 1.8.5: </span>This pipeline was modified during the v1.8.5 release cycle. See <span class="xref std std-doc">/user/release_notes/v1.8.5</span> for details. The previous default pipeline has been preserved as <a class="reference external" href="https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_default-deprecated.yml"><code class="docutils literal notranslate"><span class="pre">default-deprecated</span></code></a></p>
+<p><span class="versionmodified changed">Changed in version 1.8.5: </span>This pipeline was modified during the v1.8.5 release cycle. See <a class="reference internal" href="../release_notes/v1.8.5"><span class="doc">Version 1.8.5 Beta (May 24, 2023)</span></a> for details. The previous default pipeline has been preserved as <a class="reference external" href="https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/resources/configs/pipeline_config_default-deprecated.yml"><code class="docutils literal notranslate"><span class="pre">default-deprecated</span></code></a></p>
 </div>
 </div>
 <p>C-PAC is packaged with a default processing pipeline so that you can get your data preprocessing and analysis started immediately. Just pull the C-PAC Docker container and kick off the container with your data, and you’re on your way.</p>
 <p>The default processing pipeline performs fMRI processing using four strategies, with and without global signal regression, with and without bandpass filtering.</p>
 <p>Anatomical processing begins with conforming the data to RPI orientation and removing orientation header information that will interfere with further processing. A non-linear transform between skull-on images and a 2mm MNI brain-only template are calculated using ANTs<a class="footnote-reference brackets" href="#footcite-avan08" id="id1">1</a>.</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">Changed in version 1.8.5: </span>Images are them skull-stripped using FSL’s BET<a class="footnote-reference brackets" href="#footcite-smit02" id="id2">2</a> (was using AFNI’s 3dSkullStrip<a class="footnote-reference brackets" href="#footcite-cox96" id="id3">3</a> prior to v1.8.5. See <span class="xref std std-doc">/user/release_notes/v1.8.5</span> for details.) and subsequently segmented into WM, GM, and CSF using FSL’s FAST tool<a class="footnote-reference brackets" href="#footcite-zhan01" id="id4">4</a>.</p>
+<p><span class="versionmodified changed">Changed in version 1.8.5: </span>Images are them skull-stripped using FSL’s BET<a class="footnote-reference brackets" href="#footcite-smit02" id="id2">2</a> (was using AFNI’s 3dSkullStrip<a class="footnote-reference brackets" href="#footcite-cox96" id="id3">3</a> prior to v1.8.5. See <a class="reference internal" href="../release_notes/v1.8.5"><span class="doc">Version 1.8.5 Beta (May 24, 2023)</span></a> for details.) and subsequently segmented into WM, GM, and CSF using FSL’s FAST tool<a class="footnote-reference brackets" href="#footcite-zhan01" id="id4">4</a>.</p>
 </div>
 <p>The resulting WM mask was multiplied by a WM prior map that was transformed into individual space using the inverse of the linear transforms previously calculated during the ANTs procedure. A CSF mask was multiplied by a ventricle map derived from the Harvard-Oxford atlas distributed with FSL<a class="footnote-reference brackets" href="#footcite-smit04" id="id5">5</a>. Skull-stripped images and grey matter tissue maps are written into MNI space at 2mm resolution.</p>
 <p>Functional preprocessing begins with resampling the data to RPI orientation, and slice timing correction. Next, motion correction is performed using a two-stage approach in which the images are first coregistered to the mean fMRI and then a new mean is calculated and used as the target for a second coregistration (AFNI 3dvolreg<a class="footnote-reference brackets" href="#footcite-cox99" id="id6">6</a>). A 7 degree of freedom linear transform between the mean fMRI and the structural image is calculated using FSL’s implementation of boundary-based registration<a class="footnote-reference brackets" href="#footcite-zhan01" id="id7">4</a>. Nuisance variable regression (NVR) is performed on motion corrected data using a 2nd order polynomial, a 24-regressor model of motion<a class="footnote-reference brackets" href="#footcite-fris96" id="id8">7</a>, 5 nuisance signals, identified via principal components analysis of signals obtained from white matter (CompCor<a class="footnote-reference brackets" href="#footcite-behz07" id="id9">8</a>), and mean CSF signal. WM and CSF signals were extracted using the previously described masks after transforming the fMRI data to match them in 2mm space using the inverse of the linear fMRI-sMRI transform. The NVR procedure is performed twice, with and without the inclusion of the global signal as a nuisance regressor. The residuals of the NVR procedure are processed with and without bandpass filtering (0.01Hz &lt; f &lt; 0.1Hz), written into MNI space at 3mm resolution and subsequently smoothed using a 6mm FWHM kernel.</p>

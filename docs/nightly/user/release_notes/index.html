@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../../genindex" /><link rel="search" title="Search" href="../../search" />
 
     <link rel="shortcut icon" href="../../_static/favicon.ico"/><meta name="generator" content="sphinx-4.0.0, furo 2022.09.29"/>
-        <title>Version 1.8.4 Beta (Dec 13, 2022) - C-PAC 1.8.5 Beta documentation</title>
+        <title>Version 1.8.5 Beta (May 24, 2023) - C-PAC 1.8.6.dev Beta documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -124,7 +124,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../../index"><div class="brand">C-PAC 1.8.5 Beta documentation</div></a>
+      <a href="../../index"><div class="brand">C-PAC 1.8.6.dev Beta documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -150,7 +150,7 @@
     <img class="sidebar-logo" src="../../_static/cpac_logo_vertical.svg" alt="Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">C-PAC 1.8.5 Beta documentation</span>
+  <span class="sidebar-brand-text">C-PAC 1.8.6.dev Beta documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../../search" role="search">
   <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
@@ -315,7 +315,96 @@
           </label>
         </div>
         <article role="main">
-          <section id="version-1-8-4-beta-dec-13-2022">
+          <section id="version-1-8-5-beta-may-24-2023">
+<h1>Version 1.8.5 Beta (May 24, 2023)<a class="headerlink" href="#version-1-8-5-beta-may-24-2023" title="Permalink to this headline">#</a></h1>
+<p><strong>New Features</strong></p>
+<ul class="simple">
+<li><p>Extension of Template-Space Processing.</p>
+<ul>
+<li><p>In an effort to support compatibility with other tools being used in the field, C-PAC now has the option of performing several operations in template space, where they have historically only been supported within C-PAC in native space. These features now include:</p>
+<ul>
+<li><p>Time series despiking via AFNI 3dDespike.</p></li>
+<li><p>Nuisance correction and denoising.</p></li>
+<li><p>Calculation of the ALFF, f/ALFF and ReHo derivatives.</p></li>
+<li><p>Connectome computation (already supported; included for completeness)</p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Improved Robustness of Default Pipeline Configuration.</p>
+<ul>
+<li><p>A modified version of the legacy C-PAC default pipeline has been released that improves stability across datasets. This pipeline largely maintains the original preprocessing choices, with the modification of employing robust FSL BET for T1w brain mask generation rather than AFNI. This change was motivated by a difference in design of these two components, where AFNI would exclude ventricles from brain mask generation, occasionally leading to downstream errors in nuisance signal correction.</p></li>
+<li><p>The pre-1.8.5 default pipeline is still available for users as a preconfigured pipeline under the name <code class="docutils literal notranslate"><span class="pre">default-deprecated</span></code>.</p></li>
+</ul>
+</li>
+<li><p>Downsampling of surface data.</p>
+<ul>
+<li><p>While surface analysis is typically performed on high resolution surfaces and then downsampled to the resolution of the structural images being acquired, further downsampling may be required when working with functional data. To minimize the influence of signal interpolation on downstream markers, such as Regional Homogeneity, we now support downsampling of surface data to a resolution that matches the input functional data resolution.</p></li>
+</ul>
+</li>
+<li><p>Motion estimate filter forking capability expanded.</p>
+<ul>
+<li><p>Previous versions of C-PAC allowed for the application of 0‒1 motion estimate filters. C-PAC now supports configuring any number of motion estimate filters; each filter is applied independently.</p></li>
+</ul>
+</li>
+<li><p>Support for Fail-Fast workflow execution.</p>
+<ul>
+<li><p>To minimize waste of computational resources and reduce the possibility of misunderstanding of partial derived datasets, the new <code class="docutils literal notranslate"><span class="pre">fail-fast</span></code> option in C-PAC tells the workflow engine to stop running in the event of any failed or incomplete processing step.</p></li>
+</ul>
+</li>
+</ul>
+<p><strong>Improvements</strong></p>
+<ul class="simple">
+<li><p>Freesurfer outputs ingress overhaul.</p>
+<ul>
+<li><p>The process of ingressing Freesurfer recon-all outputs into the C-PAC pipeline has been streamlined. Freesurfer output directories are now linked in the C-PAC data configuration YAML files, rather than pipeline configurations, for each participant and session of data.</p></li>
+<li><p>Preconfigured pipelines which employ Freesurfer-based surface processing, such as the abcd-options pipeline, now use the surface-derived T1w brain mask as the default, rather than redundantly computing separate masks.</p></li>
+</ul>
+</li>
+<li><p>Output directory BIDS-Derivatives compliance and naming improvement.</p>
+<ul>
+<li><p>The output files in template space now feature the specific <code class="docutils literal notranslate"><span class="pre">space-*</span></code> tag, mapping to standardized names for the template entities, instead of the more generic <code class="docutils literal notranslate"><span class="pre">space-template</span></code> tag.</p></li>
+<li><p>Data that has been nuisance corrected now feature BIDS labels which name the user-provided regressor strategy name, instead of providing this information in the information-dense sidecar JSONs.</p></li>
+</ul>
+</li>
+<li><p>Corrected erroneous forking in ABCD-options pipeline.</p>
+<ul>
+<li><p>While no errors were produced in the terminal outputs, redundant computation was previously taking place which led to a slowdown for this configuration, or others which may have used the post-freesurfer processing blocks. The source of this issue has been identified and corrected.</p></li>
+</ul>
+</li>
+<li><p>For Nilearn-generated correlation matrices, diagonals are now set to all 1s (were all 0s).</p></li>
+<li><p>Distortion correction improvements.</p>
+<ul>
+<li><p>Fixed an issue where the distortion correction un-warps were not being applied to the final template-space BOLD time series data, depending on pipeline configuration decisions.</p></li>
+<li><p>Replaces <code class="docutils literal notranslate"><span class="pre">DwellTime</span></code> with <code class="docutils literal notranslate"><span class="pre">EffectiveEchoSpacing</span></code> in the application of FSL FUGUE, consistent with the intention of the documentation and correcting inconsistent nomenclature.</p></li>
+<li><p>Added the ability to ingress TotalReadoutTime from epi field map meta-data from JSON sidecars.</p></li>
+<li><p>Added the ability to use TotalReadoutTime of epi field maps in the calculation of FSL topup distortion correction.</p></li>
+<li><p>Identified future directions for refining distortion correction further, including the modernization of some libraries to support the adoption of the sdcflows library.</p></li>
+</ul>
+</li>
+<li><p>Run directory and logging improvements.</p>
+<ul>
+<li><p>Added a level of depth to working directories to match log and output directory structure.</p></li>
+<li><p>Renamed participant-pipeline-level output directory prefix to <code class="docutils literal notranslate"><span class="pre">pipeline_</span></code> to match log and working paths.</p></li>
+<li><p>Added crash messages from during and before graph building to logs.</p></li>
+<li><p>Added data-config-specific hash string to C-PAC-generated config files.</p></li>
+</ul>
+</li>
+</ul>
+<p><strong>Error Fixes</strong></p>
+<ul class="simple">
+<li><p>Single-step resampling has been fixed such that motion-corrected BOLD time series data is blocked from being used as the input, as the motion correction transforms are factored into the transform application.</p></li>
+<li><p>Fixed a bug in which generated pipeline configs were not representative of the input configurations being specified. The only affected configurable option discovered in testing was when seed-based correlation analysis was used, the engine was always reverting to the default configuration.</p></li>
+<li><p>Fixed bug that was causing <code class="docutils literal notranslate"><span class="pre">cpac</span> <span class="pre">run</span></code> to fail when passing a manual random seed via <code class="docutils literal notranslate"><span class="pre">--random_seed</span></code> rather than directly in the pipeline config file.</p></li>
+<li><p>Fixed an issue that was causing some epi field maps to not be ingressed if the BIDS tags were not in a specific (BIDS-compliant) order.</p></li>
+<li><p>Fixed an issue where phase-difference GRE field map files were not properly being ingressed if the filenames were not expected, such as including an index for cases with multiple maps.</p></li>
+<li><p>Fixed a bug where ALFF &amp; f/ALFF would not run if frequency filtering was disabled earlier in the pipeline.</p></li>
+<li><p>Fixed a bug where Freesurfer directories were not successfully ingressed at runtime.</p></li>
+<li><p>Added public read access to some overly restricted packaged templates.</p></li>
+<li><p>Fixed a bug where the notch filter was always assuming the sampling frequency was <code class="docutils literal notranslate"><span class="pre">2.0</span></code>.</p></li>
+</ul>
+</section>
+<section id="version-1-8-4-beta-dec-13-2022">
 <h1>Version 1.8.4 Beta (Dec 13, 2022)<a class="headerlink" href="#version-1-8-4-beta-dec-13-2022" title="Permalink to this headline">#</a></h1>
 <p><strong>Critical Alert for fMRIPrep-Options in C-PAC v1.8.1 - v1.8.3</strong></p>
 <ul class="simple">

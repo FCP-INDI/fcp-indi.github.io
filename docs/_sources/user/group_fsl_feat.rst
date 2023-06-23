@@ -64,6 +64,7 @@ You can get more information about the required inputs for each preset with the 
 This will produce:
 
 .. include:: /user/group/feat/load-preset/unpaired-two/help.rst
+    :start-at: Usage:
 
 Following this, you could generate a ready-to-run two-sample unpaired t-test by running the following, assuming the phenotype CSV has a column of participant IDs named "subject_id" and a column named "diagnosis", which is the covariate you wish to test:
 

@@ -25,15 +25,15 @@ You can configure the settings explained below in the **data settings** YAML fil
 
 If you don't already have a data settings YAML file, you can generate one in your current directory by running::
 
-    cpac utils data_config new_settings_template
+    cpac utils data-config new-settings-template
 
 or::
 
-    singularity run C-PAC_latest.sif bids_dir outputs_dir cli -- utils data_config new_settings_template
+    singularity run C-PAC_latest.sif $BIDS_DIR $OUTPUTS_DIR cli -- utils data-config new-settings-template
 
 or::
 
-    docker run -i --rm --user $(id -u):$(id -g) -v /path/to/data_config:/scratch -w="/scratch" fcpindi/c-pac:latest bids_dir outputs_dir cli -- utils data_config new_settings_template
+    docker run -i --rm --user $(id -u):$(id -g) -v /path/to/data_config:/scratch -w="/scratch" fcpindi/c-pac:latest $BIDS_DIR $OUTPUTS_DIR cli -- utils data-config new-settings-template
 
 If running a container directly (either of the latter options rather than the first option, which is through :doc:`cpac (Python package) <cpac>`), ``bids_dir`` and ``outputs_dir`` are required but not used, so any non-null string will work for those positional arguments.
 
@@ -58,7 +58,7 @@ Once your ``data_settings.yml`` file is ready, you can generate your data config
     -B /path/to/data/in/data_settings/1 \
     -B /path/to/data/in/data_settings/2 \
     C-PAC_latest.sif /path/to/bids_dir /path/to/outputs cli -- utils \
-    data_config build /path/to/data_settings.yml
+    data-config build /path/to/data_settings.yml
 
 or::
 
@@ -69,7 +69,7 @@ or::
     -v /path/to/data/in/data_settings/2:/path/to/data/in/data_settings/2 \
     -v /path/to/data_config:/scratch -w="/scratch" \
     fcpindi/c-pac:latest /path/to/bids_dir /path/to/outputs cli -- utils \
-    data_config build /path/to/data_settings.yml
+    data-config build /path/to/data_settings.yml
 
 Continue below for some example use cases.
 
@@ -136,15 +136,15 @@ You can also fill in the AWS credentials file field, and the inclusion and exclu
 
 Once your data settings file is ready, generate your data configuration file by running::
 
-    cpac utils data_config build /path/to/data_settings.yml
+    cpac utils data-config build /path/to/data_settings.yml
 
 or::
 
-    singularity run C-PAC_latest.sif bids_dir outputs_dir cli -- utils data_config build /path/to/data_settings.yml
+    singularity run C-PAC_latest.sif $BIDS_DIR $OUTPUTS_DIR cli -- utils data-config build /path/to/data_settings.yml
 
 or::
 
-    docker run -i --rm --user $(id -u) -v /path/to/data_config:/scratch -w="/scratch" fcpindi/c-pac:latest bids_dir outputs_dir cli -- utils data_config build /path/to/data_settings.yml
+    docker run -i --rm --user $(id -u) -v /path/to/data_config:/scratch -w="/scratch" fcpindi/c-pac:latest $BIDS_DIR $OUTPUTS_DIR cli -- utils data-config build /path/to/data_settings.yml
 
 Data: Custom Layout
 -------------------
@@ -172,15 +172,15 @@ You can also fill in the AWS credentials file field, and the inclusion and exclu
 
 Once your data settings file is ready, generate your data configuration file by running::
 
-    cpac utils data_config build /path/to/data_settings.yml
+    cpac utils data-config build /path/to/data_settings.yml
 
 or::
 
-    singularity run C-PAC_latest.sif bids_dir outputs_dir cli -- utils data_config build /path/to/data_settings.yml
+    singularity run C-PAC_latest.sif $BIDS_DIR $OUTPUTS_DIR cli -- utils data-config build /path/to/data_settings.yml
 
 or::
 
-    docker run -i --rm --user $(id -u) -v /path/to/data_config:/scratch -w="/scratch" fcpindi/c-pac:latest bids_dir outputs_dir cli -- utils data_config build /path/to/data_settings.yml
+    docker run -i --rm --user $(id -u) -v /path/to/data_config:/scratch -w="/scratch" fcpindi/c-pac:latest $BIDS_DIR $OUTPUTS_DIR cli -- utils data-config build /path/to/data_settings.yml
 
 Custom Path Templates
 ---------------------

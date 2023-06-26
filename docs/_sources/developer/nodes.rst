@@ -7,9 +7,9 @@ Nodes
 
 .. _n_cpus:
 
-A Nipype :py:class:`~nipype.pipeline.engine.nodes.Node` has an initialization parameter ``mem_gb`` that differs from the :doc:`commandline option </user/run/help>` ``--mem_gb``. While the commandline option is **a limit**, the Node initialization parameter is **an estimate** of the most memory that Node will consume when run. The Node parameter is not a limit; rather, this value is used to allocate system resources at runtime.
+A Nipype :py:class:`~nipype.pipeline.engine.nodes.Node` has an initialization parameter ``mem_gb`` that differs from the :doc:`commandline option </user/run/help>` ``--mem-gb``. While the commandline option is **a limit**, the Node initialization parameter is **an estimate** of the most memory that Node will consume when run. The Node parameter is not a limit; rather, this value is used to allocate system resources at runtime.
 
-Conversely, the commandline option ``--n_cpus`` is **a limit** and the Node initialization parameter ``n_procs`` is **also a limit** of the maximum number of threads a Node will be permmitted to consume.
+Conversely, the commandline option ``--n-cpus`` is **a limit** and the Node initialization parameter ``n_procs`` is **also a limit** of the maximum number of threads a Node will be permmitted to consume.
 
 C-PAC automatically creates a JSON-like file called ``callback.log`` (via the function :py:func:`~CPAC.utils.monitoring.log_nodes_cb`) when running. This file includes for each Node:
 
@@ -18,7 +18,7 @@ C-PAC automatically creates a JSON-like file called ``callback.log`` (via the fu
    * specified maximum number of threads per Node, and
    * threads used at runtime.
 
-A ``callback.log`` can be provided to the pipeline configuration file (see :doc:`/user/compute_config`) or with the commandline flag ``--runtime_usage``. If a callback log is provided in the pipeline configuration, nodes with names that match nodes recorded in that pipeline log will have their memory estimates overridden by the values in the callback log plus a buffer percent (provided with the ``--runtime_buffer`` flag or in the pipeline configuration file).
+A ``callback.log`` can be provided to the pipeline configuration file (see :doc:`/user/compute_config`) or with the commandline flag ``--runtime-usage``. If a callback log is provided in the pipeline configuration, nodes with names that match nodes recorded in that pipeline log will have their memory estimates overridden by the values in the callback log plus a buffer percent (provided with the ``--runtime-buffer`` flag or in the pipeline configuration file).
 
 When a developer creates or modifies a Node in C-PAC, a ``mem_gb`` and ``n_procs`` argument should be provided unless the respective defaults of 0.2 and None (number of available system cores) are expected to be sufficient. When testing, the ``mem_gb`` and ``n_procs`` arguments should be adjusted if the observed memory and/or thread usage of a Node exceeds the estimate.
 

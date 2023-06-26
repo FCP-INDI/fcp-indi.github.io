@@ -20,7 +20,7 @@ From terminal
 
 Similar to the pipeline configuration YAML file, the group configuration YAML file allows you to configure your runs with key-value combinations. From terminal, you can quickly generate a default group configuration YAML file template in the directory you are in: ::
 
-    cpac utils group_config new_template
+    cpac utils group-config new-template
 
 This will generate a group configuration file that you can then modify to make your selections. See below: ::
 

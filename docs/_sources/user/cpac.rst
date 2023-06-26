@@ -88,15 +88,15 @@ To run C-PAC with a pipeline configuration file other than one of the pre-config
 
 .. code-block:: console
 
-    cpac run /Users/You/local_bids_data /Users/You/some_folder_for_outputs participant --pipeline_file /Users/You/Documents/pipeline_config.yml
+    cpac run /Users/You/local_bids_data /Users/You/some_folder_for_outputs participant --pipeline-file /Users/You/Documents/pipeline_config.yml
 
 Finally, to run C-PAC with a specific data configuration file (instead of providing a BIDS data directory):
 
 .. code-block:: console
 
-    cpac run /Users/You/any_directory /Users/You/some_folder_for_outputs participant --data_config_file /Users/You/Documents/data_config.yml
+    cpac run /Users/You/any_directory /Users/You/some_folder_for_outputs participant --data-config-file /Users/You/Documents/data_config.yml
 
-Note: we are still providing the postionally-required ``bids_dir`` input parameter. However C-PAC will not look for data in this directory when you provide a data configuration YAML with the ``--data_config_file`` flag. Providing ``.`` or ``$PWD`` will simply pass the present working directory. In addition, if the dataset in your data configuration file is not in BIDS format, just make sure to add the ``--skip_bids_validator`` flag at the end of your command to bypass the BIDS validation process.
+Note: we are still providing the postionally-required ``bids_dir`` input parameter. However C-PAC will not look for data in this directory when you provide a data configuration YAML with the ``--data-config-file`` flag. Providing ``.`` or ``$PWD`` will simply pass the present working directory. In addition, if the dataset in your data configuration file is not in BIDS format, just make sure to add the ``--skip-bids-validator`` flag at the end of your command to bypass the BIDS validation process.
 
 The full list of parameters and options that can be passed to C-PAC are shown below:
 
@@ -104,16 +104,17 @@ The full list of parameters and options that can be passed to C-PAC are shown be
 
 .. include:: /user/utils/help.rst
 
-Note that any of the optional arguments above will over-ride any pipeline settings in the default pipeline or in the pipeline configuration file you provide via the ``--pipeline_file`` parameter.
+Note that any of the optional arguments above will over-ride any pipeline settings in the default pipeline or in the pipeline configuration file you provide via the ``--pipeline-file`` parameter.
 
 **Further usage notes:**
 
-* You can run only anatomical preprocessing easily, without modifying your data or pipeline configuration files, by providing the ``--anat_only`` flag.
+* You can run only anatomical preprocessing easily, without modifying your data or pipeline configuration files, by providing the ``--anat-only`` flag.
 
-* As stated, the default behavior is to read data that is organized in the BIDS format. This includes data that is in Amazon AWS S3 by using the format ``s3://<bucket_name>/<bids_dir>`` for the ``bids_dir`` command line argument. Outputs can be written to S3 using the same format for the ``output_dir``. Credentials for accessing these buckets can be specified on the command line (using ``--aws_input_creds`` or ``--aws_output_creds``).
+* As stated, the default behavior is to read data that is organized in the BIDS format. This includes data that is in Amazon AWS S3 by using the format ``s3://<bucket_name>/<bids_dir>`` for the ``bids_dir`` command line argument. Outputs can be written to S3 using the same format for the ``output_dir``. Credentials for accessing these buckets can be specified on the command line (using ``--aws-input-creds`` or ``--aws-output-creds``).
 
-* When the app is run, a data configuration file is written to the working directory. This directory can be specified with ``--working_dir`` or the directory from which you run ``cpac`` will be used. This file can be passed into subsequent runs, which avoids the overhead of re-parsing the BIDS input directory on each run (i.e. for cluster or cloud runs). These files can be generated without executing the C-PAC pipeline using the ``test_run`` command line argument.
+* When the app is run, a data configuration file is written to the working directory. This directory can be specified with ``--working-dir`` or the directory from which you run ``cpac`` will be used. This file can be passed into subsequent runs, which avoids the overhead of re-parsing the BIDS input directory on each run (i.e. for cluster or cloud runs). These files can be generated without executing the C-PAC pipeline using ``test_config`` as the analysis level.
 
 * The ``participant_label`` and ``participant_ndx`` arguments allow the user to specify which of the many datasets should be processed, which is useful when parallelizing the run of multiple participants.
 
 * If you want to pass runtime options to your container plaform (Docker or Singularity), you can pass them with ``-o`` or ``--container_options``.
+.. TODO: Update cpac to handle `-`s and `_`s like C-PAC

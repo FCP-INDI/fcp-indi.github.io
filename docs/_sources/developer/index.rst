@@ -24,6 +24,7 @@ Contents:
    workflow_documentation
    workflows/index
    xcpqc
+   utils
    testing
    continuous_integration
    deprecating

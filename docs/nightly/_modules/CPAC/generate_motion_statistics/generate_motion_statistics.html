@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex" /><link rel="search" title="Search" href="../../../search" />
 
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/><meta name="generator" content="sphinx-4.0.0, furo 2022.09.29"/>
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/><meta name="generator" content="sphinx-4.2.0, furo 2022.09.29"/>
         <title>CPAC.generate_motion_statistics.generate_motion_statistics - C-PAC 1.8.6.dev Beta documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
@@ -314,18 +314,43 @@
         </div>
         <article role="main">
           <h1>Source code for CPAC.generate_motion_statistics.generate_motion_statistics</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span></span><span class="c1"># Copyright (C) 2012-2023  C-PAC Developers</span>
+
+<span class="c1"># This file is part of C-PAC.</span>
+
+<span class="c1"># C-PAC is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU Lesser General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or (at your</span>
+<span class="c1"># option) any later version.</span>
+
+<span class="c1"># C-PAC is distributed in the hope that it will be useful, but WITHOUT</span>
+<span class="c1"># ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or</span>
+<span class="c1"># FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public</span>
+<span class="c1"># License for more details.</span>
+
+<span class="c1"># You should have received a copy of the GNU Lesser General Public</span>
+<span class="c1"># License along with C-PAC. If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="sd">&quot;&quot;&quot;Functions to calculate motion statistics&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nb</span>
-<span class="kn">from</span> <span class="nn">CPAC.pipeline</span> <span class="kn">import</span> <span class="n">nipype_pipeline_engine</span> <span class="k">as</span> <span class="n">pe</span>
-<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
-<span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.function</span> <span class="kn">import</span> <span class="n">Function</span>
-
 <span class="kn">from</span> <span class="nn">nipype.interfaces.afni.base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">AFNICommand</span><span class="p">,</span> <span class="n">AFNICommandInputSpec</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">nipype.interfaces.base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">TraitedSpec</span><span class="p">,</span> <span class="n">traits</span><span class="p">,</span> <span class="n">isdefined</span><span class="p">,</span> <span class="n">File</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces.base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">TraitedSpec</span><span class="p">,</span> <span class="n">traits</span><span class="p">,</span> <span class="n">File</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
+<span class="kn">from</span> <span class="nn">CPAC.pipeline</span> <span class="kn">import</span> <span class="n">nipype_pipeline_engine</span> <span class="k">as</span> <span class="n">pe</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.function</span> <span class="kn">import</span> <span class="n">Function</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.pytest</span> <span class="kn">import</span> <span class="n">skipif</span>
+
 
 <div class="viewcode-block" id="motion_power_statistics"><a class="viewcode-back" href="../../../developer/workflows/generate_motion_statistics#CPAC.generate_motion_statistics.motion_power_statistics">[docs]</a><span class="k">def</span> <span class="nf">motion_power_statistics</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;motion_stats&#39;</span><span class="p">,</span>
-                            <span class="n">motion_correct_tool</span><span class="o">=</span><span class="s1">&#39;3dvolreg&#39;</span><span class="p">):</span>
+                            <span class="n">motion_correct_tool</span><span class="o">=</span><span class="s1">&#39;3dvolreg&#39;</span><span class="p">,</span>
+                            <span class="n">filtered</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The main purpose of this workflow is to get various statistical measures</span>
 <span class="sd">     from the movement/motion parameters obtained in functional preprocessing.</span>
@@ -536,16 +561,18 @@
 
     <span class="c1"># Calculating mean Framewise Displacement as per jenkinson et al., 2002</span>
     <span class="n">calculate_FDJ</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">,</span>
-                                                  <span class="s1">&#39;motion_correct_tool&#39;</span><span class="p">],</span>
+                                                  <span class="s1">&#39;calc_from&#39;</span><span class="p">,</span>
+                                                  <span class="s1">&#39;center&#39;</span><span class="p">],</span>
                                      <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
                                      <span class="n">function</span><span class="o">=</span><span class="n">calculate_FD_J</span><span class="p">,</span>
                                      <span class="n">as_module</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;calculate_FDJ&#39;</span><span class="p">)</span>
 
-    <span class="n">calculate_FDJ</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">motion_correct_tool</span> <span class="o">=</span> <span class="n">motion_correct_tool</span>
-    <span class="k">if</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;3dvolreg&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">filtered</span> <span class="ow">or</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;3dvolreg&#39;</span><span class="p">:</span>
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;transformations&#39;</span><span class="p">,</span> <span class="n">calculate_FDJ</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
+        <span class="n">calculate_FDJ</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">calc_from</span> <span class="o">=</span> <span class="s1">&#39;affine&#39;</span>
     <span class="k">elif</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;mcflirt&#39;</span><span class="p">:</span>
+        <span class="n">calculate_FDJ</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">calc_from</span> <span class="o">=</span> <span class="s1">&#39;rms&#39;</span>
         <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">input_node</span><span class="p">,</span> <span class="s1">&#39;rels_displacement&#39;</span><span class="p">,</span> <span class="n">calculate_FDJ</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
 
     <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">calculate_FDJ</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;FDJ_1D&#39;</span><span class="p">)</span>
@@ -640,7 +667,10 @@
     <span class="k">return</span> <span class="n">out_file</span></div>
 
 
-<div class="viewcode-block" id="calculate_FD_J"><a class="viewcode-back" href="../../../developer/workflows/generate_motion_statistics#CPAC.generate_motion_statistics.calculate_FD_J">[docs]</a><span class="k">def</span> <span class="nf">calculate_FD_J</span><span class="p">(</span><span class="n">in_file</span><span class="p">,</span> <span class="n">motion_correct_tool</span><span class="o">=</span><span class="s1">&#39;3dvolreg&#39;</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="calculate_FD_J"><a class="viewcode-back" href="../../../developer/workflows/generate_motion_statistics#CPAC.generate_motion_statistics.calculate_FD_J">[docs]</a><span class="nd">@skipif</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+        <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;Test requires Python 3.10 or higher&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">calculate_FD_J</span><span class="p">(</span><span class="n">in_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">calc_from</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;affine&#39;</span><span class="p">,</span> <span class="s1">&#39;rms&#39;</span><span class="p">],</span>
+                   <span class="n">center</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Method to calculate framewise displacement as per Jenkinson et al. 2002</span>
 
@@ -648,25 +678,41 @@
 <span class="sd">    ----------</span>
 <span class="sd">    in_file : string</span>
 <span class="sd">        matrix transformations from volume alignment file path if</span>
-<span class="sd">        motion_correct_tool is &#39;3dvolreg&#39;, or FDRMS (*_rel.rms) output if</span>
-<span class="sd">        motion_correct_tool is &#39;mcflirt&#39;.</span>
-<span class="sd">    motion_correct_tool : string</span>
-<span class="sd">        motion correction tool used, &#39;3dvolreg&#39; or &#39;mcflirt&#39;.</span>
-<span class="sd">    center : ndarray</span>
-<span class="sd">        optional volume center for the calculation.</span>
+<span class="sd">        calc_from is &#39;affine&#39;, or FDRMS (*_rel.rms) output if</span>
+<span class="sd">        calc_from is &#39;rms&#39;.</span>
+<span class="sd">    calc_from : string</span>
+<span class="sd">        one of {&#39;affine&#39;, &#39;rms&#39;}</span>
+<span class="sd">    center : ndarray, optional</span>
+<span class="sd">        optional volume center for the from-affine calculation</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    out_file : string</span>
 <span class="sd">        Frame-wise displacement file path</span>
 
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import gzip, os, pickle</span>
+<span class="sd">    &gt;&gt;&gt; from unittest import mock</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; with gzip.open(&#39;/code/CPAC/generate_motion_statistics/test/&#39;</span>
+<span class="sd">    ...                &#39;fdj_test_data.pklz&#39;) as _pickle:</span>
+<span class="sd">    ...     test_data = pickle.load(_pickle)</span>
+<span class="sd">    &gt;&gt;&gt; with mock.patch(&#39;nibabel.load&#39;,</span>
+<span class="sd">    ...                 return_value=test_data.img), mock.patch(</span>
+<span class="sd">    ...        &#39;numpy.genfromtxt&#39;, return_value=test_data.affine):</span>
+<span class="sd">    ...     fdj_file = calculate_FD_J(test_data.affine, calc_from=&#39;affine&#39;,</span>
+<span class="sd">    ...                               center=find_volume_center(test_data.img))</span>
+<span class="sd">    &gt;&gt;&gt; all(np.isclose(np.genfromtxt(fdj_file),</span>
+<span class="sd">    ...                np.insert(test_data.rels_rms, 0, 0), atol=0.001))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; os.unlink(fdj_file)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">center</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-
-    <span class="k">if</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;3dvolreg&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">calc_from</span> <span class="o">==</span> <span class="s1">&#39;affine&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">center</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
         <span class="n">pm_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">in_file</span><span class="p">)</span>
 
         <span class="n">pm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">pm_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pm_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">4</span><span class="p">))</span>
@@ -693,12 +739,12 @@
 
             <span class="n">T_rb_prev</span> <span class="o">=</span> <span class="n">T_rb</span>
 
-    <span class="k">elif</span> <span class="n">motion_correct_tool</span> <span class="o">==</span> <span class="s1">&#39;mcflirt&#39;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">calc_from</span> <span class="o">==</span> <span class="s1">&#39;rms&#39;</span><span class="p">:</span>
         <span class="n">rel_rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">in_file</span><span class="p">)</span>
         <span class="n">fd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">rel_rms</span><span class="p">)</span>
-    
+
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;motion_correct_tool </span><span class="si">{</span><span class="n">motion_correct_tool</span><span class="si">}</span><span class="s2"> not supported&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;calc_from </span><span class="si">{</span><span class="n">calc_from</span><span class="si">}</span><span class="s2"> not supported&quot;</span><span class="p">)</span>
 
     <span class="n">out_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;FD_J.1D&#39;</span><span class="p">)</span>
     <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">out_file</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%.8f</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -706,7 +752,7 @@
     <span class="k">return</span> <span class="n">out_file</span></div>
 
 
-<span class="k">def</span> <span class="nf">find_volume_center</span><span class="p">(</span><span class="n">img_file</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">find_volume_center</span><span class="p">(</span><span class="n">img_file</span> <span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Find the center of mass of a Nifti image volume</span>
 
@@ -964,8 +1010,8 @@
 <span class="sd">        path to file containing array of DVARS calculation for each voxel</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">rest_data</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">func_brain</span><span class="p">)</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-    <span class="n">mask_data</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
+    <span class="n">rest_data</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">func_brain</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">mask_data</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;bool&#39;</span><span class="p">)</span>
 
     <span class="c1"># square of relative intensity value for each voxel across every timepoint</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">rest_data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>

@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex" /><link rel="search" title="Search" href="../../../../search" />
 
-    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/><meta name="generator" content="sphinx-4.0.0, furo 2022.09.29"/>
+    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/><meta name="generator" content="sphinx-4.2.0, furo 2022.09.29"/>
         <title>nipype.pipeline.engine.workflows - C-PAC 1.8.6.dev Beta documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
@@ -375,6 +375,9 @@
         <span class="nb">super</span><span class="p">(</span><span class="n">Workflow</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">base_dir</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nodes_cache</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nested_workflows_cache</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
     <span class="c1"># PUBLIC API</span>
 <div class="viewcode-block" id="Workflow.clone"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Workflow.clone">[docs]</a>    <span class="k">def</span> <span class="nf">clone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Clone a workflow</span>
@@ -433,7 +436,7 @@
 <span class="sd">                                         &#39;targetinput&#39;), ...]),</span>
 <span class="sd">             ...]</span>
 <span class="sd">             sourceoutput1 will always be the first argument to func</span>
-<span class="sd">             and func will be evaluated and the results sent ot targetinput</span>
+<span class="sd">             and func will be evaluated and the results sent to targetinput</span>
 
 <span class="sd">             currently func needs to define all its needed imports within the</span>
 <span class="sd">             function as we use the inspect module to get at the source code</span>
@@ -457,7 +460,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="n">connection_list</span><span class="p">)</span>
             <span class="k">return</span>
 
-        <span class="n">newnodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">newnodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">srcnode</span><span class="p">,</span> <span class="n">destnode</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">connection_list</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span> <span class="ow">in</span> <span class="p">[</span><span class="n">srcnode</span><span class="p">,</span> <span class="n">destnode</span><span class="p">]:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
@@ -467,9 +470,9 @@
 
                 <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">srcnode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">newnodes</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_node</span><span class="p">(</span><span class="n">srcnode</span><span class="p">):</span>
-                <span class="n">newnodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">srcnode</span><span class="p">)</span>
+                <span class="n">newnodes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">srcnode</span><span class="p">)</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">destnode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">newnodes</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_node</span><span class="p">(</span><span class="n">destnode</span><span class="p">):</span>
-                <span class="n">newnodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">destnode</span><span class="p">)</span>
+                <span class="n">newnodes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">destnode</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">newnodes</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_check_nodes</span><span class="p">(</span><span class="n">newnodes</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">newnodes</span><span class="p">:</span>
@@ -479,15 +482,15 @@
         <span class="n">connected_ports</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">srcnode</span><span class="p">,</span> <span class="n">destnode</span><span class="p">,</span> <span class="n">connects</span> <span class="ow">in</span> <span class="n">connection_list</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">destnode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">connected_ports</span><span class="p">:</span>
-                <span class="n">connected_ports</span><span class="p">[</span><span class="n">destnode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">connected_ports</span><span class="p">[</span><span class="n">destnode</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
             <span class="c1"># check to see which ports of destnode are already</span>
             <span class="c1"># connected.</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">disconnect</span> <span class="ow">and</span> <span class="p">(</span><span class="n">destnode</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()):</span>
                 <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">in_edges</span><span class="p">(</span><span class="n">destnode</span><span class="p">):</span>
                     <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">get_edge_data</span><span class="p">(</span><span class="o">*</span><span class="n">edge</span><span class="p">)</span>
-                    <span class="k">for</span> <span class="n">sourceinfo</span><span class="p">,</span> <span class="n">destname</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;connect&quot;</span><span class="p">]:</span>
-                        <span class="k">if</span> <span class="n">destname</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">connected_ports</span><span class="p">[</span><span class="n">destnode</span><span class="p">]:</span>
-                            <span class="n">connected_ports</span><span class="p">[</span><span class="n">destnode</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">destname</span><span class="p">]</span>
+                    <span class="n">connected_ports</span><span class="p">[</span><span class="n">destnode</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                        <span class="n">destname</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">destname</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;connect&quot;</span><span class="p">]</span>
+                    <span class="p">)</span>
             <span class="k">for</span> <span class="n">source</span><span class="p">,</span> <span class="n">dest</span> <span class="ow">in</span> <span class="n">connects</span><span class="p">:</span>
                 <span class="c1"># Currently datasource/sink/grabber.io modules</span>
                 <span class="c1"># determine their inputs/outputs depending on</span>
@@ -542,7 +545,7 @@
                         <span class="p">)</span>
                     <span class="k">if</span> <span class="n">sourcename</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">srcnode</span><span class="o">.</span><span class="n">_check_outputs</span><span class="p">(</span><span class="n">sourcename</span><span class="p">):</span>
                         <span class="n">not_found</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">&quot;out&quot;</span><span class="p">,</span> <span class="n">srcnode</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">sourcename</span><span class="p">])</span>
-                <span class="n">connected_ports</span><span class="p">[</span><span class="n">destnode</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">dest</span><span class="p">]</span>
+                <span class="n">connected_ports</span><span class="p">[</span><span class="n">destnode</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
         <span class="n">infostr</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">not_found</span><span class="p">:</span>
             <span class="n">infostr</span> <span class="o">+=</span> <span class="p">[</span>
@@ -583,7 +586,10 @@
             <span class="n">edge_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">get_edge_data</span><span class="p">(</span><span class="n">srcnode</span><span class="p">,</span> <span class="n">destnode</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="s2">&quot;(</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">): new edge data: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">srcnode</span><span class="p">,</span> <span class="n">destnode</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">edge_data</span><span class="p">)</span>
-            <span class="p">)</span></div>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">newnodes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_node_cache</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Workflow.disconnect"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Workflow.disconnect">[docs]</a>    <span class="k">def</span> <span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Disconnect nodes</span>
@@ -631,7 +637,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">([(</span><span class="n">srcnode</span><span class="p">,</span> <span class="n">dstnode</span><span class="p">,</span> <span class="n">edge_data</span><span class="p">)])</span></div>
 
 <div class="viewcode-block" id="Workflow.add_nodes"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Workflow.add_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">add_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Add nodes to a workflow</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add nodes to a workflow</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -641,7 +647,7 @@
         <span class="n">newnodes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">all_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_all_nodes</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">all_nodes</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Node </span><span class="si">%s</span><span class="s2"> already exists in the workflow&quot;</span> <span class="o">%</span> <span class="n">node</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">Workflow</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">subnode</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">_get_all_nodes</span><span class="p">():</span>
@@ -661,17 +667,19 @@
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">newnodes</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">_hierarchy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">node</span><span class="o">.</span><span class="n">_hierarchy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">newnodes</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">add_nodes_from</span><span class="p">(</span><span class="n">newnodes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_node_cache</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="Workflow.remove_nodes"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Workflow.remove_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">remove_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Remove nodes from a workflow</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove nodes from a workflow</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        nodes : list</span>
 <span class="sd">            A list of EngineBase-based objects</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">remove_nodes_from</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">remove_nodes_from</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_node_cache</span><span class="p">()</span></div>
 
     <span class="c1"># Input-Output access</span>
     <span class="nd">@property</span>
@@ -683,8 +691,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_outputs</span><span class="p">()</span>
 
 <div class="viewcode-block" id="Workflow.get_node"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Workflow.get_node">[docs]</a>    <span class="k">def</span> <span class="nf">get_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an internal node by name</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an internal node by name&quot;&quot;&quot;</span>
         <span class="n">nodenames</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
         <span class="n">nodename</span> <span class="o">=</span> <span class="n">nodenames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">outnode</span> <span class="o">=</span> <span class="p">[</span>
@@ -699,8 +706,7 @@
         <span class="k">return</span> <span class="n">outnode</span></div>
 
 <div class="viewcode-block" id="Workflow.list_node_names"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Workflow.list_node_names">[docs]</a>    <span class="k">def</span> <span class="nf">list_node_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;List names of all nodes in a workflow</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List names of all nodes in a workflow&quot;&quot;&quot;</span>
         <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 
         <span class="n">outlist</span> <span class="o">=</span> <span class="p">[]</span>
@@ -903,7 +909,7 @@
         <span class="k">return</span> <span class="n">all_lines</span></div>
 
 <div class="viewcode-block" id="Workflow.run"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Workflow.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plugin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plugin_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">updatehash</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Execute the workflow</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute the workflow</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1052,8 +1058,7 @@
                 <span class="n">node</span><span class="o">.</span><span class="n">needed_outputs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">needed_outputs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_configure_exec_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure that each node knows where to get inputs from</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure that each node knows where to get inputs from&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
             <span class="n">node</span><span class="o">.</span><span class="n">input_source</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">in_edges</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
@@ -1065,9 +1070,7 @@
                     <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_check_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if any of the nodes are already in the graph</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if any of the nodes are already in the graph&quot;&quot;&quot;</span>
         <span class="n">node_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()]</span>
         <span class="n">node_lineage</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">_hierarchy</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">()]</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
@@ -1084,8 +1087,7 @@
                 <span class="n">node_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_has_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">subtype</span><span class="o">=</span><span class="s2">&quot;in&quot;</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if a parameter is available as an input or output</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if a parameter is available as an input or output&quot;&quot;&quot;</span>
         <span class="n">hierarchy</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
 
         <span class="c1"># Connecting to a workflow needs at least two values,</span>
@@ -1150,20 +1152,6 @@
 
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">_get_parameter_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">subtype</span><span class="o">=</span><span class="s2">&quot;in&quot;</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the underlying node corresponding to an input or</span>
-<span class="sd">        output parameter</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">subtype</span> <span class="o">==</span> <span class="s2">&quot;in&quot;</span><span class="p">:</span>
-            <span class="n">subobject</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">subobject</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span>
-        <span class="n">attrlist</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
-        <span class="n">cur_out</span> <span class="o">=</span> <span class="n">subobject</span>
-        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attrlist</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
-            <span class="n">cur_out</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">cur_out</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">cur_out</span><span class="o">.</span><span class="n">traits</span><span class="p">()[</span><span class="n">attrlist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">node</span>
-
     <span class="k">def</span> <span class="nf">_check_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_attr</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">subtype</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">)</span>
 
@@ -1197,8 +1185,7 @@
         <span class="k">return</span> <span class="n">inputdict</span>
 
     <span class="k">def</span> <span class="nf">_get_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all possible output ports that are not already connected</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns all possible output ports that are not already connected&quot;&quot;&quot;</span>
         <span class="n">outputdict</span> <span class="o">=</span> <span class="n">TraitedSpec</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
             <span class="n">outputdict</span><span class="o">.</span><span class="n">add_trait</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">traits</span><span class="o">.</span><span class="n">Instance</span><span class="p">(</span><span class="n">TraitedSpec</span><span class="p">))</span>
@@ -1213,8 +1200,7 @@
         <span class="k">return</span> <span class="n">outputdict</span>
 
     <span class="k">def</span> <span class="nf">_set_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objekt</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">newvalue</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Trait callback function to update a node input</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Trait callback function to update a node input&quot;&quot;&quot;</span>
         <span class="n">objekt</span><span class="o">.</span><span class="n">traits</span><span class="p">()[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">set_input</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">newvalue</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_set_node_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">sourceinfo</span><span class="p">):</span>
@@ -1233,22 +1219,28 @@
         <span class="n">node</span><span class="o">.</span><span class="n">set_input</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">newval</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_get_all_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">allnodes</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">Workflow</span><span class="p">):</span>
-                <span class="n">allnodes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">_get_all_nodes</span><span class="p">())</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">allnodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">allnodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes_cache</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nested_workflows_cache</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nested_workflows_cache</span><span class="p">:</span>
+            <span class="n">allnodes</span> <span class="o">|=</span> <span class="n">node</span><span class="o">.</span><span class="n">_get_all_nodes</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">allnodes</span>
 
-    <span class="k">def</span> <span class="nf">_has_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wanted_node</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">wanted_node</span> <span class="o">==</span> <span class="n">node</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">def</span> <span class="nf">_update_node_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">)</span>
+
+        <span class="n">added_nodes</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes_cache</span><span class="p">)</span>
+        <span class="n">removed_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes_cache</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nodes_cache</span> <span class="o">=</span> <span class="n">nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nested_workflows_cache</span><span class="o">.</span><span class="n">difference_update</span><span class="p">(</span><span class="n">removed_nodes</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">added_nodes</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">Workflow</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">_has_node</span><span class="p">(</span><span class="n">wanted_node</span><span class="p">):</span>
-                    <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="kc">False</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_nested_workflows_cache</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_has_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wanted_node</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">wanted_node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes_cache</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">wf</span><span class="o">.</span><span class="n">_has_node</span><span class="p">(</span><span class="n">wanted_node</span><span class="p">)</span> <span class="k">for</span> <span class="n">wf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nested_workflows_cache</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_create_flat_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Make a simple DAG where no node is a workflow.&quot;&quot;&quot;</span>
@@ -1258,8 +1250,7 @@
         <span class="k">return</span> <span class="n">workflowcopy</span><span class="o">.</span><span class="n">_graph</span>
 
     <span class="k">def</span> <span class="nf">_reset_hierarchy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset the hierarchy on a graph</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset the hierarchy on a graph&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">Workflow</span><span class="p">):</span>
                 <span class="n">node</span><span class="o">.</span><span class="n">_reset_hierarchy</span><span class="p">()</span>
@@ -1269,8 +1260,7 @@
                 <span class="n">node</span><span class="o">.</span><span class="n">_hierarchy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
 
     <span class="k">def</span> <span class="nf">_generate_flatgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a graph containing only Nodes or MapNodes</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a graph containing only Nodes or MapNodes&quot;&quot;&quot;</span>
         <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;expanding workflow: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
@@ -1279,7 +1269,7 @@
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
                 <span class="p">(</span><span class="s2">&quot;Workflow: </span><span class="si">%s</span><span class="s2"> is not a directed acyclic graph &quot;</span> <span class="s2">&quot;(DAG)&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
             <span class="p">)</span>
-        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="p">))</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;processing node: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">Workflow</span><span class="p">):</span>
@@ -1292,7 +1282,7 @@
                     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;in: connections-&gt; </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;connect&quot;</span><span class="p">]))</span>
                     <span class="k">for</span> <span class="n">cd</span> <span class="ow">in</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;connect&quot;</span><span class="p">]):</span>
                         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;in: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">cd</span><span class="p">))</span>
-                        <span class="n">dstnode</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_get_parameter_node</span><span class="p">(</span><span class="n">cd</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">subtype</span><span class="o">=</span><span class="s2">&quot;in&quot;</span><span class="p">)</span>
+                        <span class="n">dstnode</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="n">cd</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
                         <span class="n">srcnode</span> <span class="o">=</span> <span class="n">u</span>
                         <span class="n">srcout</span> <span class="o">=</span> <span class="n">cd</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                         <span class="n">dstin</span> <span class="o">=</span> <span class="n">cd</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
@@ -1312,7 +1302,7 @@
                             <span class="n">parameter</span> <span class="o">=</span> <span class="n">cd</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="n">parameter</span> <span class="o">=</span> <span class="n">cd</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                        <span class="n">srcnode</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">_get_parameter_node</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="n">subtype</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">)</span>
+                        <span class="n">srcnode</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get_node</span><span class="p">(</span><span class="n">parameter</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
                         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cd</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">):</span>
                             <span class="n">srcout</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cd</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
                             <span class="n">srcout</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
@@ -1339,8 +1329,7 @@
     <span class="k">def</span> <span class="nf">_get_dot</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hierarchy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">colored</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">simple_form</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">0</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a dot file with connection info</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a dot file with connection info&quot;&quot;&quot;</span>
         <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 
         <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex" /><link rel="search" title="Search" href="../../../search" />
 
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/><meta name="generator" content="sphinx-4.0.0, furo 2022.09.29"/>
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/><meta name="generator" content="sphinx-4.2.0, furo 2022.09.29"/>
         <title>CPAC.alff.alff - C-PAC 1.8.6.dev Beta documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
@@ -318,6 +318,7 @@
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">CPAC.pipeline</span> <span class="kn">import</span> <span class="n">nipype_pipeline_engine</span> <span class="k">as</span> <span class="n">pe</span>
+<span class="kn">from</span> <span class="nn">CPAC.pipeline.nodeblock</span> <span class="kn">import</span> <span class="n">nodeblock</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces.afni</span> <span class="kn">import</span> <span class="n">preprocess</span>
 <span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
 <span class="kn">from</span> <span class="nn">CPAC.alff.utils</span> <span class="kn">import</span> <span class="n">get_opt_string</span>
@@ -555,19 +556,19 @@
     <span class="k">return</span> <span class="n">wf</span></div>
 
 
-<div class="viewcode-block" id="alff_falff"><a class="viewcode-back" href="../../../developer/workflows/alff#CPAC.alff.alff.alff_falff">[docs]</a><span class="k">def</span> <span class="nf">alff_falff</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;alff_falff&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;amplitude_low_frequency_fluctuation&quot;],</span>
-<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [([&quot;desc-denoisedNofilt_bold&quot;,</span>
-<span class="sd">                  &quot;desc-preproc_bold&quot;],</span>
-<span class="sd">                 &quot;space-bold_desc-brain_mask&quot;)],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;alff&quot;,</span>
-<span class="sd">                 &quot;falff&quot;]}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;alff_falff&quot;</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;amplitude_low_frequency_fluctuation&quot;</span><span class="p">],</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;run&quot;</span><span class="p">],</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;desc-denoisedNofilt_bold&quot;</span><span class="p">,</span> <span class="s2">&quot;desc-preproc_bold&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;space-bold_desc-brain_mask&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;alff&quot;</span><span class="p">,</span> <span class="s2">&quot;falff&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="k">def</span> <span class="nf">alff_falff</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
     <span class="n">alff</span> <span class="o">=</span> <span class="n">create_alff</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;alff_falff_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
@@ -590,22 +591,26 @@
         <span class="s1">&#39;falff&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">alff</span><span class="p">,</span> <span class="s1">&#39;outputspec.falff_img&#39;</span><span class="p">)</span>
     <span class="p">}</span>
 
-    <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="alff_falff_space_template"><a class="viewcode-back" href="../../../developer/workflows/alff#CPAC.alff.alff.alff_falff_space_template">[docs]</a><span class="k">def</span> <span class="nf">alff_falff_space_template</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;alff_falff_space_template&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;amplitude_low_frequency_fluctuation&quot;],</span>
-<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [([&quot;space-template_res-derivative_desc-denoisedNofilt_bold&quot;,</span>
-<span class="sd">                  &quot;space-template_res-derivative_desc-preproc_bold&quot;],</span>
-<span class="sd">                 &quot;space-template_res-derivative_desc-bold_mask&quot;)],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;space-template_alff&quot;,</span>
-<span class="sd">                 &quot;space-template_falff&quot;]}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;alff_falff_space_template&quot;</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;amplitude_low_frequency_fluctuation&quot;</span><span class="p">],</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;run&quot;</span><span class="p">],</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">(</span>
+            <span class="p">[</span>
+                <span class="s2">&quot;space-template_res-derivative_desc-denoisedNofilt_bold&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;space-template_res-derivative_desc-preproc_bold&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;space-template_res-derivative_desc-bold_mask&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;space-template_alff&quot;</span><span class="p">,</span> <span class="s2">&quot;space-template_falff&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="k">def</span> <span class="nf">alff_falff_space_template</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
     <span class="n">alff</span> <span class="o">=</span> <span class="n">create_alff</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;alff_falff_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
     <span class="n">alff</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">hp_input</span><span class="o">.</span><span class="n">hp</span> <span class="o">=</span> \
@@ -627,7 +632,7 @@
         <span class="s1">&#39;space-template_falff&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">alff</span><span class="p">,</span> <span class="s1">&#39;outputspec.falff_img&#39;</span><span class="p">)</span>
     <span class="p">}</span>
 
-    <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 </pre></div>
         </article>
       </div>

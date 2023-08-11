@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex" /><link rel="search" title="Search" href="../../../search" />
 
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/><meta name="generator" content="sphinx-4.0.0, furo 2022.09.29"/>
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/><meta name="generator" content="sphinx-4.2.0, furo 2022.09.29"/>
         <title>CPAC.func_preproc.func_preproc - C-PAC 1.8.6.dev Beta documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
@@ -314,23 +314,36 @@
         </div>
         <article role="main">
           <h1>Source code for CPAC.func_preproc.func_preproc</h1><div class="highlight"><pre>
-<span></span><span class="c1"># pylint: disable=ungrouped-imports,wrong-import-order,wrong-import-position</span>
+<span></span><span class="c1"># Copyright (C) 2012-2023  C-PAC Developers</span>
+
+<span class="c1"># This file is part of C-PAC.</span>
+
+<span class="c1"># C-PAC is free software: you can redistribute it and/or modify it under</span>
+<span class="c1"># the terms of the GNU Lesser General Public License as published by the</span>
+<span class="c1"># Free Software Foundation, either version 3 of the License, or (at your</span>
+<span class="c1"># option) any later version.</span>
+
+<span class="c1"># C-PAC is distributed in the hope that it will be useful, but WITHOUT</span>
+<span class="c1"># ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or</span>
+<span class="c1"># FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public</span>
+<span class="c1"># License for more details.</span>
+
+<span class="c1"># You should have received a copy of the GNU Lesser General Public</span>
+<span class="c1"># License along with C-PAC. If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
+<span class="sd">&quot;&quot;&quot;Functional preprocessing&quot;&quot;&quot;</span>
+<span class="c1"># pylint: disable=ungrouped-imports,wrong-import-order,wrong-import-position</span>
 <span class="kn">from</span> <span class="nn">nipype</span> <span class="kn">import</span> <span class="n">logging</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="kn">import</span> <span class="n">afni</span><span class="p">,</span> <span class="n">ants</span><span class="p">,</span> <span class="n">fsl</span><span class="p">,</span> <span class="n">utility</span> <span class="k">as</span> <span class="n">util</span>
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;nipype.workflow&#39;</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">CPAC.pipeline</span> <span class="kn">import</span> <span class="n">nipype_pipeline_engine</span> <span class="k">as</span> <span class="n">pe</span>
+<span class="kn">from</span> <span class="nn">CPAC.pipeline.nodeblock</span> <span class="kn">import</span> <span class="n">nodeblock</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces.afni</span> <span class="kn">import</span> <span class="n">preprocess</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces.afni</span> <span class="kn">import</span> <span class="n">utils</span> <span class="k">as</span> <span class="n">afni_utils</span>
 
-<span class="kn">from</span> <span class="nn">CPAC.func_preproc.utils</span> <span class="kn">import</span> <span class="n">add_afni_prefix</span><span class="p">,</span> <span class="n">nullify</span><span class="p">,</span> <span class="n">chunk_ts</span><span class="p">,</span> \
-                                    <span class="n">split_ts_chunks</span><span class="p">,</span> <span class="n">oned_text_concat</span><span class="p">,</span> \
-                                    <span class="n">notch_filter_motion</span>
-<span class="kn">from</span> <span class="nn">CPAC.generate_motion_statistics</span> <span class="kn">import</span> <span class="n">motion_power_statistics</span>
-<span class="kn">from</span> <span class="nn">CPAC.utils.docs</span> <span class="kn">import</span> <span class="n">grab_docstring_dct</span>
+<span class="kn">from</span> <span class="nn">CPAC.func_preproc.utils</span> <span class="kn">import</span> <span class="n">nullify</span>
 <span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.ants</span> <span class="kn">import</span> <span class="n">AI</span>  <span class="c1"># niworkflows</span>
 <span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.ants</span> <span class="kn">import</span> <span class="n">PrintHeader</span><span class="p">,</span> <span class="n">SetDirectionByMatrix</span>
-<span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.function</span> <span class="kn">import</span> <span class="n">Function</span>
-<span class="kn">from</span> <span class="nn">CPAC.utils.utils</span> <span class="kn">import</span> <span class="n">check_prov_for_motion_tool</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.utils</span> <span class="kn">import</span> <span class="n">add_afni_prefix</span>
 
 
 <span class="k">def</span> <span class="nf">collect_arguments</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
@@ -551,90 +564,6 @@
                 <span class="n">output_node</span><span class="p">,</span> <span class="s1">&#39;func_brain_mask&#39;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">wf</span>
-
-
-<span class="k">def</span> <span class="nf">normalize_motion_parameters</span><span class="p">(</span><span class="n">in_file</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convert FSL mcflirt motion parameters to AFNI space</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span> <span class="nn">os</span>
-    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-
-    <span class="n">motion_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">in_file</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-    <span class="n">motion_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">motion_params</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="mi">180</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
-                               <span class="n">motion_params</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="mi">180</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
-                               <span class="o">-</span><span class="n">motion_params</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="mi">180</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
-                               <span class="n">motion_params</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="p">:],</span>
-                               <span class="n">motion_params</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="p">:],</span>
-                               <span class="o">-</span><span class="n">motion_params</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="p">:]))</span>
-    <span class="n">motion_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">motion_params</span><span class="p">)</span>
-
-    <span class="n">out_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s1">&#39;motion_params.1D&#39;</span><span class="p">)</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">out_file</span><span class="p">,</span> <span class="n">motion_params</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">out_file</span>
-
-
-<span class="k">def</span> <span class="nf">get_mcflirt_rms_abs</span><span class="p">(</span><span class="n">rms_files</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">rms_files</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s1">&#39;abs.rms&#39;</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
-            <span class="n">abs_file</span> <span class="o">=</span> <span class="n">path</span>
-        <span class="k">if</span> <span class="s1">&#39;rel.rms&#39;</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
-            <span class="n">rels_file</span> <span class="o">=</span> <span class="n">path</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">abs_file</span><span class="p">,</span> <span class="n">rels_file</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">estimate_reference_image</span><span class="p">(</span><span class="n">in_file</span><span class="p">):</span>
-
-    <span class="c1"># fMRIPrep-style BOLD reference</span>
-    <span class="c1"># Ref: https://github.com/nipreps/niworkflows/blob/maint/1.3.x/niworkflows/interfaces/registration.py#L446-L549</span>
-
-    <span class="kn">import</span> <span class="nn">os</span>
-    <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-    <span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nb</span>
-
-    <span class="n">ref_input</span> <span class="o">=</span> <span class="p">[</span><span class="n">in_file</span><span class="p">]</span>
-    <span class="n">mc_out_file</span> <span class="o">=</span> <span class="s1">&#39;bold_mc.nii.gz&#39;</span>
-
-    <span class="c1"># Build the nibabel spatial image we will work with</span>
-    <span class="n">ref_im</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">im_i</span> <span class="ow">in</span> <span class="n">ref_input</span><span class="p">:</span>
-        <span class="n">max_new_volumes</span> <span class="o">=</span> <span class="mi">50</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_im</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">max_new_volumes</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">break</span>
-        <span class="n">nib_i</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">squeeze_image</span><span class="p">(</span><span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">im_i</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">nib_i</span><span class="o">.</span><span class="n">dataobj</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-            <span class="n">ref_im</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nib_i</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">nib_i</span><span class="o">.</span><span class="n">dataobj</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
-            <span class="n">ref_im</span> <span class="o">+=</span> <span class="n">nb</span><span class="o">.</span><span class="n">four_to_three</span><span class="p">(</span><span class="n">nib_i</span><span class="o">.</span><span class="n">slicer</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="n">max_new_volumes</span><span class="p">])</span>
-    <span class="n">ref_im</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">squeeze_image</span><span class="p">(</span><span class="n">nb</span><span class="o">.</span><span class="n">concat_images</span><span class="p">(</span><span class="n">ref_im</span><span class="p">))</span>
-
-    <span class="n">out_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s2">&quot;ref_bold.nii.gz&quot;</span><span class="p">)</span>
-
-    <span class="c1"># Slicing may induce inconsistencies with shape-dependent values in extensions.</span>
-    <span class="c1"># For now, remove all. If this turns out to be a mistake, we can select extensions</span>
-    <span class="c1"># that don&#39;t break pipeline stages.</span>
-    <span class="n">ref_im</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">extensions</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
-
-    <span class="k">if</span> <span class="n">ref_im</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">40</span><span class="p">:</span>
-        <span class="n">ref_im</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">Nifti1Image</span><span class="p">(</span>
-            <span class="n">ref_im</span><span class="o">.</span><span class="n">dataobj</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="mi">20</span><span class="p">:</span><span class="mi">40</span><span class="p">],</span> <span class="n">ref_im</span><span class="o">.</span><span class="n">affine</span><span class="p">,</span> <span class="n">ref_im</span><span class="o">.</span><span class="n">header</span>
-        <span class="p">)</span>
-
-    <span class="n">ref_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s2">&quot;slice.nii.gz&quot;</span><span class="p">)</span>
-    <span class="n">ref_im</span><span class="o">.</span><span class="n">to_filename</span><span class="p">(</span><span class="n">ref_name</span><span class="p">)</span>
-    <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;3dvolreg -Fourier -twopass -zpad 4 -prefix </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">mc_out_file</span><span class="p">,</span> <span class="n">ref_name</span><span class="p">)</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
-
-    <span class="n">mc_slice_nii</span> <span class="o">=</span> <span class="n">nb</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">mc_out_file</span><span class="p">)</span>
-
-    <span class="n">median_image_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">mc_slice_nii</span><span class="o">.</span><span class="n">get_fdata</span><span class="p">(),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-
-    <span class="n">nb</span><span class="o">.</span><span class="n">Nifti1Image</span><span class="p">(</span><span class="n">median_image_data</span><span class="p">,</span> <span class="n">ref_im</span><span class="o">.</span><span class="n">affine</span><span class="p">,</span> <span class="n">ref_im</span><span class="o">.</span><span class="n">header</span><span class="p">)</span><span class="o">.</span><span class="n">to_filename</span><span class="p">(</span>
-        <span class="n">out_file</span>
-    <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">out_file</span>
 
 
 <span class="k">def</span> <span class="nf">create_scale_func_wf</span><span class="p">(</span><span class="n">scaling_factor</span><span class="p">,</span> <span class="n">wf_name</span><span class="o">=</span><span class="s1">&#39;scale_func&#39;</span><span class="p">):</span>
@@ -876,7 +805,7 @@
 
     <span class="c1"># Init variables</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">in_files</span><span class="p">)</span>
-    <span class="n">hdr</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">get_header</span><span class="p">()</span>
+    <span class="n">hdr</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">header</span>
     <span class="n">shape</span> <span class="o">=</span> <span class="n">hdr</span><span class="o">.</span><span class="n">get_data_shape</span><span class="p">()</span>
 
     <span class="c1"># Check to make sure the input file is 4-dimensional</span>
@@ -899,325 +828,14 @@
     <span class="k">return</span> <span class="n">stopidx</span><span class="p">,</span> <span class="n">startidx</span></div>
 
 
-<span class="k">def</span> <span class="nf">motion_correct_connections</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">opt</span> <span class="o">!=</span> <span class="s1">&#39;3dvolreg&#39;</span> <span class="ow">and</span> <span class="n">opt</span> <span class="o">!=</span> <span class="s1">&#39;mcflirt&#39;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">[!] Error: The &#39;tool&#39; parameter of the &quot;</span>
-                        <span class="s2">&quot;&#39;motion_correction&#39; workflow must be either &quot;</span>
-                        <span class="s2">&quot;&#39;3dvolreg&#39; or &#39;mcflirt&#39;.</span><span class="se">\n\n</span><span class="s2">Tool input: &quot;</span>
-                        <span class="s2">&quot;</span><span class="si">{0}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">opt</span><span class="p">))</span>
-
-    <span class="k">if</span> <span class="n">cfg</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">pipeline_setup</span><span class="p">[</span><span class="s1">&#39;system_config&#39;</span><span class="p">][</span>
-                   <span class="s1">&#39;max_cores_per_participant&#39;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">chunk_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import nibabel as nb&#39;</span><span class="p">]</span>
-            <span class="n">chunk</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;func_file&#39;</span><span class="p">,</span>
-                                                  <span class="s1">&#39;n_chunks&#39;</span><span class="p">,</span>
-                                                  <span class="s1">&#39;chunk_size&#39;</span><span class="p">],</span>
-                                     <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;TR_ranges&#39;</span><span class="p">],</span>
-                                     <span class="n">function</span><span class="o">=</span><span class="n">chunk_ts</span><span class="p">,</span>
-                                     <span class="n">imports</span><span class="o">=</span><span class="n">chunk_imports</span><span class="p">),</span>
-                            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;chunk_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-            <span class="c1">#chunk.inputs.n_chunks = int(cfg.pipeline_setup[&#39;system_config&#39;][</span>
-            <span class="c1">#                              &#39;max_cores_per_participant&#39;])</span>
-            
-            <span class="c1"># 10-TR sized chunks</span>
-            <span class="n">chunk</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">chunk_size</span> <span class="o">=</span> <span class="mi">10</span>
-            
-            <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;desc-preproc_bold&quot;</span><span class="p">)</span>
-            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">chunk</span><span class="p">,</span> <span class="s1">&#39;func_file&#39;</span><span class="p">)</span>
-
-            <span class="n">split_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;import subprocess&#39;</span><span class="p">]</span>
-            <span class="n">split</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;func_file&#39;</span><span class="p">,</span>
-                                                  <span class="s1">&#39;tr_ranges&#39;</span><span class="p">],</span>
-                                     <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;split_funcs&#39;</span><span class="p">],</span>
-                                     <span class="n">function</span><span class="o">=</span><span class="n">split_ts_chunks</span><span class="p">,</span>
-                                     <span class="n">imports</span><span class="o">=</span><span class="n">split_imports</span><span class="p">),</span>
-                            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;split_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-            <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;desc-preproc_bold&quot;</span><span class="p">)</span>
-            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">split</span><span class="p">,</span> <span class="s1">&#39;func_file&#39;</span><span class="p">)</span>
-            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="s1">&#39;TR_ranges&#39;</span><span class="p">,</span> <span class="n">split</span><span class="p">,</span> <span class="s1">&#39;tr_ranges&#39;</span><span class="p">)</span>
-
-            <span class="n">out_split_func</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_split_func_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">split</span><span class="p">,</span> <span class="s1">&#39;split_funcs&#39;</span><span class="p">,</span> <span class="n">out_split_func</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-            <span class="n">func_motion_correct</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">MapNode</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">Volreg</span><span class="p">(),</span>
-                                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_generate_&#39;</span>
-                                                  <span class="sa">f</span><span class="s1">&#39;ref_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-                                             <span class="n">iterfield</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">])</span>
-
-            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">out_split_func</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                       <span class="n">func_motion_correct</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-            <span class="n">func_concat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">TCat</span><span class="p">(),</span>
-                                  <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_concat_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">func_concat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
-
-            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                       <span class="n">func_concat</span><span class="p">,</span> <span class="s1">&#39;in_files&#39;</span><span class="p">)</span>
-
-            <span class="n">out_motion</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_motion_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_concat</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">out_motion</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">out_split_func</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_split_func_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-            <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">)</span>
-            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">out_split_func</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-            <span class="n">func_motion_correct</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">Volreg</span><span class="p">(),</span>
-                                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_generate_ref_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">out_split_func</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                       <span class="n">func_motion_correct</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-            <span class="n">out_motion</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_motion_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                       <span class="n">out_motion</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">out_split_func</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-            <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_split_func_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">out_split_func</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-        <span class="n">func_motion_correct</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">Volreg</span><span class="p">(),</span>
-                                      <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_generate_ref_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">out_split_func</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                   <span class="n">func_motion_correct</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-        <span class="n">out_motion</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-            <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_motion_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span> <span class="n">out_motion</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-    <span class="n">func_motion_correct</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">zpad</span> <span class="o">=</span> <span class="mi">4</span>
-    <span class="n">func_motion_correct</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
-
-    <span class="n">args</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;-Fourier&#39;</span>
-    <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">functional_preproc</span><span class="p">[</span><span class="s1">&#39;motion_estimates_and_correction&#39;</span><span class="p">][</span>
-        <span class="s1">&#39;motion_correction&#39;</span><span class="p">][</span><span class="s1">&#39;AFNI-3dvolreg&#39;</span><span class="p">][</span><span class="s1">&#39;functional_volreg_twopass&#39;</span><span class="p">]:</span>
-        <span class="n">args</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;-twopass </span><span class="si">{</span><span class="n">args</span><span class="si">}</span><span class="s1">&#39;</span>
-
-    <span class="n">func_motion_correct</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
-
-    <span class="c1"># Calculate motion parameters</span>
-    <span class="k">if</span> <span class="n">opt</span> <span class="o">==</span> <span class="s1">&#39;3dvolreg&#39;</span><span class="p">:</span>
-        <span class="n">func_motion_correct_A</span> <span class="o">=</span> <span class="n">func_motion_correct</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s1">&#39;func_motion_correct_3dvolreg_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="n">func_motion_correct_A</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">md1d_file</span> <span class="o">=</span> <span class="s1">&#39;max_displacement.1D&#39;</span>
-        <span class="n">func_motion_correct_A</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
-
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">out_split_func</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                   <span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;motion-basefile&#39;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;basefile&#39;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">cfg</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">pipeline_setup</span><span class="p">[</span><span class="s1">&#39;system_config&#39;</span><span class="p">][</span>
-                       <span class="s1">&#39;max_cores_per_participant&#39;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">motion_concat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">TCat</span><span class="p">(),</span>
-                                        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;motion_concat_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-                <span class="n">motion_concat</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
-
-                <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                           <span class="n">motion_concat</span><span class="p">,</span> <span class="s1">&#39;in_files&#39;</span><span class="p">)</span>
-
-                <span class="n">out_motion_A</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                    <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_motion_A_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-                <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">motion_concat</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                           <span class="n">out_motion_A</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-                <span class="n">concat_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">]</span>
-                <span class="n">md1d_concat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_files&#39;</span><span class="p">],</span>
-                                               <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
-                                               <span class="n">function</span><span class="o">=</span><span class="n">oned_text_concat</span><span class="p">,</span>
-                                               <span class="n">imports</span><span class="o">=</span><span class="n">concat_imports</span><span class="p">),</span>
-                                      <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;md1d_concat_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-                <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;md1d_file&#39;</span><span class="p">,</span>
-                           <span class="n">md1d_concat</span><span class="p">,</span> <span class="s1">&#39;in_files&#39;</span><span class="p">)</span>
-
-                <span class="n">oned_concat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_files&#39;</span><span class="p">],</span>
-                                               <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
-                                               <span class="n">function</span><span class="o">=</span><span class="n">oned_text_concat</span><span class="p">,</span>
-                                               <span class="n">imports</span><span class="o">=</span><span class="n">concat_imports</span><span class="p">),</span>
-                                      <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;oned_concat_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-                <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;oned_file&#39;</span><span class="p">,</span>
-                           <span class="n">oned_concat</span><span class="p">,</span> <span class="s1">&#39;in_files&#39;</span><span class="p">)</span>
-
-                <span class="n">oned_matrix_concat</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                    <span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_files&#39;</span><span class="p">],</span>
-                             <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
-                             <span class="n">function</span><span class="o">=</span><span class="n">oned_text_concat</span><span class="p">,</span>
-                             <span class="n">imports</span><span class="o">=</span><span class="n">concat_imports</span><span class="p">),</span>
-                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;oned_matrix_concat_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-                <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;oned_matrix_save&#39;</span><span class="p">,</span>
-                           <span class="n">oned_matrix_concat</span><span class="p">,</span> <span class="s1">&#39;in_files&#39;</span><span class="p">)</span>
-
-                <span class="n">out_md1d</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                    <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_md1d_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-                <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">md1d_concat</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                           <span class="n">out_md1d</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-                <span class="n">out_oned</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                    <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_oned_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-                <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">oned_concat</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                           <span class="n">out_oned</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-                <span class="n">out_oned_matrix</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                    <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_oned_matrix_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-                <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">oned_matrix_concat</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                           <span class="n">out_oned_matrix</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">out_motion_A</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                    <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_motion_A_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-                <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                           <span class="n">out_motion_A</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-                <span class="n">out_md1d</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                    <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_md1d_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-                <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;md1d_file&#39;</span><span class="p">,</span>
-                           <span class="n">out_md1d</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-                <span class="n">out_oned</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                    <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_oned_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-                <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;oned_file&#39;</span><span class="p">,</span>
-                           <span class="n">out_oned</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-                <span class="n">out_oned_matrix</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                    <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_oned_matrix_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-                <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;oned_matrix_save&#39;</span><span class="p">,</span>
-                           <span class="n">out_oned_matrix</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">out_motion_A</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_motion_A_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">,</span>
-                       <span class="n">out_motion_A</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-            <span class="n">out_md1d</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_md1d_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;md1d_file&#39;</span><span class="p">,</span>
-                       <span class="n">out_md1d</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-            <span class="n">out_oned</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_oned_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;oned_file&#39;</span><span class="p">,</span>
-                       <span class="n">out_oned</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-            <span class="n">out_oned_matrix</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-                <span class="n">interface</span><span class="o">=</span><span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">]),</span>
-                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;out_oned_matrix_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-            <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;oned_matrix_save&#39;</span><span class="p">,</span>
-                       <span class="n">out_oned_matrix</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-
-        <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">out_motion_A</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;desc-motion_bold&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">out_motion_A</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;max-displacement&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">out_md1d</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;movement-parameters&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">out_oned</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;coordinate-transformation&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">out_oned_matrix</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-        <span class="p">}</span>
-
-    <span class="k">elif</span> <span class="n">opt</span> <span class="o">==</span> <span class="s1">&#39;mcflirt&#39;</span><span class="p">:</span>
-        <span class="n">func_motion_correct_A</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
-            <span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">MCFLIRT</span><span class="p">(</span><span class="n">save_mats</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_plots</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_motion_correct_mcflirt_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="mf">2.5</span><span class="p">)</span>
-
-        <span class="n">func_motion_correct_A</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">save_mats</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="n">func_motion_correct_A</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">save_plots</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="n">func_motion_correct_A</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">save_rms</span> <span class="o">=</span> <span class="kc">True</span>
-
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;motion-basefile&#39;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;ref_file&#39;</span><span class="p">)</span>
-
-        <span class="n">normalize_motion_params</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">],</span>
-                                                   <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
-                                                   <span class="n">function</span><span class="o">=</span><span class="n">normalize_motion_parameters</span><span class="p">),</span>
-                                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;norm_motion_params_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;par_file&#39;</span><span class="p">,</span>
-                   <span class="n">normalize_motion_params</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-        <span class="n">get_rms_abs</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;rms_files&#39;</span><span class="p">],</span>
-                                       <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;abs_file&#39;</span><span class="p">,</span>
-                                                     <span class="s1">&#39;rels_file&#39;</span><span class="p">],</span>
-                                       <span class="n">function</span><span class="o">=</span><span class="n">get_mcflirt_rms_abs</span><span class="p">),</span>
-                              <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;get_mcflirt_rms_abs_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;rms_files&#39;</span><span class="p">,</span>
-                   <span class="n">get_rms_abs</span><span class="p">,</span> <span class="s1">&#39;rms_files&#39;</span><span class="p">)</span>
-
-        <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;desc-motion_bold&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;max-displacement&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">get_rms_abs</span><span class="p">,</span> <span class="s1">&#39;abs_file&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;rels-displacement&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">get_rms_abs</span><span class="p">,</span> <span class="s1">&#39;rels_file&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;movement-parameters&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">normalize_motion_params</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">),</span>
-            <span class="s1">&#39;coordinate-transformation&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_motion_correct_A</span><span class="p">,</span> <span class="s1">&#39;mat_file&#39;</span><span class="p">)</span>
-        <span class="p">}</span>
-
-    <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-
-
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_reorient&#39;</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">],</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;run&#39;</span><span class="p">],</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;bold&#39;</span><span class="p">],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">,</span> <span class="s1">&#39;desc-reorient_bold&#39;</span><span class="p">]</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">func_reorient</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;func_reorient&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;functional_preproc&quot;],</span>
-<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;bold&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;desc-preproc_bold&quot;, </span>
-<span class="sd">                 &quot;desc-reorient_bold&quot;]}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">func_deoblique</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">Refit</span><span class="p">(),</span>
                              <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_deoblique_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
@@ -1248,16 +866,14 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_scaling&#39;</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;scaling&#39;</span><span class="p">],</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;run&#39;</span><span class="p">],</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">]</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">func_scaling</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;func_scaling&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;functional_preproc&quot;, &quot;scaling&quot;],</span>
-<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;desc-preproc_bold&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;desc-preproc_bold&quot;]}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">scale_func_wf</span> <span class="o">=</span> <span class="n">create_scale_func_wf</span><span class="p">(</span>
         <span class="n">scaling_factor</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">scaling_factor</span><span class="p">,</span>
@@ -1274,20 +890,14 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_truncate&#39;</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;truncation&#39;</span><span class="p">],</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;Description&#39;</span><span class="p">:</span> <span class="s1">&#39;Truncated functional time-series BOLD data.&#39;</span><span class="p">}}</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">func_truncate</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;func_truncate&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;functional_preproc&quot;, &quot;truncation&quot;],</span>
-<span class="sd">     &quot;switch&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;desc-preproc_bold&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: {</span>
-<span class="sd">         &quot;desc-preproc_bold&quot;: {</span>
-<span class="sd">             &quot;Description&quot;: &quot;Truncated functional time-series BOLD data.&quot;</span>
-<span class="sd">         }}</span>
-<span class="sd">    }</span>
-<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="c1"># if cfg.functional_preproc[&#39;truncation&#39;][&#39;start_tr&#39;] == 0 and \</span>
     <span class="c1">#                cfg.functional_preproc[&#39;truncation&#39;][&#39;stop_tr&#39;] == None:</span>
@@ -1314,20 +924,17 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_despike&#39;</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;despiking&#39;</span><span class="p">],</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;run&#39;</span><span class="p">],</span>
+    <span class="n">option_key</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;space&#39;</span><span class="p">],</span>
+    <span class="n">option_val</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;native&#39;</span><span class="p">],</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;Description&#39;</span><span class="p">:</span> <span class="s1">&#39;De-spiked BOLD time-series via AFNI 3dDespike.&#39;</span><span class="p">}}</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">func_despike</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;func_despike&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;functional_preproc&quot;, &quot;despiking&quot;],</span>
-<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: [&quot;space&quot;],</span>
-<span class="sd">     &quot;option_val&quot;: [&quot;native&quot;],</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;desc-preproc_bold&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: {</span>
-<span class="sd">         &quot;desc-preproc_bold&quot;: {</span>
-<span class="sd">             &quot;Description&quot;: &quot;De-spiked BOLD time-series via AFNI 3dDespike.&quot;</span>
-<span class="sd">         }}</span>
-<span class="sd">    }</span>
-<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">despike</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">Despike</span><span class="p">(),</span>
                       <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_despiked_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
@@ -1346,26 +953,23 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_despike_template&#39;</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;despiking&#39;</span><span class="p">],</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;run&#39;</span><span class="p">],</span>
+    <span class="n">option_key</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;space&#39;</span><span class="p">],</span>
+    <span class="n">option_val</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;template&#39;</span><span class="p">],</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;space-template_desc-preproc_bold&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;space-template_res-derivative_desc-preproc_bold&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;T1w-template-funcreg&#39;</span><span class="p">,</span> <span class="s1">&#39;T1w-template-deriv&#39;</span><span class="p">],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;space-template_desc-preproc_bold&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;Description&#39;</span><span class="p">:</span> <span class="s1">&#39;De-spiked BOLD time-series via AFNI 3dDespike.&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Template&#39;</span><span class="p">:</span> <span class="s1">&#39;T1w-template-funcreg&#39;</span><span class="p">},</span>
+             <span class="s1">&#39;space-template_res-derivative_desc-preproc_bold&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;Description&#39;</span><span class="p">:</span> <span class="s1">&#39;De-spiked BOLD time-series via AFNI 3dDespike.&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Template&#39;</span><span class="p">:</span> <span class="s1">&#39;T1w-template-deriv&#39;</span><span class="p">}}</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">func_despike_template</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;func_despike_template&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;functional_preproc&quot;, &quot;despiking&quot;],</span>
-<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: [&quot;space&quot;],</span>
-<span class="sd">     &quot;option_val&quot;: [&quot;template&quot;],</span>
-<span class="sd">     &quot;inputs&quot;: [(&quot;space-template_desc-preproc_bold&quot;,</span>
-<span class="sd">                 &quot;space-template_res-derivative_desc-preproc_bold&quot;),</span>
-<span class="sd">                &quot;T1w-template-funcreg&quot;,</span>
-<span class="sd">                &quot;T1w-template-deriv&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: {</span>
-<span class="sd">         &quot;space-template_desc-preproc_bold&quot;: {</span>
-<span class="sd">             &quot;Description&quot;: &quot;De-spiked BOLD time-series via AFNI 3dDespike.&quot;,</span>
-<span class="sd">             &quot;Template&quot;: &quot;T1w-template-funcreg&quot;},</span>
-<span class="sd">         &quot;space-template_res-derivative_desc-preproc_bold&quot;: {</span>
-<span class="sd">             &quot;Description&quot;: &quot;De-spiked BOLD time-series via AFNI 3dDespike.&quot;,</span>
-<span class="sd">             &quot;Template&quot;: &quot;T1w-template-deriv&quot;}</span>
-<span class="sd">    }}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">despike</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">Despike</span><span class="p">(),</span>
                       <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_despiked_template_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
@@ -1399,26 +1003,17 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_slice_time&#39;</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;slice_timing_correction&#39;</span><span class="p">],</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;run&#39;</span><span class="p">],</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">,</span> <span class="s1">&#39;TR&#39;</span><span class="p">,</span> <span class="s1">&#39;tpattern&#39;</span><span class="p">],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;Description&#39;</span><span class="p">:</span> <span class="s1">&#39;Slice-time corrected BOLD time-series via AFNI 3dTShift.&#39;</span><span class="p">},</span>
+             <span class="s1">&#39;desc-stc_bold&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;Description&#39;</span><span class="p">:</span> <span class="s1">&#39;Slice-time corrected BOLD time-series via AFNI 3dTShift.&#39;</span><span class="p">}}</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">func_slice_time</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;func_slice_time&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;functional_preproc&quot;, &quot;slice_timing_correction&quot;],</span>
-<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;desc-preproc_bold&quot;,</span>
-<span class="sd">                &quot;TR&quot;,</span>
-<span class="sd">                &quot;tpattern&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: {</span>
-<span class="sd">         &quot;desc-preproc_bold&quot;: {</span>
-<span class="sd">             &quot;Description&quot;: &quot;Slice-time corrected BOLD time-series via&quot;</span>
-<span class="sd">                            &quot; AFNI 3dTShift.&quot;</span>
-<span class="sd">         },</span>
-<span class="sd">         &quot;desc-stc_bold&quot;: {</span>
-<span class="sd">             &quot;Description&quot;: &quot;Slice-time corrected BOLD time-series via&quot;</span>
-<span class="sd">                            &quot; AFNI 3dTShift.&quot;}}</span>
-<span class="sd">    }</span>
-<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">slice_time</span> <span class="o">=</span> <span class="n">slice_timing_wf</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_slice_timing_correction_&#39;</span>
                                       <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
@@ -1444,323 +1039,17 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">get_motion_ref</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;get_motion_ref&quot;,</span>
-<span class="sd">     &quot;config&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;switch&quot;: [&quot;functional_preproc&quot;, &quot;motion_estimates_and_correction&quot;, </span>
-<span class="sd">                &quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: [&quot;functional_preproc&quot;, &quot;motion_estimates_and_correction&quot;,</span>
-<span class="sd">                    &quot;motion_correction&quot;, &quot;motion_correction_reference&quot;],</span>
-<span class="sd">     &quot;option_val&quot;: [&quot;mean&quot;, &quot;median&quot;, &quot;selected_volume&quot;, &quot;fmriprep_reference&quot;],</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;desc-preproc_bold&quot;,</span>
-<span class="sd">                &quot;desc-reorient_bold&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;motion-basefile&quot;]}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">option_vals</span> <span class="o">=</span> <span class="n">grab_docstring_dct</span><span class="p">(</span><span class="n">get_motion_ref</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;option_val&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">opt</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">option_vals</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">[!] Error: The </span><span class="se">\&#39;</span><span class="s1">motion_correction_reference</span><span class="se">\&#39;</span><span class="s1"> &#39;</span>
-                         <span class="s1">&#39;parameter of the </span><span class="se">\&#39;</span><span class="s1">motion_correction</span><span class="se">\&#39;</span><span class="s1"> workflow &#39;</span>
-                         <span class="s1">&#39;must be one of:</span><span class="se">\n\t</span><span class="si">{0}</span><span class="s1">.</span><span class="se">\n\n</span><span class="s1">Tool input: </span><span class="se">\&#39;</span><span class="si">{1}</span><span class="se">\&#39;</span><span class="s1">&#39;</span>
-                         <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                             <span class="s1">&#39; or &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&#39;&quot;</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">option_vals</span><span class="p">]),</span>
-                             <span class="n">opt</span><span class="p">))</span>
-
-    <span class="k">if</span> <span class="n">opt</span> <span class="o">==</span> <span class="s1">&#39;mean&#39;</span><span class="p">:</span>
-        <span class="n">func_get_RPI</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">TStat</span><span class="p">(),</span>
-                               <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_get_mean_RPI_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-                               <span class="n">mem_gb</span><span class="o">=</span><span class="mf">0.48</span><span class="p">,</span>
-                               <span class="n">mem_x</span><span class="o">=</span><span class="p">(</span><span class="mi">1435097126797993</span> <span class="o">/</span>
-                                      <span class="mi">302231454903657293676544</span><span class="p">,</span>
-                                      <span class="s1">&#39;in_file&#39;</span><span class="p">))</span>
-
-        <span class="n">func_get_RPI</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="s1">&#39;-mean&#39;</span>
-        <span class="n">func_get_RPI</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
-
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_get_RPI</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-    <span class="k">elif</span> <span class="n">opt</span> <span class="o">==</span> <span class="s1">&#39;median&#39;</span><span class="p">:</span>
-        <span class="n">func_get_RPI</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">TStat</span><span class="p">(),</span>
-                               <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_get_median_RPI_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-        <span class="n">func_get_RPI</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="s1">&#39;-median&#39;</span>
-        <span class="n">func_get_RPI</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">outputtype</span> <span class="o">=</span> <span class="s1">&#39;NIFTI_GZ&#39;</span>
-
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_get_RPI</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-    <span class="k">elif</span> <span class="n">opt</span> <span class="o">==</span> <span class="s1">&#39;selected_volume&#39;</span><span class="p">:</span>
-        <span class="n">func_get_RPI</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
-                               <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_get_selected_RPI_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-        <span class="n">func_get_RPI</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
-            <span class="n">expr</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span>
-            <span class="n">single_idx</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">functional_preproc</span><span class="p">[</span><span class="s1">&#39;motion_estimates_and_correction&#39;</span><span class="p">][</span>
-                <span class="s1">&#39;motion_correction&#39;</span><span class="p">][</span><span class="s1">&#39;motion_correction_reference_volume&#39;</span><span class="p">],</span>
-            <span class="n">outputtype</span><span class="o">=</span><span class="s1">&#39;NIFTI_GZ&#39;</span>
-        <span class="p">)</span>
-
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_get_RPI</span><span class="p">,</span> <span class="s1">&#39;in_file_a&#39;</span><span class="p">)</span>
-
-    <span class="k">elif</span> <span class="n">opt</span> <span class="o">==</span> <span class="s1">&#39;fmriprep_reference&#39;</span><span class="p">:</span>
-        <span class="n">func_get_RPI</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;in_file&#39;</span><span class="p">],</span>
-                                             <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;out_file&#39;</span><span class="p">],</span>
-                                             <span class="n">function</span><span class="o">=</span><span class="n">estimate_reference_image</span><span class="p">),</span>
-                           <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_get_fmriprep_ref_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-        <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;desc-reorient_bold&#39;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">func_get_RPI</span><span class="p">,</span> <span class="s1">&#39;in_file&#39;</span><span class="p">)</span>
-
-    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;motion-basefile&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">func_get_RPI</span><span class="p">,</span> <span class="s1">&#39;out_file&#39;</span><span class="p">)</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">func_motion_correct</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;motion_correction&quot;,</span>
-<span class="sd">     &quot;config&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;switch&quot;: [&quot;functional_preproc&quot;, &quot;motion_estimates_and_correction&quot;,</span>
-<span class="sd">                &quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: [&quot;functional_preproc&quot;, &quot;motion_estimates_and_correction&quot;,</span>
-<span class="sd">                    &quot;motion_correction&quot;, &quot;using&quot;],</span>
-<span class="sd">     &quot;option_val&quot;: [&quot;3dvolreg&quot;, &quot;mcflirt&quot;],</span>
-<span class="sd">     &quot;inputs&quot;: [(&quot;desc-preproc_bold&quot;,</span>
-<span class="sd">                 &quot;motion-basefile&quot;)],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;desc-preproc_bold&quot;,</span>
-<span class="sd">                 &quot;desc-motion_bold&quot;,</span>
-<span class="sd">                 &quot;max-displacement&quot;,</span>
-<span class="sd">                 &quot;rels-displacement&quot;,</span>
-<span class="sd">                 &quot;movement-parameters&quot;,</span>
-<span class="sd">                 &quot;coordinate-transformation&quot;]}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-
-    <span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span> <span class="o">=</span> <span class="n">motion_correct_connections</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span>
-                                             <span class="n">opt</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">func_motion_estimates</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;motion_estimates&quot;,</span>
-<span class="sd">     &quot;config&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;switch&quot;: [&quot;functional_preproc&quot;, &quot;motion_estimates_and_correction&quot;,</span>
-<span class="sd">                &quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: [&quot;functional_preproc&quot;, &quot;motion_estimates_and_correction&quot;,</span>
-<span class="sd">                    &quot;motion_correction&quot;, &quot;using&quot;],</span>
-<span class="sd">     &quot;option_val&quot;: [&quot;3dvolreg&quot;, &quot;mcflirt&quot;],</span>
-<span class="sd">     &quot;inputs&quot;: [(&quot;desc-preproc_bold&quot;,</span>
-<span class="sd">                 &quot;motion-basefile&quot;)],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;max-displacement&quot;,</span>
-<span class="sd">                 &quot;rels-displacement&quot;,</span>
-<span class="sd">                 &quot;movement-parameters&quot;,</span>
-<span class="sd">                 &quot;coordinate-transformation&quot;]}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-
-    <span class="n">wf</span><span class="p">,</span> <span class="n">wf_outputs</span> <span class="o">=</span> <span class="n">motion_correct_connections</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span>
-                                                <span class="n">opt</span><span class="p">)</span>
-
-    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;max-displacement&#39;</span><span class="p">:</span> <span class="n">wf_outputs</span><span class="p">[</span><span class="s1">&#39;max-displacement&#39;</span><span class="p">],</span>
-        <span class="s1">&#39;movement-parameters&#39;</span><span class="p">:</span> <span class="n">wf_outputs</span><span class="p">[</span><span class="s1">&#39;movement-parameters&#39;</span><span class="p">]</span>
-    <span class="p">}</span>
-
-    <span class="k">if</span> <span class="s1">&#39;coordinate-transformation&#39;</span> <span class="ow">in</span> <span class="n">wf_outputs</span><span class="p">:</span>
-        <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;coordinate-transformation&#39;</span><span class="p">]</span> <span class="o">=</span> \
-            <span class="n">wf_outputs</span><span class="p">[</span><span class="s1">&#39;coordinate-transformation&#39;</span><span class="p">]</span>
-
-    <span class="k">if</span> <span class="s1">&#39;rels-displacement&#39;</span> <span class="ow">in</span> <span class="n">wf_outputs</span><span class="p">:</span>
-        <span class="n">outputs</span><span class="p">[</span><span class="s1">&#39;rels-displacement&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">wf_outputs</span><span class="p">[</span><span class="s1">&#39;rels-displacement&#39;</span><span class="p">]</span>
-
-    <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">func_motion_correct_only</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;motion_correction_only&quot;,</span>
-<span class="sd">     &quot;config&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;switch&quot;: [&quot;functional_preproc&quot;, &quot;motion_estimates_and_correction&quot;, </span>
-<span class="sd">                &quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: [&quot;functional_preproc&quot;, &quot;motion_estimates_and_correction&quot;,</span>
-<span class="sd">                    &quot;motion_correction&quot;, &quot;using&quot;],</span>
-<span class="sd">     &quot;option_val&quot;: [&quot;3dvolreg&quot;, &quot;mcflirt&quot;],</span>
-<span class="sd">     &quot;inputs&quot;: [(&quot;desc-preproc_bold&quot;,</span>
-<span class="sd">                 &quot;motion-basefile&quot;)],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;desc-preproc_bold&quot;,</span>
-<span class="sd">                 &quot;desc-motion_bold&quot;]}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-
-    <span class="n">wf</span><span class="p">,</span> <span class="n">wf_outputs</span> <span class="o">=</span> <span class="n">motion_correct_connections</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span>
-                                                <span class="n">opt</span><span class="p">)</span>
-
-    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">:</span> <span class="n">wf_outputs</span><span class="p">[</span><span class="s1">&#39;desc-motion_bold&#39;</span><span class="p">],</span>
-        <span class="s1">&#39;desc-motion_bold&#39;</span><span class="p">:</span> <span class="n">wf_outputs</span><span class="p">[</span><span class="s1">&#39;desc-motion_bold&#39;</span><span class="p">]</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">motion_estimate_filter</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;motion_estimate_filter&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;functional_preproc&quot;, &quot;motion_estimates_and_correction&quot;,</span>
-<span class="sd">                &quot;motion_estimate_filter&quot;],</span>
-<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: &quot;filters&quot;,</span>
-<span class="sd">     &quot;option_val&quot;: &quot;USER-DEFINED&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;movement-parameters&quot;,</span>
-<span class="sd">                &quot;TR&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;movement-parameters&quot;,</span>
-<span class="sd">                 &quot;motion-filter-info&quot;,</span>
-<span class="sd">                 &quot;motion-filter-plot&quot;]}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="n">notch_imports</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;import numpy as np&#39;</span><span class="p">,</span>
-                     <span class="s1">&#39;from scipy.signal import iirnotch, lfilter, firwin, &#39;</span>
-                     <span class="s1">&#39;freqz&#39;</span><span class="p">,</span>
-                     <span class="s1">&#39;from matplotlib import pyplot as plt&#39;</span><span class="p">,</span>
-                     <span class="s1">&#39;from CPAC.func_preproc.utils import degrees_to_mm, &#39;</span>
-                     <span class="s1">&#39;mm_to_degrees&#39;</span><span class="p">]</span>
-    <span class="n">notch</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">Function</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;motion_params&#39;</span><span class="p">,</span>
-                                          <span class="s1">&#39;filter_type&#39;</span><span class="p">,</span>
-                                          <span class="s1">&#39;TR&#39;</span><span class="p">,</span>
-                                          <span class="s1">&#39;fc_RR_min&#39;</span><span class="p">,</span>
-                                          <span class="s1">&#39;fc_RR_max&#39;</span><span class="p">,</span>
-                                          <span class="s1">&#39;center_freq&#39;</span><span class="p">,</span>
-                                          <span class="s1">&#39;freq_bw&#39;</span><span class="p">,</span>
-                                          <span class="s1">&#39;lowpass_cutoff&#39;</span><span class="p">,</span>
-                                          <span class="s1">&#39;filter_order&#39;</span><span class="p">],</span>
-                             <span class="n">output_names</span><span class="o">=</span><span class="p">[</span>
-                                 <span class="s1">&#39;filtered_motion_params&#39;</span><span class="p">,</span>
-                                 <span class="s1">&#39;filter_info&#39;</span><span class="p">,</span>
-                                 <span class="s1">&#39;filter_plot&#39;</span><span class="p">],</span>
-                             <span class="n">function</span><span class="o">=</span><span class="n">notch_filter_motion</span><span class="p">,</span>
-                             <span class="n">imports</span><span class="o">=</span><span class="n">notch_imports</span><span class="p">),</span>
-                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;filter_motion_params_</span><span class="si">{</span><span class="n">opt</span><span class="p">[</span><span class="s2">&quot;Name&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-
-    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">filter_type</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;filter_type&#39;</span><span class="p">)</span>
-    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fc_RR_min</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;breathing_rate_min&#39;</span><span class="p">)</span>
-    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">fc_RR_max</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;breathing_rate_max&#39;</span><span class="p">)</span>
-    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">center_freq</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;center_frequency&#39;</span><span class="p">)</span>
-    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">freq_bw</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;filter_bandwidth&#39;</span><span class="p">)</span>
-    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">lowpass_cutoff</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;lowpass_cutoff&#39;</span><span class="p">)</span>
-    <span class="n">notch</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">filter_order</span> <span class="o">=</span> <span class="n">opt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;filter_order&#39;</span><span class="p">)</span>
-
-    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;movement-parameters&#39;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;motion_params&#39;</span><span class="p">)</span>
-
-    <span class="n">node</span><span class="p">,</span> <span class="n">out</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;TR&#39;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;TR&#39;</span><span class="p">)</span>
-
-    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;motion-filter-info&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;filter_info&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;motion-filter-plot&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;filter_plot&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;movement-parameters&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">notch</span><span class="p">,</span> <span class="s1">&#39;filtered_motion_params&#39;</span><span class="p">)</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">calc_motion_stats</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;calc_motion_stats&quot;,</span>
-<span class="sd">     &quot;config&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;switch&quot;: [[&quot;functional_preproc&quot;, &quot;run&quot;], </span>
-<span class="sd">                [&quot;functional_preproc&quot;, &quot;motion_estimates_and_correction&quot;, </span>
-<span class="sd">                &quot;motion_estimates&quot;, &quot;calculate_motion_after&quot;]],</span>
-<span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [(&quot;desc-preproc_bold&quot;,</span>
-<span class="sd">                 &quot;space-bold_desc-brain_mask&quot;,</span>
-<span class="sd">                 &quot;movement-parameters&quot;,</span>
-<span class="sd">                 &quot;max-displacement&quot;,</span>
-<span class="sd">                 &quot;rels-displacement&quot;,</span>
-<span class="sd">                 &quot;coordinate-transformation&quot;),</span>
-<span class="sd">                &quot;subject&quot;,</span>
-<span class="sd">                &quot;scan&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;framewise-displacement-power&quot;,</span>
-<span class="sd">                 &quot;framewise-displacement-jenkinson&quot;,</span>
-<span class="sd">                 &quot;dvars&quot;,</span>
-<span class="sd">                 &quot;power-params&quot;,</span>
-<span class="sd">                 &quot;motion-params&quot;]}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-
-    <span class="n">motion_prov</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_cpac_provenance</span><span class="p">(</span><span class="s1">&#39;movement-parameters&#39;</span><span class="p">)</span>
-    <span class="n">motion_correct_tool</span> <span class="o">=</span> <span class="n">check_prov_for_motion_tool</span><span class="p">(</span><span class="n">motion_prov</span><span class="p">)</span>
-
-    <span class="n">gen_motion_stats</span> <span class="o">=</span> <span class="n">motion_power_statistics</span><span class="p">(</span>
-        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;gen_motion_stats_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
-        <span class="n">motion_correct_tool</span><span class="o">=</span><span class="n">motion_correct_tool</span><span class="p">)</span>
-
-    <span class="c1"># Special case where the workflow is not getting outputs from</span>
-    <span class="c1"># resource pool but is connected to functional datasource</span>
-    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;subject&#39;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-               <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;inputspec.subject_id&#39;</span><span class="p">)</span>
-
-    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;scan&#39;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-               <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;inputspec.scan_id&#39;</span><span class="p">)</span>
-
-    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s2">&quot;desc-preproc_bold&quot;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-               <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;inputspec.motion_correct&#39;</span><span class="p">)</span>
-
-    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;space-bold_desc-brain_mask&#39;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-               <span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;inputspec.mask&#39;</span><span class="p">)</span>
-
-    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;movement-parameters&#39;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-               <span class="n">gen_motion_stats</span><span class="p">,</span>
-               <span class="s1">&#39;inputspec.movement_parameters&#39;</span><span class="p">)</span>
-
-    <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;max-displacement&#39;</span><span class="p">)</span>
-    <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span>
-               <span class="n">gen_motion_stats</span><span class="p">,</span>
-               <span class="s1">&#39;inputspec.max_displacement&#39;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s1">&#39;rels-displacement&#39;</span><span class="p">):</span>
-        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;rels-displacement&#39;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">gen_motion_stats</span><span class="p">,</span>
-                   <span class="s1">&#39;inputspec.rels_displacement&#39;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">check_rpool</span><span class="p">(</span><span class="s1">&#39;coordinate-transformation&#39;</span><span class="p">):</span>
-        <span class="n">node</span><span class="p">,</span> <span class="n">out_file</span> <span class="o">=</span> <span class="n">strat_pool</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="s1">&#39;coordinate-transformation&#39;</span><span class="p">)</span>
-        <span class="n">wf</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="n">gen_motion_stats</span><span class="p">,</span>
-                   <span class="s1">&#39;inputspec.transformations&#39;</span><span class="p">)</span>
-
-    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;framewise-displacement-power&#39;</span><span class="p">:</span>
-            <span class="p">(</span><span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.FDP_1D&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;framewise-displacement-jenkinson&#39;</span><span class="p">:</span>
-            <span class="p">(</span><span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.FDJ_1D&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;dvars&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.DVARS_1D&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;power-params&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.power_params&#39;</span><span class="p">),</span>
-        <span class="s1">&#39;motion-params&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">gen_motion_stats</span><span class="p">,</span> <span class="s1">&#39;outputspec.motion_params&#39;</span><span class="p">)</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-
-
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;bold_mask_afni&#39;</span><span class="p">,</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_masking&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">]],</span>
+    <span class="n">option_key</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_masking&#39;</span><span class="p">,</span> <span class="s1">&#39;using&#39;</span><span class="p">],</span>
+    <span class="n">option_val</span><span class="o">=</span><span class="s1">&#39;AFNI&#39;</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;space-bold_desc-brain_mask&#39;</span><span class="p">:</span>
+        <span class="p">{</span><span class="s1">&#39;Description&#39;</span><span class="p">:</span> <span class="s1">&#39;Binary brain mask of the BOLD functional time-series created by AFNI 3dAutomask.&#39;</span><span class="p">}}</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">bold_mask_afni</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;bold_mask_afni&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;functional_preproc&quot;],</span>
-<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: [&quot;func_masking&quot;, &quot;using&quot;],</span>
-<span class="sd">     &quot;option_val&quot;: &quot;AFNI&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;desc-preproc_bold&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: {</span>
-<span class="sd">         &quot;space-bold_desc-brain_mask&quot;: {</span>
-<span class="sd">             &quot;Description&quot;: &quot;Binary brain mask of the BOLD functional &quot;</span>
-<span class="sd">                            &quot;time-series created by AFNI 3dAutomask.&quot;}}}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">func_get_brain_mask</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">preprocess</span><span class="o">.</span><span class="n">Automask</span><span class="p">(),</span>
                                   <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_get_brain_mask_AFNI_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -1776,16 +1065,16 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;bold_mask_fsl&#39;</span><span class="p">,</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_masking&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">]],</span>
+    <span class="n">option_key</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_masking&#39;</span><span class="p">,</span> <span class="s1">&#39;using&#39;</span><span class="p">],</span>
+    <span class="n">option_val</span><span class="o">=</span><span class="s1">&#39;FSL&#39;</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;space-bold_desc-brain_mask&#39;</span><span class="p">]</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">bold_mask_fsl</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;bold_mask_fsl&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;functional_preproc&quot;],</span>
-<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: [&quot;func_masking&quot;, &quot;using&quot;],</span>
-<span class="sd">     &quot;option_val&quot;: &quot;FSL&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;desc-preproc_bold&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;space-bold_desc-brain_mask&quot;]}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">inputnode_bet</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span>
         <span class="n">util</span><span class="o">.</span><span class="n">IdentityInterface</span><span class="p">(</span><span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;frac&#39;</span><span class="p">,</span>
@@ -1929,22 +1218,17 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;bold_mask_fsl_afni&#39;</span><span class="p">,</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_masking&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">]],</span>
+    <span class="n">option_key</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_masking&#39;</span><span class="p">,</span> <span class="s1">&#39;using&#39;</span><span class="p">],</span>
+    <span class="n">option_val</span><span class="o">=</span><span class="s1">&#39;FSL_AFNI&#39;</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;motion-basefile&#39;</span><span class="p">,</span> <span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">),</span> <span class="s1">&#39;FSL-AFNI-bold-ref&#39;</span><span class="p">,</span> <span class="s1">&#39;FSL-AFNI-brain-mask&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;FSL-AFNI-brain-probseg&#39;</span><span class="p">],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;space-bold_desc-brain_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;desc-ref_bold&#39;</span><span class="p">]</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">bold_mask_fsl_afni</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;bold_mask_fsl_afni&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;functional_preproc&quot;],</span>
-<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: [&quot;func_masking&quot;, &quot;using&quot;],</span>
-<span class="sd">     &quot;option_val&quot;: &quot;FSL_AFNI&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [(&quot;motion-basefile&quot;,</span>
-<span class="sd">                 &quot;desc-preproc_bold&quot;),</span>
-<span class="sd">                &quot;FSL-AFNI-bold-ref&quot;,</span>
-<span class="sd">                &quot;FSL-AFNI-brain-mask&quot;,</span>
-<span class="sd">                &quot;FSL-AFNI-brain-probseg&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;space-bold_desc-brain_mask&quot;,</span>
-<span class="sd">                 &quot;desc-ref_bold&quot;]}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-
     <span class="c1"># fMRIPrep-style BOLD mask</span>
     <span class="c1"># Ref: https://github.com/nipreps/niworkflows/blob/maint/1.3.x/niworkflows/func/util.py#L246-L514</span>
 
@@ -1988,8 +1272,7 @@
             <span class="n">sigma_units</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mm&#39;</span><span class="p">,</span> <span class="s1">&#39;mm&#39;</span><span class="p">,</span> <span class="s1">&#39;mm&#39;</span><span class="p">],</span>
             <span class="n">shrink_factors</span><span class="o">=</span><span class="p">[[</span><span class="mi">2</span><span class="p">]],</span>
             <span class="n">sampling_percentage</span><span class="o">=</span><span class="p">[</span><span class="mf">0.2</span><span class="p">],</span>
-            <span class="n">use_histogram_matching</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
-            <span class="n">use_estimate_learning_rate_once</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span>
+            <span class="n">use_histogram_matching</span><span class="o">=</span><span class="p">[</span><span class="kc">True</span><span class="p">]</span>
         <span class="p">),</span>
         <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;norm_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
         <span class="n">n_procs</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">pipeline_setup</span><span class="p">[</span><span class="s1">&#39;system_config&#39;</span><span class="p">][</span><span class="s1">&#39;num_OMP_threads&#39;</span><span class="p">],</span>
@@ -2113,20 +1396,17 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;bold_mask_anatomical_refined&#39;</span><span class="p">,</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_masking&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">]],</span>
+    <span class="n">option_key</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_masking&#39;</span><span class="p">,</span> <span class="s1">&#39;using&#39;</span><span class="p">],</span>
+    <span class="n">option_val</span><span class="o">=</span><span class="s1">&#39;Anatomical_Refined&#39;</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span> <span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s1">&#39;desc-brain_T1w&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;space-T1w_desc-brain_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;space-T1w_desc-acpcbrain_mask&#39;</span><span class="p">])],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;space-bold_desc-brain_mask&#39;</span><span class="p">]</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">bold_mask_anatomical_refined</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;bold_mask_anatomical_refined&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;functional_preproc&quot;],</span>
-<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: [&quot;func_masking&quot;, &quot;using&quot;],</span>
-<span class="sd">     &quot;option_val&quot;: &quot;Anatomical_Refined&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [(&quot;bold&quot;,</span>
-<span class="sd">                 &quot;desc-preproc_bold&quot;),</span>
-<span class="sd">                (&quot;desc-brain_T1w&quot;,</span>
-<span class="sd">                 [&quot;space-T1w_desc-brain_mask&quot;,</span>
-<span class="sd">                  &quot;space-T1w_desc-acpcbrain_mask&quot;])],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;space-bold_desc-brain_mask&quot;]}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="c1"># binarize anat mask, in case it is not a binary mask.</span>
     <span class="n">anat_brain_mask_bin</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(),</span>
@@ -2235,21 +1515,19 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;bold_mask_anatomical_based&#39;</span><span class="p">,</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_masking&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">]],</span>
+    <span class="n">option_key</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_masking&#39;</span><span class="p">,</span> <span class="s1">&#39;using&#39;</span><span class="p">],</span>
+    <span class="n">option_val</span><span class="o">=</span><span class="s1">&#39;Anatomical_Based&#39;</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;desc-brain_T1w&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;desc-preproc_T1w&#39;</span><span class="p">,</span> <span class="s1">&#39;desc-reorient_T1w&#39;</span><span class="p">,</span> <span class="s1">&#39;T1w&#39;</span><span class="p">])],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;space-bold_desc-brain_mask&#39;</span><span class="p">]</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">bold_mask_anatomical_based</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;Generate the BOLD mask by basing it off of the anatomical brain mask.</span>
 <span class="sd">    Adapted from DCAN Lab&#39;s BOLD mask method from the ABCD pipeline.</span>
 <span class="sd">        https://github.com/DCAN-Labs/DCAN-HCP/blob/master/fMRIVolume/scripts/DistortionCorrectionAndEPIToT1wReg_FLIRTBBRAndFreeSurferBBRbased.sh</span>
-
-<span class="sd">    Node Block:</span>
-<span class="sd">    {&quot;name&quot;: &quot;bold_mask_anatomical_based&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;functional_preproc&quot;],</span>
-<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: [&quot;func_masking&quot;, &quot;using&quot;],</span>
-<span class="sd">     &quot;option_val&quot;: &quot;Anatomical_Based&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;desc-preproc_bold&quot;,</span>
-<span class="sd">                (&quot;desc-brain_T1w&quot;,</span>
-<span class="sd">                 [&quot;desc-preproc_T1w&quot;, &quot;desc-reorient_T1w&quot;, &quot;T1w&quot;])],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;space-bold_desc-brain_mask&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="c1"># 0. Take single volume of func</span>
@@ -2329,24 +1607,20 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;bold_mask_anatomical_resampled&#39;</span><span class="p">,</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_masking&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">]],</span>
+    <span class="n">option_key</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_masking&#39;</span><span class="p">,</span> <span class="s1">&#39;using&#39;</span><span class="p">],</span>
+    <span class="n">option_val</span><span class="o">=</span><span class="s1">&#39;Anatomical_Resampled&#39;</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">,</span> <span class="s1">&#39;T1w-template-funcreg&#39;</span><span class="p">,</span> <span class="s1">&#39;space-template_desc-preproc_T1w&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;space-template_desc-T1w_mask&#39;</span><span class="p">],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;space-template_res-bold_desc-brain_T1w&#39;</span><span class="p">,</span> <span class="s1">&#39;space-template_desc-bold_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;space-bold_desc-brain_mask&#39;</span><span class="p">]</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">bold_mask_anatomical_resampled</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;Resample anatomical brain mask in standard space to get BOLD brain mask in standard space</span>
 <span class="sd">    Adapted from DCAN Lab&#39;s BOLD mask method from the ABCD pipeline.</span>
 <span class="sd">        https://github.com/DCAN-Labs/DCAN-HCP/blob/master/fMRIVolume/scripts/OneStepResampling.sh#L121-L132</span>
-
-<span class="sd">    Node Block:</span>
-<span class="sd">    {&quot;name&quot;: &quot;bold_mask_anatomical_resampled&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;functional_preproc&quot;],</span>
-<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: [&quot;func_masking&quot;, &quot;using&quot;],</span>
-<span class="sd">     &quot;option_val&quot;: &quot;Anatomical_Resampled&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;desc-preproc_bold&quot;,</span>
-<span class="sd">                &quot;T1w-template-funcreg&quot;,</span>
-<span class="sd">                &quot;space-template_desc-preproc_T1w&quot;,</span>
-<span class="sd">                &quot;space-template_desc-T1w_mask&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;space-template_res-bold_desc-brain_T1w&quot;,</span>
-<span class="sd">                 &quot;space-template_desc-bold_mask&quot;,</span>
-<span class="sd">                 &quot;space-bold_desc-brain_mask&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="c1"># applywarp --rel --interp=spline -i ${T1wImage} -r ${ResampRefIm} --premat=$FSLDIR/etc/flirtsch/ident.mat -o ${WD}/${T1wImageFile}.${FinalfMRIResolution}</span>
@@ -2402,21 +1676,20 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;bold_mask_ccs&#39;</span><span class="p">,</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_masking&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">]],</span>
+    <span class="n">option_key</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_masking&#39;</span><span class="p">,</span> <span class="s1">&#39;using&#39;</span><span class="p">],</span>
+    <span class="n">option_val</span><span class="o">=</span><span class="s1">&#39;CCS_Anatomical_Refined&#39;</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;desc-motion_bold&#39;</span><span class="p">,</span> <span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">,</span> <span class="s1">&#39;bold&#39;</span><span class="p">],</span> <span class="s1">&#39;desc-brain_T1w&#39;</span><span class="p">,</span>
+            <span class="p">[</span><span class="s1">&#39;desc-preproc_T1w&#39;</span><span class="p">,</span> <span class="s1">&#39;desc-reorient_T1w&#39;</span><span class="p">,</span> <span class="s1">&#39;T1w&#39;</span><span class="p">]],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;space-bold_desc-brain_mask&#39;</span><span class="p">,</span> <span class="s1">&#39;desc-ROIbrain_bold&#39;</span><span class="p">]</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">bold_mask_ccs</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;Generate the BOLD mask by basing it off of the anatomical brain.</span>
 <span class="sd">    Adapted from the BOLD mask method from the CCS pipeline.</span>
 <span class="sd">        https://github.com/TingsterX/CCS/blob/master/ccs_01_funcpreproc.sh#L89-L110</span>
-<span class="sd">    Node Block:</span>
-<span class="sd">    {&quot;name&quot;: &quot;bold_mask_ccs&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;functional_preproc&quot;],</span>
-<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: [&quot;func_masking&quot;, &quot;using&quot;],</span>
-<span class="sd">     &quot;option_val&quot;: &quot;CCS_Anatomical_Refined&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [[&quot;desc-motion_bold&quot;, &quot;desc-preproc_bold&quot;, &quot;bold&quot;],</span>
-<span class="sd">                &quot;desc-brain_T1w&quot;,</span>
-<span class="sd">                [&quot;desc-preproc_T1w&quot;, &quot;desc-reorient_T1w&quot;, &quot;T1w&quot;]],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;space-bold_desc-brain_mask&quot;,</span>
-<span class="sd">                &quot;desc-ROIbrain_bold&quot;]}</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="c1"># Run 3dAutomask to generate func initial mask</span>
@@ -2545,26 +1818,16 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;bold_masking&#39;</span><span class="p">,</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_masking&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">],</span>
+            <span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;func_masking&#39;</span><span class="p">,</span> <span class="s1">&#39;apply_func_mask_in_native_space&#39;</span><span class="p">]],</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">,</span> <span class="s1">&#39;space-bold_desc-brain_mask&#39;</span><span class="p">)],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Description&#39;</span><span class="p">:</span> <span class="s1">&#39;The skull-stripped BOLD time-series.&#39;</span><span class="p">,</span> <span class="s1">&#39;SkullStripped&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+             <span class="s1">&#39;desc-brain_bold&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;Description&#39;</span><span class="p">:</span> <span class="s1">&#39;The skull-stripped BOLD time-series.&#39;</span><span class="p">,</span> <span class="s1">&#39;SkullStripped&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}}</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">bold_masking</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;bold_masking&quot;,</span>
-<span class="sd">     &quot;config&quot;: None,</span>
-<span class="sd">     &quot;switch&quot;: [[&quot;functional_preproc&quot;, &quot;run&quot;],</span>
-<span class="sd">                [&quot;functional_preproc&quot;, &quot;func_masking&quot;,</span>
-<span class="sd">                 &quot;apply_func_mask_in_native_space&quot;]],</span>
-<span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [(&quot;desc-preproc_bold&quot;,</span>
-<span class="sd">                 &quot;space-bold_desc-brain_mask&quot;)],</span>
-<span class="sd">     &quot;outputs&quot;: {</span>
-<span class="sd">         &quot;desc-preproc_bold&quot;: {</span>
-<span class="sd">             &quot;Description&quot;: &quot;The skull-stripped BOLD time-series.&quot;,</span>
-<span class="sd">             &quot;SkullStripped&quot;: True},</span>
-<span class="sd">         &quot;desc-brain_bold&quot;: {</span>
-<span class="sd">             &quot;Description&quot;: &quot;The skull-stripped BOLD time-series.&quot;,</span>
-<span class="sd">             &quot;SkullStripped&quot;: True}}</span>
-<span class="sd">    }</span>
-<span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">func_edge_detect</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">Calc</span><span class="p">(),</span>
                                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_extract_brain_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
@@ -2585,18 +1848,13 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_mean&#39;</span><span class="p">,</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;generate_func_mean&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">]],</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;desc-mean_bold&#39;</span><span class="p">]</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">func_mean</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;func_mean&quot;,</span>
-<span class="sd">     &quot;config&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;switch&quot;: [[&quot;functional_preproc&quot;, &quot;run&quot;],</span>
-<span class="sd">                [&quot;functional_preproc&quot;, &quot;generate_func_mean&quot;, &quot;run&quot;]],</span>
-<span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;desc-preproc_bold&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;desc-mean_bold&quot;]</span>
-<span class="sd">    }</span>
-<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">func_mean</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">afni_utils</span><span class="o">.</span><span class="n">TStat</span><span class="p">(),</span>
                         <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_mean_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -2614,18 +1872,13 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 
 
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_normalize&#39;</span><span class="p">,</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">,</span> <span class="s1">&#39;normalize_func&#39;</span><span class="p">,</span> <span class="s1">&#39;run&#39;</span><span class="p">]],</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">]</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">func_normalize</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;func_normalize&quot;,</span>
-<span class="sd">     &quot;config&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;switch&quot;: [[&quot;functional_preproc&quot;, &quot;run&quot;],</span>
-<span class="sd">                [&quot;functional_preproc&quot;, &quot;normalize_func&quot;, &quot;run&quot;]],</span>
-<span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [&quot;desc-preproc_bold&quot;],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;desc-preproc_bold&quot;]}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-
     <span class="n">func_normalize</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(),</span>
                              <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_normalize_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
                              <span class="n">mem_gb</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
@@ -2642,19 +1895,16 @@
     <span class="p">}</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-    
-    
+
+
+<span class="nd">@nodeblock</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;func_mask_normalize&#39;</span><span class="p">,</span>
+    <span class="n">config</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;functional_preproc&#39;</span><span class="p">],</span>
+    <span class="n">switch</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;run&#39;</span><span class="p">],</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;desc-preproc_bold&#39;</span><span class="p">,</span> <span class="s1">&#39;space-bold_desc-brain_mask&#39;</span><span class="p">)],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;space-bold_desc-brain_mask&#39;</span><span class="p">]</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">func_mask_normalize</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">strat_pool</span><span class="p">,</span> <span class="n">pipe_num</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    {&quot;name&quot;: &quot;func_mask_normalize&quot;,</span>
-<span class="sd">     &quot;config&quot;: [&quot;functional_preproc&quot;],</span>
-<span class="sd">     &quot;switch&quot;: [&quot;run&quot;],</span>
-<span class="sd">     &quot;option_key&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;option_val&quot;: &quot;None&quot;,</span>
-<span class="sd">     &quot;inputs&quot;: [(&quot;desc-preproc_bold&quot;,</span>
-<span class="sd">                 &quot;space-bold_desc-brain_mask&quot;)],</span>
-<span class="sd">     &quot;outputs&quot;: [&quot;space-bold_desc-brain_mask&quot;]}</span>
-<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">func_mask_normalize</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">interface</span><span class="o">=</span><span class="n">fsl</span><span class="o">.</span><span class="n">ImageMaths</span><span class="p">(),</span>
                                   <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;func_mask_normalize_</span><span class="si">{</span><span class="n">pipe_num</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
@@ -2672,7 +1922,6 @@
     <span class="p">}</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-
 </pre></div>
         </article>
       </div>

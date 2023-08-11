@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex" /><link rel="search" title="Search" href="../../../../search" />
 
-    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/><meta name="generator" content="sphinx-4.0.0, furo 2022.09.29"/>
+    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/><meta name="generator" content="sphinx-4.2.0, furo 2022.09.29"/>
         <title>nipype.pipeline.engine.nodes - C-PAC 1.8.6.dev Beta documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
@@ -325,6 +325,7 @@
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">os.path</span> <span class="k">as</span> <span class="nn">op</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">socket</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
@@ -346,7 +347,6 @@
     <span class="n">load_json</span><span class="p">,</span>
     <span class="n">emptydirs</span><span class="p">,</span>
     <span class="n">savepkl</span><span class="p">,</span>
-    <span class="n">indirectory</span><span class="p">,</span>
     <span class="n">silentrm</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -378,6 +378,10 @@
 <span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">EngineBase</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;nipype.workflow&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">NodeExecutionError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A nipype-specific name for exceptions when executing a Node.&quot;&quot;&quot;</span>
 
 
 <span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="n">EngineBase</span><span class="p">):</span>
@@ -414,7 +418,7 @@
         <span class="n">run_without_submitting</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">n_procs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">mem_gb</span><span class="o">=</span><span class="mf">0.20</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
@@ -521,6 +525,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">needed_outputs</span> <span class="o">=</span> <span class="n">needed_outputs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="kc">None</span>
 
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="p">,</span> <span class="s2">&quot;write_cmdline&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="o">.</span><span class="n">write_cmdline</span> <span class="o">=</span> <span class="kc">True</span>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">interface</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the underlying interface object&quot;&quot;&quot;</span>
@@ -602,9 +609,12 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hierarchy</span><span class="p">:</span>
             <span class="n">outputdir</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outputdir</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_hierarchy</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterization</span><span class="p">:</span>
-            <span class="n">params_str</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterization</span><span class="p">]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">str2bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;execution&quot;</span><span class="p">][</span><span class="s2">&quot;parameterize_dirs&quot;</span><span class="p">]):</span>
-                <span class="n">params_str</span> <span class="o">=</span> <span class="p">[</span><span class="n">_parameterization_dir</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params_str</span><span class="p">]</span>
+            <span class="n">maxlen</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="mi">252</span> <span class="k">if</span> <span class="n">str2bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;execution&quot;</span><span class="p">][</span><span class="s2">&quot;parameterize_dirs&quot;</span><span class="p">])</span> <span class="k">else</span> <span class="mi">32</span>
+            <span class="p">)</span>
+            <span class="n">params_str</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">_parameterization_dir</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">maxlen</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameterization</span>
+            <span class="p">]</span>
             <span class="n">outputdir</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outputdir</span><span class="p">,</span> <span class="o">*</span><span class="n">params_str</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_output_dir</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outputdir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
@@ -755,7 +765,8 @@
         <span class="p">)</span>
 
         <span class="c1"># Check hash, check whether run should be enforced</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;[Node] Setting-up &quot;</span><span class="si">%s</span><span class="s1">&quot; in &quot;</span><span class="si">%s</span><span class="s1">&quot;.&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fullname</span><span class="p">,</span> <span class="n">outdir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">MapNode</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;[Node] Setting-up &quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fullname</span><span class="si">}</span><span class="s1">&quot; in &quot;</span><span class="si">{</span><span class="n">outdir</span><span class="si">}</span><span class="s1">&quot;.&#39;</span><span class="p">)</span>
         <span class="n">cached</span><span class="p">,</span> <span class="n">updated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_cached</span><span class="p">()</span>
 
         <span class="c1"># If the node is cached, check on pklz files and finish</span>
@@ -846,7 +857,6 @@
         <span class="c1"># Tear-up after success</span>
         <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">hashfile_unfinished</span><span class="p">,</span> <span class="n">hashfile_unfinished</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_unfinished&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
         <span class="n">write_node_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">is_mapnode</span><span class="o">=</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">MapNode</span><span class="p">))</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;[Node] Finished &quot;</span><span class="si">%s</span><span class="s1">&quot;.&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fullname</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
     <span class="k">def</span> <span class="nf">_get_hashval</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -898,7 +908,7 @@
                 <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="k">raise</span> <span class="n">NodeExecutionError</span><span class="p">(</span>
 <span class="w">                    </span><span class="sd">&quot;&quot;&quot;\</span>
 <span class="sd">Error populating the inputs of node &quot;%s&quot;: the results file of the source node \</span>
 <span class="sd">(%s) does not contain any outputs.&quot;&quot;&quot;</span>
@@ -1013,78 +1023,68 @@
                 <span class="p">)</span>
                 <span class="k">return</span> <span class="n">result</span>
 
-        <span class="n">outdir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">()</span>
-        <span class="c1"># Run command: either execute is true or load_results failed.</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="n">InterfaceResult</span><span class="p">(</span>
-            <span class="n">interface</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>
-            <span class="n">runtime</span><span class="o">=</span><span class="n">Bunch</span><span class="p">(</span>
-                <span class="n">cwd</span><span class="o">=</span><span class="n">outdir</span><span class="p">,</span>
-                <span class="n">returncode</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                <span class="n">environ</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">),</span>
-                <span class="n">hostname</span><span class="o">=</span><span class="n">socket</span><span class="o">.</span><span class="n">gethostname</span><span class="p">(),</span>
-            <span class="p">),</span>
-            <span class="n">inputs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">get_traitsfree</span><span class="p">(),</span>
-        <span class="p">)</span>
-
+        <span class="n">outdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">())</span>
         <span class="k">if</span> <span class="n">copyfiles</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_originputs</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_copyfiles_to_wd</span><span class="p">(</span><span class="n">execute</span><span class="o">=</span><span class="n">execute</span><span class="p">)</span>
 
-        <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;[Node] Running &quot;</span><span class="si">{}</span><span class="s1">&quot; (&quot;</span><span class="si">{}</span><span class="s1">.</span><span class="si">{}</span><span class="s1">&quot;)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="o">.</span><span class="vm">__module__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="c1"># Run command: either execute is true or load_results failed.</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s1">&#39;[Node] Executing &quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&quot; &lt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="o">.</span><span class="vm">__module__</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="n">CommandLine</span><span class="p">):</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">with</span> <span class="n">indirectory</span><span class="p">(</span><span class="n">outdir</span><span class="p">):</span>
-                    <span class="n">cmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="o">.</span><span class="n">cmdline</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">msg</span><span class="p">:</span>
-                <span class="n">result</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="se">\n\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="nb">getattr</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">runtime</span><span class="p">,</span> <span class="s2">&quot;stderr&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="n">msg</span>
-                <span class="p">)</span>
-                <span class="n">_save_resultfile</span><span class="p">(</span>
-                    <span class="n">result</span><span class="p">,</span>
-                    <span class="n">outdir</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                    <span class="n">rebase</span><span class="o">=</span><span class="n">str2bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;execution&quot;</span><span class="p">][</span><span class="s2">&quot;use_relative_paths&quot;</span><span class="p">]),</span>
-                <span class="p">)</span>
-                <span class="k">raise</span>
-            <span class="n">cmdfile</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;command.txt&quot;</span><span class="p">)</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">cmdfile</span><span class="p">,</span> <span class="s2">&quot;wt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="n">cmd</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">fd</span><span class="p">)</span>
-            <span class="n">message</span> <span class="o">+=</span> <span class="s2">&quot;, a CommandLine Interface with command:</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cwd</span><span class="o">=</span><span class="n">outdir</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">msg</span><span class="p">:</span>
-            <span class="n">result</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="se">\n\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="nb">getattr</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">runtime</span><span class="p">,</span> <span class="s2">&quot;stderr&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="n">msg</span>
-            <span class="p">)</span>
-            <span class="n">_save_resultfile</span><span class="p">(</span>
-                <span class="n">result</span><span class="p">,</span>
+
+        <span class="c1"># Invoke core run method of the interface ignoring exceptions</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cwd</span><span class="o">=</span><span class="n">outdir</span><span class="p">,</span> <span class="n">ignore_exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s1">&#39;[Node] Finished &quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&quot;, elapsed time </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">runtime</span><span class="o">.</span><span class="n">duration</span><span class="si">}</span><span class="s1">s.&#39;</span>
+        <span class="p">)</span>
+
+        <span class="n">exc_tb</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">runtime</span><span class="p">,</span> <span class="s2">&quot;traceback&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">exc_tb</span><span class="p">:</span>
+            <span class="c1"># Clean working directory if no errors</span>
+            <span class="n">dirs2keep</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">MapNode</span><span class="p">):</span>
+                <span class="n">dirs2keep</span> <span class="o">=</span> <span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;mapflow&quot;</span><span class="p">)]</span>
+
+            <span class="n">result</span><span class="o">.</span><span class="n">outputs</span> <span class="o">=</span> <span class="n">clean_working_directory</span><span class="p">(</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">outputs</span><span class="p">,</span>
                 <span class="n">outdir</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                <span class="n">rebase</span><span class="o">=</span><span class="n">str2bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;execution&quot;</span><span class="p">][</span><span class="s2">&quot;use_relative_paths&quot;</span><span class="p">]),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">needed_outputs</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+                <span class="n">dirs2keep</span><span class="o">=</span><span class="n">dirs2keep</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="k">raise</span>
 
-        <span class="n">dirs2keep</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">MapNode</span><span class="p">):</span>
-            <span class="n">dirs2keep</span> <span class="o">=</span> <span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s2">&quot;mapflow&quot;</span><span class="p">)]</span>
-
-        <span class="n">result</span><span class="o">.</span><span class="n">outputs</span> <span class="o">=</span> <span class="n">clean_working_directory</span><span class="p">(</span>
-            <span class="n">result</span><span class="o">.</span><span class="n">outputs</span><span class="p">,</span>
-            <span class="n">outdir</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">needed_outputs</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
-            <span class="n">dirs2keep</span><span class="o">=</span><span class="n">dirs2keep</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="c1"># Store results file under all circumstances</span>
         <span class="n">_save_resultfile</span><span class="p">(</span>
             <span class="n">result</span><span class="p">,</span>
             <span class="n">outdir</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
             <span class="n">rebase</span><span class="o">=</span><span class="n">str2bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;execution&quot;</span><span class="p">][</span><span class="s2">&quot;use_relative_paths&quot;</span><span class="p">]),</span>
         <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">exc_tb</span><span class="p">:</span>
+            <span class="n">runtime</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">runtime</span>
+
+            <span class="k">def</span> <span class="nf">_tab</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+                <span class="kn">from</span> <span class="nn">textwrap</span> <span class="kn">import</span> <span class="n">indent</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">text</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+                <span class="k">return</span> <span class="n">indent</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Exception raised while executing Node </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">runtime</span><span class="p">,</span> <span class="s1">&#39;cmdline&#39;</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Cmdline:</span><span class="se">\n</span><span class="si">{</span><span class="n">_tab</span><span class="p">(</span><span class="n">runtime</span><span class="o">.</span><span class="n">cmdline</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Stdout:</span><span class="se">\n</span><span class="si">{</span><span class="n">_tab</span><span class="p">(</span><span class="n">runtime</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Stderr:</span><span class="se">\n</span><span class="si">{</span><span class="n">_tab</span><span class="p">(</span><span class="n">runtime</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="c1"># Always pass along the traceback</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Traceback:</span><span class="se">\n</span><span class="si">{</span><span class="n">_tab</span><span class="p">(</span><span class="n">runtime</span><span class="o">.</span><span class="n">traceback</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="n">NodeExecutionError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">result</span>
 
@@ -1442,8 +1442,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_serial</span> <span class="o">=</span> <span class="n">serial</span>
 
     <span class="k">def</span> <span class="nf">_create_dynamic_traits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basetraits</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nitems</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert specific fields of a trait to accept multiple inputs</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert specific fields of a trait to accept multiple inputs&quot;&quot;&quot;</span>
         <span class="n">output</span> <span class="o">=</span> <span class="n">DynamicTraitedSpec</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">fields</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">fields</span> <span class="o">=</span> <span class="n">basetraits</span><span class="o">.</span><span class="n">copyable_trait_names</span><span class="p">()</span>
@@ -1607,7 +1606,7 @@
                 <span class="k">if</span> <span class="n">code</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">msg</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;Subnode </span><span class="si">%d</span><span class="s2"> failed&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="p">]</span>
                     <span class="n">msg</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;Error: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">code</span><span class="p">)]</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">NodeExecutionError</span><span class="p">(</span>
                 <span class="s2">&quot;Subnodes of node: </span><span class="si">%s</span><span class="s2"> failed:</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msg</span><span class="p">))</span>
             <span class="p">)</span>
 

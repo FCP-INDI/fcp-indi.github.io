@@ -57,13 +57,13 @@ C-PAC will include all expected keys from the pipeline file specified in ``FROM`
 
 From terminal, you can quickly generate a default pipeline configuration YAML file template in the directory you are in::
 
-   cpac utils pipe_config new_template
+   cpac utils pipe-config new-template
 
 You can then edit the file as needed. For values that you want to leave at the default, you can either leave the key as-is, or you can remove the key, and C-PAC will automatically use value from the default pipeline configuration (or from the pipeline specified in ``FROM``).
 
 If you want to run the analysis from terminal::
 
-   cpac run --pipe_config {path to pipeline config} {path to data config}
+   cpac run --pipe-config {path to pipeline config} {path to data config}
 
 Pipeline configuration files, like the data settings and data configuration files discussed in the :doc:`data configuration builder section </user/subject_list_config>`, are stored as YAML files.  Similarly, each of the parameters used by C-PAC to assemble your pipeline can be specified as nested key-value pairs, so a pipeline configuration YAML would have multiple lines of the form ``key: value`` like so
 

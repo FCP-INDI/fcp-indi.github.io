@@ -45,7 +45,7 @@ You can generate any of these presets using the C-PAC command-line interface (CL
 
 .. code-block:: console
 
-    cpac group feat load_preset <preset type>
+    cpac group feat load-preset <preset type>
 
 Enter any of the following in place of :file:`<preset type>` for the type of analysis you want to run:
 
@@ -59,26 +59,21 @@ You can get more information about the required inputs for each preset with the 
 
 .. code-block:: console
 
-    cpac group feat load_preset unpaired_two --help
+    cpac group feat load-preset unpaired-two --help
 
 This will produce:
 
-.. code-block:: console
-
-    Usage: cpac group feat load_preset unpaired_two [OPTIONS] GROUP_PARTICIPANTS
-                                                    Z_THRESH P_THRESH PHENO_FILE
-                                                    PHENO_SUB COVARIATE MODEL_NAME
-    Options:
-      --output_dir TEXT
-      --help             Show this message and exit.
+.. literalinclude:: /user/group/feat/load-preset/unpaired-two/help.rst
+    :language: bash
+    :start-at: Usage:
 
 Following this, you could generate a ready-to-run two-sample unpaired t-test by running the following, assuming the phenotype CSV has a column of participant IDs named "subject_id" and a column named "diagnosis", which is the covariate you wish to test:
 
 .. code-block:: console
 
-    cpac group feat load_preset unpaired_two /path/to/group_participant_list.txt 2.3 0.05
+    cpac group feat load-preset unpaired-two /path/to/group_participant_list.txt 2.3 0.05
             /path/to/phenotypic_file.csv subject_id diagnosis grp_analysis1 
-            --output_dir /path/to/output_dir
+            --output-dir /path/to/output_dir
 
 You will receive a message like this shortly after:
 
@@ -133,7 +128,7 @@ From the terminal
 
 Similar to the pipeline configuration YAML file, the group configuration YAML file allows you to configure your runs with key-value combinations. From terminal, you can quickly generate a default group configuration YAML file template in the directory you are in: ::
 
-    cpac utils group_config new_template
+    cpac utils group-config new-template
 
 This will generate a group configuration file that you can then modify to make your selections. See below: ::
 

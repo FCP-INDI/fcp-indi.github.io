@@ -15,7 +15,7 @@ Random seed can be set in pipeline config
    :start-at: system_config:
    :end-before: # Select Off if you intend to run CPAC on a single machine.
 
-or on the command line with ``--random_seed $SEED``.
+or on the command line with ``--random-seed $SEED``.
 
 Valid options are positive integers up to 2,147,483,647 or the word 'random' (which will set an integer in that range). If not specified, a seed will not be set, and each relevant process will run with an undocumented random seed.
 

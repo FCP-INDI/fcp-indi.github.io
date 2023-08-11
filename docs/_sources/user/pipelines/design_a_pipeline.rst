@@ -41,7 +41,7 @@ Once you save the pipeline configuration YAML file, you can provide it to the C-
             -v /tmp:/tmp \
             -v /Users/You/Documents:/configs \
             -v /Users/You/resources:/resources \
-            fcpindi/c-pac:latest /bids_dataset /outputs participant --pipeline_file /configs/pipeline_config.yml
+            fcpindi/c-pac:latest /bids_dataset /outputs participant --pipeline-file /configs/pipeline_config.yml
 
 Or you can provide it to the C-PAC Singularity container like so:
 
@@ -51,7 +51,7 @@ Or you can provide it to the C-PAC Singularity container like so:
             -B /Users/You/some_folder:/outputs \
             -B /tmp:/tmp \
             -B /Users/You/Documents:/configs \
-            fcpindi_c-pac_latest-{date}-{hash value}.img s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant --pipeline_file /configs/pipeline_config.yml
+            fcpindi_c-pac_latest-{date}-{hash value}.img s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS /outputs participant --pipeline-file /configs/pipeline_config.yml
 
 **Reporting errors and getting help**
 

@@ -39,16 +39,16 @@ register_plugin('pybtex.style.formatting', 'cpac_docs_style', CPAC_DocsStyle)
 # https://python-semver.readthedocs.io/en/latest/usage.html
 
 
-class DocumentNodeBlockFunction(FunctionDocumenter):
-    """Document Node Block Functions"""
-    objtype = 'Function'
-    priority = 10
+# class DocumentNodeBlockFunction(FunctionDocumenter):
+#     """Document Node Block Functions"""
+#     objtype = 'Function'
+#     priority = 10
 
-    @classmethod
-    def can_document_member(cls, member: Any, membername: str, isattr: bool,
-                            parent: Any) -> bool:
-        """Determine if a member is a NodeBlockFunction"""
-        return isinstance(member, NodeBlockFunction)
+#     @classmethod
+#     def can_document_member(cls, member: Any, membername: str, isattr: bool,
+#                             parent: Any) -> bool:
+#         """Determine if a member is a NodeBlockFunction"""
+#         return isinstance(member, NodeBlockFunction)
 
 
 def coerce(version):
@@ -163,6 +163,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinxcontrib.programoutput',
+    'autodoc_nodeblock',
     'exec',
     'nbsphinx']
 
@@ -644,7 +645,7 @@ def initialize_factory() -> None:
 def setup(app) -> None:
     """Extend Sphinx"""
     # Node Block Function customizations
-    app.setup_extension('sphinx.directives')
-    app.add_autodocumenter(DocumentNodeBlockFunction)
+    # app.setup_extension('sphinx.directives')
+    # app.add_autodocumenter(DocumentNodeBlockFunction)
     # modify docstrings before parsing RST
     app.connect('autodoc-process-docstring', autodoc_process_docstring)

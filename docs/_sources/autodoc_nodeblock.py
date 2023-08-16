@@ -5,9 +5,32 @@ from sphinx.ext.autodoc import Documenter, FunctionDocumenter, bool_option
 
 
 class NBFMixin(Documenter):
-    def format_name(self) -> str:
-        """Prepend "NodeBlockFunction" to the name"""
-        return f'NodeBlockFunction: {super().format_name()}'
+    def add_directive_header(self, sig: str) -> None:
+        """Prepend "NodeBlockFunction" to the name & add the directive
+        header and options to the generated content."""
+        domain = getattr(self, 'domain', 'py')
+        directive = getattr(self, 'directivetype', self.objtype)
+        name = self.format_name()
+        sourcename = self.get_sourcename()
+
+        # Prepend NodeBlockFunction pseudoheader
+        self.add_line(f'*NodeBlockFunction*: **{self.object.name}**',
+                      sourcename)
+        self.add_line('', sourcename)
+        # one signature per line, indented by column
+        prefix = f'.. {domain}:{directive}:: '
+        for i, sig_line in enumerate(sig.split("\n")):
+            self.add_line(f'{prefix}{name}{sig_line}',
+                          sourcename)
+            if i == 0:
+                prefix = " " * len(prefix)
+
+        if self.options.no_index or self.options.noindex:
+            self.add_line('   :no-index:', sourcename)
+        if self.objpath:
+            # Be explicit about the module, this is necessary since .. class::
+            # etc. don't support a prepended module name
+            self.add_line('   :module: %s' % self.modname, sourcename)
 
 
 class NodeBlockFunctionDocumenter(NBFMixin, FunctionDocumenter):

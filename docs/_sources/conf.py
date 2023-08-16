@@ -650,8 +650,5 @@ def initialize_factory() -> None:
 
 def setup(app) -> None:
     """Extend Sphinx"""
-    # Node Block Function customizations
-    # app.setup_extension('sphinx.directives')
-    # app.add_autodocumenter(DocumentNodeBlockFunction)
     # modify docstrings before parsing RST
     app.connect('autodoc-process-docstring', autodoc_process_docstring)

@@ -15,15 +15,18 @@
 import os
 import re
 import sys
+from typing import Any
 
 from dateutil import parser as dparser
 from CPAC import __version__
+from CPAC.pipeline.nodeblock import NodeBlockFunction
 from CPAC.utils.monitoring import custom_logging
 from github import Github
 from github.GithubException import RateLimitExceededException, \
     UnknownObjectException
 import m2r
 import semver
+from sphinx.ext.autodoc import FunctionDocumenter
 from pybtex.plugin import register_plugin
 
 sys.path.append(os.path.dirname(__file__))
@@ -34,6 +37,18 @@ register_plugin('pybtex.style.formatting', 'cpac_docs_style', CPAC_DocsStyle)
 
 # "Dealing with Invalid Versions" from
 # https://python-semver.readthedocs.io/en/latest/usage.html
+
+
+class DocumentNodeBlockFunction(FunctionDocumenter):
+    """Document Node Block Functions"""
+    objtype = 'Function'
+    priority = 10
+
+    @classmethod
+    def can_document_member(cls, member: Any, membername: str, isattr: bool,
+                            parent: Any) -> bool:
+        """Determine if a member is a NodeBlockFunction"""
+        return isinstance(member, NodeBlockFunction)
 
 
 def coerce(version):
@@ -628,4 +643,8 @@ def initialize_factory() -> None:
 
 def setup(app) -> None:
     """Extend Sphinx"""
+    # Node Block Function customizations
+    app.setup_extension('sphinx.directives')
+    app.add_autodocumenter(DocumentNodeBlockFunction)
+    # modify docstrings before parsing RST
     app.connect('autodoc-process-docstring', autodoc_process_docstring)

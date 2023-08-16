@@ -25,8 +25,8 @@ from github import Github
 from github.GithubException import RateLimitExceededException, \
     UnknownObjectException
 import m2r
+from nipype import __version__ as _nipype_version
 import semver
-from sphinx.ext.autodoc import FunctionDocumenter
 from pybtex.plugin import register_plugin
 
 sys.path.append(os.path.dirname(__file__))
@@ -170,6 +170,12 @@ extensions = [
 bibtex_bibfiles = [f'references/{bib}' for bib in os.listdir('references') if
                    bib.endswith('.bib')]
 bibtex_default_style = 'cpac_docs_style'
+
+intersphinx_mapping = {
+    'nipype': (f'https://nipype.readthedocs.io/en/{_nipype_version}/', None),
+    'python': ('https://docs.python.org/3', None)}
+
+napoleon_preprocess_types = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -7,7 +7,7 @@ C-PAC Pipeline Construction
 Configuration Object
 ====================
 
-The 'c' variable in cpac_pipeline.py is a `Configuration object <https://github.com/FCP-INDI/C-PAC/blob/main/CPAC/utils/configuration.py>`_, which is an abstract representation used to store the options for the pipeline configuration YAML after it is read in by C-PAC.  Each attribute of the Configuration object is a key from the YAML file, with values mirroring the YAML.
+The 'c' variable in cpac_pipeline.py is a ~:py:class:`CPAC.utils.configuration.configuration.Configuration` instance, which is an abstract representation used to store the options for the pipeline configuration YAML after it is read in by C-PAC. Each attribute of the Configuration object is a key from the YAML file, with values mirroring the YAML.
 
 Strategy Object
 ===============

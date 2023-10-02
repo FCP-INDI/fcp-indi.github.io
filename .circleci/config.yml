@@ -64,7 +64,7 @@ commands:
     steps:
       - run:
           name: ↑ Installing deploy dependencies
-          command: apt-get update && apt-get -y install git rsync
+          command: sudo apt-get update && sudo apt-get -y install git rsync
       - run:
           name: 🔧 Configuring git user
           command: |
@@ -122,6 +122,7 @@ jobs:
     working_directory: /home/circleci/build
     docker:
       - image: ghcr.io/fcp-indi/c-pac:nightly
+        user: root
     steps:
       - checkout:
           path: /home/circleci/build
@@ -131,13 +132,14 @@ jobs:
       - get-tutorials
       - run:
           name: 🏗️ Building nightly branch docs
-          command: ./bin/build nightly
+          command: source ~/docs_env/bin/activate && ./bin/build nightly
       - store-commit-message
       - persist-new-build
   build-version:
     working_directory: /home/circleci/build
     docker:
       - image: ghcr.io/fcp-indi/c-pac:nightly
+        user: root
     steps:
       - checkout:
           path: /home/circleci/build
@@ -148,7 +150,7 @@ jobs:
       - get-tutorials
       - run:
           name: 🏗️ Building version branch docs
-          command: ./bin/build ${BUILD_VERSION}
+          command: source ~/docs_env/bin/activate && ./bin/build ${BUILD_VERSION}
       - store-commit-message
       - persist-new-build
   deploy-nightly:

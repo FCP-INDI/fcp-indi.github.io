@@ -5,8 +5,8 @@ commands:
       - run:
           name: 👽️ Getting user tutorials
           command: |
-            sudo apt-get update
-            sudo apt-get -y install git pandoc
+            apt-get update
+            apt-get -y install git pandoc
             git clone --depth 1 https://github.com/FCP-INDI/C-PAC_tutorials.git docs/_sources/user/tutorials
   get-version:
     steps:
@@ -22,17 +22,20 @@ commands:
           name: ↑ Installing build dependencies
           # setuptools≤57.5.0 until traits>4.6.0 in C-PAC
           command: |
-            sudo apt-get update && sudo apt-get -y install git python3-dev graphviz graphviz-dev libgraphviz-dev pkg-config python3-sphinx
+            apt-get update && apt-get -y install git python3-dev graphviz graphviz-dev libgraphviz-dev pkg-config python3-sphinx
+            python -m venv /home/circleci/docs_env
+            source /home/circleci/docs_env/bin/activate
             pip install "setuptools<=57.5.0"
-            pip install --user -r requirements.txt
-            pip install --user -r https://raw.githubusercontent.com/${CIRCLE_PROJECT_USERNAME}/C-PAC/<< parameters.version >>/requirements.txt
-            pip install --user git+https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git@<< parameters.version >>
+            pip install -r requirements.txt
+            pip install -r https://raw.githubusercontent.com/${CIRCLE_PROJECT_USERNAME}/C-PAC/<< parameters.version >>/requirements.txt
+            pip install git+https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git@<< parameters.version >>
             git clone https://github.com/${CIRCLE_PROJECT_USERNAME}/C-PAC.git /home/circleci/build/C-PAC
             cd /home/circleci/build/C-PAC
             git checkout << parameters.version >>
             cd /home/circleci/build
-            python -m venv ~/simple
-            source ~/simple/bin/activate
+            deactivate
+            python -m venv /home/circleci/simple
+            source /home/circleci/simple/bin/activate
             pip install git+https://github.com/FCP-INDI/cpac.git@81c33b52d72478bef54ccfdce05577d52ebf714c semver
             deactivate
   
@@ -42,7 +45,7 @@ commands:
       - run:
           name: 👊 Running cpac commands
           command: |
-            source ~/simple/bin/activate
+            source /home/circleci/simple/bin/activate
             cpac pull
             mkdir -p docs/_sources/user/cpac
             printf ".. code-block:: console\n\n   $ cpac --help\n\n" > docs/_sources/user/cpac/help.rst
@@ -67,6 +70,9 @@ commands:
           command: |
             git config --global user.email "CMI_CPAC_Support@childmind.org"
             git config --global user.name "ChildMindInstituteCNL"
+            mkdir -p /home/circleci/.ssh/
+            touch /home/circleci/.ssh/known_hosts
+            ssh-keyscan github.com >> /home/circleci/.ssh/known_hosts
       - run:
           name: 🔀 Combining new docs with existing docs
           command: |
@@ -118,7 +124,8 @@ jobs:
   build-nightly:
     working_directory: /home/circleci/build
     docker:
-      - image: cimg/python:3.10
+      - image: ghcr.io/fcp-indi/c-pac:nightly
+        user: root
     steps:
       - checkout:
           path: /home/circleci/build
@@ -128,13 +135,14 @@ jobs:
       - get-tutorials
       - run:
           name: 🏗️ Building nightly branch docs
-          command: ./bin/build nightly
+          command: source /home/circleci/docs_env/bin/activate && ./bin/build nightly
       - store-commit-message
       - persist-new-build
   build-version:
     working_directory: /home/circleci/build
     docker:
-      - image: cimg/python:3.10
+      - image: ghcr.io/fcp-indi/c-pac:nightly
+        user: root
     steps:
       - checkout:
           path: /home/circleci/build
@@ -145,7 +153,7 @@ jobs:
       - get-tutorials
       - run:
           name: 🏗️ Building version branch docs
-          command: ./bin/build ${BUILD_VERSION}
+          command: source /home/circleci/docs_env/bin/activate && ./bin/build ${BUILD_VERSION}
       - store-commit-message
       - persist-new-build
   deploy-nightly:

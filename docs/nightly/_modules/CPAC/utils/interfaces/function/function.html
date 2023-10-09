@@ -316,6 +316,7 @@
           <h1>Source code for CPAC.utils.interfaces.function.function</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span>
 
 <span class="kn">from</span> <span class="nn">nipype</span> <span class="kn">import</span> <span class="n">logging</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces.base</span> <span class="kn">import</span> <span class="p">(</span><span class="n">traits</span><span class="p">,</span> <span class="n">DynamicTraitedSpec</span><span class="p">,</span> <span class="n">Undefined</span><span class="p">,</span>
@@ -373,11 +374,22 @@
 <span class="sd">            parameter)</span>
 <span class="sd">        imports : list of strings</span>
 <span class="sd">            list of import statements that allow the function to execute</span>
-<span class="sd">            in an otherwise empty namespace</span>
+<span class="sd">            in an otherwise empty namespace. If these collide with</span>
+<span class="sd">            imports defined via the :py:meth:`Function.sig_imports`</span>
+<span class="sd">            decorator, the imports given as a parameter here will take</span>
+<span class="sd">            precedence over those from the decorator.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="nb">super</span><span class="p">(</span><span class="n">Function</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">inputs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">function</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="s1">&#39;ns_imports&#39;</span><span class="p">):</span>
+                <span class="c1"># prepend the ns_imports from the decorator to</span>
+                <span class="c1"># the paramater imports</span>
+                <span class="n">_ns_imports</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s1">&#39;from CPAC.utils.interfaces.function import Function&#39;</span><span class="p">,</span>
+                     <span class="o">*</span><span class="n">function</span><span class="o">.</span><span class="n">ns_imports</span><span class="p">]</span>
+                <span class="n">imports</span> <span class="o">=</span> <span class="n">_ns_imports</span> <span class="k">if</span> <span class="n">imports</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="o">*</span><span class="n">_ns_imports</span><span class="p">,</span>
+                                                               <span class="o">*</span><span class="n">imports</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">as_module</span><span class="p">:</span>
                 <span class="n">module</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmodule</span><span class="p">(</span><span class="n">function</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
                 <span class="n">full_name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">function</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
@@ -411,6 +423,58 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_out</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_names</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_out</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Function.sig_imports"><a class="viewcode-back" href="../../../../../developer/nodes#CPAC.utils.interfaces.function.Function.sig_imports">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">sig_imports</span><span class="p">(</span><span class="n">imports</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets an ``ns_imports`` attribute on a function for</span>
+<span class="sd">        Function-node functions.</span>
+<span class="sd">        This can be useful for classes needed for decorators, typehints</span>
+<span class="sd">        and for avoiding redefinitions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        imports : list of str</span>
+<span class="sd">            import statements to import the function in an otherwise empty</span>
+<span class="sd">            namespace. If these collide with imports defined via the</span>
+<span class="sd">            :py:meth:`Function.__init__` initialization method, the</span>
+<span class="sd">            imports given as a parameter here will be overridden by</span>
+<span class="sd">            those from the initializer.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        func : function</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        See the defintion of</span>
+<span class="sd">        :py:func:`~CPAC.generate_motion_statistics.calculate_FD_J` to see the</span>
+<span class="sd">        decorator tested here being applied.</span>
+<span class="sd">        &gt;&gt;&gt; from CPAC.generate_motion_statistics import calculate_FD_J</span>
+<span class="sd">        &gt;&gt;&gt; calc_fdj = Function(input_names=[&#39;in_file&#39;, &#39;calc_from&#39;, &#39;center&#39;],</span>
+<span class="sd">        ...                     output_names=[&#39;out_file&#39;],</span>
+<span class="sd">        ...                     function=calculate_FD_J,</span>
+<span class="sd">        ...                     as_module=True)</span>
+<span class="sd">        &gt;&gt;&gt; calc_fdj.imports  # doctest: +NORMALIZE_WHITESPACE</span>
+<span class="sd">        [&#39;from CPAC.utils.interfaces.function import Function&#39;,</span>
+<span class="sd">         &#39;import os&#39;,</span>
+<span class="sd">         &#39;import sys&#39;,</span>
+<span class="sd">         &#39;from typing import Optional&#39;,</span>
+<span class="sd">         &#39;import numpy as np&#39;,</span>
+<span class="sd">         &#39;from CPAC.utils.pytest import skipif&#39;,</span>
+<span class="sd">         &#39;from CPAC.utils.typing import LITERAL&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; from inspect import signature</span>
+<span class="sd">        &gt;&gt;&gt; from nipype.utils.functions import (getsource,</span>
+<span class="sd">        ...     create_function_from_source)</span>
+<span class="sd">        &gt;&gt;&gt; f = create_function_from_source(getsource(calculate_FD_J),</span>
+<span class="sd">        ...                                 calc_fdj.imports)</span>
+<span class="sd">        &gt;&gt;&gt; inspect.signature(calculate_FD_J) == inspect.signature(f)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">_imports</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="s1">&#39;ns_imports&#39;</span><span class="p">,</span> <span class="n">imports</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">func</span>
+        <span class="k">return</span> <span class="n">_imports</span></div>
 
     <span class="k">def</span> <span class="nf">_set_function_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;function_str&#39;</span><span class="p">:</span>

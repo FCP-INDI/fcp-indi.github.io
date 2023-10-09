@@ -983,7 +983,10 @@ if list of length &gt; 1, has to match the number of outputs</p></li>
 isolated namespace (possibly in concert with the <code class="docutils literal notranslate"><span class="pre">imports</span></code>
 parameter)</p></li>
 <li><p><strong>imports</strong> (<em>list of strings</em>) – list of import statements that allow the function to execute
-in an otherwise empty namespace</p></li>
+in an otherwise empty namespace. If these collide with
+imports defined via the <a class="reference internal" href="#CPAC.utils.interfaces.function.Function.sig_imports" title="CPAC.utils.interfaces.function.Function.sig_imports"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Function.sig_imports</span></code></a>
+decorator, the imports given as a parameter here will take
+precedence over those from the decorator.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1060,6 +1063,58 @@ if successful, results</p>
 <dt class="sig sig-object py" id="CPAC.utils.interfaces.function.Function.save_inputs_to_json">
 <span class="sig-name descname"><span class="pre">save_inputs_to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CPAC.utils.interfaces.function.Function.save_inputs_to_json" title="Permalink to this definition">#</a></dt>
 <dd><p>A convenient way to save current inputs to a JSON file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="CPAC.utils.interfaces.function.Function.sig_imports">
+<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">sig_imports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imports</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span></span></span><a class="reference internal" href="../_modules/CPAC/utils/interfaces/function/function#Function.sig_imports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#CPAC.utils.interfaces.function.Function.sig_imports" title="Permalink to this definition">#</a></dt>
+<dd><p>Sets an <code class="docutils literal notranslate"><span class="pre">ns_imports</span></code> attribute on a function for
+Function-node functions.
+This can be useful for classes needed for decorators, typehints
+and for avoiding redefinitions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>imports</strong> (<em>list of str</em>) – import statements to import the function in an otherwise empty
+namespace. If these collide with imports defined via the
+<a class="reference internal" href="#CPAC.utils.interfaces.function.Function.__init__" title="CPAC.utils.interfaces.function.Function.__init__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Function.__init__</span></code></a> initialization method, the
+imports given as a parameter here will be overridden by
+those from the initializer.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>func</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>function</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>See the defintion of
+<a class="reference internal" href="workflows/generate_motion_statistics#CPAC.generate_motion_statistics.calculate_FD_J" title="CPAC.generate_motion_statistics.calculate_FD_J"><code class="xref py py-func docutils literal notranslate"><span class="pre">calculate_FD_J</span></code></a> to see the
+decorator tested here being applied.
+&gt;&gt;&gt; from CPAC.generate_motion_statistics import calculate_FD_J
+&gt;&gt;&gt; calc_fdj = Function(input_names=[‘in_file’, ‘calc_from’, ‘center’],
+…                     output_names=[‘out_file’],
+…                     function=calculate_FD_J,
+…                     as_module=True)
+&gt;&gt;&gt; calc_fdj.imports  # doctest: +NORMALIZE_WHITESPACE
+[‘from CPAC.utils.interfaces.function import Function’,</p>
+<blockquote>
+<div><p>‘import os’,
+‘import sys’,
+‘from typing import Optional’,
+‘import numpy as np’,
+‘from CPAC.utils.pytest import skipif’,
+‘from CPAC.utils.typing import LITERAL’]</p>
+</div></blockquote>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">signature</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">nipype.utils.functions</span> <span class="kn">import</span> <span class="p">(</span><span class="n">getsource</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">create_function_from_source</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">create_function_from_source</span><span class="p">(</span><span class="n">getsource</span><span class="p">(</span><span class="n">calculate_FD_J</span><span class="p">),</span>
+<span class="gp">... </span>                                <span class="n">calc_fdj</span><span class="o">.</span><span class="n">imports</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">calculate_FD_J</span><span class="p">)</span> <span class="o">==</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py property">

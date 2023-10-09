@@ -333,10 +333,6 @@
 <span class="sd">&quot;&quot;&quot;Functions to calculate motion statistics&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">nibabel</span> <span class="k">as</span> <span class="nn">nb</span>
@@ -346,6 +342,7 @@
 <span class="kn">from</span> <span class="nn">CPAC.pipeline</span> <span class="kn">import</span> <span class="n">nipype_pipeline_engine</span> <span class="k">as</span> <span class="n">pe</span>
 <span class="kn">from</span> <span class="nn">CPAC.utils.interfaces.function</span> <span class="kn">import</span> <span class="n">Function</span>
 <span class="kn">from</span> <span class="nn">CPAC.utils.pytest</span> <span class="kn">import</span> <span class="n">skipif</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.typing</span> <span class="kn">import</span> <span class="n">LITERAL</span>
 
 
 <div class="viewcode-block" id="motion_power_statistics"><a class="viewcode-back" href="../../../developer/workflows/generate_motion_statistics#CPAC.generate_motion_statistics.motion_power_statistics">[docs]</a><span class="k">def</span> <span class="nf">motion_power_statistics</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;motion_stats&#39;</span><span class="p">,</span>
@@ -667,9 +664,14 @@
     <span class="k">return</span> <span class="n">out_file</span></div>
 
 
-<div class="viewcode-block" id="calculate_FD_J"><a class="viewcode-back" href="../../../developer/workflows/generate_motion_statistics#CPAC.generate_motion_statistics.calculate_FD_J">[docs]</a><span class="nd">@skipif</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+<div class="viewcode-block" id="calculate_FD_J"><a class="viewcode-back" href="../../../developer/workflows/generate_motion_statistics#CPAC.generate_motion_statistics.calculate_FD_J">[docs]</a><span class="nd">@Function</span><span class="o">.</span><span class="n">sig_imports</span><span class="p">([</span><span class="s1">&#39;import os&#39;</span><span class="p">,</span> <span class="s1">&#39;import sys&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;from typing import Optional&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;import numpy as np&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;from CPAC.utils.pytest import skipif&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;from CPAC.utils.typing import LITERAL&#39;</span><span class="p">])</span>
+<span class="nd">@skipif</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
         <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;Test requires Python 3.10 or higher&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">calculate_FD_J</span><span class="p">(</span><span class="n">in_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">calc_from</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;affine&#39;</span><span class="p">,</span> <span class="s1">&#39;rms&#39;</span><span class="p">],</span>
+<span class="k">def</span> <span class="nf">calculate_FD_J</span><span class="p">(</span><span class="n">in_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">calc_from</span><span class="p">:</span> <span class="n">LITERAL</span><span class="p">[</span><span class="s1">&#39;affine&#39;</span><span class="p">,</span> <span class="s1">&#39;rms&#39;</span><span class="p">],</span>
                    <span class="n">center</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Method to calculate framewise displacement as per Jenkinson et al. 2002</span>

@@ -15,7 +15,6 @@ Contents
 
 .. toctree::
    :glob:
-   :maxdepth: 2
 
    /developer/continuous_integration/*
    !/developer/continuous_integration/index.rst

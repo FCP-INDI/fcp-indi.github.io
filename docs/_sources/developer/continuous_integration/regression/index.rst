@@ -8,7 +8,7 @@ Regression testing for C-PAC involves several repositories.
     .. raw:: html
         :file: ../../../_static/flowcharts/regression_suite.svg
 
-    `Open image <../../../_static/flowcharts/regression_suite.svg>`_
+    `Open image <../../../_static/flowcharts/regression_suite.self-contained.svg>`_
 
 GitHub repository environment
 -----------------------------
@@ -49,9 +49,8 @@ variables
 
 If you want to run automated regression tests on a fork of `FCP-INDI/C-PAC`_, you'll need to configure an environment called ``ACCESS`` in your fork with all of these secrets and variables defined correctly for your testing environment.
 
-.. include::
+.. toctree::
    :glob:
-   :maxdepth: 2
 
    /developer/continuous_integration/regression/*
    !/developer/continuous_integration/regression/index.rst

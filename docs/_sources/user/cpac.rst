@@ -3,11 +3,25 @@ cpac (Python package)
 
 `cpac <https://pypi.org/project/cpac/>`_ is available so that you can easily run analyses without needing interact with the container platform that allows you to run C-PAC without installing all of the underlying software.
 
-cpac requires Python 3.6 or greater. To get cpac, simply
+``cpac`` requires Python 3.8 or greater. To get cpac, simply
 
 .. code-block:: console
 
     pip install cpac
+
+Run extra packages with cpac
+````````````````````````````
+Beginning with v1.8.5, ``cpac`` can run |ba_timeseries_gradients|_ and/or |tsconcat|_ in addition to C-PAC. If either package is already installed, ``cpac`` will use the installed version. You can install them with the relevant extras, like one of the following lines:
+
+.. code-block:: console
+
+    pip install cpac[ba_timeseries_gradients]
+    pip install cpac[tsconcat]
+    pip install cpac[ba_timeseries_gradients,tsconcat]
+
+.. note::
+
+    ``ba_timeseries_gradients`` and ``tsconcat`` may have more specific dependency requirements than C-PAC. If you run into unclear installation issues when installing these extras, please see the documentation for those packages.
 
 Download / Upgrade C-PAC with cpac
 ``````````````````````````````````
@@ -117,4 +131,13 @@ Note that any of the optional arguments above will over-ride any pipeline settin
 * The ``participant_label`` and ``participant_ndx`` arguments allow the user to specify which of the many datasets should be processed, which is useful when parallelizing the run of multiple participants.
 
 * If you want to pass runtime options to your container plaform (Docker or Singularity), you can pass them with ``-o`` or ``--container_options``.
+
 .. TODO: Update cpac to handle `-`s and `_`s like C-PAC
+
+.. |ba_timeseries_gradients| replace:: ``ba_timeseries_gradients``
+
+.. _ba_timeseries_gradients: https://cmi-dair.github.io/ba-timeseries-gradients/ba_timeseries_gradients.html
+
+.. |tsconcat| replace:: ``tsconcat``
+
+.. _tsconcat: https://cmi-dair.github.io/tsconcat/tsconcat.html

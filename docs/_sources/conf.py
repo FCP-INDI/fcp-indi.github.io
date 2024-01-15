@@ -459,6 +459,7 @@ html_css_files = [
     'custom.css',
 ]
 html_js_files = [
+    'hideEmptyHighlights.js',
     ('versionList.js', {'defer': 'defer'})]
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,

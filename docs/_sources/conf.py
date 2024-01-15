@@ -15,14 +15,17 @@
 import os
 import re
 import sys
+from typing import Any
 
 from dateutil import parser as dparser
 from CPAC import __version__
+from CPAC.pipeline.nodeblock import NodeBlockFunction
 from CPAC.utils.monitoring import custom_logging
 from github import Github
 from github.GithubException import RateLimitExceededException, \
     UnknownObjectException
 import m2r
+from nipype import __version__ as _nipype_version
 import semver
 from pybtex.plugin import register_plugin
 
@@ -34,6 +37,18 @@ register_plugin('pybtex.style.formatting', 'cpac_docs_style', CPAC_DocsStyle)
 
 # "Dealing with Invalid Versions" from
 # https://python-semver.readthedocs.io/en/latest/usage.html
+
+
+# class DocumentNodeBlockFunction(FunctionDocumenter):
+#     """Document Node Block Functions"""
+#     objtype = 'Function'
+#     priority = 10
+
+#     @classmethod
+#     def can_document_member(cls, member: Any, membername: str, isattr: bool,
+#                             parent: Any) -> bool:
+#         """Determine if a member is a NodeBlockFunction"""
+#         return isinstance(member, NodeBlockFunction)
 
 
 def coerce(version):
@@ -148,12 +163,19 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinxcontrib.programoutput',
+    'autodoc_nodeblock',
     'exec',
     'nbsphinx']
 
 bibtex_bibfiles = [f'references/{bib}' for bib in os.listdir('references') if
                    bib.endswith('.bib')]
 bibtex_default_style = 'cpac_docs_style'
+
+intersphinx_mapping = {
+    'nipype': (f'https://nipype.readthedocs.io/en/{_nipype_version}/', None),
+    'python': ('https://docs.python.org/3', None)}
+
+napoleon_preprocess_types = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -629,4 +651,5 @@ def initialize_factory() -> None:
 
 def setup(app) -> None:
     """Extend Sphinx"""
+    # modify docstrings before parsing RST
     app.connect('autodoc-process-docstring', autodoc_process_docstring)

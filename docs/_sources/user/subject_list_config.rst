@@ -281,7 +281,9 @@ The ``cpac_data_config_setup.py`` command line utility will produce a YAML file 
 Note that more than one functional scan is defined under the `func` key (i.e., multiple series), and that individual scan parameters can be defined to override the default settings.
 
 Output Directory Ingress
-----------------
+------------------------
+
+.. versionadded:: 1.8.6
 
 C-PAC now allows users to pull pre-computed data from a FreeSurfer or fMRIPrep output directory. This is done through the data config file. 
 

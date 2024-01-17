@@ -313,4 +313,5 @@ When pulling fMRIPrep outputs into C-PAC, you only need to include a few section
         subject_id: $SUB
         unique_id: $SES
         derivatives_dir: $PATH_TO/fMRIPrep/$SUBDIR/$SUBDIR
+
 You may also need to modify your pipeline YAML. For FreeSurfer, please ensure that ``surface_analysis > freesurfer > ingress_reconall`` is switched on. For fMRIPrep, make sure that ``pipeline_setup > outdir_ingress`` is switched on. 

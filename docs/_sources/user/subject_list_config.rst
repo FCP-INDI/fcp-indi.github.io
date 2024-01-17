@@ -303,6 +303,7 @@ C-PAC now allows users to pull pre-computed data from a FreeSurfer or fMRIPrep o
           site: $SITE
           subject_id: $SUB
           unique_id: $SES
+
 When pulling fMRIPrep outputs into C-PAC, you only need to include a few sections of the data config, since no raw data is required. 
 
 .. code-block:: yaml

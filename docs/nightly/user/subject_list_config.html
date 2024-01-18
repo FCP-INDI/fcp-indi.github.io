@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex" /><link rel="search" title="Search" href="../search" /><link rel="next" title="Setting Up A Pipeline Configuration" href="pipelines/pipeline_config" /><link rel="prev" title="C-PAC Quickstart" href="quick" />
 
     <link rel="shortcut icon" href="../_static/favicon.ico"/><!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
-        <title>Setting Up A Data Configuration File (Participant/Subject List) - C-PAC 1.8.6.dev Beta documentation</title>
+        <title>Setting Up A Data Configuration File (Participant/Subject List) - C-PAC 1.8.7dev1 Beta documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a96c6ba1" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
@@ -124,7 +124,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index"><div class="brand">C-PAC 1.8.6.dev Beta documentation</div></a>
+      <a href="../index"><div class="brand">C-PAC 1.8.7dev1 Beta documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -150,7 +150,7 @@
     <img class="sidebar-logo" src="../_static/cpac_logo_vertical.svg" alt="Logo"/>
   </div>
   
-  <span class="sidebar-brand-text">C-PAC 1.8.6.dev Beta documentation</span>
+  <span class="sidebar-brand-text">C-PAC 1.8.7dev1 Beta documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="../search" role="search">
   <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
@@ -567,6 +567,38 @@ data-config build /path/to/data_settings.yml
 </div>
 <p>Note that more than one functional scan is defined under the <cite>func</cite> key (i.e., multiple series), and that individual scan parameters can be defined to override the default settings.</p>
 </section>
+<section id="output-directory-ingress">
+<h2>Output Directory Ingress<a class="headerlink" href="#output-directory-ingress" title="Permalink to this heading">#</a></h2>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.8.6.</span></p>
+</div>
+<p>C-PAC now allows users to pull pre-computed data from a FreeSurfer or fMRIPrep output directory. This is done through the data config file.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example of how to include FreeSurfer outputs in the data config:</span>
+<span class="w">      </span><span class="nt">anat</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">T1w</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$PATH_TO/T1w.nii.gz</span>
+<span class="w">        </span><span class="nt">freesurfer_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$PATH_TO/freesurfer/$SUBDIR/$SUBDIR</span>
+<span class="w">      </span><span class="nt">func</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">func-run-1</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">scan</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$PATH_TO/run-1_bold.nii.gz</span>
+<span class="w">          </span><span class="nt">scan_parameters</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$PATH_TO/run-1_bold.json</span>
+<span class="w">        </span><span class="nt">func-run-2</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">scan</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$PATH_TO/run-2_bold.nii.gz</span>
+<span class="w">          </span><span class="nt">scan_parameters</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$PATH_TO/run-2_bold.json</span>
+<span class="w">      </span><span class="nt">site</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$SITE</span>
+<span class="w">      </span><span class="nt">subject_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$SUB</span>
+<span class="w">      </span><span class="nt">unique_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$SES</span>
+</pre></div>
+</div>
+<p>When pulling fMRIPrep outputs into C-PAC, you only need to include a few sections of the data config, since no raw data is required.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example of how to include fMRIPrep outputs in the data config:</span>
+<span class="w">    </span><span class="nt">site</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$SITE</span>
+<span class="w">    </span><span class="nt">subject_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$SUB</span>
+<span class="w">    </span><span class="nt">unique_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$SES</span>
+<span class="w">    </span><span class="nt">derivatives_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">$PATH_TO/fMRIPrep/$SUBDIR/$SUBDIR</span>
+</pre></div>
+</div>
+<p>You may also need to modify your pipeline YAML. For FreeSurfer, please ensure that <code class="docutils literal notranslate"><span class="pre">surface_analysis</span> <span class="pre">&gt;</span> <span class="pre">freesurfer</span> <span class="pre">&gt;</span> <span class="pre">ingress_reconall</span></code> is switched on. For fMRIPrep, make sure that <code class="docutils literal notranslate"><span class="pre">pipeline_setup</span> <span class="pre">&gt;</span> <span class="pre">outdir_ingress</span></code> is switched on.</p>
+</section>
 </section>
 
         </article>
@@ -636,6 +668,7 @@ data-config build /path/to/data_settings.yml
 <li><a class="reference internal" href="#data-custom-layout">Data: Custom Layout</a></li>
 <li><a class="reference internal" href="#custom-path-templates">Custom Path Templates</a></li>
 <li><a class="reference internal" href="#data-yaml-fields">Data YAML Fields</a></li>
+<li><a class="reference internal" href="#output-directory-ingress">Output Directory Ingress</a></li>
 </ul>
 </li>
 </ul>
@@ -647,7 +680,7 @@ data-config build /path/to/data_settings.yml
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=cb37d366"></script>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=c5ff48a6"></script>
     <script src="../_static/doctools.js?v=d248f5b3"></script>
     <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../_static/scripts/furo.js?v=32e29ea5"></script>

@@ -279,3 +279,39 @@ The ``cpac_data_config_setup.py`` command line utility will produce a YAML file 
         site: site01
 
 Note that more than one functional scan is defined under the `func` key (i.e., multiple series), and that individual scan parameters can be defined to override the default settings.
+
+Output Directory Ingress
+------------------------
+
+.. versionadded:: 1.8.6
+
+C-PAC now allows users to pull pre-computed data from a FreeSurfer or fMRIPrep output directory. This is done through the data config file. 
+
+.. code-block:: yaml
+
+    # Example of how to include FreeSurfer outputs in the data config:
+          anat:
+            T1w: $PATH_TO/T1w.nii.gz
+            freesurfer_dir: $PATH_TO/freesurfer/$SUBDIR/$SUBDIR
+          func:
+            func-run-1:
+              scan: $PATH_TO/run-1_bold.nii.gz
+              scan_parameters: $PATH_TO/run-1_bold.json
+            func-run-2:
+              scan: $PATH_TO/run-2_bold.nii.gz
+              scan_parameters: $PATH_TO/run-2_bold.json
+          site: $SITE
+          subject_id: $SUB
+          unique_id: $SES
+
+When pulling fMRIPrep outputs into C-PAC, you only need to include a few sections of the data config, since no raw data is required. 
+
+.. code-block:: yaml
+
+    # Example of how to include fMRIPrep outputs in the data config:
+        site: $SITE
+        subject_id: $SUB
+        unique_id: $SES
+        derivatives_dir: $PATH_TO/fMRIPrep/$SUBDIR/$SUBDIR
+
+You may also need to modify your pipeline YAML. For FreeSurfer, please ensure that ``surface_analysis > freesurfer > ingress_reconall`` is switched on. For fMRIPrep, make sure that ``pipeline_setup > outdir_ingress`` is switched on. 

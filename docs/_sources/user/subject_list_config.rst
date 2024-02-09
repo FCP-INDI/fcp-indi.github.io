@@ -127,10 +127,11 @@ This is the simplest option. As the data is in BIDS format, the C-PAC data confi
 
 In the data settings file, populate these fields::
 
-   dataFormat:                  ['BIDS']
+   dataFormat:                  'BIDS'
    bidsBaseDir:                 /path/to/BIDS/directory
    outputSubjectListLocation:   /save/configs/here
    subjectListName:             data_config_name
+   brain_mask_template:         None
 
 You can also fill in the AWS credentials file field, and the inclusion and exclusion fields, as needed.
 

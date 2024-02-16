@@ -43,7 +43,7 @@ Surface-based ReHo
 
 .. versionadded:: 1.8.7
 
-C-PAC now offers the computation of surface-based ReHo. This can be configured in under surface_analysis in the pipeline file. 
+C-PAC now offers the computation of surface-based ReHo. This can be configured under surface_analysis in the pipeline file. 
 
 .. literalinclude:: /references/default_pipeline.yml
    :language: YAML

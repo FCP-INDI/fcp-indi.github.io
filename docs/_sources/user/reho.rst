@@ -38,6 +38,18 @@ Configuring CPAC to Run ReHo
    :start-at: regional_homogeneity:
    :end-before: voxel_mirrored_homotopic_connectivity:
 
+Surface-based ReHo
+^^^^^^^^^^^^^^^^^^
+
+.. versionadded:: 1.8.7
+
+C-PAC now offers the computation of surface-based ReHo. This can be configured in under surface_analysis in the pipeline file. 
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: surface_analysis:
+   :end-before: anatomical_preproc:
+
 References
 ^^^^^^^^^^
 Cao, Q., Zang, Y., Sun, L., Sui, M., Long, X., Zou, Q., Wang, Y., 2006. `Abnormal neural activity in children with attention deficit hyperactivity disorder: a resting-state functional magnetic resonance imaging study <http://www.ncbi.nlm.nih.gov/pubmed/16791098>`_. Neuroreport 17, 1033-1036.

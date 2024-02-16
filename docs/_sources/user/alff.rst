@@ -46,7 +46,7 @@ Configuring CPAC to Run ALFF and f/ALFF
 
 Surface-based f/ALFF
 ^^^^^^^^^^^^^^^^^^^^
-.. versionadded:: 1.8.6
+.. versionadded:: 1.8.7
 
 C-PAC now offers the computation of surface-based ALFF and fALFF. This can be configured in under surface_analysis in the pipeline file. 
 

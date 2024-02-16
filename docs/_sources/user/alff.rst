@@ -44,6 +44,17 @@ Configuring CPAC to Run ALFF and f/ALFF
    :start-at: amplitude_low_frequency_fluctuation:
    :end-before: regional_homogeneity:
 
+Surface-based f/ALFF
+^^^^^^^^^^^^^^^^^^^^
+.. versionadded:: 1.8.6
+
+C-PAC now offers the computation of surface-based ALFF and fALFF. This can be configured in under surface_analysis in the pipeline file. 
+
+.. literalinclude:: /references/default_pipeline.yml
+   :language: YAML
+   :start-at: surface_analysis:
+   :end-before: anatomical_preproc:
+
 References
 ^^^^^^^^^^
 

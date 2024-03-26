@@ -417,12 +417,23 @@
 <span class="sd">    &gt;&gt;&gt; slack_420349_preconfig[&#39;pipeline_setup&#39;, &#39;pipeline_name&#39;]</span>
 <span class="sd">    &#39;slack_420349_preconfig&#39;</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_map</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">skip_env_check</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a Configuration instance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config_map : dict, optional</span>
+
+<span class="sd">        skip_env_check : bool, optional</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">CPAC.pipeline.schema</span> <span class="kn">import</span> <span class="n">schema</span>
         <span class="kn">from</span> <span class="nn">CPAC.utils.utils</span> <span class="kn">import</span> <span class="n">lookup_nested_value</span><span class="p">,</span> <span class="n">update_nested_dict</span>
 
         <span class="k">if</span> <span class="n">config_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">config_map</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">skip_env_check</span><span class="p">:</span>
+            <span class="n">config_map</span><span class="p">[</span><span class="s1">&#39;skip env check&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="n">base_config</span> <span class="o">=</span> <span class="n">config_map</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;FROM&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">base_config</span><span class="p">:</span>
@@ -430,7 +441,8 @@
                 <span class="n">base_config</span> <span class="o">=</span> <span class="s1">&#39;default&#39;</span>
             <span class="c1"># import another config (specified with &#39;FROM&#39; key)</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">base_config</span> <span class="o">=</span> <span class="n">Preconfiguration</span><span class="p">(</span><span class="n">base_config</span><span class="p">)</span>
+                <span class="n">base_config</span> <span class="o">=</span> <span class="n">Preconfiguration</span><span class="p">(</span><span class="n">base_config</span><span class="p">,</span>
+                                               <span class="n">skip_env_check</span><span class="o">=</span><span class="n">skip_env_check</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">BadParameter</span><span class="p">:</span>
                 <span class="n">base_config</span> <span class="o">=</span> <span class="n">configuration_from_file</span><span class="p">(</span><span class="n">base_config</span><span class="p">)</span>
             <span class="n">config_map</span> <span class="o">=</span> <span class="n">update_nested_dict</span><span class="p">(</span><span class="n">base_config</span><span class="o">.</span><span class="n">dict</span><span class="p">(),</span> <span class="n">config_map</span><span class="p">)</span>
@@ -458,20 +470,26 @@
 
         <span class="n">config_map</span> <span class="o">=</span> <span class="n">schema</span><span class="p">(</span><span class="n">config_map</span><span class="p">)</span>
 
+        <span class="c1"># remove &#39;skip env check&#39; now that the config is validated</span>
+        <span class="k">if</span> <span class="s2">&quot;skip env check&quot;</span> <span class="ow">in</span> <span class="n">config_map</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">config_map</span><span class="p">[</span><span class="s2">&quot;skip env check&quot;</span><span class="p">]</span>
         <span class="c1"># remove &#39;FROM&#39; before setting attributes now that it&#39;s imported</span>
         <span class="k">if</span> <span class="s1">&#39;FROM&#39;</span> <span class="ow">in</span> <span class="n">config_map</span><span class="p">:</span>
             <span class="k">del</span> <span class="n">config_map</span><span class="p">[</span><span class="s1">&#39;FROM&#39;</span><span class="p">]</span>
 
-        <span class="c1"># set FSLDIR to the environment $FSLDIR if the user sets it to</span>
-        <span class="c1"># &#39;FSLDIR&#39; in the pipeline config file</span>
-        <span class="n">_FSLDIR</span> <span class="o">=</span> <span class="n">config_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;FSLDIR&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">_FSLDIR</span> <span class="ow">and</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^[\$\{]{0,2}?FSLDIR[\}]?$&#39;</span><span class="p">,</span> <span class="n">_FSLDIR</span><span class="p">)):</span>
-            <span class="n">config_map</span><span class="p">[</span><span class="s1">&#39;FSLDIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;FSLDIR&#39;</span><span class="p">]</span>
-
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config_map</span><span class="p">:</span>
-            <span class="c1"># set attribute</span>
-            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">set_from_ENV</span><span class="p">(</span><span class="n">config_map</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
-
+        <span class="k">if</span> <span class="n">skip_env_check</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config_map</span><span class="p">:</span>
+                <span class="c1"># set attribute</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_without_ENV</span><span class="p">(</span><span class="n">config_map</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># set FSLDIR to the environment $FSLDIR if the user sets it to</span>
+            <span class="c1"># &#39;FSLDIR&#39; in the pipeline config file</span>
+            <span class="n">_FSLDIR</span> <span class="o">=</span> <span class="n">config_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;FSLDIR&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_FSLDIR</span> <span class="ow">and</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^[\$\{]{0,2}?FSLDIR[\}]?$&#39;</span><span class="p">,</span> <span class="n">_FSLDIR</span><span class="p">)):</span>
+                <span class="n">config_map</span><span class="p">[</span><span class="s1">&#39;FSLDIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;FSLDIR&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config_map</span><span class="p">:</span>
+                <span class="c1"># set attribute</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_from_ENV</span><span class="p">(</span><span class="n">config_map</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_attr</span><span class="p">()</span>
 
         <span class="c1"># set working directory as an environment variable</span>
@@ -588,6 +606,78 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">attr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;__&quot;</span><span class="p">)</span>
         <span class="p">]</span>
         <span class="k">return</span> <span class="n">attributes</span></div>
+
+<div class="viewcode-block" id="Configuration.set_from_ENV"><a class="viewcode-back" href="../../../../developer/utils#CPAC.utils.configuration.Configuration.set_from_ENV">[docs]</a>    <span class="k">def</span> <span class="nf">set_from_ENV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conf</span><span class="p">):</span>  <span class="c1"># pylint: disable=invalid-name</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Replace strings like $VAR and ${VAR} with environment variable values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        conf : any</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        conf : any</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import os</span>
+<span class="sd">        &gt;&gt;&gt; os.environ[&#39;SAMPLE_VALUE_SFE&#39;] = &#39;/example/path&#39;</span>
+<span class="sd">        &gt;&gt;&gt; c = Configuration()</span>
+<span class="sd">        &gt;&gt;&gt; c.set_from_ENV({&#39;key&#39;: {&#39;nested_list&#39;: [</span>
+<span class="sd">        ...     1, &#39;1&#39;, &#39;$SAMPLE_VALUE_SFE/extended&#39;]}})</span>
+<span class="sd">        {&#39;key&#39;: {&#39;nested_list&#39;: [1, &#39;1&#39;, &#39;/example/path/extended&#39;]}}</span>
+<span class="sd">        &gt;&gt;&gt; c.set_from_ENV([&#39;${SAMPLE_VALUE_SFE}&#39;, &#39;SAMPLE_VALUE_SFE&#39;])</span>
+<span class="sd">        [&#39;/example/path&#39;, &#39;SAMPLE_VALUE_SFE&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; del os.environ[&#39;SAMPLE_VALUE_SFE&#39;]</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">set_from_ENV</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">conf</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_from_ENV</span><span class="p">(</span><span class="n">conf</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">conf</span><span class="p">}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="c1"># set any specified environment variables</span>
+            <span class="c1"># (only matching all-caps plus `-` and `_`)</span>
+            <span class="c1"># like `${VAR}`</span>
+            <span class="n">_pattern1</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\${[A-Z\-_]*}&#39;</span>
+            <span class="c1"># like `$VAR`</span>
+            <span class="n">_pattern2</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\$[A-Z\-_]*(?=/|$)&#39;</span>
+            <span class="c1"># replace with environment variables if they exist</span>
+            <span class="k">for</span> <span class="n">_pattern</span> <span class="ow">in</span> <span class="p">[</span><span class="n">_pattern1</span><span class="p">,</span> <span class="n">_pattern2</span><span class="p">]:</span>
+                <span class="n">_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">_pattern</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">_match</span><span class="p">:</span>
+                    <span class="n">_match</span> <span class="o">=</span> <span class="n">_match</span><span class="o">.</span><span class="n">group</span><span class="p">()</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;${&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;}&#39;</span><span class="p">)</span>
+                    <span class="n">conf</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
+                        <span class="n">_pattern</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">_match</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;$</span><span class="si">{</span><span class="n">_match</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">),</span> <span class="n">conf</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">conf</span></div>
+
+<div class="viewcode-block" id="Configuration.set_without_ENV"><a class="viewcode-back" href="../../../../developer/utils#CPAC.utils.configuration.Configuration.set_without_ENV">[docs]</a>    <span class="k">def</span> <span class="nf">set_without_ENV</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conf</span><span class="p">):</span>  <span class="c1"># pylint: disable=invalid-name</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;Retain strings like $VAR and ${VAR} when setting attributes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        conf : any</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        conf : any</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import os</span>
+<span class="sd">        &gt;&gt;&gt; os.environ[&#39;SAMPLE_VALUE_SFE&#39;] = &#39;/example/path&#39;</span>
+<span class="sd">        &gt;&gt;&gt; c = Configuration()</span>
+<span class="sd">        &gt;&gt;&gt; c.set_without_ENV({&#39;key&#39;: {&#39;nested_list&#39;: [</span>
+<span class="sd">        ...     1, &#39;1&#39;, &#39;$SAMPLE_VALUE_SFE/extended&#39;]}})</span>
+<span class="sd">        {&#39;key&#39;: {&#39;nested_list&#39;: [1, &#39;1&#39;, &#39;$SAMPLE_VALUE_SFE/extended&#39;]}}</span>
+<span class="sd">        &gt;&gt;&gt; c.set_without_ENV([&#39;${SAMPLE_VALUE_SFE}&#39;, &#39;SAMPLE_VALUE_SFE&#39;])</span>
+<span class="sd">        [&#39;${SAMPLE_VALUE_SFE}&#39;, &#39;SAMPLE_VALUE_SFE&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; del os.environ[&#39;SAMPLE_VALUE_SFE&#39;]</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">set_without_ENV</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">conf</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_without_ENV</span><span class="p">(</span><span class="n">conf</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">conf</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">conf</span></div>
 
 <div class="viewcode-block" id="Configuration.sub_pattern"><a class="viewcode-back" href="../../../../developer/utils#CPAC.utils.configuration.Configuration.sub_pattern">[docs]</a>    <span class="k">def</span> <span class="nf">sub_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">orig_key</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">orig_key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="bp">self</span><span class="p">[</span><span class="n">pattern</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)])</span></div>
@@ -977,52 +1067,9 @@
 <span class="sd">    preconfig : str</span>
 <span class="sd">        The canonical name of the preconfig to load</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preconfig</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config_map</span><span class="o">=</span><span class="n">preconfig_yaml</span><span class="p">(</span><span class="n">preconfig</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span></div>
-
-
-<span class="k">def</span> <span class="nf">set_from_ENV</span><span class="p">(</span><span class="n">conf</span><span class="p">):</span>  <span class="c1"># pylint: disable=invalid-name</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;Function to replace strings like $VAR and ${VAR} with</span>
-<span class="sd">    environment variable values</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    conf : any</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    conf : any</span>
-
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; import os</span>
-<span class="sd">    &gt;&gt;&gt; os.environ[&#39;SAMPLE_VALUE_SFE&#39;] = &#39;/example/path&#39;</span>
-<span class="sd">    &gt;&gt;&gt; set_from_ENV({&#39;key&#39;: {&#39;nested_list&#39;: [</span>
-<span class="sd">    ...     1, &#39;1&#39;, &#39;$SAMPLE_VALUE_SFE/extended&#39;]}})</span>
-<span class="sd">    {&#39;key&#39;: {&#39;nested_list&#39;: [1, &#39;1&#39;, &#39;/example/path/extended&#39;]}}</span>
-<span class="sd">    &gt;&gt;&gt; set_from_ENV([&#39;${SAMPLE_VALUE_SFE}&#39;, &#39;SAMPLE_VALUE_SFE&#39;])</span>
-<span class="sd">    [&#39;/example/path&#39;, &#39;SAMPLE_VALUE_SFE&#39;]</span>
-<span class="sd">    &gt;&gt;&gt; del os.environ[&#39;SAMPLE_VALUE_SFE&#39;]</span>
-<span class="sd">    &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">set_from_ENV</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">conf</span><span class="p">]</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">set_from_ENV</span><span class="p">(</span><span class="n">conf</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">conf</span><span class="p">}</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="c1"># set any specified environment variables</span>
-        <span class="c1"># (only matching all-caps plus `-` and `_`)</span>
-        <span class="c1"># like `${VAR}`</span>
-        <span class="n">_pattern1</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\${[A-Z\-_]*}&#39;</span>
-        <span class="c1"># like `$VAR`</span>
-        <span class="n">_pattern2</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\$[A-Z\-_]*(?=/|$)&#39;</span>
-        <span class="c1"># replace with environment variables if they exist</span>
-        <span class="k">for</span> <span class="n">_pattern</span> <span class="ow">in</span> <span class="p">[</span><span class="n">_pattern1</span><span class="p">,</span> <span class="n">_pattern2</span><span class="p">]:</span>
-            <span class="n">_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">_pattern</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">_match</span><span class="p">:</span>
-                <span class="n">_match</span> <span class="o">=</span> <span class="n">_match</span><span class="o">.</span><span class="n">group</span><span class="p">()</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;${&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;}&#39;</span><span class="p">)</span>
-                <span class="n">conf</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
-                    <span class="n">_pattern</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">_match</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;$</span><span class="si">{</span><span class="n">_match</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">),</span> <span class="n">conf</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">conf</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preconfig</span><span class="p">,</span> <span class="n">skip_env_check</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config_map</span><span class="o">=</span><span class="n">preconfig_yaml</span><span class="p">(</span><span class="n">preconfig</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+                         <span class="n">skip_env_check</span><span class="o">=</span><span class="n">skip_env_check</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="set_subject"><a class="viewcode-back" href="../../../../developer/utils#CPAC.utils.configuration.set_subject">[docs]</a><span class="k">def</span> <span class="nf">set_subject</span><span class="p">(</span><span class="n">sub_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">pipe_config</span><span class="p">:</span> <span class="s1">&#39;Configuration&#39;</span><span class="p">,</span>

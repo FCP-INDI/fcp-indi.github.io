@@ -369,6 +369,7 @@
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">Parameter</span><span class="p">,</span> <span class="n">Signature</span><span class="p">,</span> <span class="n">signature</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span> <span class="nn">nibabel</span> <span class="kn">import</span> <span class="n">load</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces.utility</span> <span class="kn">import</span> <span class="n">Function</span>
 <span class="kn">from</span> <span class="nn">nipype.pipeline</span> <span class="kn">import</span> <span class="n">engine</span> <span class="k">as</span> <span class="n">pe</span>
@@ -387,6 +388,7 @@
 <span class="kn">from</span> <span class="nn">traits.trait_base</span> <span class="kn">import</span> <span class="n">Undefined</span>
 <span class="kn">from</span> <span class="nn">traits.trait_handlers</span> <span class="kn">import</span> <span class="n">TraitListObject</span>
 <span class="kn">from</span> <span class="nn">CPAC.utils.monitoring.custom_logging</span> <span class="kn">import</span> <span class="n">getLogger</span>
+<span class="kn">from</span> <span class="nn">CPAC.utils.typing</span> <span class="kn">import</span> <span class="n">DICT</span>
 
 <span class="c1"># set global default mem_gb</span>
 <span class="n">DEFAULT_MEM_GB</span> <span class="o">=</span> <span class="mf">2.0</span>
@@ -471,7 +473,13 @@
         <span class="p">{</span><span class="s2">&quot;    &gt;&gt;&gt; realign.inputs.in_files = &#39;functional.nii&#39;&quot;</span><span class="p">}</span>
     <span class="p">)</span>
 
-<div class="viewcode-block" id="Node.__init__"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Node.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="n">DEFAULT_MEM_GB</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Node.__init__"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Node.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+            <span class="n">mem_gb</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_MEM_GB</span><span class="p">,</span>
+            <span class="n">throttle</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># pylint: disable=import-outside-toplevel</span>
         <span class="kn">from</span> <span class="nn">CPAC.pipeline.random_state</span> <span class="kn">import</span> <span class="n">random_seed</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">mem_gb</span><span class="o">=</span><span class="n">mem_gb</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -480,6 +488,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">seed_applied</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_data_shape</span> <span class="o">=</span> <span class="n">Undefined</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">throttle</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">throttle</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose_logger</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_mem_x</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="s1">&#39;mem_x&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
@@ -513,7 +523,8 @@
             <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;mem_gb&#39;</span><span class="p">,</span> <span class="n">Parameter</span><span class="o">.</span><span class="n">POSITIONAL_OR_KEYWORD</span><span class="p">,</span>
                       <span class="n">default</span><span class="o">=</span><span class="n">DEFAULT_MEM_GB</span><span class="p">)</span>
         <span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">orig_sig_params</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+</span> <span class="p">[</span>
-            <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;mem_x&#39;</span><span class="p">,</span> <span class="n">Parameter</span><span class="o">.</span><span class="n">KEYWORD_ONLY</span><span class="p">),</span>
+            <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;mem_x&#39;</span><span class="p">,</span> <span class="n">Parameter</span><span class="o">.</span><span class="n">KEYWORD_ONLY</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+            <span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;throttle&quot;</span><span class="p">,</span> <span class="n">Parameter</span><span class="o">.</span><span class="n">KEYWORD_ONLY</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
             <span class="n">orig_sig_params</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
         <span class="p">])</span>
 
@@ -550,7 +561,11 @@
 <span class="sd">            ``mode`` can be any one of</span>
 <span class="sd">            * &#39;xyzt&#39; (spatial * temporal) (default if not specified)</span>
 <span class="sd">            * &#39;xyz&#39; (spatial)</span>
-<span class="sd">            * &#39;t&#39; (temporal)&#39;&#39;&#39;</span><span class="p">]))</span>  <span class="c1"># noqa: E501  # pylint: disable=line-too-long</span>
+<span class="sd">            * &#39;t&#39; (temporal)</span>
+
+<span class="sd">        throttle : bool, optional</span>
+<span class="sd">            Assume this Node will use all available memory if no observation run is</span>
+<span class="sd">            provided.&#39;&#39;&#39;</span><span class="p">]))</span>  <span class="c1"># noqa: E501  # pylint: disable=line-too-long</span>
 
     <span class="k">def</span> <span class="nf">_add_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flags</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&#39;&#39;&#39;</span>
@@ -758,12 +773,21 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">_&#39;</span></div>
 
-    <span class="fm">__init__</span><span class="o">.</span><span class="n">__signature__</span> <span class="o">=</span> <span class="n">Signature</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="p">[</span>
-        <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;mem_gb&#39;</span> <span class="k">else</span> <span class="p">(</span>
-            <span class="s1">&#39;mem_gb&#39;</span><span class="p">,</span>
-            <span class="n">Parameter</span><span class="p">(</span><span class="s1">&#39;mem_gb&#39;</span><span class="p">,</span> <span class="n">Parameter</span><span class="o">.</span><span class="n">POSITIONAL_OR_KEYWORD</span><span class="p">,</span>
-                      <span class="n">default</span><span class="o">=</span><span class="n">DEFAULT_MEM_GB</span><span class="p">)</span>
-        <span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">signature</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span></div>
+    <span class="n">_parameters</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">DICT</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">_custom_params</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">DICT</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;mem_gb&quot;</span><span class="p">:</span> <span class="n">DEFAULT_MEM_GB</span><span class="p">,</span>
+        <span class="s2">&quot;throttle&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">default</span> <span class="ow">in</span> <span class="n">_custom_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">signature</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">_custom_params</span><span class="p">:</span>
+                <span class="n">_parameters</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span>
+                    <span class="n">param</span><span class="p">,</span> <span class="n">Parameter</span><span class="o">.</span><span class="n">POSITIONAL_OR_KEYWORD</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">default</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_parameters</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="fm">__init__</span><span class="o">.</span><span class="n">__signature__</span> <span class="o">=</span> <span class="n">Signature</span><span class="p">(</span><span class="n">parameters</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">_parameters</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+    <span class="k">del</span> <span class="n">_custom_params</span><span class="p">,</span> <span class="n">_parameters</span></div>
 
 
 <div class="viewcode-block" id="Workflow"><a class="viewcode-back" href="../../../../developer/nodes#CPAC.pipeline.nipype_pipeline_engine.Workflow">[docs]</a><span class="k">class</span> <span class="nc">Workflow</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">Workflow</span><span class="p">):</span>

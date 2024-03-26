@@ -179,11 +179,11 @@ C-PAC is now compatible with fMRIPrep output directories so that users can run n
 
 * Nuisance regression has to be in template space. 
 
-* Create_regressors should be switched off
+* :ref:`Create_regressors` should be switched off
 
 * The names of the regressors under **Columns** must match the column names from the fMRIPrep confounds file
 
-* The 'Name' field must match the name of one of the regressor strategies in the section above
+* If there are regressor strategies under :ref:`nuisance_corrections > 2-nuisance_regression > Regressors`, the 'Name' field of one strategy must match the name of the regressor strategy listed under :ref:`ingress_regressors`. If you are not running bandpass filtering, the field :ref:`nuisance_corrections > 2-nuisance_regression > Regressors` can be blank. See below for an example.
 
 * Nuisance regression cannot fork with ingressed regressors
 

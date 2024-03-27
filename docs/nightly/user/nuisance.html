@@ -975,6 +975,42 @@ Power and colleagues (2011) proposed two measures to identify volumes contaminat
 </pre></div>
 </div>
 </section>
+<section id="pulling-regressors-from-fmriprep-output-directory">
+<h2>Pulling Regressors from fMRIPrep Output Directory<a class="headerlink" href="#pulling-regressors-from-fmriprep-output-directory" title="Permalink to this heading">#</a></h2>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.8.6.</span></p>
+</div>
+<p>C-PAC is now compatible with fMRIPrep output directories so that users can run nuisance regression and calculate derivatives. There are a few things to note to configure this option in the pipeline file.</p>
+<ul class="simple">
+<li><p>Nuisance regression has to be in template space.</p></li>
+<li><p><span class="xref std std-ref">Create_regressors</span> should be switched off</p></li>
+<li><p>The names of the regressors under <strong>Columns</strong> must match the column names from the fMRIPrep confounds file</p></li>
+<li><p>If there are regressor strategies under <span class="xref std std-ref">nuisance_corrections &gt; 2-nuisance_regression &gt; Regressors</span>, the ‘Name’ field of one strategy must match the name of the regressor strategy listed under <span class="xref std std-ref">ingress_regressors</span>. If you are not running bandpass filtering, the field <span class="xref std std-ref">nuisance_corrections &gt; 2-nuisance_regression &gt; Regressors</span> can be blank. See below for an example.</p></li>
+<li><p>Nuisance regression cannot fork with ingressed regressors</p></li>
+</ul>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example of nuisance regression section of pipeline file</span>
+<span class="nt">nuisance_corrections</span><span class="p">:</span>
+<span class="w"> </span><span class="nt">2-nuisance_regression</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">On</span><span class="p p-Indicator">]</span>
+
+<span class="w">   </span><span class="c1"># Select which nuisance signal corrections to apply</span>
+<span class="w">   </span><span class="nt">Regressors</span><span class="p">:</span>
+<span class="w">     </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">Name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">strat1</span>
+<span class="w">       </span><span class="nt">Bandpass</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">bottom_frequency</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+<span class="w">         </span><span class="nt">top_frequency</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span>
+<span class="w">         </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">default</span>
+<span class="w">   </span><span class="nt">ingress_regressors</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">On</span>
+<span class="w">     </span><span class="nt">Regressors</span><span class="p">:</span>
+<span class="w">       </span><span class="nt">Name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">strat1</span>
+<span class="w">       </span><span class="nt">Columns</span><span class="p">:</span>
+<span class="w">       </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">global_signal</span>
+<span class="w">       </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">white_matter</span>
+<span class="w">   </span><span class="nt">create_regressors</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Off</span>
+</pre></div>
+</div>
+</section>
 <section id="configuring-median-angle-correction-options">
 <h2>Configuring Median Angle Correction Options<a class="headerlink" href="#configuring-median-angle-correction-options" title="Permalink to this heading">#</a></h2>
 <div class="admonition warning">
@@ -1100,6 +1136,7 @@ Fox, M.D., Snyder, A.Z., Vincent, J.L., Corbetta, M., Van Essen, D.C., Raichle, 
 </ul>
 </li>
 <li><a class="reference internal" href="#an-example-of-nuisance-regressors">An example of nuisance regressors</a></li>
+<li><a class="reference internal" href="#pulling-regressors-from-fmriprep-output-directory">Pulling Regressors from fMRIPrep Output Directory</a></li>
 <li><a class="reference internal" href="#configuring-median-angle-correction-options">Configuring Median Angle Correction Options</a></li>
 <li><a class="reference internal" href="#external-resources">External Resources</a></li>
 <li><a class="reference internal" href="#references">References</a></li>

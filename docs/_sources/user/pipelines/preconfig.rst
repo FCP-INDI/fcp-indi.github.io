@@ -51,6 +51,13 @@ References
 
 .. footbibliography::
 
+abcd-options
+------------
+
+.. warning::
+
+   :doc:`/user/known-issues/FCP-INDI/C-PAC/2104`
+
 anat-only: Default with Anatomical Preprocessing Only
 -----------------------------------------------------
 

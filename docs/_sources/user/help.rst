@@ -45,6 +45,10 @@ where :file:`crash-file.pklz` is the name of the crash file you wish to view.
 Common Issues
 ^^^^^^^^^^^^^
 
+#. My end-to-end surface pipeline with ABCD post-processing is hanging/stalling.
+
+    .. include:: /user/known-issues/FCP-INDI/C-PAC/2104.rst
+
 #. I have a pipeline configuration that used to work, but now I'm getting errors that start with ``OSError: File /ndmg_atlases/label/Human/``. Why?
 
     .. include:: /user/ndmg_atlases.rst

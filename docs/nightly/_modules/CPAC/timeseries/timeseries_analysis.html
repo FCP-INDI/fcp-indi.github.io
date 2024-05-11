@@ -390,8 +390,7 @@
 
 <span class="c1"># You should have received a copy of the GNU Lesser General Public</span>
 <span class="c1"># License along with C-PAC. If not, see &lt;https://www.gnu.org/licenses/&gt;.</span>
-<span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="kn">import</span> <span class="n">afni</span><span class="p">,</span> <span class="n">fsl</span>
-<span class="kn">import</span> <span class="nn">nipype.interfaces.utility</span> <span class="k">as</span> <span class="nn">util</span>
+<span class="kn">from</span> <span class="nn">nipype.interfaces</span> <span class="kn">import</span> <span class="n">afni</span><span class="p">,</span> <span class="n">fsl</span><span class="p">,</span> <span class="n">utility</span> <span class="k">as</span> <span class="n">util</span>
 <span class="kn">from</span> <span class="nn">nipype.interfaces.utility</span> <span class="kn">import</span> <span class="n">Function</span>
 
 <span class="kn">from</span> <span class="nn">CPAC.connectome.connectivity_matrix</span> <span class="kn">import</span> <span class="p">(</span>
@@ -966,7 +965,7 @@
     <span class="k">return</span> <span class="n">oneD_file</span></div>
 
 
-<div class="viewcode-block" id="gen_voxel_timeseries"><a class="viewcode-back" href="../../../developer/workflows/timeseries#CPAC.timeseries.gen_voxel_timeseries">[docs]</a><span class="k">def</span> <span class="nf">gen_voxel_timeseries</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="n">template</span><span class="p">):</span>
+<div class="viewcode-block" id="gen_voxel_timeseries"><a class="viewcode-back" href="../../../developer/workflows/timeseries#CPAC.timeseries.gen_voxel_timeseries">[docs]</a><span class="k">def</span> <span class="nf">gen_voxel_timeseries</span><span class="p">(</span><span class="n">data_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">template</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Extract timeseries for each voxel in the data that is present in the input mask.</span>
 
@@ -976,20 +975,11 @@
 <span class="sd">        path to input functional data</span>
 <span class="sd">    template : string (nifti file)</span>
 <span class="sd">        path to input mask in functional native space</span>
-<span class="sd">    output_type : list</span>
-<span class="sd">        list of two boolean values suggesting</span>
-<span class="sd">        the output types - numpy npz file and csv</span>
-<span class="sd">        format</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    out_list : list of files</span>
-<span class="sd">        Based on ouput_type options method returns a list containing</span>
-<span class="sd">        path to npz and csv file having timeseries of each voxel in</span>
-<span class="sd">        the data that is present in the input mask.The row header</span>
-<span class="sd">        corresponds to voxel&#39;s xyz cordinates and column headers corresponds</span>
-<span class="sd">        to the volume index in the csv. By default it outputs afni compatible</span>
-<span class="sd">        1D file with mean of timeseries of voxels across timepoints.</span>
+<span class="sd">    oneD_file : str</span>
+<span class="sd">        Path to the created .1D file containing the mean timeseries vector.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -1009,21 +999,16 @@
     <span class="n">header_data</span> <span class="o">=</span> <span class="n">datafile</span><span class="o">.</span><span class="n">header</span>
     <span class="n">qform</span> <span class="o">=</span> <span class="n">header_data</span><span class="o">.</span><span class="n">get_qform</span><span class="p">()</span>
     <span class="n">sorted_list</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">vol_dict</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="n">tmp_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">template</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">tmp_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">tmp_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">oneD_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;mask_&quot;</span> <span class="o">+</span> <span class="n">tmp_file</span> <span class="o">+</span> <span class="s2">&quot;.1D&quot;</span><span class="p">)</span>
     <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">oneD_file</span><span class="p">,</span> <span class="s2">&quot;wt&quot;</span><span class="p">)</span>
 
-    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">unit_data</span><span class="o">.</span><span class="n">shape</span>
-
     <span class="n">node_array</span> <span class="o">=</span> <span class="n">img_data</span><span class="p">[</span><span class="n">unit_data</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
     <span class="n">node_array</span> <span class="o">=</span> <span class="n">node_array</span><span class="o">.</span><span class="n">T</span>
     <span class="n">time_points</span> <span class="o">=</span> <span class="n">node_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">time_points</span><span class="p">):</span>
-        <span class="n">string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;vol </span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">vol_dict</span><span class="p">[</span><span class="n">string</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_array</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">node_array</span><span class="p">[</span><span class="n">t</span><span class="p">]),</span> <span class="mi">6</span><span class="p">)))</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">val</span> <span class="o">=</span> <span class="n">node_array</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
@@ -1037,9 +1022,9 @@
     <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">),</span> <span class="n">quoting</span><span class="o">=</span><span class="n">csv</span><span class="o">.</span><span class="n">QUOTE_MINIMAL</span><span class="p">)</span>
     <span class="n">one</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
     <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;volume/xyz&quot;</span><span class="p">]</span>
-    <span class="n">cordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">unit_data</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cordinates</span><span class="p">)):</span>
-        <span class="n">ijk_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">cordinates</span><span class="p">[</span><span class="n">val</span><span class="p">],</span> <span class="n">one</span><span class="p">])</span>
+    <span class="n">coordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">unit_data</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">coordinates</span><span class="p">)):</span>
+        <span class="n">ijk_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">coordinates</span><span class="p">[</span><span class="n">val</span><span class="p">],</span> <span class="n">one</span><span class="p">])</span>
         <span class="n">ijk_mat</span> <span class="o">=</span> <span class="n">ijk_mat</span><span class="o">.</span><span class="n">T</span>
         <span class="n">product</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">qform</span><span class="p">,</span> <span class="n">ijk_mat</span><span class="p">)</span>
         <span class="n">val</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">product</span><span class="o">.</span><span class="n">tolist</span><span class="p">()[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">])</span>
@@ -1454,11 +1439,15 @@
       
     </aside>
   </div>
-</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=68ced503"></script>
+</div><script src="../../../_static/jquery.js?v=5d32c60e"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=68ced503"></script>
     <script src="../../../_static/doctools.js?v=d248f5b3"></script>
     <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../../_static/scripts/furo.js?v=4e2eecee"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/underscore.js?v=f1230927"></script>
+    <script src="../../../_static/doctools.js?v=d248f5b3"></script>
     <script src="../../../_static/hideEmptyHighlights.js?v=af317073"></script>
     <script defer="defer" src="../../../_static/versionList.js?v=f2bc52a7"></script>
     </body>

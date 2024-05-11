@@ -157,6 +157,7 @@ sys.path.insert(0, os.path.abspath('.'))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinxcontrib.bibtex',
+    'sphinxcontrib.jquery',
     'sphinx.ext.ifconfig',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
@@ -459,6 +460,8 @@ html_css_files = [
     'custom.css',
 ]
 html_js_files = [
+    'underscore.js',
+    'doctools.js',
     'hideEmptyHighlights.js',
     ('versionList.js', {'defer': 'defer'})]
 

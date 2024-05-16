@@ -1,0 +1,25 @@
+digraph structs {
+node [shape=record];
+"alff_workflowhp_input" [label="{IN}|{ hp_input | utility |  }|{OUT|<outhp> hp}"];
+"alff_workflowlp_input" [label="{IN}|{ lp_input | utility |  }|{OUT|<outlp> lp}"];
+"alff_workflowinputspec" [label="{IN}|{ inputspec | utility |  }|{OUT|<outrestmask> rest_mask|<outrestres> rest_res}"];
+"alff_workflowbandpass_filtering" [label="{IN|<inhighpass> highpass|<ininfile> in_file|<inlowpass> lowpass}|{ bandpass_filtering | afni |  }|{OUT|<outoutfile> out_file}"];
+"alff_workflowget_option_string" [label="{IN|<inmask> mask}|{ get_option_string | utility |  }|{OUT|<outoptionstring> option_string}"];
+"alff_workflowstddev_filtered" [label="{IN|<ininfile> in_file|<inoptions> options}|{ stddev_filtered | afni |  }|{OUT|<outoutfile> out_file}"];
+"alff_workflowstddev_unfiltered" [label="{IN|<ininfile> in_file|<inoptions> options}|{ stddev_unfiltered | afni |  }|{OUT|<outoutfile> out_file}"];
+"alff_workflowfalff" [label="{IN|<ininfilea> in_file_a|<ininfileb> in_file_b|<ininfilec> in_file_c}|{ falff | afni |  }|{OUT|<outoutfile> out_file}"];
+"alff_workflowoutputspec" [label="{IN|<inalffimg> alff_img|<infalffimg> falff_img}|{ outputspec | utility |  }|{OUT}"];
+"alff_workflowbandpass_filtering":"outoutfile":e -> "alff_workflowstddev_filtered":"ininfile":w;
+"alff_workflowfalff":"outoutfile":e -> "alff_workflowoutputspec":"infalffimg":w;
+"alff_workflowget_option_string":"outoptionstring":e -> "alff_workflowstddev_filtered":"inoptions":w;
+"alff_workflowget_option_string":"outoptionstring":e -> "alff_workflowstddev_unfiltered":"inoptions":w;
+"alff_workflowhp_input":"outhp":e -> "alff_workflowbandpass_filtering":"inhighpass":w;
+"alff_workflowinputspec":"outrestmask":e -> "alff_workflowfalff":"ininfilea":w;
+"alff_workflowinputspec":"outrestmask":e -> "alff_workflowget_option_string":"inmask":w;
+"alff_workflowinputspec":"outrestres":e -> "alff_workflowbandpass_filtering":"ininfile":w;
+"alff_workflowinputspec":"outrestres":e -> "alff_workflowstddev_unfiltered":"ininfile":w;
+"alff_workflowlp_input":"outlp":e -> "alff_workflowbandpass_filtering":"inlowpass":w;
+"alff_workflowstddev_filtered":"outoutfile":e -> "alff_workflowfalff":"ininfileb":w;
+"alff_workflowstddev_filtered":"outoutfile":e -> "alff_workflowoutputspec":"inalffimg":w;
+"alff_workflowstddev_unfiltered":"outoutfile":e -> "alff_workflowfalff":"ininfilec":w;
+}

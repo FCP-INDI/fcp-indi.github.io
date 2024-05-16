@@ -411,10 +411,52 @@
 </section>
 <section id="common-issues">
 <h2>Common Issues<a class="headerlink" href="#common-issues" title="Permalink to this heading">¶</a></h2>
-<ol class="arabic">
-<li><p>I have a pipeline configuration that used to work, but now I’m getting errors that start with <code class="docutils literal notranslate"><span class="pre">OSError:</span> <span class="pre">File</span> <span class="pre">/ndmg_atlases/label/Human/</span></code>. Why?</p>
-<blockquote>
-<div><p>On July 20, 2020, Neuroparc released v1.0. In moving from v0 to v1, the paths to several of the Neuroparc atlases changed. The atlases are used by C-PAC in its default and preconfigured pipelines. C-PAC v1.7.0 includes the Neuroparc v1.0 paths, but <strong>if you are using a pipeline based on C-PAC 1.6.2a or older, you will need to update any Nueroparc v0 paths in your config</strong></p>
+<section id="my-end-to-end-surface-pipeline-with-abcd-post-processing-is-hanging-stalling">
+<h3>My end-to-end surface pipeline with ABCD post-processing is hanging/stalling.<a class="headerlink" href="#my-end-to-end-surface-pipeline-with-abcd-post-processing-is-hanging-stalling" title="Permalink to this heading">¶</a></h3>
+<section id="freesurfer-based-pipeline-hangs-if-recon-all-and-abcd-surface-post-processing-are-run-in-the-same-pipeline">
+<h4>Freesurfer-based pipeline hangs if <code class="docutils literal notranslate"><span class="pre">recon-all</span></code> and ABCD surface post-processing are run in the same pipeline<a class="headerlink" href="#freesurfer-based-pipeline-hangs-if-recon-all-and-abcd-surface-post-processing-are-run-in-the-same-pipeline" title="Permalink to this heading">¶</a></h4>
+<p>See issue <a class="reference external" href="https://github.com/FCP-INDI/C-PAC/issues/2104">#2104</a> for the latest developments on this issue.</p>
+<p>When running both <code class="docutils literal notranslate"><span class="pre">recon-all</span></code> within C-PAC via Nipype and the ABCD surface post-processing workflow,</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># PREPROCESSING</span>
+<span class="c1"># -------------</span>
+<span class="nt">surface_analysis</span><span class="p">:</span>
+
+<span class="w">  </span><span class="c1"># Will run Freesurfer for surface-based analysis. Will output traditional Freesurfer derivatives.</span>
+<span class="w">  </span><span class="c1"># If you wish to employ Freesurfer outputs for brain masking or tissue segmentation in the voxel-based pipeline,</span>
+<span class="w">  </span><span class="c1"># select those &#39;Freesurfer-&#39; labeled options further below in anatomical_preproc.</span>
+<span class="w">  </span><span class="nt">freesurfer</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">run_reconall</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">On</span>
+
+<span class="w">  </span><span class="c1"># Run ABCD-HCP post FreeSurfer and fMRISurface pipeline</span>
+<span class="w">  </span><span class="nt">post_freesurfer</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">On</span>
+</pre></div>
+</div>
+<p>the pipeline tends to hang roughly around the timeseries warp-to-template part of the pipeline, although the warp-to-template portion seems unrelated to the stall.</p>
+<p>(The stall always happens with one of the abcd timeseries warp-to-template nodeblock’s nodes being listed in the pypeline.log as the last to complete - and when you search the working directory, often ANTs registration never even started.)</p>
+<p>However, post-proc runs well on its own. It’s the combination.</p>
+<section id="workarounds">
+<h5>Workarounds<a class="headerlink" href="#workarounds" title="Permalink to this heading">¶</a></h5>
+<section id="preferred">
+<h6>Preferred<a class="headerlink" href="#preferred" title="Permalink to this heading">¶</a></h6>
+<p>Running FreeSurfer <code class="docutils literal notranslate"><span class="pre">recon-all</span></code> first and ingressing its outputs, which is now our recommended usage, doesn’t hit this problem.</p>
+</section>
+<section id="alternative">
+<h6>Alternative<a class="headerlink" href="#alternative" title="Permalink to this heading">¶</a></h6>
+<p>Running it normally, hitting a stall, and simply restarting the pipeline run also gets past it. That is, cancelling the stalled pipeline, and then re-starting it as-is via warm restart (if the Nipype working directory remains).</p>
+</section>
+<section id="planned-resolution">
+<h6>Planned resolution<a class="headerlink" href="#planned-resolution" title="Permalink to this heading">¶</a></h6>
+<ul class="simple">
+<li><p>Removing FreeSurfer <code class="docutils literal notranslate"><span class="pre">recon-all</span></code> as a workflow within C-PAC, instead requiring its outputs as input data for configurations that involve surface analysis.</p></li>
+</ul>
+</section>
+</section>
+</section>
+</section>
+<section id="i-have-a-pipeline-configuration-that-used-to-work-but-now-i-m-getting-errors-that-start-with-oserror-file-ndmg-atlases-label-human-why">
+<h3>I have a pipeline configuration that used to work, but now I’m getting errors that start with <code class="docutils literal notranslate"><span class="pre">OSError:</span> <span class="pre">File</span> <span class="pre">/ndmg_atlases/label/Human/</span></code>. Why?<a class="headerlink" href="#i-have-a-pipeline-configuration-that-used-to-work-but-now-i-m-getting-errors-that-start-with-oserror-file-ndmg-atlases-label-human-why" title="Permalink to this heading">¶</a></h3>
+<p>On July 20, 2020, Neuroparc released v1.0. In moving from v0 to v1, the paths to several of the Neuroparc atlases changed. The atlases are used by C-PAC in its default and preconfigured pipelines. C-PAC v1.7.0 includes the Neuroparc v1.0 paths, but <strong>if you are using a pipeline based on C-PAC 1.6.2a or older, you will need to update any Nueroparc v0 paths in your config</strong></p>
 <div class="table-wrapper docutils container" id="id1">
 <table class="docutils align-default" id="id1">
 <caption><span class="caption-text">All paths begin with <code class="docutils literal notranslate"><span class="pre">/ndmg_atlases/label/Human/</span></code></span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
@@ -493,27 +535,22 @@
 </tbody>
 </table>
 </div>
-</div></blockquote>
-</li>
-<li><p>My run is crashing with the crash files indicating a memory error.  What is going on?</p>
-<blockquote>
-<div><p>This issue often occurs when scans are resampled to a higher resolution.  This is because functional images, the template that you are resampling to, and the resulting generated image are all loaded into memory at various points in the C-PAC pipeline.  Typically these images are compressed, but they will be uncompressed when loaded.  If the amount of memory required to load the images exceeds the amount of memory available, C-PAC will crash.</p>
+</section>
+<section id="my-run-is-crashing-with-the-crash-files-indicating-a-memory-error-what-is-going-on">
+<h3>My run is crashing with the crash files indicating a memory error.  What is going on?<a class="headerlink" href="#my-run-is-crashing-with-the-crash-files-indicating-a-memory-error-what-is-going-on" title="Permalink to this heading">¶</a></h3>
+<p>This issue often occurs when scans are resampled to a higher resolution.  This is because functional images, the template that you are resampling to, and the resulting generated image are all loaded into memory at various points in the C-PAC pipeline.  Typically these images are compressed, but they will be uncompressed when loaded.  If the amount of memory required to load the images exceeds the amount of memory available, C-PAC will crash.</p>
 <p>For instance, suppose you are resampling a 50 MB (100 MB uncompressed) resting-state scan with 3 mm isotropic voxels to a 3 MB (15 MB uncompressed) 1 mm template. By dividing the voxel volume for the original resting state scan by the voxel volume for the template, you can determine that the voxel count of the resampled resting-state scan will be 27 times greater. Therefore, if you multiply the uncompressed file size by 27 you can estimate that the resampled scan alone will take up 2.7 GB of space. You will need at least this much RAM for C-PAC to load the scan.  If you are running multiple subjects simultaneously, you would need to multiply this estimate by the number of subjects.  Note that the template, original image, and any other open applications will also have their own memory requirements, so the estimate would be closer to 2.8 GB per subject plus however much RAM is used before C-PAC is started (assuming no new applications are started mid-run).</p>
 <p>To avoid this error, you will need to either get more RAM, run fewer subjects at once, or consider downsampling your template to a lower resolution.</p>
-</div></blockquote>
-</li>
-<li id="working-dir-crashes"><p>I’m re-running a pipeline, but I am receiving many crashes.  Most of these crashes tell me that a file that has been moved or no longer exists is being used as an input for a step in the C-PAC pipeline.  What is going on and how can I tell C-PAC to use the correct inputs?</p>
-<blockquote>
-<div><p>One of the features of Nipype (which C-PAC is built upon) is that steps that have been run before are not re-run when you re-start a pipeline.  Nipype accomplishes this by associating a value with a step based on the properties of that step (i.e., hashing).  Nipype has two potential values that it can associate with a step: a value based on the size and date of the files created by the step, and a value based upon the data present within the files themselves.  The first value is what C-PAC uses with its pipelines, since it is much more computationally practical.  Since this value only looks at the size and date of files to determine whether or not a step has been run, it will not see that the file’s path has changed, and it will assume that all paths are consistent with the path structure from when the pipeline was run before.</p>
+</section>
+<section id="i-m-re-running-a-pipeline-but-i-am-receiving-many-crashes-most-of-these-crashes-tell-me-that-a-file-that-has-been-moved-or-no-longer-exists-is-being-used-as-an-input-for-a-step-in-the-c-pac-pipeline-what-is-going-on-and-how-can-i-tell-c-pac-to-use-the-correct-inputs">
+<span id="working-dir-crashes"></span><h3>I’m re-running a pipeline, but I am receiving many crashes.  Most of these crashes tell me that a file that has been moved or no longer exists is being used as an input for a step in the C-PAC pipeline.  What is going on and how can I tell C-PAC to use the correct inputs?<a class="headerlink" href="#i-m-re-running-a-pipeline-but-i-am-receiving-many-crashes-most-of-these-crashes-tell-me-that-a-file-that-has-been-moved-or-no-longer-exists-is-being-used-as-an-input-for-a-step-in-the-c-pac-pipeline-what-is-going-on-and-how-can-i-tell-c-pac-to-use-the-correct-inputs" title="Permalink to this heading">¶</a></h3>
+<p>One of the features of Nipype (which C-PAC is built upon) is that steps that have been run before are not re-run when you re-start a pipeline.  Nipype accomplishes this by associating a value with a step based on the properties of that step (i.e., hashing).  Nipype has two potential values that it can associate with a step: a value based on the size and date of the files created by the step, and a value based upon the data present within the files themselves.  The first value is what C-PAC uses with its pipelines, since it is much more computationally practical.  Since this value only looks at the size and date of files to determine whether or not a step has been run, it will not see that the file’s path has changed, and it will assume that all paths are consistent with the path structure from when the pipeline was run before.</p>
 <p>To work around this error, you will need to delete the working directory associated with the previous run and create a new directory to replace it for the new run.</p>
-</div></blockquote>
-</li>
-<li><p>How should I cite C-PAC in my paper?</p>
-<blockquote>
-<div><p>Please cite the abstract located <a class="reference external" href="http://www.frontiersin.org/10.3389/conf.fninf.2013.09.00042/event_abstract">here</a>.</p>
-</div></blockquote>
-</li>
-</ol>
+</section>
+<section id="how-should-i-cite-c-pac-in-my-paper">
+<h3>How should I cite C-PAC in my paper?<a class="headerlink" href="#how-should-i-cite-c-pac-in-my-paper" title="Permalink to this heading">¶</a></h3>
+<p>Please cite the abstract located <a class="reference external" href="http://www.frontiersin.org/10.3389/conf.fninf.2013.09.00042/event_abstract">here</a>.</p>
+</section>
 </section>
 </section>
 
@@ -578,7 +615,25 @@
 <li><a class="reference internal" href="#cpac-1-7-2">CPAC ≤1.7.2</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#common-issues">Common Issues</a></li>
+<li><a class="reference internal" href="#common-issues">Common Issues</a><ul>
+<li><a class="reference internal" href="#my-end-to-end-surface-pipeline-with-abcd-post-processing-is-hanging-stalling">My end-to-end surface pipeline with ABCD post-processing is hanging/stalling.</a><ul>
+<li><a class="reference internal" href="#freesurfer-based-pipeline-hangs-if-recon-all-and-abcd-surface-post-processing-are-run-in-the-same-pipeline">Freesurfer-based pipeline hangs if <code class="docutils literal notranslate"><span class="pre">recon-all</span></code> and ABCD surface post-processing are run in the same pipeline</a><ul>
+<li><a class="reference internal" href="#workarounds">Workarounds</a><ul>
+<li><a class="reference internal" href="#preferred">Preferred</a></li>
+<li><a class="reference internal" href="#alternative">Alternative</a></li>
+<li><a class="reference internal" href="#planned-resolution">Planned resolution</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#i-have-a-pipeline-configuration-that-used-to-work-but-now-i-m-getting-errors-that-start-with-oserror-file-ndmg-atlases-label-human-why">I have a pipeline configuration that used to work, but now I’m getting errors that start with <code class="docutils literal notranslate"><span class="pre">OSError:</span> <span class="pre">File</span> <span class="pre">/ndmg_atlases/label/Human/</span></code>. Why?</a></li>
+<li><a class="reference internal" href="#my-run-is-crashing-with-the-crash-files-indicating-a-memory-error-what-is-going-on">My run is crashing with the crash files indicating a memory error.  What is going on?</a></li>
+<li><a class="reference internal" href="#i-m-re-running-a-pipeline-but-i-am-receiving-many-crashes-most-of-these-crashes-tell-me-that-a-file-that-has-been-moved-or-no-longer-exists-is-being-used-as-an-input-for-a-step-in-the-c-pac-pipeline-what-is-going-on-and-how-can-i-tell-c-pac-to-use-the-correct-inputs">I’m re-running a pipeline, but I am receiving many crashes.  Most of these crashes tell me that a file that has been moved or no longer exists is being used as an input for a step in the C-PAC pipeline.  What is going on and how can I tell C-PAC to use the correct inputs?</a></li>
+<li><a class="reference internal" href="#how-should-i-cite-c-pac-in-my-paper">How should I cite C-PAC in my paper?</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

@@ -1,0 +1,49 @@
+..
+   The headings here start with * to nest under - in user/help
+
+Freesurfer-based pipeline hangs if ``recon-all`` and ABCD surface post-processing are run in the same pipeline
+**************************************************************************************************************
+
+See issue :issue:`2104` for the latest developments on this issue.
+
+When running both ``recon-all`` within C-PAC via Nipype and the ABCD surface post-processing workflow, 
+
+.. code-block:: yaml
+
+    # PREPROCESSING
+    # -------------
+    surface_analysis:
+
+      # Will run Freesurfer for surface-based analysis. Will output traditional Freesurfer derivatives.
+      # If you wish to employ Freesurfer outputs for brain masking or tissue segmentation in the voxel-based pipeline,
+      # select those 'Freesurfer-' labeled options further below in anatomical_preproc.
+      freesurfer:
+        run_reconall: On
+
+      # Run ABCD-HCP post FreeSurfer and fMRISurface pipeline
+      post_freesurfer:
+        run: On
+
+the pipeline tends to hang roughly around the timeseries warp-to-template part of the pipeline, although the warp-to-template portion seems unrelated to the stall.
+
+(The stall always happens with one of the abcd timeseries warp-to-template nodeblock's nodes being listed in the pypeline.log as the last to complete - and when you search the working directory, often ANTs registration never even started.)
+
+However, post-proc runs well on its own. It's the combination.
+
+Workarounds
+###########
+
+Preferred
+`````````
+
+Running FreeSurfer ``recon-all`` first and ingressing its outputs, which is now our recommended usage, doesn't hit this problem.
+
+Alternative
+```````````
+
+Running it normally, hitting a stall, and simply restarting the pipeline run also gets past it. That is, cancelling the stalled pipeline, and then re-starting it as-is via warm restart (if the Nipype working directory remains).
+
+Planned resolution
+``````````````````
+
+- Removing FreeSurfer ``recon-all`` as a workflow within C-PAC, instead requiring its outputs as input data for configurations that involve surface analysis.

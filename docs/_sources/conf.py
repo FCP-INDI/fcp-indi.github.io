@@ -164,6 +164,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinxcontrib.programoutput',
+    'sphinx_issues',
     'autodoc_nodeblock',
     'exec',
     'nbsphinx']
@@ -175,6 +176,8 @@ bibtex_default_style = 'cpac_docs_style'
 intersphinx_mapping = {
     'nipype': (f'https://nipype.readthedocs.io/en/{_nipype_version}/', None),
     'python': ('https://docs.python.org/3', None)}
+
+issues_github_path = 'FCP-INDI/C-PAC'
 
 napoleon_preprocess_types = True
 

@@ -45,6 +45,11 @@ where :file:`crash-file.pklz` is the name of the crash file you wish to view.
 Common Issues
 ^^^^^^^^^^^^^
 
+``bids-validator: command not found``
+-------------------------------------
+
+.. include:: /user/known-issues/FCP-INDI/C-PAC/2110.rst
+
 My end-to-end surface pipeline with ABCD post-processing is hanging/stalling.
 -----------------------------------------------------------------------------
 

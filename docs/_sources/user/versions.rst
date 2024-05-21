@@ -9,21 +9,46 @@ Variants
 Primary image
 -------------
 
+|latest-primary-badge|
+
 Non-variant, primary image (no ``${VARIANT}`` or an empty string, e.g. |example version|)
 
 Lite variant
 ------------
 
+|latest-lite-badge|
+
 ``-lite``, primary image without FreeSurfer for a smaller image for runs that don't need FreeSurfer (e.g., |example version|\ ``-lite``)
 
+Stale variants
+--------------
+
+The following variants were version-matched to other pipelines years ago but have not been recently harmonized.
+
 ABCD-HCP variant
-----------------
+****************
+
+.. versionremoved:: 1.8.8
+
+.. image:: https://img.shields.io/badge/last_published_version-C--PAC_1.8.7_%7C_abcd--hcp--pipeline@e480a8f-yellow
+   :target: https://hub.docker.com/layers/fcpindi/c-pac/release-v1.8.7-ABCD-HCP/images/sha256-859bd8b11c38f07f53c75c7d06543bc3f35aa7ec368bb2ac0d9362ba365fe90e
 
 ``-ABCD-HCP``, image with software dependencies version-matched to `ABCD-HCP BIDS fMRI Pipeline <https://github.com/DCAN-Labs/abcd-hcp-pipeline/blob/e480a8f99534f1b05f37bf44c64827384b69b383/Dockerfile>`_ (e.g., |example version|\ ``-ABCD-HCP``)
 
 fMRIPrep-LTS variant
---------------------
+********************
+
+.. versionremoved:: 1.8.8
+
+.. image:: https://img.shields.io/badge/last_published_version-C--PAC_1.8.7_%7C_fMRIPrep--LTS_20.2.1-yellow
+   :target: https://hub.docker.com/layers/fcpindi/c-pac/release-v1.8.7-fMRIPrep-LTS/images/sha256-cf30cb0643477f01067db9bd173f425f891644e0c0103cf754e1aa5e2b000938
 
 ``-fMRIPrep-LTS``, image with software dependencies version-matched to `fMRIPrep LTS <https://reproducibility.stanford.edu/fmriprep-lts#long-term-support-lts>`_ (e.g., |example version|\ ``-fMRIPrep-LTS``)
 
 .. |example version| replace:: ``release-``\ |version as code|
+
+.. |latest-primary-badge| image:: https://img.shields.io/badge/last_published_version-C--PAC_1.8.7-green
+   :target: https://hub.docker.com/layers/fcpindi/c-pac/release-v1.8.7/images/sha256-590200a9f6b87e4c67a7b19627f332d54fab94a54c0fc5ed709d6fa31017569f
+
+.. |latest-lite-badge| image:: https://img.shields.io/badge/last_published_version-C--PAC_1.8.7-green
+   :target: https://hub.docker.com/layers/fcpindi/c-pac/release-v1.8.7-lite/images/sha256-7e983fdf82a005509c96cee3aa90755e2783d9c8835a46cabacf94540ddb9f3a

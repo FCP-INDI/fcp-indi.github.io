@@ -13,6 +13,7 @@
 # serve to show the default.
 
 import os
+from pathlib import Path
 import re
 import sys
 from typing import Any
@@ -32,8 +33,12 @@ from pybtex.plugin import register_plugin
 sys.path.append(os.path.dirname(__file__))
 
 from references import CPAC_DocsStyle  # noqa: E402
+from docker_hub_info import update_doc
 
 register_plugin('pybtex.style.formatting', 'cpac_docs_style', CPAC_DocsStyle)
+
+# Update Docker Hub links
+update_doc(Path(__file__).parent / "user/versions.rst")
 
 # "Dealing with Invalid Versions" from
 # https://python-semver.readthedocs.io/en/latest/usage.html

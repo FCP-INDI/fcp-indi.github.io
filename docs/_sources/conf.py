@@ -593,7 +593,7 @@ rst_prolog = """
 .. |version as code| replace:: ``{version}``
 
 """.format(
-    version=f'v{version}' if not version.endswith('dev') else 'nightly'
+    version=f'release-v{version}' if not version.endswith('dev') else 'nightly'
 )
 
 rst_epilog = """

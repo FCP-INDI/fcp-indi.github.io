@@ -30,10 +30,10 @@ ABCD-HCP variant
 
 .. versionremoved:: 1.8.8
 
-.. image:: https://img.shields.io/badge/last_published_version-C--PAC_1.8.7_%7C_abcd--hcp--pipeline@e480a8f-yellow
+.. image:: https://img.shields.io/badge/last_published_version-C--PAC_1.8.7_%7C_abcd--hcp--pipeline_0.1.4-yellow
    :target: https://hub.docker.com/layers/fcpindi/c-pac/release-v1.8.7-ABCD-HCP/images/sha256-859bd8b11c38f07f53c75c7d06543bc3f35aa7ec368bb2ac0d9362ba365fe90e
 
-``-ABCD-HCP``, image with software dependencies version-matched to `ABCD-HCP BIDS fMRI Pipeline <https://github.com/DCAN-Labs/abcd-hcp-pipeline/blob/e480a8f99534f1b05f37bf44c64827384b69b383/Dockerfile>`_ (e.g., ``release-v1.8.7-ABCD-HCP``)
+``-ABCD-HCP``, image with software dependencies version-matched to `ABCD-HCP BIDS fMRI Pipeline <https://github.com/DCAN-Labs/abcd-hcp-pipeline/blob/e480a8f99534f1b05f37bf44c64827384b69b383/Dockerfile>`_ version `0.1.4 <https://github.com/DCAN-Labs/abcd-hcp-pipeline/releases/tag/v0.1.4>`_ (e.g., ``release-v1.8.7-ABCD-HCP``)
 
 fMRIPrep-LTS variant
 ********************
@@ -43,7 +43,7 @@ fMRIPrep-LTS variant
 .. image:: https://img.shields.io/badge/last_published_version-C--PAC_1.8.7_%7C_fMRIPrep--LTS_20.2.1-yellow
    :target: https://hub.docker.com/layers/fcpindi/c-pac/release-v1.8.7-fMRIPrep-LTS/images/sha256-cf30cb0643477f01067db9bd173f425f891644e0c0103cf754e1aa5e2b000938
 
-``-fMRIPrep-LTS``, image with software dependencies version-matched to `fMRIPrep LTS <https://reproducibility.stanford.edu/fmriprep-lts#long-term-support-lts>`_ (e.g., ``release-v1.8.7-fMRIPrep-LTS``)
+``-fMRIPrep-LTS``, image with software dependencies version-matched to `fMRIPrep LTS <https://reproducibility.stanford.edu/fmriprep-lts#long-term-support-lts>`_ version `20.2.1 <https://github.com/nipreps/fmriprep/releases/tag/20.2.1>`_ (e.g., ``release-v1.8.7-fMRIPrep-LTS``)
 
 .. |example version| replace:: |version as code|
 

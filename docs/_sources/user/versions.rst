@@ -9,14 +9,14 @@ Variants
 Primary image
 -------------
 
-|latest-primary-badge|
+|latest-primary-badge| |nightly-badge|
 
 Non-variant, primary image (no ``${VARIANT}`` or an empty string, e.g. |example version|)
 
 Lite variant
 ------------
 
-|latest-lite-badge|
+|latest-lite-badge| |nightly-lite-badge|
 
 ``-lite``, primary image without FreeSurfer for a smaller image for runs that don't need FreeSurfer (e.g., |example version|\ ``-lite``)
 
@@ -52,3 +52,10 @@ fMRIPrep-LTS variant
 
 .. |latest-lite-badge| image:: https://img.shields.io/badge/last_published_version-C--PAC_1.8.7-green
    :target: https://hub.docker.com/layers/fcpindi/c-pac/release-v1.8.7-lite/images/sha256-7e983fdf82a005509c96cee3aa90755e2783d9c8835a46cabacf94540ddb9f3a
+
+.. |nightly-badge| image:: https://img.shields.io/badge/last_development_version-C--PAC_nightly-green
+   :target: https://hub.docker.com/layers/fcpindi/c-pac/nightly/images/sha256-779c148e491dda7120dbf5b667bf7d86e81282d56fae67c5d3c5be2ecd6618b0
+   
+.. |nightly-lite-badge| image:: https://img.shields.io/badge/last_development_version-C--PAC_nightly-green
+   :target: https://hub.docker.com/layers/fcpindi/c-pac/nightly-lite/images/sha256-2cbbc07e601f1530846143ccb74ff6b8e64f04f7f19ff7f84ff8dcc5c91be639
+   

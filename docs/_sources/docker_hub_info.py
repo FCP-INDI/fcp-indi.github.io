@@ -1,6 +1,16 @@
 """Get link info for links to Docker Hub."""
+from dataclasses import dataclass
 from pathlib import Path
 import requests
+
+
+@dataclass
+class DockerHubInfo:
+    """Info required from Docker Hub to generate a link or badge."""
+    tag: str
+    """Image tag."""
+    digest: str
+    """Image digest."""
 
 
 def digest(tag_data: dict) -> str:
@@ -8,7 +18,7 @@ def digest(tag_data: dict) -> str:
     return tag_data.get("images", [{}])[0].get("digest", "")
 
 
-def get_latest_tags() -> tuple[str, str, str]:
+def get_latest_tags() -> dict[str, DockerHubInfo]:
     """Return a list of tags from Docker Hub.
     
     Returns
@@ -19,27 +29,35 @@ def get_latest_tags() -> tuple[str, str, str]:
     """
     url = "https://hub.docker.com/v2/repositories/fcpindi/c-pac/tags?page_size=100"
     response = requests.get(url)
-    tags_data = response.json()
-    tags = {tag["name"]: tag for tag in tags_data.get("results", []) if tag["name"].startswith("release-")}
+    tags_data = {tag["name"]: tag for tag in response.json().get("results")}
+    tags = {name: tag for name, tag in tags_data.items() if name.startswith("release-")}
     tag_keys = list(tags.keys())
     tag_keys.sort(reverse=True)
     latest, lite = next(tag for tag in tag_keys if tag[-1].isdigit()), next(tag for tag in tag_keys if tag.endswith("-lite"))
-    return ("primary", latest, digest(tags[latest])), ("lite", lite, digest(tags[lite]))
+    return {"primary": DockerHubInfo(tag=latest, digest=digest(tags[latest])),
+            "lite": DockerHubInfo(tag=lite, digest=digest(tags[lite])),
+            **{tag: DockerHubInfo(tag=tag, digest=digest(tags_data[tag]))
+               for tag in ["nightly", "nightly-lite"]}}
 
 
-def create_badge(variant: str, tag: str, digest: str) -> dict[str, str]:
+def create_badge(variant: str, docker_hub_info: DockerHubInfo) -> dict[str, str]:
     """Create a Docker Hub RST badge for the given tag and digest."""
-    version = tag.split("-v", 1)[1].split("-", 1)[0]
+    version = docker_hub_info.tag.split("-v", 1)[-1].split("-", 1)[0]
+    if version.startswith("nightly"):
+        repstr = f"|{variant}-badge|"
+        return {repstr: f""".. {repstr} image:: https://img.shields.io/badge/development_version-C--PAC_{version}-green
+   :target: https://hub.docker.com/layers/fcpindi/c-pac/{docker_hub_info.tag}/images/{docker_hub_info.digest.replace(':', '-')}
+   """}
     repstr = f"|latest-{variant}-badge|"
     return {repstr: f""".. {repstr} image:: https://img.shields.io/badge/last_published_version-C--PAC_{version}-green
-   :target: https://hub.docker.com/layers/fcpindi/c-pac/{tag}/images/{digest.replace(':', '-')}
+   :target: https://hub.docker.com/layers/fcpindi/c-pac/{docker_hub_info.tag}/images/{docker_hub_info.digest.replace(':', '-')}
 """}
 
 
 def update_doc(doc_path: Path) -> None:
     r"""Update the badges in ``docs_path``."""
     badges = {}
-    for tag in get_latest_tags():
+    for tag in get_latest_tags().items():
         badges.update(create_badge(*tag))
     with doc_path.open("r", encoding="utf8") as _doc:
         lines = _doc.readlines()

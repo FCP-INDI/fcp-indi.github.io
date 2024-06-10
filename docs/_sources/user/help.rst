@@ -45,11 +45,6 @@ where :file:`crash-file.pklz` is the name of the crash file you wish to view.
 Common Issues
 ^^^^^^^^^^^^^
 
-``bids-validator: command not found``
--------------------------------------
-
-.. include:: /user/known-issues/FCP-INDI/C-PAC/2110.rst
-
 My end-to-end surface pipeline with ABCD post-processing is hanging/stalling.
 -----------------------------------------------------------------------------
 
@@ -82,3 +77,11 @@ How should I cite C-PAC in my paper?
 ------------------------------------
 
 Please cite the abstract located `here <http://www.frontiersin.org/10.3389/conf.fninf.2013.09.00042/event_abstract>`__.
+
+Recently Resolved Common Issues
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``bids-validator: command not found``
+-------------------------------------
+
+.. include:: /user/known-issues/FCP-INDI/C-PAC/2110.rst

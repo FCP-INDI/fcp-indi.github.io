@@ -1,11 +1,11 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../../genindex" /><link rel="search" title="Search" href="../../../search" /><link rel="next" title="Troubleshooting and Help" href="../../help" /><link rel="prev" title="C-PAC Tutorials" href="../index" />
 
-    <link rel="shortcut icon" href="../../../_static/favicon.ico"/><!-- Generated with Sphinx 7.1.2 and Furo 2024.05.06 -->
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/><!-- Generated with Sphinx 7.3.2 and Furo 2024.05.06 -->
         <title>1. Tutorial: optimizing memory estimation - C-PAC 1.8.8.dev1 Beta documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a96c6ba1" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=387cc868" />
@@ -382,12 +382,12 @@
         </div>
         <article role="main" id="furo-main-content">
           <section id="Tutorial:-optimizing-memory-estimation">
-<h1><span class="section-number">1. </span>Tutorial: optimizing memory estimation<a class="headerlink" href="#Tutorial:-optimizing-memory-estimation" title="Permalink to this heading">¶</a></h1>
+<h1><span class="section-number">1. </span>Tutorial: optimizing memory estimation<a class="headerlink" href="#Tutorial:-optimizing-memory-estimation" title="Link to this heading">¶</a></h1>
 <p>(You can <a class="reference external" href="https://raw.githubusercontent.com/FCP-INDI/C-PAC_tutorials/main/observed_usage/index.ipynb">⇩ download this notebook 💾</a> and run it locally.)</p>
 <p>C-PAC has some built-in heuristics for estimating the memory required for each node, but these estimates can be greatly improved by providing observed memory usage for a given configuration and comparable data. This tutorial will step through the process of an observation run and an optimized run.</p>
 <p>Note: The code cells in this notebook are using a <a class="reference external" href="https://pypi.org/project/bash_kernel">BASH kernel</a> and <a class="reference external" href="https://fcp-indi.github.io/docs/nightly/user/cpac">cpac (Python package)</a> v0.5.0</p>
 <section id="Observation-run">
-<h2><span class="section-number">1.1. </span>Observation run<a class="headerlink" href="#Observation-run" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">1.1. </span>Observation run<a class="headerlink" href="#Observation-run" title="Link to this heading">¶</a></h2>
 <p>First, we need to run a single exemplar through our pipeline configuration to observe how much memory is used at each node. How many cores we provide to this run should be the same number we intend to use in our optimized runs, but we’ll want to give this run lots of memory to allow for the built-in conservative memory estimates.</p>
 <p>For this tutorial, we’ll use a subject from <a class="reference external" href="http://fcon_1000.projects.nitrc.org/indi/adhd200">ADHD-200</a>, from the FCP-INDI AWS S3 bucket, and we’ll use the anatomical only preconfiguration.</p>
 <div class="nbinput docutils container">
@@ -904,7 +904,7 @@ optional arguments:
 </div>
 </section>
 <section id="Memory-optimized-runs">
-<h2><span class="section-number">1.2. </span>Memory optimized runs<a class="headerlink" href="#Memory-optimized-runs" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">1.2. </span>Memory optimized runs<a class="headerlink" href="#Memory-optimized-runs" title="Link to this heading">¶</a></h2>
 <p>Now that we have observed memory usage specific to our system + configuration + data shape, we can use these observations to inform the estimates of our subesquent runs. Here we’ll run another subject and re-run the same intial subject so we can compare the performance. We’ll use our original desired memory constraints.</p>
 <p>In this example, we’ll use a buffer of 25% to demonstrate adjusting the buffer. If you don’t set a buffer, the default of 10% will be used. If you don’t want a buffer, you can set the buffer to 0.</p>
 <p>We can do this with a pipeline configuration like</p>
@@ -1328,9 +1328,9 @@ cpac_sub-5971050_ses-1
 <p><img alt="Box-and-whisker plot of efficiency" src="../../../_images/efficiency.png" /> <img alt="Box-and-whisker plot of estimated memory usage" src="../../../_images/estimated.png" /> <img alt="Box-and-whisker plot of observed memory usage" src="../../../_images/runtime.png" /></p>
 </section>
 <section id="Notes">
-<h2><span class="section-number">1.3. </span>Notes<a class="headerlink" href="#Notes" title="Permalink to this heading">¶</a></h2>
+<h2><span class="section-number">1.3. </span>Notes<a class="headerlink" href="#Notes" title="Link to this heading">¶</a></h2>
 <section id="Total-memory-usage">
-<h3><span class="section-number">1.3.1. </span>Total memory usage<a class="headerlink" href="#Total-memory-usage" title="Permalink to this heading">¶</a></h3>
+<h3><span class="section-number">1.3.1. </span>Total memory usage<a class="headerlink" href="#Total-memory-usage" title="Link to this heading">¶</a></h3>
 <p>These estimates and observations are per-node. At any given moment, you’ll have up to <code class="docutils literal notranslate"><span class="pre">n_cpus</span></code> nodes running at once, plus C-PAC and Nipype will be using some memory, so a worst-case scenario for memory usage is approximately the heaviest <code class="docutils literal notranslate"><span class="pre">n_cpus</span></code> nodes + <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">GB</span></code> for overhead.</p>
 <p>In this example, we set <code class="docutils literal notranslate"><span class="pre">n_cpus</span></code> to <code class="docutils literal notranslate"><span class="pre">4</span></code>. For the optimized re-run in this example, the four greediest nodes + <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">GB</span></code> for overhead = <code class="docutils literal notranslate"><span class="pre">(1.1376</span> <span class="pre">+</span> <span class="pre">0.9533</span> <span class="pre">+</span> <span class="pre">0.7630</span> <span class="pre">+</span> <span class="pre">0.7189</span> <span class="pre">+</span> <span class="pre">1)</span> <span class="pre">GB</span></code> = <code class="docutils literal notranslate"><span class="pre">4.5728</span> <span class="pre">GB</span></code>, which is well within the specified limit of <code class="docutils literal notranslate"><span class="pre">10</span> <span class="pre">GB</span></code>. In most cases, the greediest nodes won’t be peaking simultaneously, so we won’t expect an out-of-memory error on an optimized run, but they are possible, even if no individual node is overruning by much.</p>
 </section>
@@ -1412,9 +1412,9 @@ cpac_sub-5971050_ses-1
   </div>
 </div><script src="../../../_static/jquery.js?v=5d32c60e"></script>
     <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=68ced503"></script>
+    <script src="../../../_static/documentation_options.js?v=fda68b68"></script>
     <script src="../../../_static/doctools.js?v=d248f5b3"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/scripts/furo.js?v=4e2eecee"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>

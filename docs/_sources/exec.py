@@ -6,8 +6,8 @@ from docutils import nodes
 
 
 class ExecDirective(Directive):
-    """Execute the specified python code and insert the output into the document
-    """
+    """Execute the specified python code and insert the output into the
+    document"""
     has_content = True
 
     def run(self):
@@ -29,7 +29,10 @@ class ExecDirective(Directive):
 
         try:
             exec('\n'.join(self.content))
-            return [nodes.literal_block(text=sys.stdout.getvalue())]
+            content = sys.stdout.getvalue()
+            if content.strip():
+                return [nodes.literal_block(text=content)]
+            return []
         except Exception as e:
             _, _, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -39,9 +42,7 @@ class ExecDirective(Directive):
                 )
             )
             stack_message = nodes.paragraph(text=str(e))
-            return [
-                nodes.error(None, error_message, stack_message)
-            ]
+            return [nodes.error(None, error_message, stack_message)]
         finally:
             sys.stdout = oldStdout
             os.chdir(oldCwd)

@@ -11,6 +11,8 @@ NodeBlock
 
 .. automodule:: CPAC.pipeline.engine.nodeblock
     :members:
+    :special-members:
+    :private-members:
     :undoc-members:
 
 Resource
@@ -18,6 +20,8 @@ Resource
 
 .. automodule:: CPAC.pipeline.engine.resource
     :members:
+    :special-members:
+    :private-members:
     :undoc-members:
 
 Pipeline Utilities

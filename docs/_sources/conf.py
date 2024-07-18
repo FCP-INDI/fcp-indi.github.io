@@ -19,7 +19,7 @@ from typing import Any
 
 from dateutil import parser as dparser
 from CPAC import __version__
-from CPAC.pipeline.nodeblock import NodeBlockFunction
+from CPAC.pipeline.engine.nodeblock import NodeBlockFunction
 from CPAC.utils.monitoring import custom_logging
 from github import Github
 from github.GithubException import RateLimitExceededException, \

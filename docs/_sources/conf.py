@@ -172,6 +172,7 @@ extensions = [
 add_module_names = False
 maximum_signature_line_length = 90
 
+autoclass_content = "both"
 autodoc_typehints = "both"
 autodoc_typehints_format = "short"
 

@@ -11,7 +11,7 @@ NodeBlock
 
 .. automodule:: CPAC.pipeline.engine.nodeblock
     :members:
-    :special-members:
+    :inherited-members:
     :private-members:
     :undoc-members:
 
@@ -20,7 +20,7 @@ Resource
 
 .. automodule:: CPAC.pipeline.engine.resource
     :members:
-    :special-members:
+    :inherited-members:
     :private-members:
     :undoc-members:
 
@@ -29,7 +29,7 @@ Tests
 
 .. automodule:: CPAC.pipeline.test.test_engine
     :members:
-    :special-members:
+    :inherited-members:
     :private-members:
     :undoc-members:
 
@@ -38,4 +38,5 @@ Pipeline Utilities
 
 .. automodule:: CPAC.pipeline.utils
     :members:
+    :inherited-members:
     :undoc-members:

@@ -26,7 +26,6 @@ A ``CPAC.utils.monitoring.custom_logging.MockLogger`` can be used in place of a 
 .. autofunction:: CPAC.utils.monitoring.custom_logging.getLogger
 
 .. autoclass:: CPAC.utils.monitoring.custom_logging.MockLogger
-   :special-members: __init__
    :members:
    :inherited-members:
 

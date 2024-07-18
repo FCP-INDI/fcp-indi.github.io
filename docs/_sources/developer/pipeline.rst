@@ -24,6 +24,15 @@ Resource
     :private-members:
     :undoc-members:
 
+Tests
+-----
+
+.. automodule:: CPAC.pipeline.test.test_engine
+    :members:
+    :special-members:
+    :private-members:
+    :undoc-members:
+
 Pipeline Utilities
 ^^^^^^^^^^^^^^^^^^
 

@@ -19,7 +19,7 @@ from typing import Any
 
 from dateutil import parser as dparser
 from CPAC import __version__
-from CPAC.pipeline.nodeblock import NodeBlockFunction
+from CPAC.pipeline.engine.nodeblock import NodeBlockFunction
 from CPAC.utils.monitoring import custom_logging
 from github import Github
 from github.GithubException import RateLimitExceededException, \
@@ -169,6 +169,13 @@ extensions = [
     'exec',
     'nbsphinx']
 
+add_module_names = False
+maximum_signature_line_length = 90
+
+autoclass_content = "both"
+autodoc_typehints = "both"
+autodoc_typehints_format = "short"
+
 bibtex_bibfiles = [f'references/{bib}' for bib in os.listdir('references') if
                    bib.endswith('.bib')]
 bibtex_default_style = 'cpac_docs_style'
@@ -179,7 +186,11 @@ intersphinx_mapping = {
 
 issues_github_path = 'FCP-INDI/C-PAC'
 
+napoleon_attr_annotations = True
+napoleon_include_private_with_doc = True
 napoleon_preprocess_types = True
+napoleon_use_admonition_for_notes = True
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -51,7 +51,10 @@ If you want to base a pipeline on another pipeline configuration YAML file, you 
 
    FROM: /path/to/pipeline.yml
 
-in your pipeline configuration file. You can use the name of a :doc:`preconfigured pipeline </user/pipelines/preconfig>` instead of a filepath if you want to base a configuration file on a preconfigured pipeline. If ``FROM`` is not specified, the pipeline will be based on :doc:`the default pipeline </user/pipelines/default>`.
+in your pipeline configuration file. You can use the name of a :doc:`preconfigured pipeline </user/pipelines/preconfig>` instead of a filepath if you want to base a configuration file on a preconfigured pipeline. If ``FROM`` is not specified, the pipeline will be based on :doc:`the blank pipeline </user/pipelines/blank>`.
+
+.. versionchanged:: 1.8.5
+   From version 1.8.0 to version 1.8.5, unspecified keys were based on the default configuration rather than the blank preconfiguration.
 
 C-PAC will include all expected keys from the pipeline file specified in ``FROM`` (or the default pipeline if none is specified). Any keys specified in a pipeline configuration file will take precedence over the same key in the ``FROM`` base configuration, but all omitted keys will retain their values from the ``FROM`` base configuration.
 
@@ -59,7 +62,7 @@ From terminal, you can quickly generate a default pipeline configuration YAML fi
 
    cpac utils pipe-config new-template
 
-You can then edit the file as needed. For values that you want to leave at the default, you can either leave the key as-is, or you can remove the key, and C-PAC will automatically use value from the default pipeline configuration (or from the pipeline specified in ``FROM``).
+You can then edit the file as needed. For values that you want to leave at the default, you can either leave the key as-is, or you can add the line ``FROM: default``, remove the key, and C-PAC will automatically use value from the default pipeline configuration (or from the pipeline specified in ``FROM``).
 
 If you want to run the analysis from terminal::
 

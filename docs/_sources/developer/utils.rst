@@ -22,6 +22,18 @@ Configuration
     :members:
     :undoc-members:
 
+.. automodule:: CPAC.utils.configuration.configuration
+    :members:
+    :undoc-members:
+
+.. automodule:: CPAC.utils.configuration.diff
+    :members:
+    :undoc-members:
+
+.. automodule:: CPAC.utils.configuration.yaml_template
+    :members:
+    :undoc-members:
+
 Create FMRIB's Local Analysis of Mixed Effects (FLAME) Model Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

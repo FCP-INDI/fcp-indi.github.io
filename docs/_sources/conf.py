@@ -13,6 +13,7 @@
 # serve to show the default.
 
 import os
+from pathlib import Path
 import re
 import sys
 from typing import Any
@@ -28,6 +29,7 @@ import m2r
 from nipype import __version__ as _nipype_version
 import semver
 from pybtex.plugin import register_plugin
+import yaml
 
 sys.path.append(os.path.dirname(__file__))
 
@@ -139,7 +141,29 @@ def yaml_to_rst(path):
     open(path, 'w').write(''.join(lines))
 
 
+def literal_include_config_page(filepath: Path) -> None:
+    """Create a page with a literalinclude of a config file."""
+    if not filepath.exists():
+        return
+    with filepath.open("r", encoding="utf8") as _f:
+        config: dict[str, Any] = yaml.safe_load(_f)
+    title: str = config["pipeline_setup"]["pipeline_name"]
+    with (Path("user/pipelines") /
+          filepath.name.replace("_pipeline.yml", ".rst")
+          ).open("w", encoding="utf8") as _f:
+        _f.write(f""".. title:: {title} pipeline configuration YAML file
+
+.. literalinclude:: /{filepath}
+   :language: YAML
+""")
+    return
+
+
 yaml_to_rst('references/1.7-1.8-deprecations.yml')
+for ref in Path("references").iterdir():
+    if str(ref).endswith("_pipeline.yml"):
+        # create literalinclude page
+        literal_include_config_page(ref)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the

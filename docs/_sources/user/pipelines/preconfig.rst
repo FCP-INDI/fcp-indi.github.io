@@ -7,7 +7,7 @@ human
 default: The Default Pipeline
 -----------------------------
 
-:doc:`Pipeline Configuration YAML </references/default_pipeline.yml>`
+:doc:`Pipeline Configuration YAML </user/pipelines/default>`
 
 .. note::
    
@@ -54,7 +54,7 @@ References
 abcd-options
 ------------
 
-:doc:`Pipeline Configuration YAML </references/abcd-options_pipeline.yml>`
+:doc:`Pipeline Configuration YAML </user/pipelines/abcd-options>`
 
 .. warning::
 
@@ -63,7 +63,7 @@ abcd-options
 anat-only: Default with Anatomical Preprocessing Only
 -----------------------------------------------------
 
-:doc:`Pipeline Configuration YAML </references/anat-only_pipeline.yml>`
+:doc:`Pipeline Configuration YAML </user/pipelines/anat-only>`
 
 Based on the preprocessing decisions of the default pipeline, this preconfiguration allows you to immediately kick off a run with only anatomical preprocessing selected. This includes:
 
@@ -74,7 +74,7 @@ Based on the preprocessing decisions of the default pipeline, this preconfigurat
 preproc: Default without Derivatives
 ------------------------------------
 
-:doc:`Pipeline Configuration YAML </references/preproc_pipeline.yml>`
+:doc:`Pipeline Configuration YAML </user/pipelines/preproc>`
 
 Based on the preprocessing decisions of the default pipeline, this preconfiguration allows you to preprocess all of your data, without launching into calculation of outputs and data derivatives. This includes:
 
@@ -95,7 +95,7 @@ Functional:
 fmriprep-options: fMRIPrep options Pipeline
 -------------------------------------------
 
-:doc:`Pipeline Configuration YAML </references/fmriprep-options_pipeline.yml>`
+:doc:`Pipeline Configuration YAML </user/pipelines/fmriprep-options>`
 
 This pipeline is designed to increase reproducibility with the preprocessing results of the fmriprep pipeline package\ :footcite:`fMRI16` produced by the `Poldrack Lab at Stanford University <https://poldracklab.stanford.edu/>`_.
 
@@ -113,7 +113,7 @@ References
 ndmg: Neurodata's 'ndmg-f' Pipeline
 -----------------------------------
 
-:doc:`Pipeline Configuration YAML </references/ndmg_pipeline.yml>`
+:doc:`Pipeline Configuration YAML </user/pipelines/ndmg>`
 
 This pipeline is the result of `Neurodata's <https://neurodata.io/>`_ study to converge upon the intersection of pipeline configuration decisions that maximizes discriminability between participants' data, drawing from the connectome graphs produced (labeled 'ndmg_graph' in the C-PAC output directory). This pipeline invokes a minimal set of preprocessing.
 
@@ -133,7 +133,7 @@ References
 rbc-options: ReproBrainChart Options Pipeline
 ---------------------------------------------
 
-:doc:`Pipeline Configuration YAML </references/rbc-options_pipeline.yml>`
+:doc:`Pipeline Configuration YAML </user/pipelines/rbc-options>`
 
 RBC-options pipeline was built and integrated in C-PAC based on the Reproducible Brain Charts initiative, which aims to aggregate and harmonize phenotypic and neuroimage data to delineate node mechanisms regarding developmental basis of psychopathology in youth and yield reproducible growth charts of brain development\ :footcite:`Hoff21`.
 
@@ -148,7 +148,7 @@ non-human primate
 monkey: Default with Monkey Preprocessing 
 -----------------------------------------
 
-:doc:`Pipeline Configuration YAML </references/monkey_pipeline.yml>`
+:doc:`Pipeline Configuration YAML </user/pipelines/monkey>`
 
 This pipeline is based on the work of Xu et al.\ :footcite:`Xu19` and nhp-ABCD-BIDS-pipeline.\ :footcite:`Stur20`
 
@@ -190,14 +190,14 @@ testing
 benchmark-ANTS: C-PAC Benchmark with ANTs Registration
 ------------------------------------------------------
 
-:doc:`Pipeline Configuration YAML </references/benchmark-ANTS_pipeline.yml>`
+:doc:`Pipeline Configuration YAML </user/pipelines/benchmark-ANTS>`
 
 The benchmark pipeline has remained mostly unchanged since the project's inception, and is used at the end of each release cycle to ensure the results of C-PAC's key outputs have not changed. It is designed to test a wide range of pipeline options. This pipeline is based on registration-to-template using the ANTs/ITK toolset, as this decision impacts many other aspects of the pipeline further downstream.
 
 benchmark-FNIRT: C-PAC Benchmark with FSL FNIRT Registration
 ------------------------------------------------------------
 
-:doc:`Pipeline Configuration YAML </references/benchmark-FNIRT_pipeline.yml>`
+:doc:`Pipeline Configuration YAML </user/pipelines/benchmark-FNIRT>`
 
 The benchmark pipeline has remained mostly unchanged since the project's inception, and is used at the end of each release cycle to ensure the results of C-PAC's key outputs have not changed. It is designed to test a wide range of pipeline options. This pipeline is based on registration-to-template using the FSL FLIRT & FNIRT, as this decision impacts many other aspects of the pipeline further downstream.
 

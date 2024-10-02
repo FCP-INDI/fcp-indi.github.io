@@ -23,6 +23,10 @@ C-PAC is packaged with a default processing pipeline so that you can get your da
 
 The default processing pipeline performs fMRI processing using four strategies, with and without global signal regression, with and without bandpass filtering.
 
+.. warning::
+
+   :doc:`/user/known-issues/FCP-INDI/C-PAC/2152`
+
 Anatomical processing begins with conforming the data to RPI orientation and removing orientation header information that will interfere with further processing. A non-linear transform between skull-on images and a 2mm MNI brain-only template are calculated using ANTs\ :footcite:`Avan08`. 
 
 .. versionchanged:: 1.8.5
@@ -33,10 +37,20 @@ The resulting WM mask was multiplied by a WM prior map that was transformed into
 
 Functional preprocessing begins with resampling the data to RPI orientation, and slice timing correction. Next, motion correction is performed using a two-stage approach in which the images are first coregistered to the mean fMRI and then a new mean is calculated and used as the target for a second coregistration (AFNI 3dvolreg\ :footcite:`Cox99`). A 7 degree of freedom linear transform between the mean fMRI and the structural image is calculated using FSL's implementation of boundary-based registration\ :footcite:`Zhan01`. Nuisance variable regression (NVR) is performed on motion corrected data using a 2nd order polynomial, a 24-regressor model of motion\ :footcite:`Fris96`, 5 nuisance signals, identified via principal components analysis of signals obtained from white matter (CompCor\ :footcite:`Behz07`), and mean CSF signal. WM and CSF signals were extracted using the previously described masks after transforming the fMRI data to match them in 2mm space using the inverse of the linear fMRI-sMRI transform. The NVR procedure is performed twice, with and without the inclusion of the global signal as a nuisance regressor. The residuals of the NVR procedure are processed with and without bandpass filtering (0.01Hz < f < 0.1Hz), written into MNI space at 3mm resolution and subsequently smoothed using a 6mm FWHM kernel.
 
+.. warning::
+
+   :doc:`/user/known-issues/FCP-INDI/C-PAC/2152`
+
 Several different individual level analysis are performed on the fMRI data including:
 
 * **Amplitude of low frequency fluctuations (alff)**\ :footcite:`Zang07`: the variance of each voxel is calculated after bandpass filtering in original space and subsequently written into MNI space at 2mm resolution and spatially smoothed using a 6mm FWHM kernel.
+.. warning::
+
+   :doc:`/user/known-issues/FCP-INDI/C-PAC/2152`
 * **Fractional amplitude of low frequency fluctuations (falff)**\ :footcite:`Zou08`: Similar to alff except that the variance of the bandpassed signal is divided by the total variance (variance of non-bandpassed signal).
+.. warning::
+
+   :doc:`/user/known-issues/FCP-INDI/C-PAC/2152`
 * **Regional homogeneity (ReHo)**\ :footcite:`Zang04`: a simultaneous Kendall rank correlation is calculated between each voxel's time course and the time courses of the 27 voxels that are face, edge, and corner touching the voxel. ReHo is calculated in original space and subsequently written into MNI space at 2mm resolution and spatially smoothed using a 6mm FWHM kernel.
 * **Voxel mirrored homotopic connectivity (VMHC)**\ :footcite:`Star08`: an non-linear transform is calculated between the skull-on anatomical data and a symmetric brain template in 2mm space. Using this transform, processed fMRI data are written in to symmetric MNI space at 2mm and the correlation between each voxel and its analog in the contralateral hemisphere is calculated. The Fisher transform is applied to the resulting values, which are then spatially smoothed using a 6mm FWHM kernel.
 * **Weighted and binarized degree centrality (DC)**\ :footcite:`Buck09`: fMRI data is written into MNI space at 2mm resolution and spatially smoothed using a 6mm FWHM kernel. The voxel x voxel similarity matrix is calculated by the correlation between every pair of voxel time courses and then thresholded so that only the top 5% of correlations remain. For each voxel, binarized DC is the number of connections that remain for the voxel after thresholding and weighted DC is the average correlation coefficient across the remaining connections.

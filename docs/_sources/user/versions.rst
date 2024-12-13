@@ -28,7 +28,7 @@ The following variants were version-matched to other pipelines years ago but hav
 ABCD-HCP variant
 ****************
 
-.. versionremoved:: 1.8.8
+.. versionremoved:: 1.8.7.post1
 
 .. image:: https://img.shields.io/badge/last_published_version-C--PAC_1.8.7_%7C_abcd--hcp--pipeline_0.1.4-yellow
    :target: https://hub.docker.com/layers/fcpindi/c-pac/release-v1.8.7-ABCD-HCP/images/sha256-859bd8b11c38f07f53c75c7d06543bc3f35aa7ec368bb2ac0d9362ba365fe90e
@@ -38,7 +38,7 @@ ABCD-HCP variant
 fMRIPrep-LTS variant
 ********************
 
-.. versionremoved:: 1.8.8
+.. versionremoved:: 1.8.7.post1
 
 .. image:: https://img.shields.io/badge/last_published_version-C--PAC_1.8.7_%7C_fMRIPrep--LTS_20.2.1-yellow
    :target: https://hub.docker.com/layers/fcpindi/c-pac/release-v1.8.7-fMRIPrep-LTS/images/sha256-cf30cb0643477f01067db9bd173f425f891644e0c0103cf754e1aa5e2b000938

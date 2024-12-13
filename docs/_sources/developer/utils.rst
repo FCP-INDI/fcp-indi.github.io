@@ -18,7 +18,15 @@ BIDS Data Configuration
 Configuration
 ^^^^^^^^^^^^^
 
-.. automodule:: CPAC.utils.configuration
+.. automodule:: CPAC.utils.configuration.configuration
+    :members:
+    :undoc-members:
+
+.. automodule:: CPAC.utils.configuration.diff
+    :members:
+    :undoc-members:
+
+.. automodule:: CPAC.utils.configuration.yaml_template
     :members:
     :undoc-members:
 

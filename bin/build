@@ -1,11 +1,19 @@
 #!/bin/bash
 
 # link references
-CPAC_DIRECTORY=$(python -c "import os, CPAC; print(os.path.abspath(os.path.dirname(CPAC.__file__)))")
-ln ${CPAC_DIRECTORY}/resources/configs/1.7-1.8-nesting-mappings.yml docs/_sources/references/1.7-1.8-nesting-mappings.yml || true
-ln ${CPAC_DIRECTORY}/resources/configs/1.7-1.8-deprecations.yml docs/_sources/references/1.7-1.8-deprecations.yml || true
-ln ${CPAC_DIRECTORY}/resources/configs/pipeline_config_default.yml docs/_sources/references/default_pipeline.yml || true
-ln ${CPAC_DIRECTORY}/resources/configs/group_config_template.yml docs/_sources/references/group_config_template.yml || true
+CPAC_DIRECTORY=$(python -c "from importlib import resources; print(str(resources.files('CPAC')))")
+ln "${CPAC_DIRECTORY}/resources/configs/1.7-1.8-nesting-mappings.yml" docs/_sources/references/1.7-1.8-nesting-mappings.yml || true
+ln "${CPAC_DIRECTORY}/resources/configs/1.7-1.8-deprecations.yml" docs/_sources/references/1.7-1.8-deprecations.yml || true
+shopt -s globstar nullglob
+for PRECONFIG in "${CPAC_DIRECTORY}"/resources/configs/pipeline_config_*.yml
+do
+    FILENAME=$(basename "$PRECONFIG")
+    CONFIG_NAME="${FILENAME#pipeline_config_}"
+    CONFIG_NAME="${CONFIG_NAME%.yml}"
+    echo "ln \"${PRECONFIG}\" \"docs/_sources/references/${CONFIG_NAME}_pipeline.yml\" || true"
+    ln "${PRECONFIG}" "docs/_sources/references/${CONFIG_NAME}_pipeline.yml" || true
+done
+ln "${CPAC_DIRECTORY}/resources/configs/group_config_template.yml" docs/_sources/references/group_config_template.yml || true
 
 # build docs
-sphinx-build -b html docs/_sources docs/$1
+sphinx-build -b html docs/_sources "docs/$1"

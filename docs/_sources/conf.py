@@ -491,8 +491,6 @@ html_css_files = [
     'custom.css',
 ]
 html_js_files = [
-    'underscore.js',
-    'doctools.js',
     'hideEmptyHighlights.js',
     ('versionList.js', {'defer': 'defer'})]
 

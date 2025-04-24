@@ -47,15 +47,15 @@ fMRIPrep-LTS variant
 
 .. |example version| replace:: |version as code|
 
-.. |latest-primary-badge| image:: https://img.shields.io/badge/last_published_version-C--PAC_1.8.7-green
-   :target: https://hub.docker.com/layers/fcpindi/c-pac/release-v1.8.7/images/sha256-590200a9f6b87e4c67a7b19627f332d54fab94a54c0fc5ed709d6fa31017569f
+.. |latest-primary-badge| image:: https://img.shields.io/badge/last_published_version-C--PAC_1.8.7.post1.dev3-green
+   :target: https://hub.docker.com/layers/fcpindi/c-pac/release-v1.8.7.post1.dev3/images/sha256-7122e5cbeea5ac68a6f2e79584677ca7bf9cdebcf705536c2b93782074b925e7
 
-.. |latest-lite-badge| image:: https://img.shields.io/badge/last_published_version-C--PAC_1.8.7-green
-   :target: https://hub.docker.com/layers/fcpindi/c-pac/release-v1.8.7-lite/images/sha256-7e983fdf82a005509c96cee3aa90755e2783d9c8835a46cabacf94540ddb9f3a
+.. |latest-lite-badge| image:: https://img.shields.io/badge/last_published_version-C--PAC_1.8.7.post1.dev3-green
+   :target: https://hub.docker.com/layers/fcpindi/c-pac/release-v1.8.7.post1.dev3-lite/images/sha256-31ab0fcc90276e5751addee506907a62bcc628e75ce9ab87adee623b961b6a8e
 
 .. |nightly-badge| image:: https://img.shields.io/badge/development_version-C--PAC_nightly-green
-   :target: https://hub.docker.com/layers/fcpindi/c-pac/nightly/images/sha256-779c148e491dda7120dbf5b667bf7d86e81282d56fae67c5d3c5be2ecd6618b0
-      
+   :target: https://hub.docker.com/layers/fcpindi/c-pac/nightly/images/sha256-287cb872b7263e63bbf7770e3cc31b54890fde9af4fe5010f0a99e36fb1bfdf4
+         
 .. |nightly-lite-badge| image:: https://img.shields.io/badge/development_version-C--PAC_nightly-green
-   :target: https://hub.docker.com/layers/fcpindi/c-pac/nightly-lite/images/sha256-2cbbc07e601f1530846143ccb74ff6b8e64f04f7f19ff7f84ff8dcc5c91be639
-      
+   :target: https://hub.docker.com/layers/fcpindi/c-pac/nightly-lite/images/sha256-dcf70cbe77b4166458b3d40bf9cab9e030b7ad24a06a1ee7e5ed335100f9cbcc
+         

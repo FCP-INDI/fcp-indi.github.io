@@ -9,6 +9,13 @@
  *
  */
 
+const BLACKLISTED_KEY_CONTROL_ELEMENTS = new Set([
+  "TEXTAREA",
+  "INPUT",
+  "SELECT",
+  "BUTTON",
+]);
+
 /**
  * select a different prefix for underscore
  */
@@ -232,6 +239,14 @@ var Documentation = {
 
 // quick alias for translations
 _ = Documentation.gettext;
+
+const _ready = (callback) => {
+  if (document.readyState !== "loading") {
+    callback();
+  } else {
+    document.addEventListener("DOMContentLoaded", callback);
+  }
+};
 
 $(document).ready(function() {
   Documentation.init();

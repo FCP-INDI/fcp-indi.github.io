@@ -30,17 +30,14 @@ For nodes that will use a varying amount of memory depending on the node's input
 
 
 .. autoclass:: CPAC.pipeline.nipype_pipeline_engine.Node
-   :special-members: __init__
    :members:
    :inherited-members:
 
 .. autoclass:: CPAC.pipeline.nipype_pipeline_engine.MapNode
-   :special-members: __init__
    :members:
    :inherited-members:
 
 .. autoclass:: nipype.interfaces.base.core.Interface
-   :special-members: __init__
    :members:
    :inherited-members:
 
@@ -50,12 +47,10 @@ For nodes that will use a varying amount of memory depending on the node's input
 
 
 .. autoclass:: CPAC.utils.interfaces.function.Function
-   :special-members: __init__
    :members:
    :inherited-members:
 
 .. autoclass:: CPAC.pipeline.nipype_pipeline_engine.Workflow
-   :special-members: __init__
    :members:
    :inherited-members:
 

@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, Any
-from CPAC.pipeline.nodeblock import NodeBlockFunction
+from CPAC.pipeline.engine.nodeblock import NodeBlockFunction
 from docutils.statemachine import StringList
 from sphinx.ext.autodoc import Documenter, FunctionDocumenter, bool_option
 

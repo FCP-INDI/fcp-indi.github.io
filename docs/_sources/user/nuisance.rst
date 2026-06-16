@@ -127,6 +127,10 @@ Configuring Temporal Filtering Options
 
 #. **Select regressors: - [dialogue: Low-frequency cutoff, High-frequency cutoff]:**  Clicking on the *+* icon to the right of the box here will bring up a dialog where you can define the upper and lower cutoffs for the bandpass filter.  You may generate multiple sets of bandpass filter strategies in this way.  When you are done defining bandpasses, check the box next to each bandpass you would like to run.
 
+.. warning::
+
+   :doc:`/user/known-issues/FCP-INDI/C-PAC/2152`
+
 .. _nuisance-no-gui:
 
 .. include:: /user/pipelines/without_gui.rst
@@ -186,6 +190,10 @@ C-PAC is now compatible with fMRIPrep output directories so that users can run n
 * If there are regressor strategies under :ref:`nuisance_corrections > 2-nuisance_regression > Regressors`, the 'Name' field of one strategy must match the name of the regressor strategy listed under :ref:`ingress_regressors`. If you are not running bandpass filtering, the field :ref:`nuisance_corrections > 2-nuisance_regression > Regressors` can be blank. See below for an example.
 
 * Nuisance regression cannot fork with ingressed regressors
+
+.. warning::
+
+   :doc:`/user/known-issues/FCP-INDI/C-PAC/2152`
 
 .. code-block:: yaml
  

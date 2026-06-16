@@ -85,3 +85,10 @@ Recently Resolved Common Issues
 -------------------------------------
 
 .. include:: /user/known-issues/FCP-INDI/C-PAC/2110.rst
+
+First two TRs not affected by bandpass filter
+---------------------------------------------
+
+.. include:: /user/known-issues/FCP-INDI/C-PAC/2152.rst
+
+

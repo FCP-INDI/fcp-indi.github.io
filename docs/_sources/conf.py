@@ -613,6 +613,8 @@ texinfo_documents = [
 
 rst_prolog = """
 
+.. |see 1.8.5 rnotes| replace:: See :doc:`/user/release_notes/v1.8.5` for details.
+
 .. |version as code| replace:: ``{version}``
 
 """.format(
